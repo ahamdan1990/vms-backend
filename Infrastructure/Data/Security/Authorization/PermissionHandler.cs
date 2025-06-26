@@ -1,7 +1,38 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿// Update your PermissionHandler.cs - Replace the role claim lookup
+
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims; // ADD THIS IMPORT
 using VisitorManagementSystem.Api.Domain.Constants;
 
 namespace VisitorManagementSystem.Api.Infrastructure.Security.Authorization;
+
+
+
+/// <summary>
+/// Multiple permissions requirement (user must have ALL permissions)
+/// </summary>
+public class MultiplePermissionsRequirement : IAuthorizationRequirement
+{
+    public IEnumerable<string> Permissions { get; }
+
+    public MultiplePermissionsRequirement(IEnumerable<string> permissions)
+    {
+        Permissions = permissions ?? throw new ArgumentNullException(nameof(permissions));
+    }
+}
+
+/// <summary>
+/// Any permission requirement (user must have ANY of the permissions)
+/// </summary>
+public class AnyPermissionRequirement : IAuthorizationRequirement
+{
+    public IEnumerable<string> Permissions { get; }
+
+    public AnyPermissionRequirement(IEnumerable<string> permissions)
+    {
+        Permissions = permissions ?? throw new ArgumentNullException(nameof(permissions));
+    }
+}
 
 /// <summary>
 /// Permission-based authorization handler
@@ -27,8 +58,8 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
                 return Task.CompletedTask;
             }
 
-            // Get user's role
-            var userRole = context.User.FindFirst("role")?.Value;
+            // FIXED: Get user's role using ClaimTypes.Role instead of "role"
+            var userRole = context.User.FindFirst(ClaimTypes.Role)?.Value;
             if (string.IsNullOrEmpty(userRole))
             {
                 _logger.LogWarning("User has no role claim for permission check: {Permission}", requirement.Permission);
@@ -61,31 +92,7 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
     }
 }
 
-/// <summary>
-/// Multiple permissions requirement (user must have ALL permissions)
-/// </summary>
-public class MultiplePermissionsRequirement : IAuthorizationRequirement
-{
-    public IEnumerable<string> Permissions { get; }
-
-    public MultiplePermissionsRequirement(IEnumerable<string> permissions)
-    {
-        Permissions = permissions ?? throw new ArgumentNullException(nameof(permissions));
-    }
-}
-
-/// <summary>
-/// Any permission requirement (user must have ANY of the permissions)
-/// </summary>
-public class AnyPermissionRequirement : IAuthorizationRequirement
-{
-    public IEnumerable<string> Permissions { get; }
-
-    public AnyPermissionRequirement(IEnumerable<string> permissions)
-    {
-        Permissions = permissions ?? throw new ArgumentNullException(nameof(permissions));
-    }
-}
+// ALSO UPDATE the other handlers in the same file
 
 /// <summary>
 /// Handler for multiple permissions requirement
@@ -109,7 +116,8 @@ public class MultiplePermissionsHandler : AuthorizationHandler<MultiplePermissio
                 return Task.CompletedTask;
             }
 
-            var userRole = context.User.FindFirst("role")?.Value;
+            // FIXED: Use ClaimTypes.Role
+            var userRole = context.User.FindFirst(ClaimTypes.Role)?.Value;
             if (string.IsNullOrEmpty(userRole))
             {
                 context.Fail();
@@ -166,7 +174,8 @@ public class AnyPermissionHandler : AuthorizationHandler<AnyPermissionRequiremen
                 return Task.CompletedTask;
             }
 
-            var userRole = context.User.FindFirst("role")?.Value;
+            // FIXED: Use ClaimTypes.Role
+            var userRole = context.User.FindFirst(ClaimTypes.Role)?.Value;
             if (string.IsNullOrEmpty(userRole))
             {
                 context.Fail();

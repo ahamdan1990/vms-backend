@@ -1,0 +1,89 @@
+# Ignore build output
+bin/
+obj/
+out/
+
+# Ignore Visual Studio temp files and settings
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Ignore Rider settings
+.idea/
+
+# Ignore build results
+*.dll
+*.exe
+*.pdb
+*.cache
+*.xml
+*.app
+*.log
+
+# Ignore test results
+TestResults/
+*.trx
+
+# Ignore dotnet specific files
+*.dbmdl
+*.bak
+*.backup
+*.swp
+
+# Ignore logs
+logs/
+*.log
+*.tlog
+
+# Ignore EF Core migrations metadata
+Migrations/*Designer.cs
+Migrations/*Snapshot.cs
+
+# Ignore packages (if not committed)
+packages/
+*.nupkg
+*.nuspec
+
+# Ignore secrets
+secrets.json
+
+# Ignore publish output
+publish/
+
+# Ignore ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# Ignore local history
+.localhistory/
+
+# Ignore user-specific files
+*.vspscc
+*.vssscc
+
+# Ignore temporary files
+*.tmp
+*.temp
+*.bak
+*.old
+*.orig
+
+# Ignore database files
+*.mdf
+*.ldf
+
+# Ignore source link files
+*.sourcelink.json
+
+# Ignore environment configs (optional - if you want to commit some of them, remove these lines)
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.json
+
+# Ignore coverage output
+coverage/
+
+# Ignore IDE cache
+.vscode/

@@ -1226,6 +1226,11 @@
             Profile photo URL
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Mapping.UserMappingProfile">
+            <summary>
+            AutoMapper profile for User entity and related DTO mappings
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Queries.Auth.GetCurrentUserQuery">
             <summary>
             Query for getting current user information
@@ -1411,7 +1416,7 @@
             <param name="cancellationToken">Cancellation token</param>
             <returns>List of active sessions</returns>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IAuthService.TerminateSessionAsync(System.Int32,System.String,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IAuthService.TerminateSessionAsync(System.Int32,System.Int32,System.Threading.CancellationToken)">
             <summary>
             Terminates specific user session
             </summary>
@@ -3021,7 +3026,7 @@
             </summary>
             <returns>List of active sessions</returns>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.AuthController.TerminateSession(System.String)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.AuthController.TerminateSession(System.Int32)">
             <summary>
             Terminates a specific session
             </summary>
@@ -7639,11 +7644,6 @@
             JWT authentication scheme options
             </summary>
         </member>
-        <member name="T:VisitorManagementSystem.Api.Infrastructure.Security.Authorization.PermissionHandler">
-            <summary>
-            Permission-based authorization handler
-            </summary>
-        </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Security.Authorization.MultiplePermissionsRequirement">
             <summary>
             Multiple permissions requirement (user must have ALL permissions)
@@ -7652,6 +7652,11 @@
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Security.Authorization.AnyPermissionRequirement">
             <summary>
             Any permission requirement (user must have ANY of the permissions)
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Security.Authorization.PermissionHandler">
+            <summary>
+            Permission-based authorization handler
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Security.Authorization.MultiplePermissionsHandler">
@@ -8408,6 +8413,18 @@
             <inheritdoc />
         </member>
         <member name="M:VisitorManagementSystem.Api.Migrations.FixAuditLogMetadataColumnSize.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Migrations.InitialMigrations">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.InitialMigrations.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.InitialMigrations.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.InitialMigrations.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:GetUserByIdQueryHandler">

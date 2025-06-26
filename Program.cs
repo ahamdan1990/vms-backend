@@ -14,6 +14,9 @@ using System.Reflection;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using VisitorManagementSystem.Api.Domain.Constants;
+using VisitorManagementSystem.Api.Infrastructure.Security.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -125,7 +128,25 @@ builder.Services.AddAuthentication(options =>
 });
 
 // Add Authorization
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    // Register all permission constants as policies
+    var allPermissions = Permissions.GetAllPermissions();
+
+    foreach (var permission in allPermissions)
+    {
+        options.AddPolicy(permission, policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.AddRequirements(new PermissionRequirement(permission));
+        });
+    }
+
+    // Set default policy
+    options.DefaultPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 
 // Add MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));

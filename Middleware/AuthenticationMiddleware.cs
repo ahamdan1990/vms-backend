@@ -19,7 +19,6 @@ public class AuthenticationMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        // Skip authentication for certain paths
         if (ShouldSkipAuthentication(context.Request.Path))
         {
             await _next(context);
@@ -28,7 +27,13 @@ public class AuthenticationMiddleware
 
         try
         {
-            await ProcessAuthenticationAsync(context);
+            var authSuccess = await ProcessAuthenticationAsync(context);
+
+            if (!authSuccess)
+            {
+                // Authentication failed, response already set — stop here
+                return;
+            }
         }
         catch (Exception ex)
         {
@@ -38,10 +43,10 @@ public class AuthenticationMiddleware
             return;
         }
 
-        await _next(context);
+        await _next(context); // Proceed only if authenticated or allowed
     }
 
-    private async Task ProcessAuthenticationAsync(HttpContext context)
+    private async Task<bool> ProcessAuthenticationAsync(HttpContext context)
     {
         var authService = context.RequestServices.GetRequiredService<IAuthService>();
 
@@ -58,18 +63,40 @@ public class AuthenticationMiddleware
                 // Token is valid, set user context
                 SetUserContext(context, validation);
                 _logger.LogDebug("User authenticated via cookie: {UserId}", validation.UserId);
+                return true;
             }
             else if (tokenInfo.RefreshToken != null)
             {
                 // Access token invalid/expired, try refresh
                 await TryRefreshTokenAsync(context, authService, tokenInfo.RefreshToken);
+                if (context.User?.Identity?.IsAuthenticated == true)
+                    return true;
+                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+
+                var errorResponse = new
+                {
+                    success = false,
+                    message = "Unauthorized: Invalid or expired token."
+                };
+
+                await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(errorResponse));
+
+                return false;
             }
             else
             {
                 // Invalid token and no refresh token, clear cookies
                 authService.ClearAuthenticationCookies(context.Response);
                 _logger.LogDebug("Invalid access token, cookies cleared");
+                return false;
             }
+        }
+        else
+        {
+            _logger.LogDebug("No access token found, skipping authentication");
+            // If your API requires auth, return 401 here instead of skipping
+            return true;  // or false if you want to block anonymous
         }
     }
 

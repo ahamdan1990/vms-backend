@@ -6,6 +6,7 @@ namespace VisitorManagementSystem.Api.Infrastructure.Security.Authorization;
 /// Permission requirement implementation (already defined in PermissionHandler.cs)
 /// This file exists to maintain clean separation if needed
 /// </summary>
+
 public class PermissionRequirement : IAuthorizationRequirement
 {
     public string Permission { get; }
@@ -14,6 +15,7 @@ public class PermissionRequirement : IAuthorizationRequirement
     {
         Permission = permission ?? throw new ArgumentNullException(nameof(permission));
     }
+
 
     public override string ToString()
     {

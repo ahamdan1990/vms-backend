@@ -122,7 +122,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 {
                     userDto.TemporaryPassword = password; // This should be handled securely
                 }
-
+                userDto.TemporaryPassword = password;
                 return userDto;
             }
             catch (Exception ex)

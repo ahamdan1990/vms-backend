@@ -409,7 +409,7 @@ public class PasswordService : IPasswordService
         }
 
         // Check minimum age
-        if (_passwordPolicy.MinimumAge > 0 && user.PasswordChangedDate.HasValue)
+        if (_passwordPolicy.MinimumAge > 0 && user.PasswordChangedDate.HasValue && !user.MustChangePassword)
         {
             var minimumChangeDate = user.PasswordChangedDate.Value.AddDays(_passwordPolicy.MinimumAge);
             if (DateTime.UtcNow < minimumChangeDate)
@@ -623,15 +623,54 @@ public class PasswordService : IPasswordService
 
     private TimeSpan EstimateCrackTime(double entropy)
     {
-        // Assume 1 billion guesses per second
-        var guessesPerSecond = 1_000_000_000.0;
-        var totalPossibilities = Math.Pow(2, entropy);
-        var averageGuesses = totalPossibilities / 2;
-        var secondsToCrack = averageGuesses / guessesPerSecond;
+        try
+        {
+            // Assume 1 billion guesses per second
+            var guessesPerSecond = 1_000_000_000.0;
 
-        return TimeSpan.FromSeconds(secondsToCrack);
+            // Handle edge cases
+            if (entropy <= 0)
+            {
+                return TimeSpan.FromSeconds(1);
+            }
+
+            // Cap entropy to prevent overflow (100 bits = practically uncrackable)
+            var cappedEntropy = Math.Min(entropy, 100.0);
+
+            var totalPossibilities = Math.Pow(2, cappedEntropy);
+
+            // Check for infinity or extremely large numbers
+            if (double.IsInfinity(totalPossibilities) || totalPossibilities > 1e50)
+            {
+                // Return a very large but representable timespan (1000 years)
+                return TimeSpan.FromDays(365 * 1000);
+            }
+
+            var averageGuesses = totalPossibilities / 2;
+            var secondsToCrack = averageGuesses / guessesPerSecond;
+
+            // Check if the result would exceed TimeSpan.MaxValue
+            if (secondsToCrack > TimeSpan.MaxValue.TotalSeconds ||
+                double.IsInfinity(secondsToCrack) ||
+                double.IsNaN(secondsToCrack))
+            {
+                // Return maximum representable timespan (about 29,247 years)
+                return TimeSpan.MaxValue;
+            }
+
+            return TimeSpan.FromSeconds(secondsToCrack);
+        }
+        catch (OverflowException)
+        {
+            _logger.LogWarning("Password crack time calculation overflowed, returning maximum safe value");
+            return TimeSpan.FromDays(365 * 1000); // 1000 years
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error calculating crack time for entropy: {Entropy}", entropy);
+            return TimeSpan.FromDays(1); // Safe fallback
+        }
     }
-
     private List<string> GenerateFeedback(PasswordStrengthResult result)
     {
         var feedback = new List<string>();

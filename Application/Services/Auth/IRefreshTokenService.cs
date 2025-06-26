@@ -52,7 +52,8 @@ public interface IRefreshTokenService
     /// <returns>True if token was revoked</returns>
     Task<bool> RevokeRefreshTokenAsync(string token, string reason, string? revokedByIp = null,
         CancellationToken cancellationToken = default);
-
+    Task<bool> RevokeRefreshTokenAsync(int sessionID, string reason, string? revokedByIp = null,
+CancellationToken cancellationToken = default);
     /// <summary>
     /// Revokes all refresh tokens for a user
     /// </summary>

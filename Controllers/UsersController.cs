@@ -98,7 +98,7 @@ public class UsersController : BaseController
     {
         try
         {
-            var query = new GetUserByIdQuery();
+            var query = new GetUserByIdQuery { UserId = id };
             var user = await _mediator.Send(query);
 
             if (user == null)

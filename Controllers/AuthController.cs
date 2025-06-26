@@ -476,8 +476,8 @@ public class AuthController : BaseController
                 UserEmail = result.UserEmail,
                 Expiry = result.Expiry,
                 Reason = result.ErrorMessage,
-                IsExpired = (bool)result.IsExpired,
-                IsNearExpiry = (bool)result.IsNearExpiry
+                IsExpired = result.IsExpired ?? false,         
+                IsNearExpiry = result.IsNearExpiry ?? false 
             };
 
             return Ok(ApiResponseDto<TokenValidationDto>.SuccessResponse(validationDto));
@@ -527,7 +527,7 @@ public class AuthController : BaseController
     [HttpDelete("sessions/{sessionId}")]
     [Authorize]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
-    public async Task<IActionResult> TerminateSession(string sessionId)
+    public async Task<IActionResult> TerminateSession(int sessionId)
     {
         try
         {

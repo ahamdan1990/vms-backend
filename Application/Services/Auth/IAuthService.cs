@@ -137,7 +137,7 @@ public interface IAuthService
     /// <param name="sessionId">Session ID to terminate</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if session terminated</returns>
-    Task<bool> TerminateSessionAsync(int userId, string sessionId, CancellationToken cancellationToken = default);
+    Task<bool> TerminateSessionAsync(int userId, int sessionId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Generates secure cookie options for authentication

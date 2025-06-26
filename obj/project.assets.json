@@ -6711,11 +6711,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\VisitorManagementSystem\\VisitorManagementSystem.Api\\VisitorManagementSystem.Api.csproj",
+      "projectUniqueName": "D:\\ServicesWebApp\\VMS-Project\\vms-backend\\VisitorManagementSystem.Api.csproj",
       "projectName": "VisitorManagementSystem.Api",
-      "projectPath": "E:\\VisitorManagementSystem\\VisitorManagementSystem.Api\\VisitorManagementSystem.Api.csproj",
+      "projectPath": "D:\\ServicesWebApp\\VMS-Project\\vms-backend\\VisitorManagementSystem.Api.csproj",
       "packagesPath": "C:\\Users\\ahamdan\\.nuget\\packages\\",
-      "outputPath": "E:\\VisitorManagementSystem\\VisitorManagementSystem.Api\\obj\\",
+      "outputPath": "D:\\ServicesWebApp\\VMS-Project\\vms-backend\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -6887,7 +6887,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.203/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.201/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

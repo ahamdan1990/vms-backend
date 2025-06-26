@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "IKUL/k9P110=",
+  "dgSpecHash": "qYO8buG+zoc=",
   "success": true,
-  "projectFilePath": "E:\\VisitorManagementSystem\\VisitorManagementSystem.Api\\VisitorManagementSystem.Api.csproj",
+  "projectFilePath": "D:\\ServicesWebApp\\VMS-Project\\vms-backend\\VisitorManagementSystem.Api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\ahamdan\\.nuget\\packages\\automapper\\12.0.1\\automapper.12.0.1.nupkg.sha512",
     "C:\\Users\\ahamdan\\.nuget\\packages\\automapper.extensions.microsoft.dependencyinjection\\12.0.1\\automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",

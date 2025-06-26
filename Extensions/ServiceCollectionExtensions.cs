@@ -170,11 +170,11 @@ public static class ServiceCollectionExtensions
         });
 
         // Distributed cache (Redis)
-        services.AddStackExchangeRedisCache(options =>
-        {
-            options.Configuration = Environment.GetEnvironmentVariable("REDIS_CONNECTION") ?? "localhost:6379";
-        });
-
+        //services.AddStackExchangeRedisCache(options =>
+        //{
+        //    options.Configuration = Environment.GetEnvironmentVariable("REDIS_CONNECTION") ?? "localhost:6379";
+        //});
+        services.AddDistributedMemoryCache();
         // Data protection
         services.AddDataProtection()
             .SetApplicationName("VisitorManagementSystem")

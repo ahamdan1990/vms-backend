@@ -1158,6 +1158,10 @@ public class AuthService : IAuthService
 
             var validationResult = await _jwtService.ValidateTokenAsync(accessToken);
 
+            var now = DateTime.UtcNow;
+            bool isExpired = validationResult.Expiry.HasValue && validationResult.Expiry.Value <= now;
+            bool isNearExpiry = validationResult.Expiry.HasValue && validationResult.Expiry.Value <= now.AddMinutes(2);
+
             if (!validationResult.IsValid)
 
             {
@@ -1228,6 +1232,7 @@ public class AuthService : IAuthService
 
 
 
+
                 return new TokenValidationResult
 
                 {
@@ -1244,7 +1249,9 @@ public class AuthService : IAuthService
 
                     Expiry = validationResult.Expiry,
 
-                    SecurityStamp = validationResult.SecurityStamp
+                    SecurityStamp = validationResult.SecurityStamp,
+                    IsExpired = isExpired,
+                    IsNearExpiry = isNearExpiry
 
                 };
 
@@ -1253,23 +1260,16 @@ public class AuthService : IAuthService
 
 
             return new TokenValidationResult
-
             {
-
                 IsValid = true,
-
                 UserId = validationResult.UserId,
-
                 UserEmail = validationResult.UserEmail,
-
                 Roles = validationResult.Roles,
-
-                Permissions = validationResult.Permissions, // Will be empty list
-
+                Permissions = validationResult.Permissions,
                 Expiry = validationResult.Expiry,
-
-                SecurityStamp = validationResult.SecurityStamp
-
+                SecurityStamp = validationResult.SecurityStamp,
+                IsExpired = isExpired,
+                IsNearExpiry = isNearExpiry
             };
 
         }
@@ -1494,7 +1494,7 @@ public class AuthService : IAuthService
 
 
 
-    public async Task<bool> TerminateSessionAsync(int userId, string sessionId, CancellationToken cancellationToken = default)
+    public async Task<bool> TerminateSessionAsync(int userId, int sessionId, CancellationToken cancellationToken = default)
 
     {
 
