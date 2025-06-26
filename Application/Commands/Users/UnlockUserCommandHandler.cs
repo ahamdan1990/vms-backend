@@ -1,0 +1,65 @@
+﻿using MediatR;
+using VisitorManagementSystem.Api.Application.DTOs.Common;
+using VisitorManagementSystem.Api.Application.Services.Auth;
+using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
+
+namespace VisitorManagementSystem.Api.Application.Commands.Users
+{
+    /// <summary>
+    /// Handler for UnlockUserCommand
+    /// </summary>
+    public class UnlockUserCommandHandler : IRequestHandler<UnlockUserCommand, CommandResultDto>
+    {
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IUserLockoutService _lockoutService;
+        private readonly ILogger<UnlockUserCommandHandler> _logger;
+
+        public UnlockUserCommandHandler(
+            IUnitOfWork unitOfWork,
+            IUserLockoutService lockoutService,
+            ILogger<UnlockUserCommandHandler> logger)
+        {
+            _unitOfWork = unitOfWork;
+            _lockoutService = lockoutService;
+            _logger = logger;
+        }
+
+        public async Task<CommandResultDto> Handle(UnlockUserCommand request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                _logger.LogInformation("Processing UnlockUserCommand for UserId: {UserId} by User: {UnlockedBy}",
+                    request.UserId, request.UnlockedBy);
+
+                var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, cancellationToken);
+                if (user == null)
+                {
+                    return CommandResultDto.Failure("User not found");
+                }
+
+                if (!user.IsCurrentlyLockedOut())
+                {
+                    return CommandResultDto.Failure("User account is not currently locked");
+                }
+
+                var reason = request.Reason ?? "Administrative unlock";
+                var success = await _lockoutService.UnlockUserAccountAsync(request.UserId, reason, request.UnlockedBy, cancellationToken);
+
+                if (success)
+                {
+                    _logger.LogInformation("User account unlocked successfully: UserId: {UserId}, UnlockedBy: {UnlockedBy}, Reason: {Reason}",
+                        request.UserId, request.UnlockedBy, reason);
+
+                    return CommandResultDto.Success("User account unlocked successfully");
+                }
+
+                return CommandResultDto.Failure("Failed to unlock user account");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing UnlockUserCommand for UserId: {UserId}", request.UserId);
+                return CommandResultDto.Failure("An error occurred while unlocking the account");
+            }
+        }
+    }
+}

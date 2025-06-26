@@ -1,0 +1,112 @@
+2025-06-25 12:48:29.197 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2025-06-25 12:48:29.981 +03:00 [INF] Database initialized successfully
+2025-06-25 12:48:30.213 +03:00 [INF] Token cleanup completed. Expired revoked: 0, Old deleted: 0
+2025-06-25 12:48:30.218 +03:00 [INF] Token cleanup completed successfully
+2025-06-25 12:48:30.250 +03:00 [INF] Audit cleanup completed. Deleted 0 old records
+2025-06-25 12:48:30.991 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPLOMODUN:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 12:48:31.403 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/login - Status: 204 - Duration: 417ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPLOMODUN:00000001
+2025-06-25 12:48:31.433 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPLOMODUM:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 12:48:31.461 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 12:48:31.465 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 12:48:31.771 +03:00 [INF] Login attempt for user: admin@vms.com from IP: 127.0.0.1
+2025-06-25 12:48:31.935 +03:00 [INF] Security event recorded: SuccessfulLogin for user: 7
+2025-06-25 12:48:31.939 +03:00 [INF] Successful login for user: admin@vms.com (ID: 7)
+2025-06-25 12:48:31.944 +03:00 [INF] Successful login for user: admin@vms.com
+2025-06-25 12:48:31.951 +03:00 [INF] 🍪 Authentication cookies set - Access: 6277 chars, Refresh: 86 chars, Secure: false, SameSite: "Lax"
+2025-06-25 12:48:31.954 +03:00 [INF] User logged in successfully: admin@vms.com from 127.0.0.1
+2025-06-25 12:48:31.993 +03:00 [INF] HTTP Response: POST /api/Auth/login - Status: 200 - Duration: 560ms - Size: 4825B - User: Anonymous - CorrelationId: 0HNDJPLOMODUM:00000001
+2025-06-25 12:48:32.013 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPLOMODUN:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 12:48:32.015 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPLOMODUO:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 12:48:32.022 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 9ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPLOMODUN:00000002
+2025-06-25 12:48:32.029 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 13ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPLOMODUO:00000001
+2025-06-25 12:48:32.047 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPLOMODUM:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 12:48:32.047 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPLOMODUP:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 12:48:32.060 +03:00 [INF] 🍪 All cookies: refresh_token=0znlvjJL3h...
+2025-06-25 12:48:32.066 +03:00 [INF] 🍪 All cookies: refresh_token=0znlvjJL3h...
+2025-06-25 12:48:32.067 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 12:48:32.074 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 12:48:32.092 +03:00 [WRN] HTTP Response: GET /api/Auth/me - Status: 401 - Duration: 45ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPLOMODUM:00000002
+2025-06-25 12:48:32.099 +03:00 [WRN] HTTP Response: GET /api/Auth/permissions - Status: 401 - Duration: 52ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPLOMODUP:00000001
+2025-06-25 12:48:32.123 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPLOMODUN:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 12:48:32.127 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPLOMODUO:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 12:48:32.137 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 14ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPLOMODUN:00000003
+2025-06-25 12:48:32.147 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 19ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPLOMODUO:00000002
+2025-06-25 12:48:32.155 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPLOMODUP:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 12:48:32.166 +03:00 [INF] 🍪 All cookies: refresh_token=0znlvjJL3h...
+2025-06-25 12:48:32.169 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 12:48:32.175 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPLOMODUM:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 12:48:32.184 +03:00 [INF] 🍪 All cookies: refresh_token=0znlvjJL3h...
+2025-06-25 12:48:32.186 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 12:48:32.289 +03:00 [INF] 🍪 Authentication cookies set - Access: 6277 chars, Refresh: 86 chars, Secure: false, SameSite: "Lax"
+2025-06-25 12:48:32.319 +03:00 [INF] HTTP Response: POST /api/Auth/refresh - Status: 200 - Duration: 163ms - Size: 4836B - User: Anonymous - CorrelationId: 0HNDJPLOMODUP:00000002
+2025-06-25 12:48:32.326 +03:00 [INF] 🍪 Authentication cookies set - Access: 6277 chars, Refresh: 86 chars, Secure: false, SameSite: "Lax"
+2025-06-25 12:48:32.332 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPLOMODUP:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 12:48:32.337 +03:00 [INF] HTTP Response: POST /api/Auth/refresh - Status: 200 - Duration: 162ms - Size: 4836B - User: Anonymous - CorrelationId: 0HNDJPLOMODUM:00000003
+2025-06-25 12:48:32.340 +03:00 [INF] 🍪 All cookies: refresh_token=EVX2FZzSSA...
+2025-06-25 12:48:32.350 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPLOMODUM:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 12:48:32.351 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 12:48:32.360 +03:00 [INF] 🍪 All cookies: refresh_token=9T8UP1EmT1...
+2025-06-25 12:48:32.371 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 12:48:32.372 +03:00 [WRN] HTTP Response: GET /api/Auth/me - Status: 401 - Duration: 39ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPLOMODUP:00000003
+2025-06-25 12:48:32.377 +03:00 [WRN] HTTP Response: GET /api/Auth/permissions - Status: 401 - Duration: 27ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPLOMODUM:00000004
+[2025-06-25 12:50:35.947 +03:00 WRN]  Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. <s:Microsoft.EntityFrameworkCore.Model.Validation>
+[2025-06-25 12:50:36.856 +03:00 INF]  Database initialized successfully <s:Program>
+[2025-06-25 12:50:37.115 +03:00 INF]  Token cleanup completed. Expired revoked: 0, Old deleted: 0 <s:VisitorManagementSystem.Api.Application.Services.Auth.RefreshTokenService>
+[2025-06-25 12:50:37.119 +03:00 INF]  Token cleanup completed successfully <s:VisitorManagementSystem.Api.Extensions.TokenCleanupBackgroundService>
+[2025-06-25 12:50:37.134 +03:00 INF]  Audit cleanup completed. Deleted 0 old records <s:VisitorManagementSystem.Api.Extensions.AuditCleanupBackgroundService>
+[2025-06-25 12:51:02.315 +03:00 INF] 0HNDJPN5PP4IB:00000001 HTTP Request: OPTIONS http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPN5PP4IB:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:02.748 +03:00 INF] 0HNDJPN5PP4IB:00000001 HTTP Response: OPTIONS /api/Auth/login - Status: 204 - Duration: 438ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPN5PP4IB:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:02.781 +03:00 INF] 0HNDJPN5PP4IA:00000001 HTTP Request: POST http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPN5PP4IA:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:02.815 +03:00 INF]  🍪 All cookies: refresh_token=9T8UP1EmT1... <s:Program>
+[2025-06-25 12:51:02.818 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 12:51:03.180 +03:00 INF]  Login attempt for user: admin@vms.com from IP: 127.0.0.1 <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 12:51:03.407 +03:00 INF]  Security event recorded: SuccessfulLogin for user: 7 <s:VisitorManagementSystem.Api.Application.Services.Auth.UserLockoutService>
+[2025-06-25 12:51:03.411 +03:00 INF]  Successful login for user: admin@vms.com (ID: 7) <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 12:51:03.416 +03:00 INF]  Successful login for user: admin@vms.com <s:VisitorManagementSystem.Api.Application.Commands.Auth.LoginCommandHandler>
+[2025-06-25 12:51:03.423 +03:00 INF]  🍪 HTTP Localhost cookies set - Access: 6277 chars, Refresh: 86 chars <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 12:51:03.441 +03:00 INF]  User logged in successfully: admin@vms.com from 127.0.0.1 <s:VisitorManagementSystem.Api.Controllers.AuthController>
+[2025-06-25 12:51:03.502 +03:00 INF] 0HNDJPN5PP4IA:00000001 HTTP Response: POST /api/Auth/login - Status: 200 - Duration: 720ms - Size: 4825B - User: Anonymous - CorrelationId: 0HNDJPN5PP4IA:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.528 +03:00 INF] 0HNDJPN5PP4IB:00000002 HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPN5PP4IB:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.530 +03:00 INF] 0HNDJPN5PP4IC:00000001 HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPN5PP4IC:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.539 +03:00 INF] 0HNDJPN5PP4IB:00000002 HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 11ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPN5PP4IB:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.547 +03:00 INF] 0HNDJPN5PP4IC:00000001 HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 16ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPN5PP4IC:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.556 +03:00 INF] 0HNDJPN5PP4IA:00000002 HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPN5PP4IA:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.560 +03:00 INF] 0HNDJPN5PP4ID:00000001 HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPN5PP4ID:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.563 +03:00 INF]  🍪 All cookies: refresh_token=Pctu4FLn6I... <s:Program>
+[2025-06-25 12:51:03.571 +03:00 INF]  🍪 All cookies: refresh_token=Pctu4FLn6I... <s:Program>
+[2025-06-25 12:51:03.573 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 12:51:03.575 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 12:51:03.597 +03:00 WRN] 0HNDJPN5PP4ID:00000001 HTTP Response: GET /api/Auth/permissions - Status: 401 - Duration: 37ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPN5PP4ID:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.601 +03:00 WRN] 0HNDJPN5PP4IA:00000002 HTTP Response: GET /api/Auth/me - Status: 401 - Duration: 44ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPN5PP4IA:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.618 +03:00 INF] 0HNDJPN5PP4IB:00000003 HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPN5PP4IB:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.622 +03:00 INF] 0HNDJPN5PP4IC:00000002 HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPN5PP4IC:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.627 +03:00 INF] 0HNDJPN5PP4IB:00000003 HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 8ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPN5PP4IB:00000003 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.645 +03:00 INF] 0HNDJPN5PP4IC:00000002 HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 23ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPN5PP4IC:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.673 +03:00 INF] 0HNDJPN5PP4ID:00000002 HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPN5PP4ID:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.674 +03:00 INF] 0HNDJPN5PP4IA:00000003 HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPN5PP4IA:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.688 +03:00 INF]  🍪 All cookies: refresh_token=Pctu4FLn6I... <s:Program>
+[2025-06-25 12:51:03.696 +03:00 INF]  🍪 All cookies: refresh_token=Pctu4FLn6I... <s:Program>
+[2025-06-25 12:51:03.705 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 12:51:03.724 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 12:51:03.840 +03:00 INF]  🍪 HTTP Localhost cookies set - Access: 6277 chars, Refresh: 86 chars <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 12:51:03.863 +03:00 INF] 0HNDJPN5PP4ID:00000002 HTTP Response: POST /api/Auth/refresh - Status: 200 - Duration: 189ms - Size: 4836B - User: Anonymous - CorrelationId: 0HNDJPN5PP4ID:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.878 +03:00 INF] 0HNDJPN5PP4ID:00000003 HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPN5PP4ID:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.887 +03:00 INF]  🍪 All cookies: refresh_token=X0K4a8pUvk... <s:Program>
+[2025-06-25 12:51:03.889 +03:00 INF]  🍪 HTTP Localhost cookies set - Access: 6277 chars, Refresh: 86 chars <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 12:51:03.890 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 12:51:03.901 +03:00 INF] 0HNDJPN5PP4IA:00000003 HTTP Response: POST /api/Auth/refresh - Status: 200 - Duration: 227ms - Size: 4836B - User: Anonymous - CorrelationId: 0HNDJPN5PP4IA:00000003 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.906 +03:00 WRN] 0HNDJPN5PP4ID:00000003 HTTP Response: GET /api/Auth/permissions - Status: 401 - Duration: 28ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPN5PP4ID:00000003 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.913 +03:00 INF] 0HNDJPN5PP4IA:00000004 HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPN5PP4IA:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:51:03.918 +03:00 INF]  🍪 All cookies: refresh_token=IjDeRrq5W3... <s:Program>
+[2025-06-25 12:51:03.920 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 12:51:03.926 +03:00 WRN] 0HNDJPN5PP4IA:00000004 HTTP Response: GET /api/Auth/me - Status: 401 - Duration: 13ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJPN5PP4IA:00000004 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:53:19.117 +03:00 INF] 0HNDJPN5PP4IE:00000001 HTTP Request: POST http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJPN5PP4IE:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 12:53:19.138 +03:00 INF]  🍪 All cookies: refresh_token=IjDeRrq5W3... <s:Program>
+[2025-06-25 12:53:19.143 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 12:53:19.156 +03:00 INF]  Login attempt for user: admin@vms.com from IP: 127.0.0.1 <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 12:53:19.182 +03:00 INF]  Security event recorded: SuccessfulLogin for user: 7 <s:VisitorManagementSystem.Api.Application.Services.Auth.UserLockoutService>
+[2025-06-25 12:53:19.184 +03:00 INF]  Successful login for user: admin@vms.com (ID: 7) <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 12:53:19.191 +03:00 INF]  Successful login for user: admin@vms.com <s:VisitorManagementSystem.Api.Application.Commands.Auth.LoginCommandHandler>
+[2025-06-25 12:53:19.193 +03:00 INF]  🍪 HTTP Localhost cookies set - Access: 6277 chars, Refresh: 86 chars <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 12:53:19.204 +03:00 INF]  User logged in successfully: admin@vms.com from 127.0.0.1 <s:VisitorManagementSystem.Api.Controllers.AuthController>
+[2025-06-25 12:53:19.215 +03:00 INF] 0HNDJPN5PP4IE:00000001 HTTP Response: POST /api/Auth/login - Status: 200 - Duration: 97ms - Size: 4825B - User: Anonymous - CorrelationId: 0HNDJPN5PP4IE:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>

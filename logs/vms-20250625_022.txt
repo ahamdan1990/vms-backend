@@ -1,0 +1,314 @@
+2025-06-25 18:54:23.807 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2025-06-25 18:54:24.707 +03:00 [INF] Database initialized successfully
+2025-06-25 18:54:24.940 +03:00 [INF] Token cleanup completed. Expired revoked: 0, Old deleted: 0
+2025-06-25 18:54:24.945 +03:00 [INF] Token cleanup completed successfully
+2025-06-25 18:54:24.949 +03:00 [INF] Audit cleanup completed. Deleted 0 old records
+2025-06-25 18:54:25.307 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UP:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:25.307 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UQ:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:25.307 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52US:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:25.307 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UT:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:25.307 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UU:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:25.307 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UR:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:25.736 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 434ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52US:00000001
+2025-06-25 18:54:25.736 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 434ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UR:00000001
+2025-06-25 18:54:25.736 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 434ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UP:00000001
+2025-06-25 18:54:25.736 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 434ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UU:00000001
+2025-06-25 18:54:25.736 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 434ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UQ:00000001
+2025-06-25 18:54:25.736 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 434ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UT:00000001
+2025-06-25 18:54:25.756 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V2:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:25.756 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V0:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:25.756 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V1:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:25.756 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UV:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:25.760 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V9:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:25.760 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V5:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:25.760 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V6:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:25.760 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V7:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:25.760 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V8:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:26.671 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52VA:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:26.673 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 917ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V1:00000001
+2025-06-25 18:54:26.673 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 917ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V2:00000001
+2025-06-25 18:54:26.677 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 921ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UV:00000001
+2025-06-25 18:54:26.690 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:26.690 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:26.690 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:26.690 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:26.690 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:26.693 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 936ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V0:00000001
+2025-06-25 18:54:26.695 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:26.714 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:26.719 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:26.720 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:26.726 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:26.729 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:26.741 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:26.789 +03:00 [WRN] HTTP Response: GET /api/Auth/me - Status: 401 - Duration: 1029ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V9:00000001
+2025-06-25 18:54:26.789 +03:00 [WRN] HTTP Response: GET /api/Auth/permissions - Status: 401 - Duration: 1029ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V5:00000001
+2025-06-25 18:54:26.789 +03:00 [WRN] HTTP Response: GET /api/Auth/me - Status: 401 - Duration: 1029ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V7:00000001
+2025-06-25 18:54:26.789 +03:00 [WRN] HTTP Response: GET /api/Auth/permissions - Status: 401 - Duration: 1029ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V6:00000001
+2025-06-25 18:54:26.789 +03:00 [WRN] HTTP Response: GET /api/Auth/permissions - Status: 401 - Duration: 1029ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V8:00000001
+2025-06-25 18:54:26.796 +03:00 [WRN] HTTP Response: GET /api/Auth/permissions - Status: 401 - Duration: 125ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52VA:00000001
+2025-06-25 18:54:26.818 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V9:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:26.823 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V5:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:26.837 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V7:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:26.839 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V3:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:26.841 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V6:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:26.854 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V4:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:26.861 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UU:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:26.865 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UR:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:26.868 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UP:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:27.682 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:27.682 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:27.682 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:27.682 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:27.685 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UQ:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:27.690 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:27.701 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 839ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UU:00000002
+2025-06-25 18:54:27.701 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 835ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UR:00000002
+2025-06-25 18:54:27.702 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 862ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V3:00000001
+2025-06-25 18:54:27.702 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 833ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UP:00000002
+2025-06-25 18:54:27.702 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 848ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V4:00000001
+2025-06-25 18:54:27.703 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:27.707 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:27.709 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:27.730 +03:00 [WRN] HTTP Response: GET /api/Auth/me - Status: 401 - Duration: 892ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V7:00000002
+2025-06-25 18:54:27.735 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 49ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UQ:00000002
+2025-06-25 18:54:27.749 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V8:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:27.751 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52VA:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:27.769 +03:00 [WRN] HTTP Response: GET /api/Auth/permissions - Status: 401 - Duration: 945ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V5:00000002
+2025-06-25 18:54:27.769 +03:00 [WRN] HTTP Response: GET /api/Auth/me - Status: 401 - Duration: 951ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V9:00000002
+2025-06-25 18:54:27.770 +03:00 [WRN] HTTP Response: GET /api/Auth/me - Status: 401 - Duration: 929ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V6:00000002
+2025-06-25 18:54:27.780 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V7:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:27.790 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:27.792 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52US:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:27.799 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:27.803 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V5:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:27.811 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V9:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:27.817 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V6:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:27.822 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:27.826 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:27.838 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 45ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52US:00000002
+2025-06-25 18:54:27.844 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UT:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:27.845 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:27.847 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V1:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:27.849 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V2:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:27.852 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:27.858 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:27.862 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:27.864 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:27.901 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 56ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UT:00000002
+2025-06-25 18:54:27.916 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 68ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V1:00000002
+2025-06-25 18:54:27.919 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:27.920 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 71ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V2:00000002
+2025-06-25 18:54:27.921 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:27.925 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:27.930 +03:00 [WRN] HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 178ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK027J52VA:00000002
+2025-06-25 18:54:27.960 +03:00 [WRN] HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 156ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK027J52V5:00000003
+2025-06-25 18:54:27.934 +03:00 [WRN] HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 153ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK027J52V7:00000003
+2025-06-25 18:54:27.931 +03:00 [WRN] HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 182ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK027J52V8:00000002
+2025-06-25 18:54:27.973 +03:00 [WRN] HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 161ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK027J52V9:00000003
+2025-06-25 18:54:27.982 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52VA:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:27.984 +03:00 [WRN] HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 167ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK027J52V6:00000003
+2025-06-25 18:54:27.987 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V5:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:27.991 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V7:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.002 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V8:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.015 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:28.021 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:28.029 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:28.034 +03:00 [INF] 🍪 All cookies: 
+2025-06-25 18:54:28.040 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:28.043 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:28.044 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:28.046 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 18:54:28.049 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UV:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.057 +03:00 [WRN] HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 74ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK027J52VA:00000003
+2025-06-25 18:54:28.059 +03:00 [WRN] HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 71ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK027J52V5:00000004
+2025-06-25 18:54:28.059 +03:00 [WRN] HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 68ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK027J52V7:00000004
+2025-06-25 18:54:28.064 +03:00 [WRN] HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 62ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK027J52V8:00000003
+2025-06-25 18:54:28.071 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/logout - Status: 204 - Duration: 22ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UV:00000002
+2025-06-25 18:54:28.105 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V0:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.107 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UU:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.108 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UR:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.109 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V3:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.111 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UP:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.113 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V4:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.114 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UQ:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.116 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 11ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V0:00000002
+2025-06-25 18:54:28.116 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52US:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.118 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UT:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.120 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V1:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.158 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V9:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.166 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 56ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V3:00000002
+2025-06-25 18:54:28.166 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 52ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V4:00000002
+2025-06-25 18:54:28.167 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 59ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UR:00000003
+2025-06-25 18:54:28.167 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 60ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UU:00000003
+2025-06-25 18:54:28.168 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/logout - Status: 204 - Duration: 53ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UQ:00000003
+2025-06-25 18:54:28.166 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 55ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UP:00000003
+2025-06-25 18:54:28.199 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 80ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UT:00000003
+2025-06-25 18:54:28.199 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 79ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V1:00000003
+2025-06-25 18:54:28.200 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 83ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52US:00000003
+2025-06-25 18:54:28.200 +03:00 [WRN] HTTP Response: POST /api/Auth/logout - Status: 429 - Duration: 42ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V9:00000004
+2025-06-25 18:54:28.207 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V2:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.229 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UV:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.230 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V0:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.243 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 35ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V2:00000003
+2025-06-25 18:54:28.253 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52VA:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.249 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V6:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.253 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 24ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UV:00000003
+2025-06-25 18:54:28.254 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V5:00000005 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.256 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V7:00000005 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.257 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V8:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.277 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V9:00000005 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.279 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 48ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V0:00000003
+2025-06-25 18:54:28.285 +03:00 [WRN] HTTP Response: GET /api/Auth/permissions - Status: 429 - Duration: 31ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52VA:00000004
+2025-06-25 18:54:28.287 +03:00 [WRN] HTTP Response: GET /api/Auth/me - Status: 429 - Duration: 38ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V6:00000004
+2025-06-25 18:54:28.294 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V3:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.300 +03:00 [WRN] HTTP Response: GET /api/Auth/permissions - Status: 429 - Duration: 46ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V5:00000005
+2025-06-25 18:54:28.306 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V4:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.308 +03:00 [WRN] HTTP Response: GET /api/Auth/me - Status: 429 - Duration: 52ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V7:00000005
+2025-06-25 18:54:28.311 +03:00 [WRN] HTTP Response: GET /api/Auth/permissions - Status: 429 - Duration: 54ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V8:00000004
+2025-06-25 18:54:28.314 +03:00 [WRN] HTTP Response: POST /api/Auth/logout - Status: 429 - Duration: 37ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V9:00000005
+2025-06-25 18:54:28.318 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UR:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.326 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52VA:00000005 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.329 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V6:00000005 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.332 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UU:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.343 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V5:00000006 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.345 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/logout - Status: 204 - Duration: 51ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V3:00000003
+2025-06-25 18:54:28.350 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V7:00000006 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.352 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/logout - Status: 204 - Duration: 46ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V4:00000003
+2025-06-25 18:54:28.356 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UQ:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.356 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V8:00000005 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.358 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UP:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.363 +03:00 [WRN] HTTP Response: GET /api/Auth/me - Status: 429 - Duration: 37ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52VA:00000005
+2025-06-25 18:54:28.367 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/logout - Status: 204 - Duration: 49ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UR:00000004
+2025-06-25 18:54:28.372 +03:00 [WRN] HTTP Response: GET /api/Auth/permissions - Status: 429 - Duration: 43ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V6:00000005
+2025-06-25 18:54:28.387 +03:00 [WRN] HTTP Response: GET /api/Auth/me - Status: 429 - Duration: 44ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V5:00000006
+2025-06-25 18:54:28.387 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/logout - Status: 204 - Duration: 55ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UU:00000004
+2025-06-25 18:54:28.391 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52UT:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.395 +03:00 [WRN] HTTP Response: GET /api/Auth/me - Status: 429 - Duration: 45ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V7:00000006
+2025-06-25 18:54:28.397 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V9:00000006 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.399 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V1:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.410 +03:00 [WRN] HTTP Response: GET /api/Auth/permissions - Status: 429 - Duration: 53ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V8:00000005
+2025-06-25 18:54:28.412 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/logout - Status: 204 - Duration: 56ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UQ:00000004
+2025-06-25 18:54:28.421 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/logout - Status: 204 - Duration: 62ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UP:00000004
+2025-06-25 18:54:28.422 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52VA:00000006 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.430 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V6:00000006 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.443 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V5:00000007 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.458 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V7:00000007 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.459 +03:00 [WRN] HTTP Response: GET /api/Auth/me - Status: 429 - Duration: 61ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V9:00000006
+2025-06-25 18:54:28.459 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/logout - Status: 204 - Duration: 67ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52UT:00000004
+2025-06-25 18:54:28.471 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/logout - Status: 204 - Duration: 71ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK027J52V1:00000004
+2025-06-25 18:54:28.480 +03:00 [WRN] HTTP Response: GET /api/Auth/permissions - Status: 429 - Duration: 57ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52VA:00000006
+2025-06-25 18:54:28.484 +03:00 [WRN] HTTP Response: POST /api/Auth/logout - Status: 429 - Duration: 54ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V6:00000006
+2025-06-25 18:54:28.490 +03:00 [WRN] HTTP Response: POST /api/Auth/logout - Status: 429 - Duration: 46ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V5:00000007
+2025-06-25 18:54:28.499 +03:00 [WRN] HTTP Response: POST /api/Auth/logout - Status: 429 - Duration: 41ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V7:00000007
+2025-06-25 18:54:28.566 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V8:00000006 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.572 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V9:00000007 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.573 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52VA:00000007 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.573 +03:00 [WRN] HTTP Response: POST /api/Auth/logout - Status: 429 - Duration: 7ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V8:00000006
+2025-06-25 18:54:28.577 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V6:00000007 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.578 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK027J52V5:00000008 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 18:54:28.580 +03:00 [WRN] HTTP Response: POST /api/Auth/logout - Status: 429 - Duration: 8ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V9:00000007
+2025-06-25 18:54:28.585 +03:00 [WRN] HTTP Response: POST /api/Auth/logout - Status: 429 - Duration: 11ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52VA:00000007
+2025-06-25 18:54:28.606 +03:00 [WRN] HTTP Response: POST /api/Auth/logout - Status: 429 - Duration: 28ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V6:00000007
+2025-06-25 18:54:28.610 +03:00 [WRN] HTTP Response: POST /api/Auth/logout - Status: 429 - Duration: 31ms - Size: 44B - User: Anonymous - CorrelationId: 0HNDK027J52V5:00000008
+[2025-06-25 18:55:27.329 +03:00 WRN]  Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. <s:Microsoft.EntityFrameworkCore.Model.Validation>
+[2025-06-25 18:55:28.133 +03:00 INF]  Database initialized successfully <s:Program>
+[2025-06-25 18:55:28.391 +03:00 INF]  Token cleanup completed. Expired revoked: 0, Old deleted: 0 <s:VisitorManagementSystem.Api.Application.Services.Auth.RefreshTokenService>
+[2025-06-25 18:55:28.397 +03:00 INF]  Token cleanup completed successfully <s:VisitorManagementSystem.Api.Extensions.TokenCleanupBackgroundService>
+[2025-06-25 18:55:28.415 +03:00 INF]  Audit cleanup completed. Deleted 0 old records <s:VisitorManagementSystem.Api.Extensions.AuditCleanupBackgroundService>
+[2025-06-25 18:55:47.770 +03:00 INF] 0HNDK0305R61U:00000001 HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61U:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:47.770 +03:00 INF] 0HNDK0305R61R:00000001 HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61R:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:47.770 +03:00 INF] 0HNDK0305R61T:00000001 HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61T:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:47.770 +03:00 INF] 0HNDK0305R61S:00000001 HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61S:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.208 +03:00 INF] 0HNDK0305R61T:00000001 HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 443ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R61T:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.208 +03:00 INF] 0HNDK0305R61U:00000001 HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 443ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R61U:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.208 +03:00 INF] 0HNDK0305R61S:00000001 HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 443ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R61S:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.213 +03:00 INF] 0HNDK0305R61R:00000001 HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 449ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R61R:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.231 +03:00 INF] 0HNDK0305R620:00000001 HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R620:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.231 +03:00 INF] 0HNDK0305R61Q:00000001 HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61Q:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.231 +03:00 INF] 0HNDK0305R61P:00000001 HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61P:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.231 +03:00 INF] 0HNDK0305R61V:00000001 HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61V:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.257 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.257 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.257 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.257 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.258 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.260 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.261 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.262 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.281 +03:00 WRN] 0HNDK0305R61P:00000001 HTTP Response: GET /api/Auth/me - Status: 401 - Duration: 49ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R61P:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.281 +03:00 WRN] 0HNDK0305R61V:00000001 HTTP Response: GET /api/Auth/permissions - Status: 401 - Duration: 49ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R61V:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.281 +03:00 WRN] 0HNDK0305R620:00000001 HTTP Response: GET /api/Auth/permissions - Status: 401 - Duration: 49ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R620:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.281 +03:00 WRN] 0HNDK0305R61Q:00000001 HTTP Response: GET /api/Auth/me - Status: 401 - Duration: 49ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R61Q:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.303 +03:00 INF] 0HNDK0305R61U:00000002 HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61U:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.305 +03:00 INF] 0HNDK0305R61R:00000002 HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61R:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.309 +03:00 INF] 0HNDK0305R61S:00000002 HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61S:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.314 +03:00 INF] 0HNDK0305R61T:00000002 HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61T:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.324 +03:00 INF] 0HNDK0305R61U:00000002 HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 21ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R61U:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.334 +03:00 INF] 0HNDK0305R61R:00000002 HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 28ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R61R:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.340 +03:00 INF] 0HNDK0305R61S:00000002 HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 31ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R61S:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.357 +03:00 INF] 0HNDK0305R61T:00000002 HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 43ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R61T:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.364 +03:00 INF] 0HNDK0305R61P:00000002 HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61P:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.367 +03:00 INF] 0HNDK0305R61V:00000002 HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61V:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.374 +03:00 INF] 0HNDK0305R620:00000002 HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R620:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.388 +03:00 INF] 0HNDK0305R61Q:00000002 HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61Q:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.397 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.401 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.406 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.420 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.427 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.429 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.428 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.446 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.515 +03:00 WRN] 0HNDK0305R61V:00000002 HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 147ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK0305R61V:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.515 +03:00 WRN] 0HNDK0305R620:00000002 HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 140ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK0305R620:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.515 +03:00 WRN] 0HNDK0305R61Q:00000002 HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 126ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK0305R61Q:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.515 +03:00 WRN] 0HNDK0305R61P:00000002 HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 150ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK0305R61P:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.581 +03:00 INF] 0HNDK0305R61V:00000003 HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61V:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.582 +03:00 INF] 0HNDK0305R620:00000003 HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R620:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.584 +03:00 INF] 0HNDK0305R61Q:00000003 HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61Q:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.585 +03:00 INF] 0HNDK0305R61P:00000003 HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61P:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.587 +03:00 INF] 0HNDK0305R621:00000001 HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R621:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.588 +03:00 INF] 0HNDK0305R622:00000001 HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R622:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.591 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.598 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.609 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.618 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.625 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.640 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.646 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.655 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.677 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.680 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.685 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.686 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.699 +03:00 WRN] 0HNDK0305R61V:00000003 HTTP Response: GET /api/Auth/me - Status: 401 - Duration: 117ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R61V:00000003 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.703 +03:00 WRN] 0HNDK0305R620:00000003 HTTP Response: GET /api/Auth/permissions - Status: 401 - Duration: 121ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R620:00000003 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.715 +03:00 WRN] 0HNDK0305R61Q:00000003 HTTP Response: GET /api/Auth/me - Status: 401 - Duration: 130ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R61Q:00000003 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.716 +03:00 WRN] 0HNDK0305R61P:00000003 HTTP Response: GET /api/Auth/permissions - Status: 401 - Duration: 130ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R61P:00000003 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.720 +03:00 WRN] 0HNDK0305R621:00000001 HTTP Response: GET /api/Auth/me - Status: 401 - Duration: 133ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R621:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.721 +03:00 WRN] 0HNDK0305R622:00000001 HTTP Response: GET /api/Auth/permissions - Status: 401 - Duration: 133ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDK0305R622:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.733 +03:00 INF] 0HNDK0305R61V:00000004 HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61V:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.739 +03:00 INF] 0HNDK0305R620:00000004 HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R620:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.752 +03:00 INF] 0HNDK0305R61Q:00000004 HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61Q:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.755 +03:00 INF] 0HNDK0305R61P:00000004 HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R61P:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.759 +03:00 INF] 0HNDK0305R621:00000002 HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R621:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.763 +03:00 INF] 0HNDK0305R622:00000002 HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDK0305R622:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.767 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.780 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.784 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.791 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.798 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.804 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 18:55:48.805 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.807 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.809 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.810 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.811 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.813 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 18:55:48.820 +03:00 WRN] 0HNDK0305R61V:00000004 HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 87ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK0305R61V:00000004 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.831 +03:00 WRN] 0HNDK0305R621:00000002 HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 71ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK0305R621:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.828 +03:00 WRN] 0HNDK0305R61Q:00000004 HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 76ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK0305R61Q:00000004 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.829 +03:00 WRN] 0HNDK0305R61P:00000004 HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 74ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK0305R61P:00000004 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.827 +03:00 WRN] 0HNDK0305R620:00000004 HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 87ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK0305R620:00000004 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 18:55:48.833 +03:00 WRN] 0HNDK0305R622:00000002 HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 69ms - Size: 107B - User: Anonymous - CorrelationId: 0HNDK0305R622:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>

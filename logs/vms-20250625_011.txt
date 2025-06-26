@@ -1,0 +1,102 @@
+2025-06-25 13:11:45.936 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2025-06-25 13:11:46.800 +03:00 [INF] Database initialized successfully
+2025-06-25 13:11:47.049 +03:00 [INF] Token cleanup completed. Expired revoked: 0, Old deleted: 0
+2025-06-25 13:11:47.054 +03:00 [INF] Token cleanup completed successfully
+2025-06-25 13:11:47.076 +03:00 [INF] Audit cleanup completed. Deleted 0 old records
+2025-06-25 13:12:32.632 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:12:33.084 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/login - Status: 204 - Duration: 456ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000001
+2025-06-25 13:12:33.120 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FH:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:12:33.161 +03:00 [INF] 🍪 All cookies: refresh_token=PNe6E2-rIr..., access_token=eyJhbGciOi...
+2025-06-25 13:12:33.164 +03:00 [INF] 🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs...
+2025-06-25 13:12:33.221 +03:00 [INF] ✅ Token validated successfully for user: 7
+2025-06-25 13:12:33.548 +03:00 [INF] Login attempt for user: admin@vms.com from IP: 127.0.0.1
+2025-06-25 13:12:33.746 +03:00 [INF] Security event recorded: SuccessfulLogin for user: 7
+2025-06-25 13:12:33.748 +03:00 [INF] Successful login for user: admin@vms.com (ID: 7)
+2025-06-25 13:12:33.752 +03:00 [INF] Successful login for user: admin@vms.com
+2025-06-25 13:12:33.758 +03:00 [INF] 🍪 HTTP Localhost cookies set - Access: 676 chars, Refresh: 86 chars
+2025-06-25 13:12:33.764 +03:00 [INF] User logged in successfully: admin@vms.com from 127.0.0.1
+2025-06-25 13:12:33.818 +03:00 [INF] HTTP Response: POST /api/Auth/login - Status: 200 - Duration: 698ms - Size: 4825B - User: 7 - CorrelationId: 0HNDJQ36B56FH:00000001
+2025-06-25 13:12:33.844 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:12:33.849 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FJ:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:12:33.857 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 12ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000002
+2025-06-25 13:12:33.864 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 14ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ36B56FJ:00000001
+2025-06-25 13:12:33.867 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FH:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:12:33.872 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FK:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:12:33.915 +03:00 [INF] 🍪 All cookies: refresh_token=ID0P9yHuLj..., access_token=eyJhbGciOi...
+2025-06-25 13:12:33.917 +03:00 [INF] 🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs...
+2025-06-25 13:12:33.919 +03:00 [INF] ✅ Token validated successfully for user: 7
+2025-06-25 13:12:33.920 +03:00 [INF] 🍪 All cookies: refresh_token=ID0P9yHuLj..., access_token=eyJhbGciOi...
+2025-06-25 13:12:33.921 +03:00 [INF] 🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs...
+2025-06-25 13:12:33.924 +03:00 [INF] ✅ Token validated successfully for user: 7
+2025-06-25 13:12:33.937 +03:00 [INF] HTTP Response: GET /api/Auth/me - Status: 200 - Duration: 69ms - Size: 4667B - User: 7 - CorrelationId: 0HNDJQ36B56FH:00000002
+2025-06-25 13:12:34.005 +03:00 [INF] HTTP Response: GET /api/Auth/permissions - Status: 200 - Duration: 133ms - Size: 8862B - User: 7 - CorrelationId: 0HNDJQ36B56FK:00000001
+2025-06-25 13:13:27.675 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:13:27.692 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/login - Status: 204 - Duration: 16ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000003
+2025-06-25 13:13:27.699 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FK:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:13:27.708 +03:00 [INF] 🍪 All cookies: refresh_token=ID0P9yHuLj..., access_token=eyJhbGciOi...
+2025-06-25 13:13:27.711 +03:00 [INF] 🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs...
+2025-06-25 13:13:27.723 +03:00 [INF] ✅ Token validated successfully for user: 7
+2025-06-25 13:13:27.752 +03:00 [INF] Login attempt for user: admin@vms.com from IP: 127.0.0.1
+2025-06-25 13:13:27.795 +03:00 [INF] Security event recorded: SuccessfulLogin for user: 7
+2025-06-25 13:13:27.797 +03:00 [INF] Successful login for user: admin@vms.com (ID: 7)
+2025-06-25 13:13:27.813 +03:00 [INF] Successful login for user: admin@vms.com
+2025-06-25 13:13:27.822 +03:00 [INF] 🍪 HTTP Localhost cookies set - Access: 676 chars, Refresh: 86 chars
+2025-06-25 13:13:27.842 +03:00 [INF] User logged in successfully: admin@vms.com from 127.0.0.1
+2025-06-25 13:13:27.867 +03:00 [INF] HTTP Response: POST /api/Auth/login - Status: 200 - Duration: 167ms - Size: 4825B - User: 7 - CorrelationId: 0HNDJQ36B56FK:00000002
+2025-06-25 13:13:27.893 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:13:27.893 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FJ:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:13:27.905 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 12ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000004
+2025-06-25 13:13:27.913 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FK:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:13:27.913 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 20ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ36B56FJ:00000002
+2025-06-25 13:13:27.926 +03:00 [INF] 🍪 All cookies: refresh_token=UriMzltzP9..., access_token=eyJhbGciOi...
+2025-06-25 13:13:27.927 +03:00 [INF] 🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs...
+2025-06-25 13:13:27.929 +03:00 [INF] ✅ Token validated successfully for user: 7
+2025-06-25 13:13:27.935 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FH:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:13:27.943 +03:00 [INF] 🍪 All cookies: refresh_token=UriMzltzP9..., access_token=eyJhbGciOi...
+2025-06-25 13:13:27.945 +03:00 [INF] 🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs...
+2025-06-25 13:13:27.947 +03:00 [INF] ✅ Token validated successfully for user: 7
+2025-06-25 13:13:27.956 +03:00 [INF] HTTP Response: GET /api/Auth/me - Status: 200 - Duration: 20ms - Size: 4667B - User: 7 - CorrelationId: 0HNDJQ36B56FH:00000003
+2025-06-25 13:13:27.993 +03:00 [INF] HTTP Response: GET /api/Auth/permissions - Status: 200 - Duration: 79ms - Size: 8862B - User: 7 - CorrelationId: 0HNDJQ36B56FK:00000003
+2025-06-25 13:14:01.257 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000005 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:14:01.267 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/logout - Status: 204 - Duration: 10ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000005
+2025-06-25 13:14:01.273 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FK:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:14:01.282 +03:00 [INF] 🍪 All cookies: refresh_token=UriMzltzP9..., access_token=eyJhbGciOi...
+2025-06-25 13:14:01.287 +03:00 [INF] 🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs...
+2025-06-25 13:14:01.291 +03:00 [INF] ✅ Token validated successfully for user: 7
+2025-06-25 13:14:01.319 +03:00 [INF] Logout request for user: 7 from IP: 127.0.0.1
+2025-06-25 13:14:01.377 +03:00 [INF] Refresh token revoked for user: 7, Reason: User logout
+2025-06-25 13:14:01.379 +03:00 [INF] Logout successful for user: 7, Tokens revoked: 1
+2025-06-25 13:14:01.383 +03:00 [INF] User 7 logged out successfully. Tokens revoked: 1
+2025-06-25 13:14:01.385 +03:00 [INF] User 7 logged out successfully. Tokens revoked: 1
+2025-06-25 13:14:01.417 +03:00 [INF] HTTP Response: POST /api/Auth/logout - Status: 200 - Duration: 144ms - Size: 112B - User: 7 - CorrelationId: 0HNDJQ36B56FK:00000004
+[2025-06-25 13:15:21.079 +03:00 WRN]  Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. <s:Microsoft.EntityFrameworkCore.Model.Validation>
+[2025-06-25 13:15:21.934 +03:00 INF]  Database initialized successfully <s:Program>
+[2025-06-25 13:15:22.172 +03:00 INF]  Token cleanup completed. Expired revoked: 0, Old deleted: 0 <s:VisitorManagementSystem.Api.Application.Services.Auth.RefreshTokenService>
+[2025-06-25 13:15:22.175 +03:00 INF]  Token cleanup completed successfully <s:VisitorManagementSystem.Api.Extensions.TokenCleanupBackgroundService>
+[2025-06-25 13:15:22.201 +03:00 INF]  Audit cleanup completed. Deleted 0 old records <s:VisitorManagementSystem.Api.Extensions.AuditCleanupBackgroundService>
+[2025-06-25 13:15:32.419 +03:00 INF] 0HNDJQ4RTTCCN:00000001 HTTP Request: OPTIONS http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ4RTTCCN:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:15:32.788 +03:00 INF] 0HNDJQ4RTTCCN:00000001 HTTP Response: OPTIONS /api/Auth/login - Status: 204 - Duration: 374ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ4RTTCCN:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:15:32.811 +03:00 INF] 0HNDJQ4RTTCCM:00000001 HTTP Request: POST http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ4RTTCCM:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:15:32.833 +03:00 INF]  🍪 All cookies:  <s:Program>
+[2025-06-25 13:15:32.833 +03:00 WRN]  ❌ No access_token cookie found! <s:Program>
+[2025-06-25 13:15:33.108 +03:00 INF]  Login attempt for user: admin@vms.com from IP: 127.0.0.1 <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 13:15:33.329 +03:00 INF]  Security event recorded: SuccessfulLogin for user: 7 <s:VisitorManagementSystem.Api.Application.Services.Auth.UserLockoutService>
+[2025-06-25 13:15:33.330 +03:00 INF]  Successful login for user: admin@vms.com (ID: 7) <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 13:15:33.333 +03:00 INF]  Successful login for user: admin@vms.com <s:VisitorManagementSystem.Api.Application.Commands.Auth.LoginCommandHandler>
+[2025-06-25 13:15:33.337 +03:00 INF]  🍪 HTTP Localhost cookies set - Access: 676 chars, Refresh: 86 chars <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 13:15:33.339 +03:00 INF]  User logged in successfully: admin@vms.com from 127.0.0.1 <s:VisitorManagementSystem.Api.Controllers.AuthController>
+[2025-06-25 13:15:33.385 +03:00 INF] 0HNDJQ4RTTCCM:00000001 HTTP Response: POST /api/Auth/login - Status: 200 - Duration: 573ms - Size: 4825B - User: Anonymous - CorrelationId: 0HNDJQ4RTTCCM:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:15:33.396 +03:00 INF] 0HNDJQ4RTTCCN:00000002 HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ4RTTCCN:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:15:33.397 +03:00 INF] 0HNDJQ4RTTCCO:00000001 HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ4RTTCCO:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:15:33.405 +03:00 INF] 0HNDJQ4RTTCCN:00000002 HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 8ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ4RTTCCN:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:15:33.408 +03:00 INF] 0HNDJQ4RTTCCO:00000001 HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 10ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ4RTTCCO:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:15:33.413 +03:00 INF] 0HNDJQ4RTTCCP:00000001 HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ4RTTCCP:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:15:33.413 +03:00 INF] 0HNDJQ4RTTCCM:00000002 HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ4RTTCCM:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:15:33.481 +03:00 INF]  🍪 All cookies: access_token=eyJhbGciOi..., refresh_token=tzMwH0SToP... <s:Program>
+[2025-06-25 13:15:33.481 +03:00 INF]  🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs... <s:Program>
+[2025-06-25 13:15:33.485 +03:00 INF]  🍪 All cookies: access_token=eyJhbGciOi..., refresh_token=tzMwH0SToP... <s:Program>
+[2025-06-25 13:15:33.485 +03:00 INF]  🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs... <s:Program>
+[2025-06-25 13:15:33.503 +03:00 INF]  ✅ Token validated successfully for user: 7 <s:Program>
+[2025-06-25 13:15:33.503 +03:00 INF]  ✅ Token validated successfully for user: 7 <s:Program>
+[2025-06-25 13:15:33.520 +03:00 INF] 0HNDJQ4RTTCCM:00000002 HTTP Response: GET /api/Auth/me - Status: 200 - Duration: 106ms - Size: 4667B - User: 7 - CorrelationId: 0HNDJQ4RTTCCM:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:15:33.580 +03:00 INF] 0HNDJQ4RTTCCP:00000001 HTTP Response: GET /api/Auth/permissions - Status: 200 - Duration: 166ms - Size: 8862B - User: 7 - CorrelationId: 0HNDJQ4RTTCCP:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>

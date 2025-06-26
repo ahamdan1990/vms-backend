@@ -1,0 +1,544 @@
+Folder PATH listing for volume Development
+Volume serial number is 3E5B-74D8
+E:.
+³   appsettings.Development.json
+³   appsettings.json
+³   appsettings.Production.json
+³   Dockerfile
+³   Program.cs
+³   structure.txt
+³   VisitorManagementSystem.Api.csproj
+³   VisitorManagementSystem.Api.csproj.user
+³   VisitorManagementSystem.Api.http
+³   
+ÃÄÄÄ.vs
+³   ³   ProjectSettings.json
+³   ³   slnx.sqlite
+³   ³   
+³   ÀÄÄÄVisitorManagementSystem.Api
+³       ÃÄÄÄcopilot-chat
+³       ³   ÀÄÄÄ6a5dd6ec
+³       ³       ÀÄÄÄsessions
+³       ÃÄÄÄCopilotIndices
+³       ³   ÀÄÄÄ17.13.444.19527
+³       ³           CodeChunks.db
+³       ³           CodeChunks.db-shm
+³       ³           CodeChunks.db-wal
+³       ³           SemanticSymbols.db
+³       ³           SemanticSymbols.db-shm
+³       ³           SemanticSymbols.db-wal
+³       ³           
+³       ÃÄÄÄFileContentIndex
+³       ³       14b797c0-b7c6-49c1-98fb-183c8e626795.vsidx
+³       ³       dcc767b2-d648-4c73-8482-e0d65af71c0a.vsidx
+³       ³       
+³       ÀÄÄÄv17
+ÃÄÄÄApplication
+³   ÃÄÄÄCommands
+³   ³   ÃÄÄÄAuth
+³   ³   ³       ChangePasswordCommand.cs
+³   ³   ³       ChangePasswordCommandHandler.cs
+³   ³   ³       LoginCommand.cs
+³   ³   ³       LoginCommandHandler.cs
+³   ³   ³       LogoutCommand.cs
+³   ³   ³       LogoutCommandHandler.cs
+³   ³   ³       RefreshTokenCommand.cs
+³   ³   ³       RefreshTokenCommandHandler.cs
+³   ³   ³       ResetPasswordCommand.cs
+³   ³   ³       ResetPasswordCommandHandler.cs
+³   ³   ³       
+³   ³   ÀÄÄÄUsers
+³   ³           ActivateUserCommand.cs
+³   ³           ActivateUserCommandHandler.cs
+³   ³           AdminPasswordResetCommand.cs
+³   ³           AdminPasswordResetCommandHandler.cs
+³   ³           CreateUserCommand.cs
+³   ³           CreateUserCommandHandler.cs
+³   ³           DeactivateUserCommand.cs
+³   ³           DeactivateUserCommandHandler.cs
+³   ³           DeleteUserCommand.cs
+³   ³           DeleteUserCommandHandler.cs
+³   ³           UnlockUserCommand.cs
+³   ³           UnlockUserCommandHandler.cs
+³   ³           UpdateUserCommand.cs
+³   ³           UpdateUserCommandHandler.cs
+³   ³           
+³   ÃÄÄÄDTOs
+³   ³   ÃÄÄÄAuth
+³   ³   ³       AuthenticationResult.cs
+³   ³   ³       ChangePasswordDto.cs
+³   ³   ³       CookieTokenInfo.cs
+³   ³   ³       CurrentUserDto.cs
+³   ³   ³       LoginRequestDto.cs
+³   ³   ³       LoginResponseDto.cs
+³   ³   ³       LogoutResult.cs
+³   ³   ³       PasswordChangeResult.cs
+³   ³   ³       PasswordResetResultDto.cs
+³   ³   ³       RefreshTokenRequestDto.cs
+³   ³   ³       ResetPasswordDto.cs
+³   ³   ³       TokenValidationResult.cs
+³   ³   ³       UserLockoutStatus.cs
+³   ³   ³       UserPermissionsDto.cs
+³   ³   ³       UserSessionDto.cs
+³   ³   ³       
+³   ³   ÃÄÄÄCommon
+³   ³   ³       ApiResponseDto.cs
+³   ³   ³       CommandResultDto.cs
+³   ³   ³       PagedResultDto.cs
+³   ³   ³       SelectListItemDto.cs
+³   ³   ³       
+³   ³   ÀÄÄÄUsers
+³   ³           CreateUserDto.cs
+³   ³           UpdateUserDto.cs
+³   ³           UserActivityDto.cs
+³   ³           UserDetailDto.cs
+³   ³           UserDto.cs
+³   ³           UserListDto.cs
+³   ³           UserProfileDto.cs
+³   ³           
+³   ÃÄÄÄQueries
+³   ³   ÃÄÄÄAuth
+³   ³   ³       GetCurrentUserQuery.cs
+³   ³   ³       GetCurrentUserQueryHandler.cs
+³   ³   ³       GetUserPermissionsQuery.cs
+³   ³   ³       GetUserPermissionsQueryHandler.cs
+³   ³   ³       ValidateTokenQuery.cs
+³   ³   ³       ValidateTokenQueryHandler.cs
+³   ³   ³       
+³   ³   ÀÄÄÄUsers
+³   ³           GetAvailableRolesQuery.cs
+³   ³           GetAvailableRolesQueryHandler.cs
+³   ³           GetUserActivityQuery.cs
+³   ³           GetUserActivityQueryHandler.cs
+³   ³           GetUserByIdQuery.cs
+³   ³           GetUserByIdQueryHandler.cs
+³   ³           GetUsersQuery.cs
+³   ³           GetUsersQueryHandler.cs
+³   ³           
+³   ÀÄÄÄServices
+³       ÀÄÄÄAuth
+³               AuthService.cs
+³               IAuthService.cs
+³               IJwtService.cs
+³               IPasswordService.cs
+³               IPermissionService.cs
+³               IRefreshTokenService.cs
+³               IUserLockoutService.cs
+³               JwtService.cs
+³               PasswordService.cs
+³               PermissionService.cs
+³               RefreshTokenService.cs
+³               UserLockoutService.cs
+³               
+ÃÄÄÄbin
+³   ÃÄÄÄDebug
+³   ³   ÀÄÄÄnet9.0
+³   ³       ³   appsettings.Development.json
+³   ³       ³   appsettings.json
+³   ³       ³   appsettings.Production.json
+³   ³       ³   AutoMapper.dll
+³   ³       ³   AutoMapper.Extensions.Microsoft.DependencyInjection.dll
+³   ³       ³   Azure.Core.dll
+³   ³       ³   Azure.Identity.dll
+³   ³       ³   FluentValidation.DependencyInjectionExtensions.dll
+³   ³       ³   FluentValidation.dll
+³   ³       ³   Humanizer.dll
+³   ³       ³   MediatR.Contracts.dll
+³   ³       ³   MediatR.dll
+³   ³       ³   MediatR.Extensions.Microsoft.DependencyInjection.dll
+³   ³       ³   Microsoft.AspNetCore.Authentication.JwtBearer.dll
+³   ³       ³   Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
+³   ³       ³   Microsoft.AspNetCore.OpenApi.dll
+³   ³       ³   Microsoft.Bcl.AsyncInterfaces.dll
+³   ³       ³   Microsoft.CodeAnalysis.CSharp.dll
+³   ³       ³   Microsoft.CodeAnalysis.CSharp.Workspaces.dll
+³   ³       ³   Microsoft.CodeAnalysis.dll
+³   ³       ³   Microsoft.CodeAnalysis.Workspaces.dll
+³   ³       ³   Microsoft.Data.SqlClient.dll
+³   ³       ³   Microsoft.EntityFrameworkCore.Abstractions.dll
+³   ³       ³   Microsoft.EntityFrameworkCore.Design.dll
+³   ³       ³   Microsoft.EntityFrameworkCore.dll
+³   ³       ³   Microsoft.EntityFrameworkCore.InMemory.dll
+³   ³       ³   Microsoft.EntityFrameworkCore.Relational.dll
+³   ³       ³   Microsoft.EntityFrameworkCore.SqlServer.dll
+³   ³       ³   Microsoft.Extensions.Caching.StackExchangeRedis.dll
+³   ³       ³   Microsoft.Extensions.DependencyModel.dll
+³   ³       ³   Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore.dll
+³   ³       ³   Microsoft.Identity.Client.dll
+³   ³       ³   Microsoft.Identity.Client.Extensions.Msal.dll
+³   ³       ³   Microsoft.IdentityModel.Abstractions.dll
+³   ³       ³   Microsoft.IdentityModel.JsonWebTokens.dll
+³   ³       ³   Microsoft.IdentityModel.Logging.dll
+³   ³       ³   Microsoft.IdentityModel.Protocols.dll
+³   ³       ³   Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+³   ³       ³   Microsoft.IdentityModel.Tokens.dll
+³   ³       ³   Microsoft.OpenApi.dll
+³   ³       ³   Microsoft.SqlServer.Server.dll
+³   ³       ³   Microsoft.Win32.SystemEvents.dll
+³   ³       ³   Mono.TextTemplating.dll
+³   ³       ³   Newtonsoft.Json.dll
+³   ³       ³   Pipelines.Sockets.Unofficial.dll
+³   ³       ³   Polly.Core.dll
+³   ³       ³   Polly.dll
+³   ³       ³   Serilog.AspNetCore.dll
+³   ³       ³   Serilog.dll
+³   ³       ³   Serilog.Enrichers.CorrelationId.dll
+³   ³       ³   Serilog.Enrichers.Thread.dll
+³   ³       ³   Serilog.Extensions.Hosting.dll
+³   ³       ³   Serilog.Extensions.Logging.dll
+³   ³       ³   Serilog.Formatting.Compact.dll
+³   ³       ³   Serilog.Settings.Configuration.dll
+³   ³       ³   Serilog.Sinks.Console.dll
+³   ³       ³   Serilog.Sinks.Debug.dll
+³   ³       ³   Serilog.Sinks.File.dll
+³   ³       ³   StackExchange.Redis.dll
+³   ³       ³   Swashbuckle.AspNetCore.Swagger.dll
+³   ³       ³   Swashbuckle.AspNetCore.SwaggerGen.dll
+³   ³       ³   Swashbuckle.AspNetCore.SwaggerUI.dll
+³   ³       ³   System.ClientModel.dll
+³   ³       ³   System.CodeDom.dll
+³   ³       ³   System.Composition.AttributedModel.dll
+³   ³       ³   System.Composition.Convention.dll
+³   ³       ³   System.Composition.Hosting.dll
+³   ³       ³   System.Composition.Runtime.dll
+³   ³       ³   System.Composition.TypedParts.dll
+³   ³       ³   System.Configuration.ConfigurationManager.dll
+³   ³       ³   System.Drawing.Common.dll
+³   ³       ³   System.IdentityModel.Tokens.Jwt.dll
+³   ³       ³   System.Memory.Data.dll
+³   ³       ³   System.Net.WebSockets.WebSocketProtocol.dll
+³   ³       ³   System.Runtime.Caching.dll
+³   ³       ³   System.Security.Cryptography.ProtectedData.dll
+³   ³       ³   System.Security.Permissions.dll
+³   ³       ³   System.Windows.Extensions.dll
+³   ³       ³   VisitorManagementSystem.Api.deps.json
+³   ³       ³   VisitorManagementSystem.Api.dll
+³   ³       ³   VisitorManagementSystem.Api.exe
+³   ³       ³   VisitorManagementSystem.Api.pdb
+³   ³       ³   VisitorManagementSystem.Api.runtimeconfig.json
+³   ³       ³   VisitorManagementSystem.Api.staticwebassets.endpoints.json
+³   ³       ³   VisitorManagementSystem.Api.xml
+³   ³       ³   
+³   ³       ÃÄÄÄcs
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³       ³       
+³   ³       ÃÄÄÄde
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³       ³       
+³   ³       ÃÄÄÄes
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³       ³       
+³   ³       ÃÄÄÄfr
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³       ³       
+³   ³       ÃÄÄÄit
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³       ³       
+³   ³       ÃÄÄÄja
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³       ³       
+³   ³       ÃÄÄÄko
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³       ³       
+³   ³       ÃÄÄÄpl
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³       ³       
+³   ³       ÃÄÄÄpt-BR
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³       ³       
+³   ³       ÃÄÄÄru
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³       ³       
+³   ³       ÃÄÄÄruntimes
+³   ³       ³   ÃÄÄÄunix
+³   ³       ³   ³   ÀÄÄÄlib
+³   ³       ³   ³       ÀÄÄÄnet6.0
+³   ³       ³   ³               Microsoft.Data.SqlClient.dll
+³   ³       ³   ³               System.Drawing.Common.dll
+³   ³       ³   ³               
+³   ³       ³   ÃÄÄÄwin
+³   ³       ³   ³   ÀÄÄÄlib
+³   ³       ³   ³       ÀÄÄÄnet6.0
+³   ³       ³   ³               Microsoft.Data.SqlClient.dll
+³   ³       ³   ³               Microsoft.Win32.SystemEvents.dll
+³   ³       ³   ³               System.Drawing.Common.dll
+³   ³       ³   ³               System.Runtime.Caching.dll
+³   ³       ³   ³               System.Security.Cryptography.ProtectedData.dll
+³   ³       ³   ³               System.Windows.Extensions.dll
+³   ³       ³   ³               
+³   ³       ³   ÃÄÄÄwin-arm
+³   ³       ³   ³   ÀÄÄÄnative
+³   ³       ³   ³           Microsoft.Data.SqlClient.SNI.dll
+³   ³       ³   ³           
+³   ³       ³   ÃÄÄÄwin-arm64
+³   ³       ³   ³   ÀÄÄÄnative
+³   ³       ³   ³           Microsoft.Data.SqlClient.SNI.dll
+³   ³       ³   ³           
+³   ³       ³   ÃÄÄÄwin-x64
+³   ³       ³   ³   ÀÄÄÄnative
+³   ³       ³   ³           Microsoft.Data.SqlClient.SNI.dll
+³   ³       ³   ³           
+³   ³       ³   ÀÄÄÄwin-x86
+³   ³       ³       ÀÄÄÄnative
+³   ³       ³               Microsoft.Data.SqlClient.SNI.dll
+³   ³       ³               
+³   ³       ÃÄÄÄtr
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³       ³       
+³   ³       ÃÄÄÄzh-Hans
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.resources.dll
+³   ³       ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³       ³       
+³   ³       ÀÄÄÄzh-Hant
+³   ³               Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³               Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³               Microsoft.CodeAnalysis.resources.dll
+³   ³               Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³               
+³   ÀÄÄÄRelease
+³       ÀÄÄÄnet9.0
+ÃÄÄÄConfiguration
+³       DatabaseConfiguration.cs
+³       JwtConfiguration.cs
+³       LoggingConfiguration.cs
+³       SecurityConfiguration.cs
+³       
+ÃÄÄÄControllers
+³       AuthController.cs
+³       BaseController.cs
+³       UsersController.cs
+³       
+ÃÄÄÄDomain
+³   ÃÄÄÄConstants
+³   ³       Permissions.cs
+³   ³       UserRoles.cs
+³   ³       ValidationMessages.cs
+³   ³       
+³   ÃÄÄÄEntities
+³   ³       AuditableEntity.cs
+³   ³       AuditLog.cs
+³   ³       BaseEntity.cs
+³   ³       RefreshToken.cs
+³   ³       SoftDeleteEntity.cs
+³   ³       User.cs
+³   ³       
+³   ÃÄÄÄEnums
+³   ³       EventType.cs
+³   ³       PermissionType.cs
+³   ³       UserRole.cs
+³   ³       UserStatus.cs
+³   ³       
+³   ÃÄÄÄInterfaces
+³   ³   ÃÄÄÄRepositories
+³   ³   ³       IGenericRepository.cs
+³   ³   ³       IRefreshTokenRepository.cs
+³   ³   ³       IUnitOfWork.cs
+³   ³   ³       IUserRepository.cs
+³   ³   ³       
+³   ³   ÃÄÄÄServices
+³   ³   ³       IDomainEventPublisher.cs
+³   ³   ³       
+³   ³   ÀÄÄÄUtilities
+³   ³           IDateTimeProvider.cs
+³   ³           
+³   ÃÄÄÄSpecifications
+³   ³       UserSpecifications.cs
+³   ³       
+³   ÀÄÄÄValueObjects
+³           Address.cs
+³           ContactInfo.cs
+³           Email.cs
+³           PhoneNumber.cs
+³           
+ÃÄÄÄExtensions
+³       ServiceCollectionExtensions.cs
+³       
+ÃÄÄÄInfrastructure
+³   ÃÄÄÄData
+³   ³   ³   ApplicationDbContext.cs
+³   ³   ³   DbInitializer.cs
+³   ³   ³   UnitOfWork.cs
+³   ³   ³   
+³   ³   ÃÄÄÄConfigurations
+³   ³   ³       AuditableEntityConfiguration.cs
+³   ³   ³       AuditLogConfiguration.cs
+³   ³   ³       BaseEntityConfiguration.cs
+³   ³   ³       RefreshTokenConfiguration.cs
+³   ³   ³       UserConfiguration.cs
+³   ³   ³       
+³   ³   ÃÄÄÄRepositories
+³   ³   ³       BaseRepository.cs
+³   ³   ³       RefreshTokenRepository.cs
+³   ³   ³       UserRepository.cs
+³   ³   ³       
+³   ³   ÃÄÄÄSecurity
+³   ³   ³   ÃÄÄÄAuthentication
+³   ³   ³   ³       ApiKeyAuthenticationHandler.cs
+³   ³   ³   ³       JwtAuthenticationHandler.cs
+³   ³   ³   ³       
+³   ³   ³   ÃÄÄÄAuthorization
+³   ³   ³   ³       PermissionHandler.cs
+³   ³   ³   ³       PermissionRequirement.cs
+³   ³   ³   ³       PolicyProvider.cs
+³   ³   ³   ³       RoleHandler.cs
+³   ³   ³   ³       
+³   ³   ³   ÀÄÄÄEncryption
+³   ³   ³           AESEncryptionService.cs
+³   ³   ³           IEncryptionService.cs
+³   ³   ³           IKeyManagementService.cs
+³   ³   ³           KeyManagementService.cs
+³   ³   ³           
+³   ³   ÀÄÄÄSeeds
+³   ³           PermissionSeeder.cs
+³   ³           UserSeeder.cs
+³   ³           
+³   ÀÄÄÄUtilities
+³           CryptoHelper.cs
+³           DateTimeProvider.cs
+³           GuidGenerator.cs
+³           
+ÃÄÄÄlogs
+³       vms-20250610_005.txt
+³       vms-20250610_006.txt
+³       vms-20250610_007.txt
+³       vms-20250610_008.txt
+³       vms-20250610_009.txt
+³       vms-20250610_010.txt
+³       vms-20250610_011.txt
+³       vms-20250610_012.txt
+³       vms-20250610_013.txt
+³       vms-20250610_014.txt
+³       vms-20250610_015.txt
+³       vms-20250611.txt
+³       vms-20250611_001.txt
+³       vms-20250611_002.txt
+³       vms-20250611_003.txt
+³       vms-20250611_004.txt
+³       vms-20250611_005.txt
+³       vms-20250611_006.txt
+³       vms-20250611_007.txt
+³       vms-20250611_008.txt
+³       vms-20250611_009.txt
+³       vms-20250611_010.txt
+³       vms-20250611_011.txt
+³       vms-20250611_012.txt
+³       vms-20250611_013.txt
+³       vms-20250611_014.txt
+³       vms-20250611_015.txt
+³       vms-20250611_016.txt
+³       vms-20250611_017.txt
+³       vms-20250611_018.txt
+³       vms-20250611_019.txt
+³       
+ÃÄÄÄMiddleware
+³       AuditLoggingMiddleware.cs
+³       AuthenticationMiddleware.cs
+³       ExceptionHandlingMiddleware.cs
+³       RateLimitingMiddleware.cs
+³       RequestLoggingMiddleware.cs
+³       SecurityHeadersMiddleware.cs
+³       
+ÃÄÄÄMigrations
+³       20250610142414_InitialCreate.cs
+³       20250610142414_InitialCreate.Designer.cs
+³       20250610205247_MakeAddressStreet1Nullable.cs
+³       20250610205247_MakeAddressStreet1Nullable.Designer.cs
+³       20250610205637_MakeAddressStreet1Nullable1.cs
+³       20250610205637_MakeAddressStreet1Nullable1.Designer.cs
+³       20250611095859_ExpandAuditLogMetadataColumn.cs
+³       20250611095859_ExpandAuditLogMetadataColumn.Designer.cs
+³       ApplicationDbContextModelSnapshot.cs
+³       
+ÃÄÄÄobj
+³   ³   project.assets.json
+³   ³   project.nuget.cache
+³   ³   VisitorManagementSystem.Api.csproj.EntityFrameworkCore.targets
+³   ³   VisitorManagementSystem.Api.csproj.nuget.dgspec.json
+³   ³   VisitorManagementSystem.Api.csproj.nuget.g.props
+³   ³   VisitorManagementSystem.Api.csproj.nuget.g.targets
+³   ³   
+³   ÃÄÄÄDebug
+³   ³   ÀÄÄÄnet9.0
+³   ³       ³   .NETCoreApp,Version=v9.0.AssemblyAttributes.cs
+³   ³       ³   apphost.exe
+³   ³       ³   staticwebassets.build.endpoints.json
+³   ³       ³   staticwebassets.build.json
+³   ³       ³   staticwebassets.references.upToDateCheck.txt
+³   ³       ³   staticwebassets.removed.txt
+³   ³       ³   VisitorM.BCB03726.Up2Date
+³   ³       ³   VisitorManagementSystem.Api.AssemblyInfo.cs
+³   ³       ³   VisitorManagementSystem.Api.AssemblyInfoInputs.cache
+³   ³       ³   VisitorManagementSystem.Api.assets.cache
+³   ³       ³   VisitorManagementSystem.Api.csproj.AssemblyReference.cache
+³   ³       ³   VisitorManagementSystem.Api.csproj.CoreCompileInputs.cache
+³   ³       ³   VisitorManagementSystem.Api.csproj.FileListAbsolute.txt
+³   ³       ³   VisitorManagementSystem.Api.dll
+³   ³       ³   VisitorManagementSystem.Api.GeneratedMSBuildEditorConfig.editorconfig
+³   ³       ³   VisitorManagementSystem.Api.genruntimeconfig.cache
+³   ³       ³   VisitorManagementSystem.Api.GlobalUsings.g.cs
+³   ³       ³   VisitorManagementSystem.Api.MvcApplicationPartsAssemblyInfo.cache
+³   ³       ³   VisitorManagementSystem.Api.MvcApplicationPartsAssemblyInfo.cs
+³   ³       ³   VisitorManagementSystem.Api.pdb
+³   ³       ³   VisitorManagementSystem.Api.xml
+³   ³       ³   
+³   ³       ÃÄÄÄref
+³   ³       ³       VisitorManagementSystem.Api.dll
+³   ³       ³       
+³   ³       ÃÄÄÄrefint
+³   ³       ³       VisitorManagementSystem.Api.dll
+³   ³       ³       
+³   ³       ÀÄÄÄstaticwebassets
+³   ³               msbuild.build.VisitorManagementSystem.Api.props
+³   ³               msbuild.buildMultiTargeting.VisitorManagementSystem.Api.props
+³   ³               msbuild.buildTransitive.VisitorManagementSystem.Api.props
+³   ³               
+³   ÀÄÄÄRelease
+³       ÀÄÄÄnet9.0
+³           ³   .NETCoreApp,Version=v9.0.AssemblyAttributes.cs
+³           ³   VisitorManagementSystem.Api.AssemblyInfo.cs
+³           ³   VisitorManagementSystem.Api.AssemblyInfoInputs.cache
+³           ³   VisitorManagementSystem.Api.assets.cache
+³           ³   VisitorManagementSystem.Api.csproj.AssemblyReference.cache
+³           ³   VisitorManagementSystem.Api.GeneratedMSBuildEditorConfig.editorconfig
+³           ³   VisitorManagementSystem.Api.GlobalUsings.g.cs
+³           ³   
+³           ÃÄÄÄref
+³           ÀÄÄÄrefint
+ÀÄÄÄProperties
+        launchSettings.json
+        

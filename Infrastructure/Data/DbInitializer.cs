@@ -1,0 +1,199 @@
+﻿using Microsoft.EntityFrameworkCore;
+using VisitorManagementSystem.Api.Domain.Constants;
+using VisitorManagementSystem.Api.Domain.Entities;
+using VisitorManagementSystem.Api.Domain.Enums;
+using VisitorManagementSystem.Api.Domain.ValueObjects;
+using VisitorManagementSystem.Api.Infrastructure.Data.Seeds;
+
+namespace VisitorManagementSystem.Api.Infrastructure.Data;
+
+/// <summary>
+/// Database initializer for seeding initial data
+/// </summary>
+public static class DbInitializer
+{
+    /// <summary>
+    /// Initializes the database with seed data
+    /// </summary>
+    /// <param name="context">Database context</param>
+    /// <param name="serviceProvider">Service provider for dependency injection</param>
+    /// <returns>Task</returns>
+    public static async Task InitializeAsync(ApplicationDbContext context, IServiceProvider serviceProvider)
+    {
+        try
+        {
+            // Ensure database is created
+            await context.Database.EnsureCreatedAsync();
+
+            // Check if database is already seeded
+            if (await context.Users.AnyAsync())
+            {
+                return; // Database has already been seeded
+            }
+
+            // Seed data in order of dependencies
+            await SeedUsersAsync(context);
+            await SeedSystemConfigAsync(context);
+
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            // Log the exception
+            var logger = serviceProvider.GetService<ILogger<ApplicationDbContext>>();
+            logger?.LogError(ex, "An error occurred while initializing the database");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Seeds initial users
+    /// </summary>
+    /// <param name="context">Database context</param>
+    /// <returns>Task</returns>
+    private static async Task SeedUsersAsync(ApplicationDbContext context)
+    {
+        var users = UserSeeder.GetSeedUsers();
+
+        foreach (var user in users)
+        {
+            await context.Users.AddAsync(user);
+        }
+    }
+
+    /// <summary>
+    /// Seeds system configuration
+    /// </summary>
+    /// <param name="context">Database context</param>
+    /// <returns>Task</returns>
+    private static async Task SeedSystemConfigAsync(ApplicationDbContext context)
+    {
+        // System configuration seeding would go here
+        // For now, we'll add basic audit log entries
+
+        var systemUser = await context.Users.FirstOrDefaultAsync(u => u.Role == UserRole.Administrator);
+        if (systemUser != null)
+        {
+            var auditLog = AuditLog.CreateSuccessEntry(
+                EventType.SystemConfiguration,
+                "System",
+                null,
+                "Database Initialized",
+                "Initial database setup completed",
+                systemUser.Id,
+                "127.0.0.1",
+                "System Initializer"
+            );
+
+            await context.AuditLogs.AddAsync(auditLog);
+        }
+    }
+
+    /// <summary>
+    /// Creates a migration if needed
+    /// </summary>
+    /// <param name="context">Database context</param>
+    /// <returns>Task</returns>
+    public static async Task MigrateAsync(ApplicationDbContext context)
+    {
+        try
+        {
+            await context.Database.MigrateAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to migrate database", ex);
+        }
+    }
+
+    /// <summary>
+    /// Resets the database (USE WITH EXTREME CAUTION)
+    /// </summary>
+    /// <param name="context">Database context</param>
+    /// <returns>Task</returns>
+    public static async Task ResetDatabaseAsync(ApplicationDbContext context)
+    {
+        await context.Database.EnsureDeletedAsync();
+        await context.Database.EnsureCreatedAsync();
+    }
+
+    /// <summary>
+    /// Checks database health
+    /// </summary>
+    /// <param name="context">Database context</param>
+    /// <returns>Database health status</returns>
+    public static async Task<DatabaseHealthStatus> CheckDatabaseHealthAsync(ApplicationDbContext context)
+    {
+        var health = new DatabaseHealthStatus
+        {
+            CheckTime = DateTime.UtcNow
+        };
+
+        try
+        {
+            // Check connection
+            health.CanConnect = await context.Database.CanConnectAsync();
+
+            if (health.CanConnect)
+            {
+                // Check if tables exist
+                var tableCount = await context.Database.ExecuteSqlRawAsync(
+                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'");
+                health.TablesExist = tableCount > 0;
+
+                // Check if seeded
+                health.IsSeeded = await context.Users.AnyAsync();
+
+                // Get record counts
+                if (health.IsSeeded)
+                {
+                    health.UserCount = await context.Users.CountAsync();
+                    health.AuditLogCount = await context.AuditLogs.CountAsync();
+                    health.RefreshTokenCount = await context.RefreshTokens.CountAsync();
+                }
+
+                health.IsHealthy = health.TablesExist && health.IsSeeded;
+            }
+        }
+        catch (Exception ex)
+        {
+            health.IsHealthy = false;
+            health.ErrorMessage = ex.Message;
+        }
+
+        return health;
+    }
+}
+
+/// <summary>
+/// Database health status information
+/// </summary>
+public class DatabaseHealthStatus
+{
+    public DateTime CheckTime { get; set; }
+    public bool IsHealthy { get; set; }
+    public bool CanConnect { get; set; }
+    public bool TablesExist { get; set; }
+    public bool IsSeeded { get; set; }
+    public int UserCount { get; set; }
+    public int AuditLogCount { get; set; }
+    public int RefreshTokenCount { get; set; }
+    public string? ErrorMessage { get; set; }
+    public TimeSpan CheckDuration { get; set; }
+
+    public Dictionary<string, object> GetHealthData()
+    {
+        return new Dictionary<string, object>
+        {
+            ["IsHealthy"] = IsHealthy,
+            ["CanConnect"] = CanConnect,
+            ["TablesExist"] = TablesExist,
+            ["IsSeeded"] = IsSeeded,
+            ["UserCount"] = UserCount,
+            ["AuditLogCount"] = AuditLogCount,
+            ["RefreshTokenCount"] = RefreshTokenCount,
+            ["CheckTime"] = CheckTime,
+            ["ErrorMessage"] = ErrorMessage ?? string.Empty
+        };
+    }
+}

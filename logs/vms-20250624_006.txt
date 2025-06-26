@@ -1,0 +1,33 @@
+2025-06-24 23:49:27.638 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2025-06-24 23:49:28.407 +03:00 [INF] Database initialized successfully
+2025-06-24 23:49:28.601 +03:00 [INF] Token cleanup completed. Expired revoked: 0, Old deleted: 0
+2025-06-24 23:49:28.605 +03:00 [INF] Token cleanup completed successfully
+2025-06-24 23:49:28.623 +03:00 [INF] Audit cleanup completed. Deleted 0 old records
+2025-06-24 23:49:53.222 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/logout - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJC2LN99RD:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-24 23:49:53.686 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/logout - Status: 204 - Duration: 468ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJC2LN99RD:00000001
+2025-06-24 23:49:53.729 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/logout - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJC2LN99RC:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-24 23:49:53.832 +03:00 [WRN] HTTP Response: POST /api/Auth/logout - Status: 401 - Duration: 103ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJC2LN99RC:00000001
+2025-06-24 23:54:00.480 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJC2LN99RF:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-24 23:54:00.502 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/login - Status: 204 - Duration: 22ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJC2LN99RF:00000001
+2025-06-24 23:54:00.517 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJC2LN99RE:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-24 23:54:00.824 +03:00 [INF] Login attempt for user: admin@vms.com from IP: 127.0.0.1
+2025-06-24 23:54:00.956 +03:00 [INF] Security event recorded: SuccessfulLogin for user: 7
+2025-06-24 23:54:00.959 +03:00 [INF] Successful login for user: admin@vms.com (ID: 7)
+2025-06-24 23:54:00.962 +03:00 [INF] Successful login for user: admin@vms.com
+2025-06-24 23:54:00.966 +03:00 [INF] User logged in successfully: admin@vms.com from 127.0.0.1
+2025-06-24 23:54:00.999 +03:00 [INF] HTTP Response: POST /api/Auth/login - Status: 200 - Duration: 482ms - Size: 4825B - User: Anonymous - CorrelationId: 0HNDJC2LN99RE:00000001
+2025-06-24 23:54:01.025 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJC2LN99RF:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-24 23:54:01.029 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJC2LN99RG:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-24 23:54:01.040 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 14ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJC2LN99RF:00000002
+2025-06-24 23:54:01.043 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 14ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJC2LN99RG:00000001
+2025-06-24 23:54:01.048 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJC2LN99RE:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-24 23:54:01.051 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJC2LN99RH:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-24 23:54:01.064 +03:00 [WRN] HTTP Response: GET /api/Auth/me - Status: 401 - Duration: 15ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJC2LN99RE:00000002
+2025-06-24 23:54:01.069 +03:00 [WRN] HTTP Response: GET /api/Auth/permissions - Status: 401 - Duration: 18ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJC2LN99RH:00000001
+2025-06-24 23:54:01.095 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJC2LN99RF:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-24 23:54:01.104 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/refresh - Status: 204 - Duration: 8ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJC2LN99RF:00000003
+2025-06-24 23:54:01.110 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/refresh - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJC2LN99RH:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-24 23:54:01.165 +03:00 [WRN] Suspicious token activity detected for user: 7, Reason: Device fingerprint mismatch, Token: 1028
+2025-06-24 23:54:01.168 +03:00 [WRN] Failed to refresh token for user: admin@vms.com
+2025-06-24 23:54:01.170 +03:00 [WRN] Token refresh failed: Device verification required
+2025-06-24 23:54:01.184 +03:00 [WRN] HTTP Response: POST /api/Auth/refresh - Status: 400 - Duration: 73ms - Size: 143B - User: Anonymous - CorrelationId: 0HNDJC2LN99RH:00000002

@@ -1,0 +1,320 @@
+2025-06-25 13:06:52.497 +03:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2025-06-25 13:06:54.529 +03:00 [INF] Database initialized successfully
+2025-06-25 13:06:54.751 +03:00 [INF] Token cleanup completed. Expired revoked: 0, Old deleted: 0
+2025-06-25 13:06:54.755 +03:00 [INF] Token cleanup completed successfully
+2025-06-25 13:06:54.804 +03:00 [INF] Audit cleanup completed. Deleted 0 old records
+2025-06-25 13:07:01.260 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ03J091I:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:07:01.710 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/login - Status: 204 - Duration: 455ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ03J091I:00000001
+2025-06-25 13:07:01.746 +03:00 [INF] HTTP Request: POST http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ03J091H:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:07:01.775 +03:00 [INF] 🍪 All cookies: refresh_token=W8Wgbxieda...
+2025-06-25 13:07:01.778 +03:00 [WRN] ❌ No access_token cookie found!
+2025-06-25 13:07:02.122 +03:00 [INF] Login attempt for user: admin@vms.com from IP: 127.0.0.1
+2025-06-25 13:07:02.321 +03:00 [INF] Security event recorded: SuccessfulLogin for user: 7
+2025-06-25 13:07:02.325 +03:00 [INF] Successful login for user: admin@vms.com (ID: 7)
+2025-06-25 13:07:02.330 +03:00 [INF] Successful login for user: admin@vms.com
+2025-06-25 13:07:02.337 +03:00 [INF] 🍪 HTTP Localhost cookies set - Access: 676 chars, Refresh: 86 chars
+2025-06-25 13:07:02.341 +03:00 [INF] User logged in successfully: admin@vms.com from 127.0.0.1
+2025-06-25 13:07:02.393 +03:00 [INF] HTTP Response: POST /api/Auth/login - Status: 200 - Duration: 645ms - Size: 4825B - User: Anonymous - CorrelationId: 0HNDJQ03J091H:00000001
+2025-06-25 13:07:02.412 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ03J091I:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:07:02.414 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ03J091J:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:07:02.421 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 9ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ03J091I:00000002
+2025-06-25 13:07:02.427 +03:00 [INF] HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 12ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ03J091J:00000001
+2025-06-25 13:07:02.430 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ03J091H:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:07:02.436 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ03J091K:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:07:02.440 +03:00 [INF] 🍪 All cookies: refresh_token=PNe6E2-rIr..., access_token=eyJhbGciOi...
+2025-06-25 13:07:02.444 +03:00 [INF] 🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs...
+2025-06-25 13:07:02.446 +03:00 [INF] 🍪 All cookies: refresh_token=PNe6E2-rIr..., access_token=eyJhbGciOi...
+2025-06-25 13:07:02.448 +03:00 [INF] 🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs...
+2025-06-25 13:07:02.482 +03:00 [INF] ✅ Token validated successfully for user: 7
+2025-06-25 13:07:02.482 +03:00 [INF] ✅ Token validated successfully for user: 7
+2025-06-25 13:07:02.536 +03:00 [INF] HTTP Response: GET /api/Auth/me - Status: 200 - Duration: 105ms - Size: 4667B - User: 7 - CorrelationId: 0HNDJQ03J091H:00000002
+2025-06-25 13:07:02.574 +03:00 [INF] HTTP Response: GET /api/Auth/permissions - Status: 200 - Duration: 137ms - Size: 8862B - User: 7 - CorrelationId: 0HNDJQ03J091K:00000001
+2025-06-25 13:08:01.176 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Users?pageIndex=0&pageSize=20&sortBy=LastName&SortDescending=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ03J091I:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:08:01.180 +03:00 [INF] HTTP Request: OPTIONS http://localhost:5000/api/Users?pageIndex=0&pageSize=20&sortBy=LastName&SortDescending=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ03J091J:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:08:01.186 +03:00 [INF] HTTP Response: OPTIONS /api/Users - Status: 204 - Duration: 10ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ03J091I:00000003
+2025-06-25 13:08:01.190 +03:00 [INF] HTTP Response: OPTIONS /api/Users - Status: 204 - Duration: 10ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ03J091J:00000002
+2025-06-25 13:08:01.193 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Users?pageIndex=0&pageSize=20&sortBy=LastName&SortDescending=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ03J091K:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:08:01.197 +03:00 [INF] HTTP Request: GET http://localhost:5000/api/Users?pageIndex=0&pageSize=20&sortBy=LastName&SortDescending=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ03J091H:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+2025-06-25 13:08:01.213 +03:00 [INF] 🍪 All cookies: refresh_token=PNe6E2-rIr..., access_token=eyJhbGciOi...
+2025-06-25 13:08:01.219 +03:00 [INF] 🍪 All cookies: refresh_token=PNe6E2-rIr..., access_token=eyJhbGciOi...
+2025-06-25 13:08:01.233 +03:00 [INF] 🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs...
+2025-06-25 13:08:01.234 +03:00 [INF] 🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs...
+2025-06-25 13:08:01.239 +03:00 [INF] ✅ Token validated successfully for user: 7
+2025-06-25 13:08:01.252 +03:00 [INF] ✅ Token validated successfully for user: 7
+2025-06-25 13:08:01.293 +03:00 [ERR] An exception occurred in the database while saving changes for context type 'VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext'.
+Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.
+ ---> Microsoft.Data.SqlClient.SqlException (0x80131904): String or binary data would be truncated in table 'VisitorManagementDB_Dev2.dbo.AuditLogs', column 'ExceptionDetails'. Truncated value: 'System.InvalidOperationException: The AuthorizationPolicy named: ''User.Read.All'' was not found.
+ '.
+   at Microsoft.Data.SqlClient.SqlConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, Boolean& dataReady)
+   at Microsoft.Data.SqlClient.SqlDataReader.TryHasMoreRows(Boolean& moreRows)
+   at Microsoft.Data.SqlClient.SqlDataReader.TryReadInternal(Boolean setTimeout, Boolean& more)
+   at Microsoft.Data.SqlClient.SqlDataReader.ReadAsyncExecute(Task task, Object state)
+   at Microsoft.Data.SqlClient.SqlDataReader.InvokeAsyncCall[T](SqlDataReaderBaseAsyncCallContext`1 context)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetAsync(Int32 startCommandIndex, RelationalDataReader reader, CancellationToken cancellationToken)
+ClientConnectionId:3f6b1d74-e075-4921-b51a-5cc16e28b4db
+Error Number:2628,State:1,Class:16
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetAsync(Int32 startCommandIndex, RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeAsync(RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Update.Internal.SqlServerModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.
+ ---> Microsoft.Data.SqlClient.SqlException (0x80131904): String or binary data would be truncated in table 'VisitorManagementDB_Dev2.dbo.AuditLogs', column 'ExceptionDetails'. Truncated value: 'System.InvalidOperationException: The AuthorizationPolicy named: ''User.Read.All'' was not found.
+ '.
+   at Microsoft.Data.SqlClient.SqlConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, Boolean& dataReady)
+   at Microsoft.Data.SqlClient.SqlDataReader.TryHasMoreRows(Boolean& moreRows)
+   at Microsoft.Data.SqlClient.SqlDataReader.TryReadInternal(Boolean setTimeout, Boolean& more)
+   at Microsoft.Data.SqlClient.SqlDataReader.ReadAsyncExecute(Task task, Object state)
+   at Microsoft.Data.SqlClient.SqlDataReader.InvokeAsyncCall[T](SqlDataReaderBaseAsyncCallContext`1 context)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetAsync(Int32 startCommandIndex, RelationalDataReader reader, CancellationToken cancellationToken)
+ClientConnectionId:3f6b1d74-e075-4921-b51a-5cc16e28b4db
+Error Number:2628,State:1,Class:16
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetAsync(Int32 startCommandIndex, RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeAsync(RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Update.Internal.SqlServerModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+2025-06-25 13:08:01.293 +03:00 [ERR] An exception occurred in the database while saving changes for context type 'VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext'.
+Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.
+ ---> Microsoft.Data.SqlClient.SqlException (0x80131904): String or binary data would be truncated in table 'VisitorManagementDB_Dev2.dbo.AuditLogs', column 'ExceptionDetails'. Truncated value: 'System.InvalidOperationException: The AuthorizationPolicy named: ''User.Read.All'' was not found.
+ '.
+   at Microsoft.Data.SqlClient.SqlConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, Boolean& dataReady)
+   at Microsoft.Data.SqlClient.SqlDataReader.TryHasMoreRows(Boolean& moreRows)
+   at Microsoft.Data.SqlClient.SqlDataReader.TryReadInternal(Boolean setTimeout, Boolean& more)
+   at Microsoft.Data.SqlClient.SqlDataReader.ReadAsyncExecute(Task task, Object state)
+   at Microsoft.Data.SqlClient.SqlDataReader.InvokeAsyncCall[T](SqlDataReaderBaseAsyncCallContext`1 context)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetAsync(Int32 startCommandIndex, RelationalDataReader reader, CancellationToken cancellationToken)
+ClientConnectionId:2facaa12-bab4-441b-bb66-a5a53c317688
+Error Number:2628,State:1,Class:16
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetAsync(Int32 startCommandIndex, RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeAsync(RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Update.Internal.SqlServerModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.
+ ---> Microsoft.Data.SqlClient.SqlException (0x80131904): String or binary data would be truncated in table 'VisitorManagementDB_Dev2.dbo.AuditLogs', column 'ExceptionDetails'. Truncated value: 'System.InvalidOperationException: The AuthorizationPolicy named: ''User.Read.All'' was not found.
+ '.
+   at Microsoft.Data.SqlClient.SqlConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, Boolean& dataReady)
+   at Microsoft.Data.SqlClient.SqlDataReader.TryHasMoreRows(Boolean& moreRows)
+   at Microsoft.Data.SqlClient.SqlDataReader.TryReadInternal(Boolean setTimeout, Boolean& more)
+   at Microsoft.Data.SqlClient.SqlDataReader.ReadAsyncExecute(Task task, Object state)
+   at Microsoft.Data.SqlClient.SqlDataReader.InvokeAsyncCall[T](SqlDataReaderBaseAsyncCallContext`1 context)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetAsync(Int32 startCommandIndex, RelationalDataReader reader, CancellationToken cancellationToken)
+ClientConnectionId:2facaa12-bab4-441b-bb66-a5a53c317688
+Error Number:2628,State:1,Class:16
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetAsync(Int32 startCommandIndex, RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeAsync(RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Update.Internal.SqlServerModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+2025-06-25 13:08:01.538 +03:00 [ERR] Failed to save audit entry for GET /api/Users?pageIndex=0&pageSize=20&sortBy=LastName&SortDescending=false - User: null
+Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.
+ ---> Microsoft.Data.SqlClient.SqlException (0x80131904): String or binary data would be truncated in table 'VisitorManagementDB_Dev2.dbo.AuditLogs', column 'ExceptionDetails'. Truncated value: 'System.InvalidOperationException: The AuthorizationPolicy named: ''User.Read.All'' was not found.
+ '.
+   at Microsoft.Data.SqlClient.SqlConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, Boolean& dataReady)
+   at Microsoft.Data.SqlClient.SqlDataReader.TryHasMoreRows(Boolean& moreRows)
+   at Microsoft.Data.SqlClient.SqlDataReader.TryReadInternal(Boolean setTimeout, Boolean& more)
+   at Microsoft.Data.SqlClient.SqlDataReader.ReadAsyncExecute(Task task, Object state)
+   at Microsoft.Data.SqlClient.SqlDataReader.InvokeAsyncCall[T](SqlDataReaderBaseAsyncCallContext`1 context)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetAsync(Int32 startCommandIndex, RelationalDataReader reader, CancellationToken cancellationToken)
+ClientConnectionId:3f6b1d74-e075-4921-b51a-5cc16e28b4db
+Error Number:2628,State:1,Class:16
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetAsync(Int32 startCommandIndex, RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeAsync(RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Update.Internal.SqlServerModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext.SaveChangesAsync(CancellationToken cancellationToken) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Infrastructure\Data\ApplicationDbContext.cs:line 99
+   at VisitorManagementSystem.Api.Infrastructure.Data.UnitOfWork.SaveChangesAsync(CancellationToken cancellationToken) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Infrastructure\Data\UnitOfWork.cs:line 50
+   at VisitorManagementSystem.Api.Middleware.AuditLoggingMiddleware.SaveAuditEntryAsync(HttpContext context, AuditLog auditEntry) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Middleware\AuditLoggingMiddleware.cs:line 254
+2025-06-25 13:08:01.585 +03:00 [ERR] Failed to save audit entry for GET /api/Users?pageIndex=0&pageSize=20&sortBy=LastName&SortDescending=false - User: null
+Microsoft.EntityFrameworkCore.DbUpdateException: An error occurred while saving the entity changes. See the inner exception for details.
+ ---> Microsoft.Data.SqlClient.SqlException (0x80131904): String or binary data would be truncated in table 'VisitorManagementDB_Dev2.dbo.AuditLogs', column 'ExceptionDetails'. Truncated value: 'System.InvalidOperationException: The AuthorizationPolicy named: ''User.Read.All'' was not found.
+ '.
+   at Microsoft.Data.SqlClient.SqlConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.SqlInternalConnection.OnError(SqlException exception, Boolean breakConnection, Action`1 wrapCloseInAction)
+   at Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(TdsParserStateObject stateObj, Boolean callerHasConnectionLock, Boolean asyncClose)
+   at Microsoft.Data.SqlClient.TdsParser.TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, Boolean& dataReady)
+   at Microsoft.Data.SqlClient.SqlDataReader.TryHasMoreRows(Boolean& moreRows)
+   at Microsoft.Data.SqlClient.SqlDataReader.TryReadInternal(Boolean setTimeout, Boolean& more)
+   at Microsoft.Data.SqlClient.SqlDataReader.ReadAsyncExecute(Task task, Object state)
+   at Microsoft.Data.SqlClient.SqlDataReader.InvokeAsyncCall[T](SqlDataReaderBaseAsyncCallContext`1 context)
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetAsync(Int32 startCommandIndex, RelationalDataReader reader, CancellationToken cancellationToken)
+ClientConnectionId:2facaa12-bab4-441b-bb66-a5a53c317688
+Error Number:2628,State:1,Class:16
+   --- End of inner exception stack trace ---
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetAsync(Int32 startCommandIndex, RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeAsync(RelationalDataReader reader, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Update.Internal.SqlServerModificationCommandBatch.ExecuteAsync(IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.ExecuteAsync(IEnumerable`1 commandBatches, IRelationalConnection connection, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(IList`1 entriesToSave, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.SaveChangesAsync(StateManager stateManager, Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.DbContext.SaveChangesAsync(Boolean acceptAllChangesOnSuccess, CancellationToken cancellationToken)
+   at VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext.SaveChangesAsync(CancellationToken cancellationToken) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Infrastructure\Data\ApplicationDbContext.cs:line 99
+   at VisitorManagementSystem.Api.Infrastructure.Data.UnitOfWork.SaveChangesAsync(CancellationToken cancellationToken) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Infrastructure\Data\UnitOfWork.cs:line 50
+   at VisitorManagementSystem.Api.Middleware.AuditLoggingMiddleware.SaveAuditEntryAsync(HttpContext context, AuditLog auditEntry) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Middleware\AuditLoggingMiddleware.cs:line 254
+2025-06-25 13:08:01.651 +03:00 [INF] HTTP Response: GET /api/Users - Status: 200 - Duration: 457ms - Size: 0B - User: 7 - CorrelationId: 0HNDJQ03J091K:00000002
+2025-06-25 13:08:01.681 +03:00 [INF] HTTP Response: GET /api/Users - Status: 200 - Duration: 483ms - Size: 0B - User: 7 - CorrelationId: 0HNDJQ03J091H:00000003
+2025-06-25 13:08:01.693 +03:00 [ERR] Unhandled exception occurred. CorrelationId: 0HNDJQ03J091K:00000002, Path: /api/Users, Method: GET, IP: 127.0.0.1, UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+System.InvalidOperationException: The AuthorizationPolicy named: 'User.Read.All' was not found.
+   at Microsoft.AspNetCore.Authorization.AuthorizationPolicy.CombineAsync(IAuthorizationPolicyProvider policyProvider, IEnumerable`1 authorizeData, IEnumerable`1 policies)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at VisitorManagementSystem.Api.Middleware.AuditLoggingMiddleware.InvokeAsync(HttpContext context) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Middleware\AuditLoggingMiddleware.cs:line 56
+   at VisitorManagementSystem.Api.Middleware.AuditLoggingMiddleware.InvokeAsync(HttpContext context) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Middleware\AuditLoggingMiddleware.cs:line 82
+   at Microsoft.AspNetCore.RateLimiting.RateLimitingMiddleware.InvokeInternal(HttpContext context, EnableRateLimitingAttribute enableRateLimitingAttribute)
+   at VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware.InvokeAsync(HttpContext context) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Middleware\RequestLoggingMiddleware.cs:line 35
+   at VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware.InvokeAsync(HttpContext context) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Middleware\RequestLoggingMiddleware.cs:line 48
+   at VisitorManagementSystem.Api.Middleware.SecurityHeadersMiddleware.InvokeAsync(HttpContext context) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Middleware\SecurityHeadersMiddleware.cs:line 25
+   at VisitorManagementSystem.Api.Middleware.ExceptionHandlingMiddleware.InvokeAsync(HttpContext context) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Middleware\ExceptionHandlingMiddleware.cs:line 32
+2025-06-25 13:08:01.695 +03:00 [ERR] Unhandled exception occurred. CorrelationId: 0HNDJQ03J091H:00000003, Path: /api/Users, Method: GET, IP: 127.0.0.1, UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0
+System.InvalidOperationException: The AuthorizationPolicy named: 'User.Read.All' was not found.
+   at Microsoft.AspNetCore.Authorization.AuthorizationPolicy.CombineAsync(IAuthorizationPolicyProvider policyProvider, IEnumerable`1 authorizeData, IEnumerable`1 policies)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at VisitorManagementSystem.Api.Middleware.AuditLoggingMiddleware.InvokeAsync(HttpContext context) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Middleware\AuditLoggingMiddleware.cs:line 56
+   at VisitorManagementSystem.Api.Middleware.AuditLoggingMiddleware.InvokeAsync(HttpContext context) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Middleware\AuditLoggingMiddleware.cs:line 82
+   at Microsoft.AspNetCore.RateLimiting.RateLimitingMiddleware.InvokeInternal(HttpContext context, EnableRateLimitingAttribute enableRateLimitingAttribute)
+   at VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware.InvokeAsync(HttpContext context) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Middleware\RequestLoggingMiddleware.cs:line 35
+   at VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware.InvokeAsync(HttpContext context) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Middleware\RequestLoggingMiddleware.cs:line 48
+   at VisitorManagementSystem.Api.Middleware.SecurityHeadersMiddleware.InvokeAsync(HttpContext context) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Middleware\SecurityHeadersMiddleware.cs:line 25
+   at VisitorManagementSystem.Api.Middleware.ExceptionHandlingMiddleware.InvokeAsync(HttpContext context) in E:\VisitorManagementSystem\VisitorManagementSystem.Api\Middleware\ExceptionHandlingMiddleware.cs:line 32
+[2025-06-25 13:11:45.936 +03:00 WRN]  Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. <s:Microsoft.EntityFrameworkCore.Model.Validation>
+[2025-06-25 13:11:46.800 +03:00 INF]  Database initialized successfully <s:Program>
+[2025-06-25 13:11:47.049 +03:00 INF]  Token cleanup completed. Expired revoked: 0, Old deleted: 0 <s:VisitorManagementSystem.Api.Application.Services.Auth.RefreshTokenService>
+[2025-06-25 13:11:47.054 +03:00 INF]  Token cleanup completed successfully <s:VisitorManagementSystem.Api.Extensions.TokenCleanupBackgroundService>
+[2025-06-25 13:11:47.076 +03:00 INF]  Audit cleanup completed. Deleted 0 old records <s:VisitorManagementSystem.Api.Extensions.AuditCleanupBackgroundService>
+[2025-06-25 13:12:32.632 +03:00 INF] 0HNDJQ36B56FI:00000001 HTTP Request: OPTIONS http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:12:33.084 +03:00 INF] 0HNDJQ36B56FI:00000001 HTTP Response: OPTIONS /api/Auth/login - Status: 204 - Duration: 456ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:12:33.120 +03:00 INF] 0HNDJQ36B56FH:00000001 HTTP Request: POST http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FH:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:12:33.161 +03:00 INF]  🍪 All cookies: refresh_token=PNe6E2-rIr..., access_token=eyJhbGciOi... <s:Program>
+[2025-06-25 13:12:33.164 +03:00 INF]  🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs... <s:Program>
+[2025-06-25 13:12:33.221 +03:00 INF]  ✅ Token validated successfully for user: 7 <s:Program>
+[2025-06-25 13:12:33.548 +03:00 INF]  Login attempt for user: admin@vms.com from IP: 127.0.0.1 <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 13:12:33.746 +03:00 INF]  Security event recorded: SuccessfulLogin for user: 7 <s:VisitorManagementSystem.Api.Application.Services.Auth.UserLockoutService>
+[2025-06-25 13:12:33.748 +03:00 INF]  Successful login for user: admin@vms.com (ID: 7) <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 13:12:33.752 +03:00 INF]  Successful login for user: admin@vms.com <s:VisitorManagementSystem.Api.Application.Commands.Auth.LoginCommandHandler>
+[2025-06-25 13:12:33.758 +03:00 INF]  🍪 HTTP Localhost cookies set - Access: 676 chars, Refresh: 86 chars <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 13:12:33.764 +03:00 INF]  User logged in successfully: admin@vms.com from 127.0.0.1 <s:VisitorManagementSystem.Api.Controllers.AuthController>
+[2025-06-25 13:12:33.818 +03:00 INF] 0HNDJQ36B56FH:00000001 HTTP Response: POST /api/Auth/login - Status: 200 - Duration: 698ms - Size: 4825B - User: 7 - CorrelationId: 0HNDJQ36B56FH:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:12:33.844 +03:00 INF] 0HNDJQ36B56FI:00000002 HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:12:33.849 +03:00 INF] 0HNDJQ36B56FJ:00000001 HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FJ:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:12:33.857 +03:00 INF] 0HNDJQ36B56FI:00000002 HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 12ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:12:33.864 +03:00 INF] 0HNDJQ36B56FJ:00000001 HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 14ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ36B56FJ:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:12:33.867 +03:00 INF] 0HNDJQ36B56FH:00000002 HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FH:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:12:33.872 +03:00 INF] 0HNDJQ36B56FK:00000001 HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FK:00000001 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:12:33.915 +03:00 INF]  🍪 All cookies: refresh_token=ID0P9yHuLj..., access_token=eyJhbGciOi... <s:Program>
+[2025-06-25 13:12:33.917 +03:00 INF]  🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs... <s:Program>
+[2025-06-25 13:12:33.919 +03:00 INF]  ✅ Token validated successfully for user: 7 <s:Program>
+[2025-06-25 13:12:33.920 +03:00 INF]  🍪 All cookies: refresh_token=ID0P9yHuLj..., access_token=eyJhbGciOi... <s:Program>
+[2025-06-25 13:12:33.921 +03:00 INF]  🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs... <s:Program>
+[2025-06-25 13:12:33.924 +03:00 INF]  ✅ Token validated successfully for user: 7 <s:Program>
+[2025-06-25 13:12:33.937 +03:00 INF] 0HNDJQ36B56FH:00000002 HTTP Response: GET /api/Auth/me - Status: 200 - Duration: 69ms - Size: 4667B - User: 7 - CorrelationId: 0HNDJQ36B56FH:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:12:34.005 +03:00 INF] 0HNDJQ36B56FK:00000001 HTTP Response: GET /api/Auth/permissions - Status: 200 - Duration: 133ms - Size: 8862B - User: 7 - CorrelationId: 0HNDJQ36B56FK:00000001 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:13:27.675 +03:00 INF] 0HNDJQ36B56FI:00000003 HTTP Request: OPTIONS http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:13:27.692 +03:00 INF] 0HNDJQ36B56FI:00000003 HTTP Response: OPTIONS /api/Auth/login - Status: 204 - Duration: 16ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000003 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:13:27.699 +03:00 INF] 0HNDJQ36B56FK:00000002 HTTP Request: POST http://localhost:5000/api/Auth/login - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FK:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:13:27.708 +03:00 INF]  🍪 All cookies: refresh_token=ID0P9yHuLj..., access_token=eyJhbGciOi... <s:Program>
+[2025-06-25 13:13:27.711 +03:00 INF]  🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs... <s:Program>
+[2025-06-25 13:13:27.723 +03:00 INF]  ✅ Token validated successfully for user: 7 <s:Program>
+[2025-06-25 13:13:27.752 +03:00 INF]  Login attempt for user: admin@vms.com from IP: 127.0.0.1 <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 13:13:27.795 +03:00 INF]  Security event recorded: SuccessfulLogin for user: 7 <s:VisitorManagementSystem.Api.Application.Services.Auth.UserLockoutService>
+[2025-06-25 13:13:27.797 +03:00 INF]  Successful login for user: admin@vms.com (ID: 7) <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 13:13:27.813 +03:00 INF]  Successful login for user: admin@vms.com <s:VisitorManagementSystem.Api.Application.Commands.Auth.LoginCommandHandler>
+[2025-06-25 13:13:27.822 +03:00 INF]  🍪 HTTP Localhost cookies set - Access: 676 chars, Refresh: 86 chars <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 13:13:27.842 +03:00 INF]  User logged in successfully: admin@vms.com from 127.0.0.1 <s:VisitorManagementSystem.Api.Controllers.AuthController>
+[2025-06-25 13:13:27.867 +03:00 INF] 0HNDJQ36B56FK:00000002 HTTP Response: POST /api/Auth/login - Status: 200 - Duration: 167ms - Size: 4825B - User: 7 - CorrelationId: 0HNDJQ36B56FK:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:13:27.893 +03:00 INF] 0HNDJQ36B56FI:00000004 HTTP Request: OPTIONS http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:13:27.893 +03:00 INF] 0HNDJQ36B56FJ:00000002 HTTP Request: OPTIONS http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FJ:00000002 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:13:27.905 +03:00 INF] 0HNDJQ36B56FI:00000004 HTTP Response: OPTIONS /api/Auth/permissions - Status: 204 - Duration: 12ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000004 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:13:27.913 +03:00 INF] 0HNDJQ36B56FK:00000003 HTTP Request: GET http://localhost:5000/api/Auth/permissions - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FK:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:13:27.913 +03:00 INF] 0HNDJQ36B56FJ:00000002 HTTP Response: OPTIONS /api/Auth/me - Status: 204 - Duration: 20ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ36B56FJ:00000002 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:13:27.926 +03:00 INF]  🍪 All cookies: refresh_token=UriMzltzP9..., access_token=eyJhbGciOi... <s:Program>
+[2025-06-25 13:13:27.927 +03:00 INF]  🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs... <s:Program>
+[2025-06-25 13:13:27.929 +03:00 INF]  ✅ Token validated successfully for user: 7 <s:Program>
+[2025-06-25 13:13:27.935 +03:00 INF] 0HNDJQ36B56FH:00000003 HTTP Request: GET http://localhost:5000/api/Auth/me - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FH:00000003 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:13:27.943 +03:00 INF]  🍪 All cookies: refresh_token=UriMzltzP9..., access_token=eyJhbGciOi... <s:Program>
+[2025-06-25 13:13:27.945 +03:00 INF]  🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs... <s:Program>
+[2025-06-25 13:13:27.947 +03:00 INF]  ✅ Token validated successfully for user: 7 <s:Program>
+[2025-06-25 13:13:27.956 +03:00 INF] 0HNDJQ36B56FH:00000003 HTTP Response: GET /api/Auth/me - Status: 200 - Duration: 20ms - Size: 4667B - User: 7 - CorrelationId: 0HNDJQ36B56FH:00000003 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:13:27.993 +03:00 INF] 0HNDJQ36B56FK:00000003 HTTP Response: GET /api/Auth/permissions - Status: 200 - Duration: 79ms - Size: 8862B - User: 7 - CorrelationId: 0HNDJQ36B56FK:00000003 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:14:01.257 +03:00 INF] 0HNDJQ36B56FI:00000005 HTTP Request: OPTIONS http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000005 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:14:01.267 +03:00 INF] 0HNDJQ36B56FI:00000005 HTTP Response: OPTIONS /api/Auth/logout - Status: 204 - Duration: 10ms - Size: 0B - User: Anonymous - CorrelationId: 0HNDJQ36B56FI:00000005 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:14:01.273 +03:00 INF] 0HNDJQ36B56FK:00000004 HTTP Request: POST http://localhost:5000/api/Auth/logout?logoutFromAllDevices=false - IP: 127.0.0.1 - User: Anonymous - CorrelationId: 0HNDJQ36B56FK:00000004 - UserAgent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:139.0) Gecko/20100101 Firefox/139.0 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>
+[2025-06-25 13:14:01.282 +03:00 INF]  🍪 All cookies: refresh_token=UriMzltzP9..., access_token=eyJhbGciOi... <s:Program>
+[2025-06-25 13:14:01.287 +03:00 INF]  🔑 Token from cookie: eyJhbGciOiJIUzI1NiIs... <s:Program>
+[2025-06-25 13:14:01.291 +03:00 INF]  ✅ Token validated successfully for user: 7 <s:Program>
+[2025-06-25 13:14:01.319 +03:00 INF]  Logout request for user: 7 from IP: 127.0.0.1 <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 13:14:01.377 +03:00 INF]  Refresh token revoked for user: 7, Reason: User logout <s:VisitorManagementSystem.Api.Application.Services.Auth.RefreshTokenService>
+[2025-06-25 13:14:01.379 +03:00 INF]  Logout successful for user: 7, Tokens revoked: 1 <s:VisitorManagementSystem.Api.Application.Services.Auth.AuthService>
+[2025-06-25 13:14:01.383 +03:00 INF]  User 7 logged out successfully. Tokens revoked: 1 <s:VisitorManagementSystem.Api.Application.Commands.Auth.LogoutCommandHandler>
+[2025-06-25 13:14:01.385 +03:00 INF]  User 7 logged out successfully. Tokens revoked: 1 <s:VisitorManagementSystem.Api.Controllers.AuthController>
+[2025-06-25 13:14:01.417 +03:00 INF] 0HNDJQ36B56FK:00000004 HTTP Response: POST /api/Auth/logout - Status: 200 - Duration: 144ms - Size: 112B - User: 7 - CorrelationId: 0HNDJQ36B56FK:00000004 <s:VisitorManagementSystem.Api.Middleware.RequestLoggingMiddleware>

@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "OAYYLdW7tOJeoFl/4gitFF+YlSDAF9/5qBo7veh35NE=",
+  "Source": "VisitorManagementSystem.Api",
+  "BasePath": "_content/VisitorManagementSystem.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

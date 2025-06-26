@@ -1,0 +1,328 @@
+﻿using Microsoft.EntityFrameworkCore;
+using VisitorManagementSystem.Api.Domain.Entities;
+using VisitorManagementSystem.Api.Infrastructure.Data.Configurations;
+using VisitorManagementSystem.Api.Domain.Interfaces.Services;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+
+namespace VisitorManagementSystem.Api.Infrastructure.Data;
+
+/// <summary>
+/// Application database context
+/// </summary>
+public class ApplicationDbContext : DbContext
+{
+    private readonly IDomainEventPublisher? _domainEventPublisher;
+    private readonly IServiceProvider _serviceProvider;
+
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IServiceProvider serviceProvider)
+        : base(options)
+    {
+        _serviceProvider = serviceProvider;
+        _domainEventPublisher = serviceProvider.GetService<IDomainEventPublisher>();
+    }
+
+    // DbSets
+    public DbSet<User> Users { get; set; } = null!;
+    public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+    public DbSet<AuditLog> AuditLogs { get; set; } = null!;
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // Apply all configurations
+        modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new RefreshTokenConfiguration());
+        modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
+
+        // Global query filters for soft delete
+        modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
+
+        modelBuilder.Entity<RefreshToken>().HasQueryFilter(rt => !rt.User.IsDeleted);
+
+        // Configure decimal precision globally
+        foreach (var property in modelBuilder.Model.GetEntityTypes()
+            .SelectMany(t => t.GetProperties())
+            .Where(p => p.ClrType == typeof(decimal) || p.ClrType == typeof(decimal?)))
+        {
+            property.SetColumnType("decimal(18,2)");
+        }
+
+        // Configure datetime to be UTC
+        foreach (var property in modelBuilder.Model.GetEntityTypes()
+            .SelectMany(t => t.GetProperties())
+            .Where(p => p.ClrType == typeof(DateTime) || p.ClrType == typeof(DateTime?)))
+        {
+            property.SetColumnType("datetime2");
+        }
+
+        // Configure string properties to use nvarchar
+        foreach (var property in modelBuilder.Model.GetEntityTypes()
+            .SelectMany(t => t.GetProperties())
+            .Where(p => p.ClrType == typeof(string)))
+        {
+            if (property.GetMaxLength() == null)
+            {
+                property.SetMaxLength(256);
+            }
+            property.SetColumnType($"nvarchar({property.GetMaxLength()})");
+        }
+    }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        base.OnConfiguring(optionsBuilder);
+
+        // Enable sensitive data logging in development
+        if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+        {
+            optionsBuilder.EnableSensitiveDataLogging();
+            optionsBuilder.EnableDetailedErrors();
+        }
+        else
+        {
+            // Suppress MARS warnings in production
+            optionsBuilder.ConfigureWarnings(warnings =>
+                warnings.Ignore(SqlServerEventId.SavepointsDisabledBecauseOfMARS));
+        }
+
+        // Configure query tracking behavior
+        optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll);
+
+        // Configure command timeout
+        optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll);
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        await OnBeforeSaveChanges();
+        var result = await base.SaveChangesAsync(cancellationToken);
+        await OnAfterSaveChanges();
+        return result;
+    }
+
+    public override int SaveChanges()
+    {
+        OnBeforeSaveChanges().GetAwaiter().GetResult();
+        var result = base.SaveChanges();
+        OnAfterSaveChanges().GetAwaiter().GetResult();
+        return result;
+    }
+
+    private async Task OnBeforeSaveChanges()
+    {
+        var entries = ChangeTracker.Entries();
+
+        foreach (var entry in entries)
+        {
+            if (entry.Entity is BaseEntity baseEntity)
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        baseEntity.CreatedOn = DateTime.UtcNow;
+                        if (baseEntity is AuditableEntity auditableEntity)
+                        {
+                            // Set created by from current user context
+                            var currentUserId = GetCurrentUserId();
+                            if (currentUserId.HasValue)
+                            {
+                                auditableEntity.CreatedBy = currentUserId.Value;
+                            }
+                        }
+                        break;
+
+                    case EntityState.Modified:
+                        baseEntity.UpdateModifiedOn();
+                        if (baseEntity is AuditableEntity auditableEntityModified)
+                        {
+                            // Set modified by from current user context
+                            var currentUserId = GetCurrentUserId();
+                            if (currentUserId.HasValue)
+                            {
+                                auditableEntityModified.ModifiedBy = currentUserId.Value;
+                            }
+                        }
+                        break;
+                }
+            }
+        }
+
+        await Task.CompletedTask;
+    }
+
+    private async Task OnAfterSaveChanges()
+    {
+        // Publish domain events if available
+        if (_domainEventPublisher != null)
+        {
+            var domainEvents = GetDomainEvents();
+            if (domainEvents.Any())
+            {
+                await _domainEventPublisher.PublishAsync(domainEvents);
+            }
+        }
+    }
+
+    private List<IDomainEvent> GetDomainEvents()
+    {
+        var domainEvents = new List<IDomainEvent>();
+
+        var entries = ChangeTracker.Entries()
+            .Where(e => e.Entity is BaseEntity)
+            .ToList();
+
+        foreach (var entry in entries)
+        {
+            // Here you would extract domain events from entities
+            // This is a simplified implementation
+            switch (entry.State)
+            {
+                case EntityState.Added:
+                    // Create domain events for entity creation
+                    break;
+                case EntityState.Modified:
+                    // Create domain events for entity modification
+                    break;
+                case EntityState.Deleted:
+                    // Create domain events for entity deletion
+                    break;
+            }
+        }
+
+        return domainEvents;
+    }
+
+    private int? GetCurrentUserId()
+    {
+        // Get current user ID from HTTP context or other user context service
+        var httpContextAccessor = _serviceProvider.GetService<IHttpContextAccessor>();
+        var userIdClaim = httpContextAccessor?.HttpContext?.User?.FindFirst("sub")?.Value;
+
+        if (int.TryParse(userIdClaim, out var userId))
+        {
+            return userId;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Detaches all tracked entities
+    /// </summary>
+    public void DetachAllEntities()
+    {
+        var changedEntriesCopy = ChangeTracker.Entries()
+            .Where(e => e.State == EntityState.Added ||
+                       e.State == EntityState.Modified ||
+                       e.State == EntityState.Deleted)
+            .ToList();
+
+        foreach (var entry in changedEntriesCopy)
+        {
+            entry.State = EntityState.Detached;
+        }
+    }
+
+    /// <summary>
+    /// Gets entities with pending changes
+    /// </summary>
+    /// <returns>List of entities with changes</returns>
+    public List<object> GetPendingChanges()
+    {
+        return ChangeTracker.Entries()
+            .Where(e => e.State == EntityState.Added ||
+                       e.State == EntityState.Modified ||
+                       e.State == EntityState.Deleted)
+            .Select(e => e.Entity)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Checks if there are any pending changes
+    /// </summary>
+    /// <returns>True if there are pending changes</returns>
+    public bool HasPendingChanges()
+    {
+        return ChangeTracker.HasChanges();
+    }
+
+    /// <summary>
+    /// Sets the command timeout for the context
+    /// </summary>
+    /// <param name="timeout">Timeout in seconds</param>
+    public void SetCommandTimeout(int timeout)
+    {
+        Database.SetCommandTimeout(timeout);
+    }
+
+    /// <summary>
+    /// Begins a transaction
+    /// </summary>
+    /// <returns>Database transaction</returns>
+    public async Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync()
+    {
+        return await Database.BeginTransactionAsync();
+    }
+
+    /// <summary>
+    /// Executes raw SQL
+    /// </summary>
+    /// <param name="sql">SQL command</param>
+    /// <param name="parameters">Parameters</param>
+    /// <returns>Number of affected rows</returns>
+    public async Task<int> ExecuteSqlAsync(string sql, params object[] parameters)
+    {
+        return await Database.ExecuteSqlRawAsync(sql, parameters);
+    }
+
+    /// <summary>
+    /// Gets database connection string
+    /// </summary>
+    /// <returns>Connection string</returns>
+    public string GetConnectionString()
+    {
+        return Database.GetConnectionString() ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Checks if database can connect
+    /// </summary>
+    /// <returns>True if can connect</returns>
+    public async Task<bool> CanConnectAsync()
+    {
+        try
+        {
+            return await Database.CanConnectAsync();
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Migrates the database
+    /// </summary>
+    public async Task MigrateAsync()
+    {
+        await Database.MigrateAsync();
+    }
+
+    /// <summary>
+    /// Ensures database is created
+    /// </summary>
+    public async Task EnsureCreatedAsync()
+    {
+        await Database.EnsureCreatedAsync();
+    }
+
+    /// <summary>
+    /// Resets all database data (USE WITH CAUTION)
+    /// </summary>
+    public async Task ResetDatabaseAsync()
+    {
+        await Database.EnsureDeletedAsync();
+        await Database.EnsureCreatedAsync();
+    }
+}
