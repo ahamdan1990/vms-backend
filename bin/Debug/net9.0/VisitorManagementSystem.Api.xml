@@ -1320,7 +1320,11 @@
             Query for getting paginated list of users with filtering and sorting
             </summary>
         </member>
-        <!-- Badly formed XML comment ignored for member "T:VisitorManagementSystem.Api.Application.Services.Auth.AuthService" -->
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.AuthService">
+            <summary>
+            Authentication service implementation with cookie-based token management
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.IAuthService">
             <summary>
             Authentication service interface for login, logout, and token management
@@ -1626,12 +1630,6 @@
             </summary>
             <param name="userId">User ID</param>
             <returns>New security stamp</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IJwtService.GetTokenConfiguration">
-            <summary>
-            Gets token configuration information
-            </summary>
-            <returns>Token configuration</returns>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.JwtTokenResult">
             <summary>
@@ -2308,7 +2306,11 @@
             Token rotation result
             </summary>
         </member>
-        <!-- Badly formed XML comment ignored for member "T:VisitorManagementSystem.Api.Application.Services.Auth.JwtService" -->
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.JwtService">
+            <summary>
+            JWT service implementation for token generation and validation
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.PasswordService">
             <summary>
             Password service implementation for hashing, validation, and policy enforcement
@@ -2759,91 +2761,6 @@
             Records successful login without calling SaveChanges (for transaction coordination)
             </summary>
         </member>
-        <member name="T:VisitorManagementSystem.Api.Configuration.DatabaseConfiguration">
-            <summary>
-            Database configuration settings
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.DatabaseConfiguration.ConnectionString">
-            <summary>
-            Primary database connection string
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.DatabaseConfiguration.ReadOnlyConnectionString">
-            <summary>
-            Read-only database connection string for read operations
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.DatabaseConfiguration.CommandTimeout">
-            <summary>
-            Database command timeout in seconds
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.DatabaseConfiguration.MaxRetryCount">
-            <summary>
-            Maximum retry count for database operations
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.DatabaseConfiguration.EnableSensitiveDataLogging">
-            <summary>
-            Whether to enable sensitive data logging (dev only)
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.DatabaseConfiguration.EnableDetailedErrors">
-            <summary>
-            Whether to enable detailed errors
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.DatabaseConfiguration.ConnectionPool">
-            <summary>
-            Connection pool settings
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.DatabaseConfiguration.Migration">
-            <summary>
-            Migration settings
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.DatabaseConfiguration.Backup">
-            <summary>
-            Backup settings
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.DatabaseConfiguration.Performance">
-            <summary>
-            Performance monitoring settings
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.DatabaseConfiguration.HealthCheck">
-            <summary>
-            Health check settings
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Configuration.ConnectionPoolConfiguration">
-            <summary>
-            Connection pool configuration
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Configuration.MigrationConfiguration">
-            <summary>
-            Migration configuration
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Configuration.BackupConfiguration">
-            <summary>
-            Backup configuration
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Configuration.PerformanceConfiguration">
-            <summary>
-            Performance configuration
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Configuration.HealthCheckConfiguration">
-            <summary>
-            Health check configuration
-            </summary>
-        </member>
         <member name="T:VisitorManagementSystem.Api.Configuration.JwtConfiguration">
             <summary>
             JWT configuration settings
@@ -2942,106 +2859,6 @@
         <member name="P:VisitorManagementSystem.Api.Configuration.JwtConfiguration.RevokeFamilyOnSuspiciousActivity">
             <summary>
             Whether to revoke refresh token families on suspicious activity
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Configuration.LoggingConfiguration">
-            <summary>
-            Logging configuration settings
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.LoggingConfiguration.LogLevel">
-            <summary>
-            Global log level
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.LoggingConfiguration.EnableStructuredLogging">
-            <summary>
-            Whether to enable structured logging
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.LoggingConfiguration.EnableCorrelationId">
-            <summary>
-            Whether to enable correlation ID logging
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.LoggingConfiguration.LogRequestResponse">
-            <summary>
-            Whether to log request/response details
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.LoggingConfiguration.LogPerformanceMetrics">
-            <summary>
-            Whether to log performance metrics
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.LoggingConfiguration.Console">
-            <summary>
-            Console logging settings
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.LoggingConfiguration.File">
-            <summary>
-            File logging settings
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.LoggingConfiguration.Database">
-            <summary>
-            Database logging settings
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.LoggingConfiguration.Audit">
-            <summary>
-            Audit logging settings
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.LoggingConfiguration.Security">
-            <summary>
-            Security logging settings
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.LoggingConfiguration.ApplicationInsights">
-            <summary>
-            Application Insights settings
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Configuration.LoggingConfiguration.SensitiveData">
-            <summary>
-            Sensitive data logging settings
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Configuration.ConsoleLoggingConfiguration">
-            <summary>
-            Console logging configuration
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Configuration.FileLoggingConfiguration">
-            <summary>
-            File logging configuration
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Configuration.DatabaseLoggingConfiguration">
-            <summary>
-            Database logging configuration
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Configuration.AuditLoggingConfiguration">
-            <summary>
-            Audit logging configuration
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Configuration.SecurityLoggingConfiguration">
-            <summary>
-            Security logging configuration
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Configuration.ApplicationInsightsConfiguration">
-            <summary>
-            Application Insights configuration
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Configuration.SensitiveDataConfiguration">
-            <summary>
-            Sensitive data logging configuration
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Configuration.SecurityConfiguration">
@@ -7830,7 +7647,8 @@
         </member>
         <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.ConfigureSecurity(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
             <summary>
-            Configures security settings
+            Configures security services with default settings
+            Security settings are now managed dynamically via database
             </summary>
         </member>
         <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.ConfigureRateLimiting(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
@@ -8020,26 +7838,6 @@
             Database health status information
             </summary>
         </member>
-        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Migrations.AddSystemConfiguration">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Migrations.AddSystemConfiguration.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Migrations.AddSystemConfiguration.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Migrations.AddConfigurationTables">
-            <summary>
-            Migration to add SystemConfigurations and ConfigurationAudits tables
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Migrations.AddConfigurationTables.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Migrations.AddConfigurationTables.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.BaseRepository`1">
             <summary>
             Base repository implementation for common CRUD operations
@@ -8061,29 +7859,14 @@
             Repository implementation for User entity operations
             </summary>
         </member>
-        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.ConfigurationMigrationSeeder">
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.ComprehensiveConfigurationSeeder">
             <summary>
-            Migrates existing appsettings.json configurations to database
+            Comprehensive configuration seeder that migrates ALL settings to database
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.ConfigurationMigrationSeeder.MigrateFromAppSettingsAsync(VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext,System.IServiceProvider,System.Int32)">
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.ComprehensiveConfigurationSeeder.SeedAllConfigurationsAsync(VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext,System.IServiceProvider,System.Nullable{System.Int32})">
             <summary>
-            Migrates configurations from appsettings.json to database
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.ConfigurationSeeder">
-            <summary>
-            Seeds default system configurations
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.ConfigurationSeeder.SeedAsync(VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext,System.Int32)">
-            <summary>
-            Seeds default configuration values
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.ConfigurationSeeder.GetDefaultConfigurations(System.Int32)">
-            <summary>
-            Gets the default configuration values
+            Seeds all system configurations into the database
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.PermissionSeeder">
@@ -8168,16 +7951,6 @@
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.PermissionAuditInfo">
             <summary>
             Permission audit information
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.SystemConfigurationSeeder">
-            <summary>
-            Service for seeding system configurations
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.SystemConfigurationSeeder.SeedAsync(System.Int32)">
-            <summary>
-            Seeds configuration data if not already present
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.UserSeeder">
@@ -8999,88 +8772,16 @@
             Security headers configuration options
             </summary>
         </member>
-        <member name="T:VisitorManagementSystem.Api.Migrations.InitialCreate">
+        <member name="T:VisitorManagementSystem.Api.Migrations.AddInitialMigration">
             <inheritdoc />
         </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.InitialCreate.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+        <member name="M:VisitorManagementSystem.Api.Migrations.AddInitialMigration.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.InitialCreate.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+        <member name="M:VisitorManagementSystem.Api.Migrations.AddInitialMigration.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
             <inheritdoc />
         </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.InitialCreate.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Migrations.MakeAddressStreet1Nullable">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.MakeAddressStreet1Nullable.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.MakeAddressStreet1Nullable.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.MakeAddressStreet1Nullable.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Migrations.MakeAddressStreet1Nullable1">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.MakeAddressStreet1Nullable1.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.MakeAddressStreet1Nullable1.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.MakeAddressStreet1Nullable1.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Migrations.ExpandAuditLogMetadataColumn">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.ExpandAuditLogMetadataColumn.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.ExpandAuditLogMetadataColumn.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.ExpandAuditLogMetadataColumn.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Migrations.FixAuditLogMetadataColumnSize">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.FixAuditLogMetadataColumnSize.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.FixAuditLogMetadataColumnSize.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.FixAuditLogMetadataColumnSize.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Migrations.InitialMigrations">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.InitialMigrations.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.InitialMigrations.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.InitialMigrations.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Migrations.addSystemConfigurationIntoDatabase">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.addSystemConfigurationIntoDatabase.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.addSystemConfigurationIntoDatabase.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.addSystemConfigurationIntoDatabase.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+        <member name="M:VisitorManagementSystem.Api.Migrations.AddInitialMigration.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:GetUserByIdQueryHandler">

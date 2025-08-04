@@ -34,6 +34,18 @@ public static class DbInitializer
                     var logger = serviceProvider.GetService<ILogger<ApplicationDbContext>>();
                     logger?.LogInformation("Users exist but system configurations missing. Migrating ALL configurations...");
                     
+                    // Find or create a system admin user for seeding
+                    var adminUser = await context.Users
+                        .Where(u => u.Role == Domain.Enums.UserRole.Administrator)
+                        .FirstOrDefaultAsync();
+                    
+                    if (adminUser == null)
+                    {
+                        logger?.LogWarning("No admin user found. Creating system admin for configuration seeding...");
+                        await SeedUsersAsync(context);
+                        await context.SaveChangesAsync();
+                    }
+                    
                     await ComprehensiveConfigurationSeeder.SeedAllConfigurationsAsync(context, serviceProvider);
                 }
                 return; // Database has already been seeded
@@ -41,9 +53,10 @@ public static class DbInitializer
 
             // Seed data in order of dependencies
             await SeedUsersAsync(context);
+            await context.SaveChangesAsync(); // Save users first
+            
             await SeedSystemConfigAsync(context, serviceProvider);
-
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(); // Save configurations
         }
         catch (Exception ex)
         {

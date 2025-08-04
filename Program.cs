@@ -9,7 +9,6 @@ using FluentValidation;
 using VisitorManagementSystem.Api.Extensions;
 using VisitorManagementSystem.Api.Infrastructure.Data;
 using VisitorManagementSystem.Api.Middleware;
-using VisitorManagementSystem.Api.Configuration;
 using System.Reflection;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -72,7 +71,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuer = true,
         ValidIssuer = builder.Configuration["JWT:Issuer"] ?? "VisitorManagementSystem",
         ValidateAudience = true,
-        ValidAudience = builder.Configuration["JWT:Audience"] ?? "VisitorManagementSystem.Api",
+        ValidAudience = builder.Configuration["JWT:Audience"] ?? "VMS-Users",
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero,
         NameClaimType = ClaimTypes.NameIdentifier // IMPORTANT: This fixes GetCurrentUserId()

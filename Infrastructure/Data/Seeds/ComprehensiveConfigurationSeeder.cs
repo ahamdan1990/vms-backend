@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Infrastructure.Data;
 
@@ -12,7 +13,7 @@ public static class ComprehensiveConfigurationSeeder
     /// <summary>
     /// Seeds all system configurations into the database
     /// </summary>
-    public static async Task SeedAllConfigurationsAsync(ApplicationDbContext context, IServiceProvider serviceProvider, int systemUserId = 1)
+    public static async Task SeedAllConfigurationsAsync(ApplicationDbContext context, IServiceProvider serviceProvider, int? systemUserId = null)
     {
         if (context.SystemConfigurations.Any())
         {
@@ -23,6 +24,25 @@ public static class ComprehensiveConfigurationSeeder
         var logger = loggerFactory?.CreateLogger("ComprehensiveConfigurationSeeder");
         
         logger?.LogInformation("Seeding comprehensive system configurations...");
+
+        // Find an existing admin user or use null for system seeding
+        if (systemUserId == null)
+        {
+            var adminUser = await context.Users
+                .Where(u => u.Role == Domain.Enums.UserRole.Administrator)
+                .FirstOrDefaultAsync();
+            
+            if (adminUser != null)
+            {
+                systemUserId = adminUser.Id;
+                logger?.LogInformation("Using admin user ID {UserId} for system configuration seeding", systemUserId);
+            }
+            else
+            {
+                logger?.LogWarning("No admin user found, system configurations will be created without CreatedBy reference");
+                systemUserId = null; // Explicitly set to null for system configurations
+            }
+        }
 
         var configurations = new List<SystemConfiguration>();
         var now = DateTime.UtcNow;
@@ -79,7 +99,7 @@ public static class ComprehensiveConfigurationSeeder
         logger?.LogInformation("Successfully seeded {Count} comprehensive configurations to database", configurations.Count);
     }
 
-    private static async Task SeedJwtConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int systemUserId)
+    private static async Task SeedJwtConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int? systemUserId)
     {
         var jwtSection = configuration.GetSection("JWT");
         
@@ -165,7 +185,7 @@ public static class ComprehensiveConfigurationSeeder
         await Task.CompletedTask;
     }
 
-    private static async Task SeedSecurityConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int systemUserId)
+    private static async Task SeedSecurityConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int? systemUserId)
     {
         var securitySection = configuration.GetSection("Security");
         
@@ -344,7 +364,7 @@ public static class ComprehensiveConfigurationSeeder
 
         await Task.CompletedTask;
     }
-    private static async Task SeedDatabaseConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int systemUserId)
+    private static async Task SeedDatabaseConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int? systemUserId)
     {
         var databaseSection = configuration.GetSection("Database");
         
@@ -474,7 +494,7 @@ public static class ComprehensiveConfigurationSeeder
         await Task.CompletedTask;
     }
 
-    private static async Task SeedLoggingConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int systemUserId)
+    private static async Task SeedLoggingConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int? systemUserId)
     {
         var loggingSection = configuration.GetSection("Logging");
         
@@ -644,7 +664,7 @@ public static class ComprehensiveConfigurationSeeder
         await Task.CompletedTask;
     }
 
-    private static async Task SeedEmailConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int systemUserId)
+    private static async Task SeedEmailConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int? systemUserId)
     {
         var emailSection = configuration.GetSection("Email");
         
@@ -682,7 +702,7 @@ public static class ComprehensiveConfigurationSeeder
         await Task.CompletedTask;
     }
 
-    private static async Task SeedSmsConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int systemUserId)
+    private static async Task SeedSmsConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int? systemUserId)
     {
         var smsSection = configuration.GetSection("SMS");
         
@@ -708,7 +728,7 @@ public static class ComprehensiveConfigurationSeeder
         await Task.CompletedTask;
     }
 
-    private static async Task SeedFileStorageConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int systemUserId)
+    private static async Task SeedFileStorageConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int? systemUserId)
     {
         var fileStorageSection = configuration.GetSection("FileStorage");
         
@@ -727,14 +747,14 @@ public static class ComprehensiveConfigurationSeeder
                 "long", "Maximum file size in bytes (10MB)", false, false, false, now, systemUserId),
                 
             CreateConfiguration("FileStorage", "AllowedExtensions", 
-                string.Join(",", fileStorageSection.GetSection("AllowedExtensions").Get<string[]>() ?? new[] { ".jpg", ".jpeg", ".png", ".pdf", ".xlsx", ".csv" }),
+                System.Text.Json.JsonSerializer.Serialize(fileStorageSection.GetSection("AllowedExtensions").Get<string[]>() ?? new[] { ".jpg", ".jpeg", ".png", ".pdf", ".xlsx", ".csv" }),
                 "json", "Allowed file extensions", false, false, false, now, systemUserId)
         });
 
         await Task.CompletedTask;
     }
 
-    private static async Task SeedSystemSettingsConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int systemUserId)
+    private static async Task SeedSystemSettingsConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int? systemUserId)
     {
         var systemSection = configuration.GetSection("SystemSettings");
         
@@ -776,7 +796,7 @@ public static class ComprehensiveConfigurationSeeder
         await Task.CompletedTask;
     }
 
-    private static async Task SeedFrSystemConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int systemUserId)
+    private static async Task SeedFrSystemConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int? systemUserId)
     {
         var frSystemSection = configuration.GetSection("FRSystem");
         
@@ -810,7 +830,7 @@ public static class ComprehensiveConfigurationSeeder
         await Task.CompletedTask;
     }
 
-    private static async Task SeedApplicationConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int systemUserId)
+    private static async Task SeedApplicationConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int? systemUserId)
     {
         configurations.AddRange(new[]
         {
@@ -858,7 +878,7 @@ public static class ComprehensiveConfigurationSeeder
         await Task.CompletedTask;
     }
 
-    private static void AddDefaultConfigurations(List<SystemConfiguration> configurations, DateTime now, int systemUserId)
+    private static void AddDefaultConfigurations(List<SystemConfiguration> configurations, DateTime now, int? systemUserId)
     {
         // Add essential defaults if appsettings.json reading fails
         configurations.AddRange(new[]
@@ -884,7 +904,7 @@ public static class ComprehensiveConfigurationSeeder
         bool isEncrypted = false, 
         bool isSensitive = false, 
         DateTime? createdOn = null, 
-        int createdBy = 1)
+        int? createdBy = null)
     {
         return new SystemConfiguration
         {

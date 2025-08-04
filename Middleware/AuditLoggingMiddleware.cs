@@ -18,9 +18,9 @@ public class AuditLoggingMiddleware
     private readonly AuditLoggingOptions _options;
     private readonly ILogger<AuditLoggingMiddleware> _logger;
 
-    // FIXED: Define maximum metadata size based on database column
-    private const int MAX_METADATA_LENGTH = 3900; // Slightly less than nvarchar(4000) to be safe
-    private const int MAX_INDIVIDUAL_FIELD_LENGTH = 1000; // Limit for individual fields
+    // FIXED: Define maximum metadata size based on database column - increased for nvarchar(max)
+    private const int MAX_METADATA_LENGTH = 50000; // Much larger limit for nvarchar(max)
+    private const int MAX_INDIVIDUAL_FIELD_LENGTH = 2000; // Increased limit for individual fields
 
     public AuditLoggingMiddleware(
         RequestDelegate next,
@@ -225,24 +225,47 @@ public class AuditLoggingMiddleware
         return input.Substring(0, Math.Max(0, maxLength - 15)) + "...[TRUNCATED]";
     }
 
+    // CRITICAL: Special handling for database text/nvarchar(max) columns
+    private string? SafeTruncateForDatabase(string? input, string fieldName)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input;
+
+        // For nvarchar(max) columns, we should be able to store much more
+        // But if there are still issues, we'll progressively truncate
+        if (input.Length > MAX_METADATA_LENGTH)
+        {
+            _logger.LogWarning("{FieldName} is too large ({Length} chars), truncating to {MaxLength}", 
+                fieldName, input.Length, MAX_METADATA_LENGTH);
+            return TruncateString(input, MAX_METADATA_LENGTH);
+        }
+
+        return input;
+    }
+
     // FIXED: Improved SaveAuditEntryAsync with better error handling
     private async Task SaveAuditEntryAsync(HttpContext context, AuditLog auditEntry)
     {
         try
         {
-            // Final validation before saving
-            if (!string.IsNullOrEmpty(auditEntry.Metadata) && auditEntry.Metadata.Length > MAX_METADATA_LENGTH)
-            {
-                _logger.LogWarning("Metadata still too large ({Length} chars), truncating", auditEntry.Metadata.Length);
-                auditEntry.Metadata = TruncateString(auditEntry.Metadata, MAX_METADATA_LENGTH);
-            }
-
-            // Validate other text fields
+            // CRITICAL: Final validation and truncation before saving
+            auditEntry.Metadata = SafeTruncateForDatabase(auditEntry.Metadata, "Metadata");
+            auditEntry.OldValues = SafeTruncateForDatabase(auditEntry.OldValues, "OldValues");
+            auditEntry.NewValues = SafeTruncateForDatabase(auditEntry.NewValues, "NewValues");
+            auditEntry.ExceptionDetails = SafeTruncateForDatabase(auditEntry.ExceptionDetails, "ExceptionDetails");
+            
+            // Validate other text fields with their specific limits
             auditEntry.Description = TruncateString(auditEntry.Description, 500);
             auditEntry.UserAgent = TruncateString(auditEntry.UserAgent, 500);
             auditEntry.RequestPath = TruncateString(auditEntry.RequestPath, 500);
             auditEntry.ErrorMessage = TruncateString(auditEntry.ErrorMessage, 1000);
             auditEntry.ReviewComments = TruncateString(auditEntry.ReviewComments, 500);
+            auditEntry.IpAddress = TruncateString(auditEntry.IpAddress, 45);
+            auditEntry.CorrelationId = TruncateString(auditEntry.CorrelationId, 50);
+            auditEntry.SessionId = TruncateString(auditEntry.SessionId, 50);
+            auditEntry.RequestId = TruncateString(auditEntry.RequestId, 50);
+            auditEntry.HttpMethod = TruncateString(auditEntry.HttpMethod, 10);
+            auditEntry.RiskLevel = TruncateString(auditEntry.RiskLevel, 20);
 
             // Get the audit repository from DI
             using var scope = context.RequestServices.CreateScope();
@@ -266,6 +289,49 @@ public class AuditLoggingMiddleware
                     auditEntry.ResponseStatusCode,
                     auditEntry.Duration
                 });
+            }
+        }
+        catch (Exception ex) when (ex.Message.Contains("String or binary data would be truncated"))
+        {
+            // CRITICAL: Handle string truncation by creating a minimal audit entry
+            _logger.LogWarning(ex, "String truncation error, creating minimal audit entry for {Method} {Path}",
+                auditEntry.HttpMethod, auditEntry.RequestPath);
+
+            try
+            {
+                // Create a minimal audit entry with only essential fields
+                var minimalEntry = new AuditLog
+                {
+                    EventType = auditEntry.EventType,
+                    EntityName = TruncateString(auditEntry.EntityName, 100),
+                    Action = TruncateString(auditEntry.Action, 50),
+                    Description = "Large request - minimal audit due to size constraints",
+                    UserId = auditEntry.UserId,
+                    IpAddress = TruncateString(auditEntry.IpAddress, 45),
+                    UserAgent = TruncateString(auditEntry.UserAgent, 200),
+                    HttpMethod = TruncateString(auditEntry.HttpMethod, 10),
+                    RequestPath = TruncateString(auditEntry.RequestPath, 200),
+                    ResponseStatusCode = auditEntry.ResponseStatusCode,
+                    IsSuccess = auditEntry.IsSuccess,
+                    Duration = auditEntry.Duration,
+                    RiskLevel = "Medium", // Flag for review
+                    RequiresAttention = true,
+                    Metadata = "{\"note\":\"Original data too large for storage\"}",
+                    CreatedOn = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                using var scope = context.RequestServices.CreateScope();
+                var unitOfWork = scope.ServiceProvider.GetService<IUnitOfWork>();
+                if (unitOfWork != null)
+                {
+                    await unitOfWork.AuditLogs.AddAsync(minimalEntry);
+                    await unitOfWork.SaveChangesAsync();
+                }
+            }
+            catch (Exception innerEx)
+            {
+                _logger.LogError(innerEx, "Failed to save even minimal audit entry");
             }
         }
         catch (Exception ex)

@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using FluentValidation;
 using VisitorManagementSystem.Api.Application.Services.Auth;
 using VisitorManagementSystem.Api.Application.Services.Configuration;
-using VisitorManagementSystem.Api.Configuration;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Infrastructure.Data;
 using VisitorManagementSystem.Api.Infrastructure.Data.Repositories;
@@ -31,6 +30,7 @@ using StackExchange.Redis;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Application.Services.Users;
+using VisitorManagementSystem.Api.Configuration;
 
 namespace VisitorManagementSystem.Api.Extensions;
 
@@ -161,11 +161,11 @@ public static class ServiceCollectionExtensions
         });
 
         // Distributed cache (Redis)
-        //services.AddStackExchangeRedisCache(options =>
-        //{
-        //    options.Configuration = Environment.GetEnvironmentVariable("REDIS_CONNECTION") ?? "localhost:6379";
-        //});
-        services.AddDistributedMemoryCache();
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = Environment.GetEnvironmentVariable("REDIS_CONNECTION") ?? "localhost:6379";
+        });
+        //services.AddDistributedMemoryCache();
         // Data protection
         services.AddDataProtection()
             .SetApplicationName("VisitorManagementSystem")

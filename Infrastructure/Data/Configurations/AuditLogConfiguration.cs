@@ -38,7 +38,7 @@ public class AuditLogConfiguration : BaseEntityConfiguration<AuditLog>
             .HasColumnType("nvarchar(max)");
 
         builder.Property(e => e.Metadata)
-            .HasColumnType("nvarchar(max)") // Allow unlimited size
+            .HasMaxLength(-1) // -1 = unlimited
             .IsRequired(false);
 
         // Request properties

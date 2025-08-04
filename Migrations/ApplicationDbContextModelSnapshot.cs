@@ -69,8 +69,7 @@ namespace VisitorManagementSystem.Api.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("ExceptionDetails")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("HttpMethod")
                         .HasMaxLength(10)
@@ -96,19 +95,17 @@ namespace VisitorManagementSystem.Api.Migrations
                         .HasDefaultValue(true);
 
                     b.Property<string>("Metadata")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasMaxLength(-1)
+                        .HasColumnType("nvarchar(-1)");
 
                     b.Property<DateTime?>("ModifiedOn")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("NewValues")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OldValues")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RequestId")
                         .HasMaxLength(50)
@@ -274,8 +271,7 @@ namespace VisitorManagementSystem.Api.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Metadata")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("ModifiedBy")
                         .HasColumnType("int");
@@ -285,12 +281,10 @@ namespace VisitorManagementSystem.Api.Migrations
 
                     b.Property<string>("NewValue")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OldValue")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Reason")
                         .HasMaxLength(500)
@@ -487,8 +481,7 @@ namespace VisitorManagementSystem.Api.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AllowedValues")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Category")
                         .IsRequired()
@@ -507,8 +500,7 @@ namespace VisitorManagementSystem.Api.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("DefaultValue")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -569,13 +561,11 @@ namespace VisitorManagementSystem.Api.Migrations
                         .HasColumnType("rowversion");
 
                     b.Property<string>("ValidationRules")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Value")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

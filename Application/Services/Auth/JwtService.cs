@@ -14,8 +14,6 @@ using VisitorManagementSystem.Api.Application.Services.Auth;
 
 using VisitorManagementSystem.Api.Application.Services.Configuration;
 
-using VisitorManagementSystem.Api.Configuration;
-
 using VisitorManagementSystem.Api.Domain.Constants;
 
 using VisitorManagementSystem.Api.Domain.Entities;
@@ -29,9 +27,7 @@ namespace VisitorManagementSystem.Api.Application.Services.Auth;
 
 
 /// <summary>
-
 /// JWT service implementation for token generation and validation
-
 /// </summary>
 
 public class JwtService : IJwtService
@@ -1107,38 +1103,6 @@ public class JwtService : IJwtService
 
         }
 
-    }
-
-
-
-    public JwtConfiguration GetTokenConfiguration()
-    {
-        // Since this is a synchronous method but we need async calls, we'll use .Result
-        // In a production system, you might want to make this method async or cache the configuration
-        try
-        {
-            return new JwtConfiguration
-            {
-                SecretKey = _dynamicConfig.GetConfigurationAsync<string>("JWT", "SecretKey", "").Result,
-                Issuer = _dynamicConfig.GetConfigurationAsync<string>("JWT", "Issuer", "").Result,
-                Audience = _dynamicConfig.GetConfigurationAsync<string>("JWT", "Audience", "").Result,
-                ExpiryInMinutes = _dynamicConfig.GetConfigurationAsync<int>("JWT", "ExpiryInMinutes", 15).Result,
-                RefreshTokenExpiryInDays = _dynamicConfig.GetConfigurationAsync<int>("JWT", "RefreshTokenExpiryInDays", 7).Result,
-                PasswordResetTokenExpiryMinutes = _dynamicConfig.GetConfigurationAsync<int>("JWT", "PasswordResetTokenExpiryMinutes", 30).Result,
-                ValidateIssuerSigningKey = _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateIssuerSigningKey", true).Result,
-                ValidateIssuer = _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateIssuer", true).Result,
-                ValidateAudience = _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateAudience", true).Result,
-                ValidateLifetime = _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateLifetime", true).Result,
-                ClockSkewMinutes = _dynamicConfig.GetConfigurationAsync<int>("JWT", "ClockSkewMinutes", 0).Result,
-                RequireExpirationTime = _dynamicConfig.GetConfigurationAsync<bool>("JWT", "RequireExpirationTime", true).Result,
-                Algorithm = _dynamicConfig.GetConfigurationAsync<string>("JWT", "Algorithm", "HS256").Result
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error getting JWT configuration, returning defaults");
-            return new JwtConfiguration(); // Return defaults
-        }
     }
 
 

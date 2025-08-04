@@ -65,6 +65,10 @@ public class ApplicationDbContext : DbContext
             .SelectMany(t => t.GetProperties())
             .Where(p => p.ClrType == typeof(string)))
         {
+            // Skip if already configured as nvarchar(max)
+            if (property.GetColumnType()?.Contains("max") == true)
+                continue;
+
             if (property.GetMaxLength() == null)
             {
                 property.SetMaxLength(256);

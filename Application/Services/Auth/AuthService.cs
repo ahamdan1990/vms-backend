@@ -3,7 +3,6 @@
 using VisitorManagementSystem.Api.Application.DTOs.Auth;
 using VisitorManagementSystem.Api.Application.Services.Users;
 using VisitorManagementSystem.Api.Application.Services.Configuration;
-using VisitorManagementSystem.Api.Configuration;
 
 using VisitorManagementSystem.Api.Domain.Constants;
 
@@ -18,10 +17,6 @@ using VisitorManagementSystem.Api.Infrastructure.Utilities;
 
 
 namespace VisitorManagementSystem.Api.Application.Services.Auth;
-
-
-
-/// <summary>
 
 /// <summary>
 /// Authentication service implementation with cookie-based token management

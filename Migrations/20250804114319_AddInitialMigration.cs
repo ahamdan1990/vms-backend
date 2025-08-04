@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace VisitorManagementSystem.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class AddInitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -46,16 +46,16 @@ namespace VisitorManagementSystem.Api.Migrations
                     TimeZone = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false, defaultValue: "UTC"),
                     Language = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false, defaultValue: "en-US"),
                     Theme = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValue: "light"),
-                    AddressStreet1 = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    AddressStreet1 = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     AddressStreet2 = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    AddressCity = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    AddressState = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    AddressPostalCode = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    AddressCountry = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    AddressCity = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    AddressState = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    AddressPostalCode = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    AddressCountry = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     AddressLatitude = table.Column<double>(type: "float", nullable: true),
                     AddressLongitude = table.Column<double>(type: "float", nullable: true),
-                    AddressType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    AddressIsValidated = table.Column<bool>(type: "bit", nullable: false),
+                    AddressType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    AddressIsValidated = table.Column<bool>(type: "bit", nullable: true),
                     CreatedOn = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     ModifiedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
@@ -100,9 +100,9 @@ namespace VisitorManagementSystem.Api.Migrations
                     EntityId = table.Column<int>(type: "int", nullable: true),
                     Action = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    OldValues = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NewValues = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    Metadata = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    OldValues = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NewValues = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Metadata = table.Column<string>(type: "nvarchar(max)", maxLength: -1, nullable: true),
                     IpAddress = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: true),
                     UserAgent = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     CorrelationId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
@@ -116,7 +116,7 @@ namespace VisitorManagementSystem.Api.Migrations
                     ResponseSize = table.Column<long>(type: "bigint", nullable: true),
                     IsSuccess = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     ErrorMessage = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
-                    ExceptionDetails = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    ExceptionDetails = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserId = table.Column<int>(type: "int", nullable: true),
                     RiskLevel = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValue: "Low"),
                     RequiresAttention = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
@@ -179,6 +179,111 @@ namespace VisitorManagementSystem.Api.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SystemConfigurations",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Category = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Key = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Value = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DataType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    RequiresRestart = table.Column<bool>(type: "bit", nullable: false),
+                    IsEncrypted = table.Column<bool>(type: "bit", nullable: false),
+                    IsReadOnly = table.Column<bool>(type: "bit", nullable: false),
+                    IsSensitive = table.Column<bool>(type: "bit", nullable: false),
+                    DefaultValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ValidationRules = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MinValue = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    MaxValue = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    AllowedValues = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Group = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    Environment = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false, defaultValue: "All"),
+                    CreatedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SystemConfigurations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SystemConfigurations_Users_CreatedBy",
+                        column: x => x.CreatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_SystemConfigurations_Users_ModifiedBy",
+                        column: x => x.ModifiedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ConfigurationAudits",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SystemConfigurationId = table.Column<int>(type: "int", nullable: false),
+                    Category = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Key = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    OldValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NewValue = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Action = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    IpAddress = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: true),
+                    UserAgent = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    SessionId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    IsAutomated = table.Column<bool>(type: "bit", nullable: false),
+                    RequiresApproval = table.Column<bool>(type: "bit", nullable: false),
+                    IsApproved = table.Column<bool>(type: "bit", nullable: false),
+                    ApprovedBy = table.Column<int>(type: "int", nullable: true),
+                    ApprovedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Metadata = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ConfigurationAudits", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ConfigurationAudits_SystemConfigurations_SystemConfigurationId",
+                        column: x => x.SystemConfigurationId,
+                        principalTable: "SystemConfigurations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ConfigurationAudits_Users_ApprovedBy",
+                        column: x => x.ApprovedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ConfigurationAudits_Users_CreatedBy",
+                        column: x => x.CreatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ConfigurationAudits_Users_ModifiedBy",
+                        column: x => x.ModifiedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -272,6 +377,56 @@ namespace VisitorManagementSystem.Api.Migrations
                 columns: new[] { "UserId", "CreatedOn" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_ConfigurationAudits_Action",
+                table: "ConfigurationAudits",
+                column: "Action");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConfigurationAudits_ApprovedBy",
+                table: "ConfigurationAudits",
+                column: "ApprovedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConfigurationAudits_Category_Key",
+                table: "ConfigurationAudits",
+                columns: new[] { "Category", "Key" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConfigurationAudits_CreatedBy",
+                table: "ConfigurationAudits",
+                column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConfigurationAudits_CreatedOn",
+                table: "ConfigurationAudits",
+                column: "CreatedOn");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConfigurationAudits_IsApproved",
+                table: "ConfigurationAudits",
+                column: "IsApproved");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConfigurationAudits_IsAutomated",
+                table: "ConfigurationAudits",
+                column: "IsAutomated");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConfigurationAudits_ModifiedBy",
+                table: "ConfigurationAudits",
+                column: "ModifiedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConfigurationAudits_RequiresApproval",
+                table: "ConfigurationAudits",
+                column: "RequiresApproval");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ConfigurationAudits_SystemConfigurationId",
+                table: "ConfigurationAudits",
+                column: "SystemConfigurationId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_RefreshToken_CreatedOn",
                 table: "RefreshTokens",
                 column: "CreatedOn");
@@ -344,6 +499,47 @@ namespace VisitorManagementSystem.Api.Migrations
                 name: "IX_RefreshTokens_UserId_IsActive_ExpiryDate",
                 table: "RefreshTokens",
                 columns: new[] { "UserId", "IsActive", "ExpiryDate" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SystemConfigurations_Category",
+                table: "SystemConfigurations",
+                column: "Category");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SystemConfigurations_Category_Key",
+                table: "SystemConfigurations",
+                columns: new[] { "Category", "Key" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SystemConfigurations_CreatedBy",
+                table: "SystemConfigurations",
+                column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SystemConfigurations_Environment",
+                table: "SystemConfigurations",
+                column: "Environment");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SystemConfigurations_Group",
+                table: "SystemConfigurations",
+                column: "Group");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SystemConfigurations_IsEncrypted",
+                table: "SystemConfigurations",
+                column: "IsEncrypted");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SystemConfigurations_ModifiedBy",
+                table: "SystemConfigurations",
+                column: "ModifiedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SystemConfigurations_RequiresRestart",
+                table: "SystemConfigurations",
+                column: "RequiresRestart");
 
             migrationBuilder.CreateIndex(
                 name: "IX_User_CreatedBy",
@@ -447,7 +643,13 @@ namespace VisitorManagementSystem.Api.Migrations
                 name: "AuditLogs");
 
             migrationBuilder.DropTable(
+                name: "ConfigurationAudits");
+
+            migrationBuilder.DropTable(
                 name: "RefreshTokens");
+
+            migrationBuilder.DropTable(
+                name: "SystemConfigurations");
 
             migrationBuilder.DropTable(
                 name: "Users");

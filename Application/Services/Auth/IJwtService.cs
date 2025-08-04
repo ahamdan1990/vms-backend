@@ -1,5 +1,4 @@
 ﻿using System.Security.Claims;
-using VisitorManagementSystem.Api.Configuration;
 using VisitorManagementSystem.Api.Domain.Entities;
 
 namespace VisitorManagementSystem.Api.Application.Services.Auth;
@@ -151,12 +150,6 @@ public interface IJwtService
     /// <param name="userId">User ID</param>
     /// <returns>New security stamp</returns>
     Task<string> RevokeAllUserTokensAsync(int userId);
-
-    /// <summary>
-    /// Gets token configuration information
-    /// </summary>
-    /// <returns>Token configuration</returns>
-    JwtConfiguration GetTokenConfiguration();
 }
 
 /// <summary>
