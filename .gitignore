@@ -2,6 +2,8 @@
 bin/
 obj/
 out/
+**/obj/
+**/bin/
 
 # Ignore Visual Studio temp files and settings
 .vs/
