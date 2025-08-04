@@ -1,12 +1,11 @@
-﻿using VisitorManagementSystem.Api.Application.Services.Auth;
-using VisitorManagementSystem.Api.Domain.Constants;
+﻿using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
-using Microsoft.Extensions.Options;
+using VisitorManagementSystem.Api.Application.Services.Configuration;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace VisitorManagementSystem.Api.Application.Services.Auth;
+namespace VisitorManagementSystem.Api.Application.Services.Users;
 
 /// <summary>
 /// User lockout service implementation for managing account lockouts and failed login attempts
@@ -16,19 +15,19 @@ public class UserLockoutService : IUserLockoutService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<UserLockoutService> _logger;
     private readonly IMemoryCache _cache;
-    private readonly IOptions<LockoutConfiguration> _lockoutConfig;
+    private readonly IDynamicConfigurationService _dynamicConfig;
     private readonly TimeSpan _cacheExpiry = TimeSpan.FromMinutes(30);
 
     public UserLockoutService(
         IUnitOfWork unitOfWork,
         ILogger<UserLockoutService> logger,
         IMemoryCache cache,
-        IOptions<LockoutConfiguration> lockoutConfig)
+        IDynamicConfigurationService dynamicConfig)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
         _cache = cache;
-        _lockoutConfig = lockoutConfig;
+        _dynamicConfig = dynamicConfig;
     }
 
     public async Task<LockoutResult> RecordFailedLoginAttemptAsync(string email, string? ipAddress = null,
@@ -48,7 +47,7 @@ public class UserLockoutService : IUserLockoutService
                 {
                     IsLockedOut = false,
                     FailedAttempts = 0,
-                    MaxFailedAttempts = _lockoutConfig.Value.MaxFailedAttempts
+                    MaxFailedAttempts = await _dynamicConfig.GetConfigurationAsync<int>("Lockout", "MaxFailedAttempts", 5, cancellationToken)
                 };
             }
 
@@ -59,12 +58,13 @@ public class UserLockoutService : IUserLockoutService
             if (user.IsCurrentlyLockedOut())
             {
                 _logger.LogWarning("Login attempt for already locked user: {Email}", email);
+                var maxFailedAttempts = await _dynamicConfig.GetConfigurationAsync<int>("Lockout", "MaxFailedAttempts", 5, cancellationToken);
                 return new LockoutResult
                 {
                     IsLockedOut = true,
                     WasAlreadyLocked = true,
                     FailedAttempts = user.FailedLoginAttempts,
-                    MaxFailedAttempts = _lockoutConfig.Value.MaxFailedAttempts,
+                    MaxFailedAttempts = maxFailedAttempts,
                     LockoutEnd = user.LockoutEnd,
                     LockoutDuration = user.LockoutEnd - DateTime.UtcNow,
                     Reason = "Account locked due to failed login attempts"
@@ -72,8 +72,8 @@ public class UserLockoutService : IUserLockoutService
             }
 
             // Increment failed attempts
-            var config = _lockoutConfig.Value;
-            user.IncrementFailedLoginAttempts(config.MaxFailedAttempts, GetLockoutDuration(user.FailedLoginAttempts + 1));
+            var maxFailedAttemptsConfig = await _dynamicConfig.GetConfigurationAsync<int>("Lockout", "MaxFailedAttempts", 5, cancellationToken);
+            user.IncrementFailedLoginAttempts(maxFailedAttemptsConfig, await GetLockoutDurationAsync(user.FailedLoginAttempts + 1, cancellationToken));
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -81,7 +81,7 @@ public class UserLockoutService : IUserLockoutService
             {
                 IsLockedOut = user.IsCurrentlyLockedOut(),
                 FailedAttempts = user.FailedLoginAttempts,
-                MaxFailedAttempts = config.MaxFailedAttempts,
+                MaxFailedAttempts = maxFailedAttemptsConfig,
                 LockoutEnd = user.LockoutEnd,
                 LockoutDuration = user.LockoutEnd - DateTime.UtcNow,
                 Reason = user.IsCurrentlyLockedOut() ? "Account locked due to failed login attempts" : null
@@ -105,7 +105,7 @@ public class UserLockoutService : IUserLockoutService
             {
                 IsLockedOut = false,
                 FailedAttempts = 0,
-                MaxFailedAttempts = _lockoutConfig.Value.MaxFailedAttempts
+                MaxFailedAttempts = await _dynamicConfig.GetConfigurationAsync<int>("Lockout", "MaxFailedAttempts", 5, cancellationToken)
             };
         }
     }
@@ -223,24 +223,26 @@ public class UserLockoutService : IUserLockoutService
             var user = await _unitOfWork.Users.GetByEmailAsync(email, cancellationToken);
             if (user == null)
             {
+                var maxFailedAttempts = await _dynamicConfig.GetConfigurationAsync<int>("Lockout", "MaxFailedAttempts", 5, cancellationToken);
                 return new LockoutStatus
                 {
                     IsLockedOut = false,
                     FailedAttempts = 0,
-                    MaxFailedAttempts = _lockoutConfig.Value.MaxFailedAttempts,
-                    RemainingAttempts = _lockoutConfig.Value.MaxFailedAttempts,
+                    MaxFailedAttempts = maxFailedAttempts,
+                    RemainingAttempts = maxFailedAttempts,
                     CanRetryNow = true
                 };
             }
 
+            var maxFailedAttemptsConfig = await _dynamicConfig.GetConfigurationAsync<int>("Lockout", "MaxFailedAttempts", 5, cancellationToken);
             var status = new LockoutStatus
             {
                 IsLockedOut = user.IsCurrentlyLockedOut(),
                 LockoutEnd = user.LockoutEnd,
                 TimeRemaining = user.IsCurrentlyLockedOut() ? user.LockoutEnd - DateTime.UtcNow : null,
                 FailedAttempts = user.FailedLoginAttempts,
-                MaxFailedAttempts = _lockoutConfig.Value.MaxFailedAttempts,
-                RemainingAttempts = Math.Max(0, _lockoutConfig.Value.MaxFailedAttempts - user.FailedLoginAttempts),
+                MaxFailedAttempts = maxFailedAttemptsConfig,
+                RemainingAttempts = Math.Max(0, maxFailedAttemptsConfig - user.FailedLoginAttempts),
                 LockoutReason = user.IsCurrentlyLockedOut() ? "Exceeded maximum failed login attempts" : null,
                 CanRetryNow = !user.IsCurrentlyLockedOut(),
                 NextRetryTime = user.LockoutEnd
@@ -272,7 +274,7 @@ public class UserLockoutService : IUserLockoutService
                 };
             }
 
-            var lockoutDuration = duration ?? _lockoutConfig.Value.LockoutDuration;
+            var lockoutDuration = duration ?? await _dynamicConfig.GetConfigurationAsync<TimeSpan>("Lockout", "LockoutDuration", TimeSpan.FromMinutes(15), cancellationToken);
             user.LockAccount(lockoutDuration);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -280,12 +282,13 @@ public class UserLockoutService : IUserLockoutService
             // Record security event
             await RecordSecurityEventAsync(userId, "ManualLockout", null, null, reason, cancellationToken);
 
+            var maxFailedAttempts = await _dynamicConfig.GetConfigurationAsync<int>("Lockout", "MaxFailedAttempts", 5, cancellationToken);
             var result = new LockoutResult
             {
                 IsLockedOut = true,
                 WasAlreadyLocked = false,
                 FailedAttempts = user.FailedLoginAttempts,
-                MaxFailedAttempts = _lockoutConfig.Value.MaxFailedAttempts,
+                MaxFailedAttempts = maxFailedAttempts,
                 LockoutEnd = user.LockoutEnd,
                 LockoutDuration = lockoutDuration,
                 Reason = reason,
@@ -406,20 +409,23 @@ public class UserLockoutService : IUserLockoutService
     {
         try
         {
-            var config = _lockoutConfig.Value;
-            var attempts = await GetFailedLoginAttemptsByIpAsync(ipAddress, config.FailedAttemptWindow, cancellationToken);
+            var maxFailedAttemptsPerIp = await _dynamicConfig.GetConfigurationAsync<int>("Lockout", "MaxFailedAttemptsPerIp", 10, cancellationToken);
+            var failedAttemptWindow = await _dynamicConfig.GetConfigurationAsync<TimeSpan>("Lockout", "FailedAttemptWindow", TimeSpan.FromMinutes(15), cancellationToken);
+            var ipBlockDuration = await _dynamicConfig.GetConfigurationAsync<TimeSpan>("Lockout", "IpBlockDuration", TimeSpan.FromMinutes(30), cancellationToken);
+            
+            var attempts = await GetFailedLoginAttemptsByIpAsync(ipAddress, failedAttemptWindow, cancellationToken);
 
             return new RateLimitStatus
             {
-                IsRateLimited = attempts >= config.MaxFailedAttemptsPerIp,
+                IsRateLimited = attempts >= maxFailedAttemptsPerIp,
                 CurrentAttempts = attempts,
-                MaxAttempts = config.MaxFailedAttemptsPerIp,
-                WindowDuration = config.FailedAttemptWindow,
-                WindowStart = DateTime.UtcNow - config.FailedAttemptWindow,
-                NextAllowedTime = attempts >= config.MaxFailedAttemptsPerIp ?
-                    DateTime.UtcNow.Add(config.IpBlockDuration) : null,
-                RetryAfter = attempts >= config.MaxFailedAttemptsPerIp ?
-                    config.IpBlockDuration : null
+                MaxAttempts = maxFailedAttemptsPerIp,
+                WindowDuration = failedAttemptWindow,
+                WindowStart = DateTime.UtcNow - failedAttemptWindow,
+                NextAllowedTime = attempts >= maxFailedAttemptsPerIp ?
+                    DateTime.UtcNow.Add(ipBlockDuration) : null,
+                RetryAfter = attempts >= maxFailedAttemptsPerIp ?
+                    ipBlockDuration : null
             };
         }
         catch (Exception ex)
@@ -478,7 +484,34 @@ public class UserLockoutService : IUserLockoutService
 
     public LockoutConfiguration GetLockoutConfiguration()
     {
-        return _lockoutConfig.Value;
+        // Since this is a synchronous method but we need async calls, we'll use .Result
+        // In a production system, you might want to make this method async or cache the configuration
+        try
+        {
+            return new LockoutConfiguration
+            {
+                MaxFailedAttempts = _dynamicConfig.GetConfigurationAsync<int>("Lockout", "MaxFailedAttempts", 5).Result,
+                LockoutDuration = _dynamicConfig.GetConfigurationAsync<TimeSpan>("Lockout", "LockoutDuration", TimeSpan.FromMinutes(15)).Result,
+                EnableProgressiveLockout = _dynamicConfig.GetConfigurationAsync<bool>("Lockout", "EnableProgressiveLockout", true).Result,
+                LockoutProgression = _dynamicConfig.GetConfigurationAsync<List<TimeSpan>>("Lockout", "LockoutProgression", 
+                    new List<TimeSpan> { TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(15), TimeSpan.FromHours(1), TimeSpan.FromHours(24) }).Result,
+                FailedAttemptWindow = _dynamicConfig.GetConfigurationAsync<TimeSpan>("Lockout", "FailedAttemptWindow", TimeSpan.FromMinutes(15)).Result,
+                ResetAttemptsOnSuccess = _dynamicConfig.GetConfigurationAsync<bool>("Lockout", "ResetAttemptsOnSuccess", true).Result,
+                EnableIpBlocking = _dynamicConfig.GetConfigurationAsync<bool>("Lockout", "EnableIpBlocking", true).Result,
+                MaxFailedAttemptsPerIp = _dynamicConfig.GetConfigurationAsync<int>("Lockout", "MaxFailedAttemptsPerIp", 10).Result,
+                IpBlockDuration = _dynamicConfig.GetConfigurationAsync<TimeSpan>("Lockout", "IpBlockDuration", TimeSpan.FromMinutes(30)).Result,
+                NotifyOnLockout = _dynamicConfig.GetConfigurationAsync<bool>("Lockout", "NotifyOnLockout", true).Result,
+                NotifyAdminOnLockout = _dynamicConfig.GetConfigurationAsync<bool>("Lockout", "NotifyAdminOnLockout", true).Result,
+                EnableAnomalyDetection = _dynamicConfig.GetConfigurationAsync<bool>("Lockout", "EnableAnomalyDetection", true).Result,
+                TrustedIpRanges = _dynamicConfig.GetConfigurationAsync<List<string>>("Lockout", "TrustedIpRanges", new List<string>()).Result,
+                BlockedIpRanges = _dynamicConfig.GetConfigurationAsync<List<string>>("Lockout", "BlockedIpRanges", new List<string>()).Result
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting lockout configuration, returning defaults");
+            return new LockoutConfiguration(); // Return defaults
+        }
     }
 
     public async Task UpdateLockoutConfigurationAsync(LockoutConfiguration configuration, CancellationToken cancellationToken = default)
@@ -587,13 +620,14 @@ public class UserLockoutService : IUserLockoutService
         try
         {
             var lockedUsers = await _unitOfWork.Users.GetLockedOutUsersAsync(cancellationToken);
+            var lockoutDuration = await _dynamicConfig.GetConfigurationAsync<TimeSpan>("Lockout", "LockoutDuration", TimeSpan.FromMinutes(15), cancellationToken);
 
             return lockedUsers.Select(user => new LockedUserInfo
             {
                 UserId = user.Id,
                 Email = user.Email.Value,
                 FullName = user.FullName,
-                LockedAt = user.LockoutEnd?.Subtract(_lockoutConfig.Value.LockoutDuration) ?? DateTime.UtcNow,
+                LockedAt = user.LockoutEnd?.Subtract(lockoutDuration) ?? DateTime.UtcNow,
                 LockoutEnd = user.LockoutEnd,
                 LockoutReason = "Failed login attempts",
                 FailedAttempts = user.FailedLoginAttempts,
@@ -615,6 +649,8 @@ public class UserLockoutService : IUserLockoutService
             var usersWithFailedAttempts = await _unitOfWork.Users
                 .GetUsersWithFailedLoginAttemptsAsync(1, cancellationToken);
 
+            var maxFailedAttempts = await _dynamicConfig.GetConfigurationAsync<int>("Lockout", "MaxFailedAttempts", 5, cancellationToken);
+
             return usersWithFailedAttempts
                 .Where(u => !u.IsCurrentlyLockedOut())
                 .Select(user => new UserAtRiskInfo
@@ -623,9 +659,9 @@ public class UserLockoutService : IUserLockoutService
                     Email = user.Email.Value,
                     FullName = user.FullName,
                     FailedAttempts = user.FailedLoginAttempts,
-                    MaxFailedAttempts = _lockoutConfig.Value.MaxFailedAttempts,
-                    RemainingAttempts = _lockoutConfig.Value.MaxFailedAttempts - user.FailedLoginAttempts,
-                    RiskLevel = user.FailedLoginAttempts >= _lockoutConfig.Value.MaxFailedAttempts - 1 ? "High" : "Medium"
+                    MaxFailedAttempts = maxFailedAttempts,
+                    RemainingAttempts = maxFailedAttempts - user.FailedLoginAttempts,
+                    RiskLevel = user.FailedLoginAttempts >= maxFailedAttempts - 1 ? "High" : "Medium"
                 }).ToList();
         }
         catch (Exception ex)
@@ -641,6 +677,7 @@ public class UserLockoutService : IUserLockoutService
         try
         {
             var lockedUsers = await GetLockedUsersAsync(cancellationToken);
+            var lockoutDuration = await _dynamicConfig.GetConfigurationAsync<TimeSpan>("Lockout", "LockoutDuration", TimeSpan.FromMinutes(15), cancellationToken);
 
             return new LockoutReport
             {
@@ -654,7 +691,7 @@ public class UserLockoutService : IUserLockoutService
                 PendingLockouts = lockedUsers.Count(u => u.LockoutEnd > DateTime.UtcNow),
                 LockoutsByReason = lockedUsers.GroupBy(u => u.LockoutReason)
                     .ToDictionary(g => g.Key, g => g.Count()),
-                AverageLockoutDuration = _lockoutConfig.Value.LockoutDuration
+                AverageLockoutDuration = lockoutDuration
             };
         }
         catch (Exception ex)
@@ -756,17 +793,22 @@ public class UserLockoutService : IUserLockoutService
         }
     }
 
-    private TimeSpan GetLockoutDuration(int failedAttempts)
+    private async Task<TimeSpan> GetLockoutDurationAsync(int failedAttempts, CancellationToken cancellationToken = default)
     {
-        var config = _lockoutConfig.Value;
+        var enableProgressive = await _dynamicConfig.GetConfigurationAsync<bool>("Lockout", "EnableProgressiveLockout", true, cancellationToken);
+        var defaultDuration = await _dynamicConfig.GetConfigurationAsync<TimeSpan>("Lockout", "LockoutDuration", TimeSpan.FromMinutes(15), cancellationToken);
 
-        if (config.EnableProgressiveLockout && config.LockoutProgression.Any())
+        if (enableProgressive)
         {
-            var index = Math.Min(failedAttempts - config.MaxFailedAttempts, config.LockoutProgression.Count - 1);
-            return index >= 0 ? config.LockoutProgression[index] : config.LockoutDuration;
+            var progression = await _dynamicConfig.GetConfigurationAsync<List<TimeSpan>>("Lockout", "LockoutProgression",
+                new List<TimeSpan> { TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(15), TimeSpan.FromHours(1), TimeSpan.FromHours(24) }, cancellationToken);
+
+            var maxAttempts = await _dynamicConfig.GetConfigurationAsync<int>("Lockout", "MaxFailedAttempts", 5, cancellationToken);
+            var index = Math.Min(failedAttempts - maxAttempts, progression.Count - 1);
+            return index >= 0 ? progression[index] : defaultDuration;
         }
 
-        return config.LockoutDuration;
+        return defaultDuration;
     }
 
     private async Task RecordSecurityEventAsync(int? userId, string eventType, string? ipAddress,
@@ -790,9 +832,10 @@ public class UserLockoutService : IUserLockoutService
         {
             if (string.IsNullOrEmpty(ipAddress)) return;
 
+            var failedAttemptWindow = await _dynamicConfig.GetConfigurationAsync<TimeSpan>("Lockout", "FailedAttemptWindow", TimeSpan.FromMinutes(15), cancellationToken);
             var cacheKey = $"ip_attempts_{ipAddress}";
             var attempts = _cache.Get<int>(cacheKey);
-            _cache.Set(cacheKey, attempts + 1, _lockoutConfig.Value.FailedAttemptWindow);
+            _cache.Set(cacheKey, attempts + 1, failedAttemptWindow);
 
             await Task.CompletedTask;
         }

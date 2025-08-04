@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Controllers; // For RoleDto
 using VisitorManagementSystem.Api.Domain.Enums;
 

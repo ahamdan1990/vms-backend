@@ -1,4 +1,6 @@
-﻿namespace VisitorManagementSystem.Api.Application.DTOs.Common;
+﻿using System.Text.Json.Serialization;
+
+namespace VisitorManagementSystem.Api.Application.DTOs.Common;
 
 /// <summary>
 /// Standard API response wrapper
@@ -19,6 +21,7 @@ public class ApiResponseDto<T>
     /// <summary>
     /// Response data
     /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public T? Data { get; set; }
 
     /// <summary>
@@ -31,35 +34,45 @@ public class ApiResponseDto<T>
     /// </summary>
     public object? Metadata { get; set; }
 
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public string CorrelationId { get; set; } = Guid.NewGuid().ToString();
+
     /// <summary>
     /// Creates a successful response
     /// </summary>
     /// <param name="data">Response data</param>
     /// <param name="message">Success message</param>
+    ///  <param name="correlationId">Correlation Id</param>
     /// <returns>Successful API response</returns>
-    public static ApiResponseDto<T> SuccessResponse(T data, string? message = null)
+    public static ApiResponseDto<T> SuccessResponse(T data, string? message = null, string? correlationId = null)
     {
         return new ApiResponseDto<T>
         {
             Success = true,
             Message = message,
-            Data = data
+            Data = data,
+            Timestamp = DateTime.UtcNow,
+            CorrelationId = correlationId ?? Guid.NewGuid().ToString()
         };
     }
+
 
     /// <summary>
     /// Creates an error response
     /// </summary>
     /// <param name="errors">Error messages</param>
     /// <param name="message">Error message</param>
+    /// <param name="correlationId">Correlation Id</param>
     /// <returns>Error API response</returns>
-    public static ApiResponseDto<T> ErrorResponse(List<string> errors, string? message = null)
+    public static ApiResponseDto<T> ErrorResponse(List<string> errors, string? message = null, string? correlationId = null)
     {
         return new ApiResponseDto<T>
         {
             Success = false,
             Message = message,
-            Errors = errors
+            Errors = errors,
+            Timestamp = DateTime.UtcNow,
+            CorrelationId = correlationId ?? Guid.NewGuid().ToString()
         };
     }
 
@@ -68,14 +81,17 @@ public class ApiResponseDto<T>
     /// </summary>
     /// <param name="error">Error message</param>
     /// <param name="message">Error message</param>
+    /// <param name="correlationId">Correlation Id</param>
     /// <returns>Error API response</returns>
-    public static ApiResponseDto<T> ErrorResponse(string error, string? message = null)
+    public static ApiResponseDto<T> ErrorResponse(string error, string? message = null, string? correlationId = null)
     {
         return new ApiResponseDto<T>
         {
             Success = false,
             Message = message,
-            Errors = new List<string> { error }
+            Errors = new List<string> { error },
+            Timestamp = DateTime.UtcNow,
+            CorrelationId = correlationId ?? Guid.NewGuid().ToString()
         };
     }
 }

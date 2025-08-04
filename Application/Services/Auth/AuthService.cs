@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.Options;
 
 using VisitorManagementSystem.Api.Application.DTOs.Auth;
-
-using VisitorManagementSystem.Api.Application.Services.Auth;
-
+using VisitorManagementSystem.Api.Application.Services.Users;
+using VisitorManagementSystem.Api.Application.Services.Configuration;
 using VisitorManagementSystem.Api.Configuration;
 
 using VisitorManagementSystem.Api.Domain.Constants;
@@ -24,10 +23,9 @@ namespace VisitorManagementSystem.Api.Application.Services.Auth;
 
 /// <summary>
 
+/// <summary>
 /// Authentication service implementation with cookie-based token management
-
 /// </summary>
-
 public class AuthService : IAuthService
 
 {
@@ -46,9 +44,7 @@ public class AuthService : IAuthService
 
     private readonly ILogger<AuthService> _logger;
 
-    private readonly JwtConfiguration _jwtConfig;
-
-    private readonly SecurityConfiguration _securityConfig;
+    private readonly IDynamicConfigurationService _dynamicConfig;
 
 
 
@@ -68,9 +64,7 @@ public class AuthService : IAuthService
 
         ILogger<AuthService> logger,
 
-        IOptions<JwtConfiguration> jwtConfig,
-
-        IOptions<SecurityConfiguration> securityConfig)
+        IDynamicConfigurationService dynamicConfig)
 
     {
 
@@ -88,9 +82,7 @@ public class AuthService : IAuthService
 
         _logger = logger;
 
-        _jwtConfig = jwtConfig.Value;
-
-        _securityConfig = securityConfig.Value;
+        _dynamicConfig = dynamicConfig;
 
     }
 
@@ -952,7 +944,8 @@ public class AuthService : IAuthService
 
             var resetToken = _passwordService.GeneratePasswordResetToken(user);
 
-            var expiryTime = DateTime.UtcNow.AddMinutes(_jwtConfig.PasswordResetTokenExpiryMinutes);
+            var passwordResetTokenExpiryMinutes = await _dynamicConfig.GetConfigurationAsync<int>("JWT", "PasswordResetTokenExpiryMinutes", 30, cancellationToken);
+            var expiryTime = DateTime.UtcNow.AddMinutes(passwordResetTokenExpiryMinutes);
 
 
 

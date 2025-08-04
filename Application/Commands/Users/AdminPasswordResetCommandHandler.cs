@@ -1,6 +1,8 @@
 ﻿using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
+using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Application.Services.Auth;
+using VisitorManagementSystem.Api.Controllers;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Users
@@ -8,7 +10,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
     /// <summary>
     /// Handler for AdminPasswordResetCommand
     /// </summary>
-    public class AdminPasswordResetCommandHandler : IRequestHandler<AdminPasswordResetCommand, CommandResultDto>
+    public class AdminPasswordResetCommandHandler : IRequestHandler<AdminPasswordResetCommand, CommandResultDto<AdminPasswordResetResponseDto>>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPasswordService _passwordService;
@@ -27,7 +29,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
             _logger = logger;
         }
 
-        public async Task<CommandResultDto> Handle(AdminPasswordResetCommand request, CancellationToken cancellationToken)
+        public async Task<CommandResultDto<AdminPasswordResetResponseDto>> Handle(AdminPasswordResetCommand request, CancellationToken cancellationToken)
         {
             try
             {
@@ -37,13 +39,13 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, cancellationToken);
                 if (user == null)
                 {
-                    return CommandResultDto.Failure("User not found");
+                    return CommandResultDto<AdminPasswordResetResponseDto>.Failure("User not found");
                 }
 
                 var resetByUser = await _unitOfWork.Users.GetByIdAsync(request.ResetBy, cancellationToken);
                 if (resetByUser == null)
                 {
-                    return CommandResultDto.Failure("Invalid administrator user");
+                    return CommandResultDto<AdminPasswordResetResponseDto>.Failure("Invalid administrator user");
                 }
 
                 string newPassword;
@@ -61,12 +63,12 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                     var passwordValidation = _passwordService.ValidatePassword(newPassword, user);
                     if (!passwordValidation.IsValid)
                     {
-                        return CommandResultDto.Failure("New password does not meet requirements", passwordValidation.Errors);
+                        return CommandResultDto<AdminPasswordResetResponseDto>.Failure("New password does not meet requirements", passwordValidation.Errors);
                     }
                 }
                 else
                 {
-                    return CommandResultDto.Failure("Either provide a new password or enable temporary password generation");
+                    return CommandResultDto<AdminPasswordResetResponseDto>.Failure("Either provide a new password or enable temporary password generation");
                 }
 
                 // Save current password to history
@@ -78,7 +80,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 // Update user password
                 user.ChangePassword(hashResult.Hash, hashResult.Salt);
 
-                if (request.RequirePasswordChange)
+                if (request.MustChangePassword)
                 {
                     user.MustChangePassword = true;
                 }
@@ -94,13 +96,17 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 _logger.LogInformation("Password reset completed for user: {UserId} by administrator: {ResetBy}, Reason: {Reason}",
                     request.UserId, request.ResetBy, reason);
 
-                var result = CommandResultDto.Success("Password reset successfully");
 
-                // Include temporary password in response if generated (should be sent securely to user)
-                if (request.GenerateTemporaryPassword)
+                var responseDto = new AdminPasswordResetResponseDto
                 {
-                    result.Data = new { TemporaryPassword = newPassword }; // This should be handled securely in real implementation
-                }
+                    NewPassword = newPassword,
+                    MustChangePassword = request.MustChangePassword,
+                    NotifyUser = request.NotifyUser,
+                    Reason = reason
+                };
+                var result = CommandResultDto<AdminPasswordResetResponseDto>.Success(responseDto,"Password reset successfully");
+
+
 
                 // TODO: Send notification to user if requested
                 if (request.NotifyUser)
@@ -114,7 +120,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing AdminPasswordResetCommand for UserId: {UserId}", request.UserId);
-                return CommandResultDto.Failure("An error occurred while resetting the password");
+                return CommandResultDto<AdminPasswordResetResponseDto>.Failure("An error occurred while resetting the password");
             }
         }
     }

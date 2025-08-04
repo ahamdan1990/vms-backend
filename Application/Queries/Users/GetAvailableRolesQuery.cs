@@ -1,5 +1,6 @@
 ﻿// Update GetAvailableRolesQuery to return RoleDto instead of SelectListItemDto
 using MediatR;
+using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Controllers; // For RoleDto
 
 namespace VisitorManagementSystem.Api.Application.Queries.Users;

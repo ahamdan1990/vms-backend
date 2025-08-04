@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage;
+using VisitorManagementSystem.Api.Domain.Entities;
 
 namespace VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
@@ -20,14 +21,24 @@ public interface IUnitOfWork : IDisposable
     /// <summary>
     /// Audit log repository
     /// </summary>
-    IGenericRepository<VisitorManagementSystem.Api.Domain.Entities.AuditLog> AuditLogs { get; }
+    IGenericRepository<AuditLog> AuditLogs { get; }
+
+    /// <summary>
+    /// System configuration repository
+    /// </summary>
+    ISystemConfigurationRepository SystemConfigurations { get; }
+
+    /// <summary>
+    /// Configuration audit repository
+    /// </summary>
+    IConfigurationAuditRepository ConfigurationAudits { get; }
 
     /// <summary>
     /// Gets a generic repository for any entity type
     /// </summary>
     /// <typeparam name="TEntity">Entity type</typeparam>
     /// <returns>Generic repository instance</returns>
-    IGenericRepository<TEntity> Repository<TEntity>() where TEntity : VisitorManagementSystem.Api.Domain.Entities.BaseEntity;
+    IGenericRepository<TEntity> Repository<TEntity>() where TEntity : BaseEntity;
 
     /// <summary>
     /// Saves all changes to the database

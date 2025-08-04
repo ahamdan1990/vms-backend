@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
-using VisitorManagementSystem.Api.Application.Services.Auth;
+using VisitorManagementSystem.Api.Application.Services.Users;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 

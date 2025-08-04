@@ -5,6 +5,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
+using VisitorManagementSystem.Api.Application.Services.Configuration;
 using VisitorManagementSystem.Api.Configuration;
 
 namespace VisitorManagementSystem.Api.Infrastructure.Security.Authentication;
@@ -14,18 +15,21 @@ namespace VisitorManagementSystem.Api.Infrastructure.Security.Authentication;
 /// </summary>
 public class JwtAuthenticationHandler : AuthenticationHandler<JwtAuthenticationSchemeOptions>
 {
-    private readonly JwtConfiguration _jwtConfig;
+    private readonly IDynamicConfigurationService _dynamicConfig;
     private readonly ILogger<JwtAuthenticationHandler> _logger;
+    private JwtConfiguration? _cachedConfig;
+    private DateTime _lastConfigLoad = DateTime.MinValue;
+    private readonly TimeSpan _configCacheExpiry = TimeSpan.FromMinutes(5);
 
     public JwtAuthenticationHandler(
         IOptionsMonitor<JwtAuthenticationSchemeOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder,
         ISystemClock clock,
-        IOptions<JwtConfiguration> jwtConfig)
+        IDynamicConfigurationService dynamicConfig)
         : base(options, logger, encoder, clock)
     {
-        _jwtConfig = jwtConfig.Value;
+        _dynamicConfig = dynamicConfig;
         _logger = logger.CreateLogger<JwtAuthenticationHandler>();
     }
 
@@ -68,24 +72,75 @@ public class JwtAuthenticationHandler : AuthenticationHandler<JwtAuthenticationS
         }
     }
 
+    private async Task<JwtConfiguration> GetJwtConfigurationAsync()
+    {
+        // Check if we have cached config and it's not expired
+        if (_cachedConfig != null && DateTime.UtcNow - _lastConfigLoad < _configCacheExpiry)
+        {
+            return _cachedConfig;
+        }
+
+        try
+        {
+            _cachedConfig = new JwtConfiguration
+            {
+                SecretKey = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "SecretKey", ""),
+                Issuer = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Issuer", ""),
+                Audience = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Audience", ""),
+                ExpiryInMinutes = await _dynamicConfig.GetConfigurationAsync<int>("JWT", "ExpiryInMinutes", 15),
+                RefreshTokenExpiryInDays = await _dynamicConfig.GetConfigurationAsync<int>("JWT", "RefreshTokenExpiryInDays", 7),
+                ValidateIssuerSigningKey = await _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateIssuerSigningKey", true),
+                ValidateIssuer = await _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateIssuer", true),
+                ValidateAudience = await _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateAudience", true),
+                ValidateLifetime = await _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateLifetime", true),
+                ClockSkewMinutes = await _dynamicConfig.GetConfigurationAsync<int>("JWT", "ClockSkewMinutes", 0),
+                RequireExpirationTime = await _dynamicConfig.GetConfigurationAsync<bool>("JWT", "RequireExpirationTime", true)
+            };
+
+            _lastConfigLoad = DateTime.UtcNow;
+            return _cachedConfig;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load JWT configuration from dynamic config, using defaults");
+            
+            // Return default configuration if dynamic config fails
+            return new JwtConfiguration
+            {
+                SecretKey = "default-secret-key-change-this",
+                Issuer = "VMS",
+                Audience = "VMS-Users",
+                ExpiryInMinutes = 15,
+                RefreshTokenExpiryInDays = 7,
+                ValidateIssuerSigningKey = true,
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ClockSkewMinutes = 0,
+                RequireExpirationTime = true
+            };
+        }
+    }
+
     private async Task<ClaimsPrincipal?> ValidateTokenAsync(string token)
     {
         try
         {
+            var jwtConfig = await GetJwtConfigurationAsync();
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_jwtConfig.SecretKey);
+            var key = Encoding.ASCII.GetBytes(jwtConfig.SecretKey);
 
             var validationParameters = new TokenValidationParameters
             {
-                ValidateIssuerSigningKey = true,
+                ValidateIssuerSigningKey = jwtConfig.ValidateIssuerSigningKey,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
-                ValidateIssuer = true,
-                ValidIssuer = _jwtConfig.Issuer,
-                ValidateAudience = true,
-                ValidAudience = _jwtConfig.Audience,
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero,
-                RequireExpirationTime = true
+                ValidateIssuer = jwtConfig.ValidateIssuer,
+                ValidIssuer = jwtConfig.Issuer,
+                ValidateAudience = jwtConfig.ValidateAudience,
+                ValidAudience = jwtConfig.Audience,
+                ValidateLifetime = jwtConfig.ValidateLifetime,
+                ClockSkew = TimeSpan.FromMinutes(jwtConfig.ClockSkewMinutes),
+                RequireExpirationTime = jwtConfig.RequireExpirationTime
             };
 
             var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);

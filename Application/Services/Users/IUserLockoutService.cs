@@ -1,6 +1,6 @@
 ﻿using VisitorManagementSystem.Api.Domain.Entities;
 
-namespace VisitorManagementSystem.Api.Application.Services.Auth;
+namespace VisitorManagementSystem.Api.Application.Services.Users;
 
 /// <summary>
 /// User lockout service interface for managing account lockouts and failed login attempts

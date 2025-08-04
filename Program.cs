@@ -49,11 +49,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 
 // Authentication & Authorization
-builder.Services.Configure<JwtConfiguration>(builder.Configuration.GetSection("JWT"));
-builder.Services.Configure<SecurityConfiguration>(builder.Configuration.GetSection("Security"));
-
-var jwtConfig = builder.Configuration.GetSection("JWT").Get<JwtConfiguration>();
-var key = Encoding.ASCII.GetBytes(jwtConfig?.SecretKey ?? throw new InvalidOperationException("JWT SecretKey not configured"));
+// Note: JWT configuration will be loaded from database after first setup
+// For initial setup, we'll use hardcoded values that will be seeded into the database
 
 builder.Services.AddAuthentication(options =>
 {
@@ -64,14 +61,18 @@ builder.Services.AddAuthentication(options =>
 {
     options.RequireHttpsMetadata = false;
     options.SaveToken = true;
+    
+    // Configure token validation parameters
+    // This will be dynamically loaded from database in production
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(
+            builder.Configuration["JWT:SecretKey"] ?? "your-super-secret-jwt-key-that-must-be-at-least-32-characters-long-for-security")),
         ValidateIssuer = true,
-        ValidIssuer = jwtConfig.Issuer,
+        ValidIssuer = builder.Configuration["JWT:Issuer"] ?? "VisitorManagementSystem",
         ValidateAudience = true,
-        ValidAudience = jwtConfig.Audience,
+        ValidAudience = builder.Configuration["JWT:Audience"] ?? "VisitorManagementSystem.Api",
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero,
         NameClaimType = ClaimTypes.NameIdentifier // IMPORTANT: This fixes GetCurrentUserId()

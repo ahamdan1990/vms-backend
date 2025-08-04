@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
+using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Controllers; // For UserActivityDto
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 

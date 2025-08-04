@@ -25,6 +25,8 @@ public class AuthenticationResult
     /// </summary>
     public string? RefreshToken { get; set; }
 
+    public string? DeviceFingerprint { get; set; }
+
     /// <summary>
     /// Access token expiry date
     /// </summary>

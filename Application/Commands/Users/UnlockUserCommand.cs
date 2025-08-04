@@ -8,7 +8,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users;
 /// <summary>
 /// Command for unlocking a user account
 /// </summary>
-public class UnlockUserCommand : IRequest<CommandResultDto>
+public class UnlockUserCommand : IRequest<CommandResultDto<object>>
 {
     public int UserId { get; set; }
     public int UnlockedBy { get; set; }

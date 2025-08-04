@@ -1,13 +1,15 @@
 ﻿// Update your AdminPasswordResetCommand to include missing properties
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
+using VisitorManagementSystem.Api.Application.DTOs.Users;
+using VisitorManagementSystem.Api.Controllers;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Users;
 
 /// <summary>
 /// Command for admin password reset
 /// </summary>
-public class AdminPasswordResetCommand : IRequest<CommandResultDto>
+public class AdminPasswordResetCommand : IRequest<CommandResultDto<AdminPasswordResetResponseDto>>
 {
     public int UserId { get; set; }
     public string? NewPassword { get; set; }

@@ -1,7 +1,0 @@
-2025-06-26 01:44:25.887 +03:00 [INF] Token cleanup completed. Expired revoked: 0, Old deleted: 0
-2025-06-26 01:44:25.902 +03:00 [INF] Token cleanup completed successfully
-2025-06-26 07:44:27.454 +03:00 [INF] Token cleanup completed. Expired revoked: 0, Old deleted: 0
-2025-06-26 07:44:27.456 +03:00 [INF] Token cleanup completed successfully
-2025-06-26 13:44:28.813 +03:00 [INF] Token cleanup completed. Expired revoked: 0, Old deleted: 0
-2025-06-26 13:44:28.816 +03:00 [INF] Token cleanup completed successfully
-[2025-06-26 16:34:41.683 +03:00 WRN]  Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development. <s:Microsoft.EntityFrameworkCore.Model.Validation>

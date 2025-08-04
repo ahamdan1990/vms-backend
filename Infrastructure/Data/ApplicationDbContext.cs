@@ -25,6 +25,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
+    public DbSet<SystemConfiguration> SystemConfigurations { get; set; } = null!;
+    public DbSet<ConfigurationAudit> ConfigurationAudits { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,6 +36,8 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new RefreshTokenConfiguration());
         modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
+        modelBuilder.ApplyConfiguration(new SystemConfigurationConfiguration());
+        modelBuilder.ApplyConfiguration(new ConfigurationAuditConfiguration());
 
         // Global query filters for soft delete
         modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);

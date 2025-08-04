@@ -36,7 +36,27 @@
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Commands.Auth.RefreshTokenCommand">
             <summary>
-            Command for refreshing authentication token
+            Command for refreshing authentication tokens
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Auth.RefreshTokenCommand.RefreshToken">
+            <summary>
+            The refresh token to use
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Auth.RefreshTokenCommand.IpAddress">
+            <summary>
+            IP address of the client
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Auth.RefreshTokenCommand.UserAgent">
+            <summary>
+            User agent of the client
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Auth.RefreshTokenCommand.DeviceFingerprint">
+            <summary>
+            ✅ FIXED: Device fingerprint from client (required for validation)
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Commands.Auth.RefreshTokenCommandHandler">
@@ -319,6 +339,11 @@
             Password changed date
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Auth.ForgotPasswordRequestDto">
+            <summary>
+            Forgot password request DTO
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Auth.LoginRequestDto">
             <summary>
             Login request data transfer object
@@ -509,6 +534,11 @@
             Confirm new password
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Auth.TokenValidationDto">
+            <summary>
+            Token validation response DTO
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Auth.TokenValidationResult">
             <summary>
             Token validation result data transfer object
@@ -689,6 +719,16 @@
             Whether this is the current session
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Common.AddressDto">
+            <summary>
+            Data transfer object for address information
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Common.CreateAddressDto">
+            <summary>
+            Data transfer object for creating address information
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Common.ApiResponseDto`1">
             <summary>
             Standard API response wrapper
@@ -720,70 +760,32 @@
             Response metadata
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Application.DTOs.Common.ApiResponseDto`1.SuccessResponse(`0,System.String)">
+        <member name="M:VisitorManagementSystem.Api.Application.DTOs.Common.ApiResponseDto`1.SuccessResponse(`0,System.String,System.String)">
             <summary>
             Creates a successful response
             </summary>
             <param name="data">Response data</param>
             <param name="message">Success message</param>
+             <param name="correlationId">Correlation Id</param>
             <returns>Successful API response</returns>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Application.DTOs.Common.ApiResponseDto`1.ErrorResponse(System.Collections.Generic.List{System.String},System.String)">
+        <member name="M:VisitorManagementSystem.Api.Application.DTOs.Common.ApiResponseDto`1.ErrorResponse(System.Collections.Generic.List{System.String},System.String,System.String)">
             <summary>
             Creates an error response
             </summary>
             <param name="errors">Error messages</param>
             <param name="message">Error message</param>
+            <param name="correlationId">Correlation Id</param>
             <returns>Error API response</returns>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Application.DTOs.Common.ApiResponseDto`1.ErrorResponse(System.String,System.String)">
+        <member name="M:VisitorManagementSystem.Api.Application.DTOs.Common.ApiResponseDto`1.ErrorResponse(System.String,System.String,System.String)">
             <summary>
             Creates an error response with single error
             </summary>
             <param name="error">Error message</param>
             <param name="message">Error message</param>
+            <param name="correlationId">Correlation Id</param>
             <returns>Error API response</returns>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Common.CommandResultDto">
-            <summary>
-            Command result data transfer object
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Common.CommandResultDto.IsSuccess">
-            <summary>
-            Success status
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Common.CommandResultDto.Message">
-            <summary>
-            Result message
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Common.CommandResultDto.Errors">
-            <summary>
-            Error messages
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Common.CommandResultDto.Data">
-            <summary>
-            Additional data
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.DTOs.Common.CommandResultDto.Success(System.String,System.Object)">
-            <summary>
-            Creates a successful result
-            </summary>
-            <param name="message">Success message</param>
-            <param name="data">Additional data</param>
-            <returns>Successful command result</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.DTOs.Common.CommandResultDto.Failure(System.String,System.Collections.Generic.List{System.String})">
-            <summary>
-            Creates a failure result
-            </summary>
-            <param name="message">Error message</param>
-            <param name="errors">Error list</param>
-            <returns>Failed command result</returns>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Common.PagedResultDto`1">
             <summary>
@@ -871,6 +873,11 @@
             Additional data
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.AdminPasswordResetDto">
+            <summary>
+            Admin password reset request DTO
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.CreateUserDto">
             <summary>
             Create user request data transfer object
@@ -941,6 +948,11 @@
             Send welcome email to user
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.RoleDto">
+            <summary>
+            Role DTO
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserDto">
             <summary>
             Update user request data transfer object
@@ -1004,6 +1016,16 @@
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserDto.Theme">
             <summary>
             User theme preference
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.UserActivationDto">
+            <summary>
+            User activation request DTO
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.UserDeactivationDto">
+            <summary>
+            User deactivation request DTO
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto">
@@ -1224,6 +1246,11 @@
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.ProfilePhotoUrl">
             <summary>
             Profile photo URL
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.UserUnlockDto">
+            <summary>
+            User unlock request DTO
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Mapping.UserMappingProfile">
@@ -2281,275 +2308,6 @@
             Token rotation result
             </summary>
         </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService">
-            <summary>
-            User lockout service interface for managing account lockouts and failed login attempts
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.RecordFailedLoginAttemptAsync(System.String,System.String,System.String,System.String,System.Threading.CancellationToken)">
-            <summary>
-            Records a failed login attempt for user
-            </summary>
-            <param name="email">User email</param>
-            <param name="ipAddress">Client IP address</param>
-            <param name="userAgent">Client user agent</param>
-            <param name="failureReason">Reason for failure</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Lockout result</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.RecordSuccessfulLoginEventAsync(System.Int32,System.String,System.String,System.Threading.CancellationToken)">
-            <summary>
-            Records successful login event only (no database changes)
-            </summary>
-            <param name="userId">User ID</param>
-            <param name="ipAddress">IP address</param>
-            <param name="userAgent">User agent</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Task</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.RecordSuccessfulLoginWithoutSaveAsync(System.Int32,System.String,System.String,System.Threading.CancellationToken)">
-            <summary>
-            Records successful login without calling SaveChanges (for transaction coordination)
-            </summary>
-            <param name="userId">User ID</param>
-            <param name="ipAddress">IP address</param>
-            <param name="userAgent">User agent</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Task</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.RecordSuccessfulLoginAsync(System.Int32,System.String,System.String,System.Threading.CancellationToken)">
-            <summary>
-            Records a successful login and resets failed attempts
-            </summary>
-            <param name="userId">User ID</param>
-            <param name="ipAddress">Client IP address</param>
-            <param name="userAgent">Client user agent</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Task</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.GetLockoutStatusAsync(System.String,System.Threading.CancellationToken)">
-            <summary>
-            Checks if user account is currently locked out
-            </summary>
-            <param name="email">User email</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Lockout status</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.LockUserAccountAsync(System.Int32,System.String,System.Nullable{System.TimeSpan},System.Nullable{System.Int32},System.Threading.CancellationToken)">
-            <summary>
-            Manually locks user account
-            </summary>
-            <param name="userId">User ID</param>
-            <param name="reason">Lockout reason</param>
-            <param name="duration">Lockout duration (null for indefinite)</param>
-            <param name="lockedBy">ID of user performing the lockout</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Lockout result</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.UnlockUserAccountAsync(System.Int32,System.String,System.Int32,System.Threading.CancellationToken)">
-            <summary>
-            Manually unlocks user account
-            </summary>
-            <param name="userId">User ID</param>
-            <param name="reason">Unlock reason</param>
-            <param name="unlockedBy">ID of user performing the unlock</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>True if unlocked successfully</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.GetFailedLoginAttemptsAsync(System.String,System.TimeSpan,System.Threading.CancellationToken)">
-            <summary>
-            Gets failed login attempts for user within time period
-            </summary>
-            <param name="email">User email</param>
-            <param name="timeWindow">Time window to check</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Number of failed attempts</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.GetFailedLoginAttemptsByIpAsync(System.String,System.TimeSpan,System.Threading.CancellationToken)">
-            <summary>
-            Gets failed login attempts by IP address
-            </summary>
-            <param name="ipAddress">IP address</param>
-            <param name="timeWindow">Time window to check</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Number of failed attempts from IP</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.CheckIpRateLimitAsync(System.String,System.Threading.CancellationToken)">
-            <summary>
-            Checks if IP address is rate limited
-            </summary>
-            <param name="ipAddress">IP address</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Rate limit status</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.BlockIpAddressAsync(System.String,System.String,System.TimeSpan,System.Threading.CancellationToken)">
-            <summary>
-            Temporarily blocks IP address
-            </summary>
-            <param name="ipAddress">IP address to block</param>
-            <param name="reason">Block reason</param>
-            <param name="duration">Block duration</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>True if blocked successfully</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.UnblockIpAddressAsync(System.String,System.String,System.Threading.CancellationToken)">
-            <summary>
-            Unblocks IP address
-            </summary>
-            <param name="ipAddress">IP address to unblock</param>
-            <param name="reason">Unblock reason</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>True if unblocked successfully</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.GetLockoutConfiguration">
-            <summary>
-            Gets lockout configuration
-            </summary>
-            <returns>Lockout configuration</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.UpdateLockoutConfigurationAsync(VisitorManagementSystem.Api.Application.Services.Auth.LockoutConfiguration,System.Threading.CancellationToken)">
-            <summary>
-            Updates lockout configuration
-            </summary>
-            <param name="configuration">New configuration</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Task</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.GetUserSecurityEventsAsync(System.Int32,System.Int32,System.Threading.CancellationToken)">
-            <summary>
-            Gets security events for user
-            </summary>
-            <param name="userId">User ID</param>
-            <param name="days">Number of days to look back</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>List of security events</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.GetSystemSecurityEventsAsync(System.Int32,System.Threading.CancellationToken)">
-            <summary>
-            Gets system-wide security events
-            </summary>
-            <param name="hours">Hours to look back</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>List of security events</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.AnalyzeLoginPatternAsync(System.Int32,VisitorManagementSystem.Api.Application.Services.Auth.LoginAttempt,System.Threading.CancellationToken)">
-            <summary>
-            Analyzes login patterns for anomalies
-            </summary>
-            <param name="userId">User ID</param>
-            <param name="currentAttempt">Current login attempt details</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Anomaly detection result</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.GetLockedUsersAsync(System.Threading.CancellationToken)">
-            <summary>
-            Gets locked users that require attention
-            </summary>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>List of locked users</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.GetUsersAtRiskAsync(System.Threading.CancellationToken)">
-            <summary>
-            Gets users close to lockout threshold
-            </summary>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>List of users at risk</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.GenerateLockoutReportAsync(System.DateTime,System.DateTime,System.Threading.CancellationToken)">
-            <summary>
-            Generates lockout report
-            </summary>
-            <param name="startDate">Report start date</param>
-            <param name="endDate">Report end date</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Lockout report</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.PerformAutomatedCleanupAsync(System.Threading.CancellationToken)">
-            <summary>
-            Performs automated lockout cleanup
-            </summary>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Cleanup result</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.SendLockoutNotificationAsync(System.Int32,VisitorManagementSystem.Api.Application.Services.Auth.LockoutResult,System.Threading.CancellationToken)">
-            <summary>
-            Sends lockout notifications
-            </summary>
-            <param name="userId">User ID</param>
-            <param name="lockoutResult">Lockout result</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Task</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.IUserLockoutService.ValidateLockoutBypassAsync(System.Int32,System.String,System.Int32,System.Threading.CancellationToken)">
-            <summary>
-            Validates lockout bypass attempt
-            </summary>
-            <param name="userId">User ID</param>
-            <param name="bypassCode">Bypass code</param>
-            <param name="requestedBy">User requesting bypass</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Bypass validation result</returns>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.LockoutResult">
-            <summary>
-            Lockout result
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.LockoutStatus">
-            <summary>
-            Lockout status
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.RateLimitStatus">
-            <summary>
-            Rate limit status
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.LockoutConfiguration">
-            <summary>
-            Lockout configuration
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.SecurityEvent">
-            <summary>
-            Security event
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.LoginAttempt">
-            <summary>
-            Login attempt details
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.AnomalyDetectionResult">
-            <summary>
-            Anomaly detection result
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.LockedUserInfo">
-            <summary>
-            Locked user information
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.UserAtRiskInfo">
-            <summary>
-            User at risk information
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.LockoutReport">
-            <summary>
-            Lockout report
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.LockoutCleanupResult">
-            <summary>
-            Lockout cleanup result
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.BypassValidationResult">
-            <summary>
-            Bypass validation result
-            </summary>
-        </member>
         <!-- Badly formed XML comment ignored for member "T:VisitorManagementSystem.Api.Application.Services.Auth.JwtService" -->
         <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.PasswordService">
             <summary>
@@ -2566,17 +2324,437 @@
             Refresh token service implementation for managing token lifecycle
             </summary>
         </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Services.Auth.UserLockoutService">
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Configuration.DynamicConfigurationService">
+            <summary>
+            Dynamic configuration service implementation for managing database-driven settings
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Configuration.DynamicConfigurationService.ConvertValue``1(System.String,System.String)">
+            <summary>
+            Converts configuration value to specified type
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Configuration.DynamicConfigurationService.LogConfigurationChangeAsync(System.Int32,System.String,System.String,System.String,System.String,System.String,System.Int32,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Logs configuration changes to audit table
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Configuration.IDynamicConfigurationService">
+            <summary>
+            Interface for dynamic configuration management service
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Configuration.IDynamicConfigurationService.GetConfigurationAsync``1(System.String,System.String,``0,System.Threading.CancellationToken)">
+            <summary>
+            Gets a configuration value with strong typing
+            </summary>
+            <typeparam name="T">Type to convert value to</typeparam>
+            <param name="category">Configuration category</param>
+            <param name="key">Configuration key</param>
+            <param name="defaultValue">Default value if not found</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Configuration value or default</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Configuration.IDynamicConfigurationService.GetConfigurationValueAsync(System.String,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets a configuration value as string
+            </summary>
+            <param name="category">Configuration category</param>
+            <param name="key">Configuration key</param>
+            <param name="defaultValue">Default value if not found</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Configuration value or default</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Configuration.IDynamicConfigurationService.SetConfigurationAsync``1(System.String,System.String,``0,System.Int32,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Sets a configuration value with strong typing
+            </summary>
+            <typeparam name="T">Type of the value</typeparam>
+            <param name="category">Configuration category</param>
+            <param name="key">Configuration key</param>
+            <param name="value">Configuration value</param>
+            <param name="modifiedBy">User making the change</param>
+            <param name="reason">Reason for change</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>True if successful</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Configuration.IDynamicConfigurationService.SetConfigurationValueAsync(System.String,System.String,System.String,System.Int32,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Sets a configuration value as string
+            </summary>
+            <param name="category">Configuration category</param>
+            <param name="key">Configuration key</param>
+            <param name="value">Configuration value</param>
+            <param name="modifiedBy">User making the change</param>
+            <param name="reason">Reason for change</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>True if successful</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Configuration.IDynamicConfigurationService.GetCategoryConfigurationAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets all configurations for a category as a dictionary
+            </summary>
+            <param name="category">Configuration category</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Dictionary of key-value pairs</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Configuration.IDynamicConfigurationService.GetAllConfigurationsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Gets all configurations as a hierarchical structure
+            </summary>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Dictionary grouped by category</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Configuration.IDynamicConfigurationService.DeleteConfigurationAsync(System.String,System.String,System.Int32,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Deletes a configuration
+            </summary>
+            <param name="category">Configuration category</param>
+            <param name="key">Configuration key</param>
+            <param name="modifiedBy">User making the change</param>
+            <param name="reason">Reason for deletion</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>True if successful</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Configuration.IDynamicConfigurationService.InvalidateCacheAsync(System.String)">
+            <summary>
+            Invalidates cache for specific category or all configurations
+            </summary>
+            <param name="category">Category to invalidate, null for all</param>
+            <returns>Task</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Configuration.IDynamicConfigurationService.GetConfigurationMetadataAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets configuration metadata
+            </summary>
+            <param name="category">Configuration category</param>
+            <param name="key">Configuration key</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Configuration metadata</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Configuration.IDynamicConfigurationService.GetConfigurationHistoryAsync(System.String,System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Gets configuration history
+            </summary>
+            <param name="category">Configuration category</param>
+            <param name="key">Configuration key</param>
+            <param name="pageSize">Number of records to retrieve</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of audit entries</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Configuration.IDynamicConfigurationService.ValidateConfigurationAsync(System.String,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Validates a configuration value
+            </summary>
+            <param name="category">Configuration category</param>
+            <param name="key">Configuration key</param>
+            <param name="value">Value to validate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Validation result</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Configuration.IDynamicConfigurationService.CreateConfigurationAsync(VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Creates a new configuration
+            </summary>
+            <param name="configuration">Configuration to create</param>
+            <param name="modifiedBy">User creating the configuration</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Created configuration</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Configuration.IDynamicConfigurationService.SearchConfigurationsAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Searches configurations
+            </summary>
+            <param name="searchTerm">Search term</param>
+            <param name="category">Optional category filter</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of matching configurations</returns>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Configuration.ValidationResult">
+            <summary>
+            Configuration validation result
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService">
+            <summary>
+            User lockout service interface for managing account lockouts and failed login attempts
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.RecordFailedLoginAttemptAsync(System.String,System.String,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Records a failed login attempt for user
+            </summary>
+            <param name="email">User email</param>
+            <param name="ipAddress">Client IP address</param>
+            <param name="userAgent">Client user agent</param>
+            <param name="failureReason">Reason for failure</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Lockout result</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.RecordSuccessfulLoginEventAsync(System.Int32,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Records successful login event only (no database changes)
+            </summary>
+            <param name="userId">User ID</param>
+            <param name="ipAddress">IP address</param>
+            <param name="userAgent">User agent</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Task</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.RecordSuccessfulLoginWithoutSaveAsync(System.Int32,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Records successful login without calling SaveChanges (for transaction coordination)
+            </summary>
+            <param name="userId">User ID</param>
+            <param name="ipAddress">IP address</param>
+            <param name="userAgent">User agent</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Task</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.RecordSuccessfulLoginAsync(System.Int32,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Records a successful login and resets failed attempts
+            </summary>
+            <param name="userId">User ID</param>
+            <param name="ipAddress">Client IP address</param>
+            <param name="userAgent">Client user agent</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Task</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.GetLockoutStatusAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Checks if user account is currently locked out
+            </summary>
+            <param name="email">User email</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Lockout status</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.LockUserAccountAsync(System.Int32,System.String,System.Nullable{System.TimeSpan},System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Manually locks user account
+            </summary>
+            <param name="userId">User ID</param>
+            <param name="reason">Lockout reason</param>
+            <param name="duration">Lockout duration (null for indefinite)</param>
+            <param name="lockedBy">ID of user performing the lockout</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Lockout result</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.UnlockUserAccountAsync(System.Int32,System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Manually unlocks user account
+            </summary>
+            <param name="userId">User ID</param>
+            <param name="reason">Unlock reason</param>
+            <param name="unlockedBy">ID of user performing the unlock</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>True if unlocked successfully</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.GetFailedLoginAttemptsAsync(System.String,System.TimeSpan,System.Threading.CancellationToken)">
+            <summary>
+            Gets failed login attempts for user within time period
+            </summary>
+            <param name="email">User email</param>
+            <param name="timeWindow">Time window to check</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Number of failed attempts</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.GetFailedLoginAttemptsByIpAsync(System.String,System.TimeSpan,System.Threading.CancellationToken)">
+            <summary>
+            Gets failed login attempts by IP address
+            </summary>
+            <param name="ipAddress">IP address</param>
+            <param name="timeWindow">Time window to check</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Number of failed attempts from IP</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.CheckIpRateLimitAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Checks if IP address is rate limited
+            </summary>
+            <param name="ipAddress">IP address</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Rate limit status</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.BlockIpAddressAsync(System.String,System.String,System.TimeSpan,System.Threading.CancellationToken)">
+            <summary>
+            Temporarily blocks IP address
+            </summary>
+            <param name="ipAddress">IP address to block</param>
+            <param name="reason">Block reason</param>
+            <param name="duration">Block duration</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>True if blocked successfully</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.UnblockIpAddressAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Unblocks IP address
+            </summary>
+            <param name="ipAddress">IP address to unblock</param>
+            <param name="reason">Unblock reason</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>True if unblocked successfully</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.GetLockoutConfiguration">
+            <summary>
+            Gets lockout configuration
+            </summary>
+            <returns>Lockout configuration</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.UpdateLockoutConfigurationAsync(VisitorManagementSystem.Api.Application.Services.Users.LockoutConfiguration,System.Threading.CancellationToken)">
+            <summary>
+            Updates lockout configuration
+            </summary>
+            <param name="configuration">New configuration</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Task</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.GetUserSecurityEventsAsync(System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Gets security events for user
+            </summary>
+            <param name="userId">User ID</param>
+            <param name="days">Number of days to look back</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of security events</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.GetSystemSecurityEventsAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Gets system-wide security events
+            </summary>
+            <param name="hours">Hours to look back</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of security events</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.AnalyzeLoginPatternAsync(System.Int32,VisitorManagementSystem.Api.Application.Services.Users.LoginAttempt,System.Threading.CancellationToken)">
+            <summary>
+            Analyzes login patterns for anomalies
+            </summary>
+            <param name="userId">User ID</param>
+            <param name="currentAttempt">Current login attempt details</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Anomaly detection result</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.GetLockedUsersAsync(System.Threading.CancellationToken)">
+            <summary>
+            Gets locked users that require attention
+            </summary>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of locked users</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.GetUsersAtRiskAsync(System.Threading.CancellationToken)">
+            <summary>
+            Gets users close to lockout threshold
+            </summary>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of users at risk</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.GenerateLockoutReportAsync(System.DateTime,System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            Generates lockout report
+            </summary>
+            <param name="startDate">Report start date</param>
+            <param name="endDate">Report end date</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Lockout report</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.PerformAutomatedCleanupAsync(System.Threading.CancellationToken)">
+            <summary>
+            Performs automated lockout cleanup
+            </summary>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Cleanup result</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.SendLockoutNotificationAsync(System.Int32,VisitorManagementSystem.Api.Application.Services.Users.LockoutResult,System.Threading.CancellationToken)">
+            <summary>
+            Sends lockout notifications
+            </summary>
+            <param name="userId">User ID</param>
+            <param name="lockoutResult">Lockout result</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Task</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService.ValidateLockoutBypassAsync(System.Int32,System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Validates lockout bypass attempt
+            </summary>
+            <param name="userId">User ID</param>
+            <param name="bypassCode">Bypass code</param>
+            <param name="requestedBy">User requesting bypass</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Bypass validation result</returns>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Users.LockoutResult">
+            <summary>
+            Lockout result
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Users.LockoutStatus">
+            <summary>
+            Lockout status
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Users.RateLimitStatus">
+            <summary>
+            Rate limit status
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Users.LockoutConfiguration">
+            <summary>
+            Lockout configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Users.SecurityEvent">
+            <summary>
+            Security event
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Users.LoginAttempt">
+            <summary>
+            Login attempt details
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Users.AnomalyDetectionResult">
+            <summary>
+            Anomaly detection result
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Users.LockedUserInfo">
+            <summary>
+            Locked user information
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Users.UserAtRiskInfo">
+            <summary>
+            User at risk information
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Users.LockoutReport">
+            <summary>
+            Lockout report
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Users.LockoutCleanupResult">
+            <summary>
+            Lockout cleanup result
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Users.BypassValidationResult">
+            <summary>
+            Bypass validation result
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Users.UserLockoutService">
             <summary>
             User lockout service implementation for managing account lockouts and failed login attempts
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.UserLockoutService.RecordSuccessfulLoginEventAsync(System.Int32,System.String,System.String,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.UserLockoutService.RecordSuccessfulLoginEventAsync(System.Int32,System.String,System.String,System.Threading.CancellationToken)">
             <summary>
             Records successful login event only (no database changes)
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Auth.UserLockoutService.RecordSuccessfulLoginWithoutSaveAsync(System.Int32,System.String,System.String,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Users.UserLockoutService.RecordSuccessfulLoginWithoutSaveAsync(System.Int32,System.String,System.String,System.Threading.CancellationToken)">
             <summary>
             Records successful login without calling SaveChanges (for transaction coordination)
             </summary>
@@ -2956,6 +3134,86 @@
             Content Security Policy configuration
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController">
+            <summary>
+            Admin controller for managing system configurations
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetAllConfigurations(System.Threading.CancellationToken)">
+            <summary>
+            Gets all configurations grouped by category
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetCategoryConfiguration(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets all configurations for a specific category
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetConfiguration(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets a specific configuration value
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.UpdateConfiguration(System.String,System.String,VisitorManagementSystem.Api.Controllers.Admin.UpdateConfigurationRequest,System.Threading.CancellationToken)">
+            <summary>
+            Updates a configuration value
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.CreateConfiguration(VisitorManagementSystem.Api.Controllers.Admin.CreateConfigurationRequest,System.Threading.CancellationToken)">
+            <summary>
+            Creates a new configuration
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.DeleteConfiguration(System.String,System.String,VisitorManagementSystem.Api.Controllers.Admin.DeleteConfigurationRequest,System.Threading.CancellationToken)">
+            <summary>
+            Deletes a configuration
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetConfigurationHistory(System.String,System.String,System.Threading.CancellationToken,System.Int32)">
+            <summary>
+            Gets configuration history/audit trail
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.SearchConfigurations(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Searches configurations
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.ValidateConfiguration(System.String,System.String,VisitorManagementSystem.Api.Controllers.Admin.ValidateConfigurationRequest,System.Threading.CancellationToken)">
+            <summary>
+            Validates a configuration value without saving
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.InvalidateCache(System.String)">
+            <summary>
+            Invalidates configuration cache
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetCurrentUserId">
+            <summary>
+            Gets current user ID from claims
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.Admin.UpdateConfigurationRequest">
+            <summary>
+            Request DTO for updating configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.Admin.CreateConfigurationRequest">
+            <summary>
+            Request DTO for creating configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.Admin.DeleteConfigurationRequest">
+            <summary>
+            Request DTO for deleting configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.Admin.ValidateConfigurationRequest">
+            <summary>
+            Request DTO for validating configuration
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.AuthController">
             <summary>
             Authentication controller for login, logout, and token management
@@ -2965,82 +3223,60 @@
             <summary>
             Authenticates user and sets secure cookies
             </summary>
-            <param name="request">Login credentials</param>
-            <returns>Authentication result</returns>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.AuthController.RefreshToken">
+        <member name="M:VisitorManagementSystem.Api.Controllers.AuthController.RefreshToken(VisitorManagementSystem.Api.Application.DTOs.Auth.RefreshTokenRequestDto)">
             <summary>
             Refreshes access token using refresh token from cookies
             </summary>
-            <returns>New authentication tokens</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.AuthController.Logout(System.Boolean)">
             <summary>
             Logs out user and clears authentication cookies
             </summary>
-            <param name="logoutFromAllDevices">Whether to logout from all devices</param>
-            <returns>Logout result</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.AuthController.ChangePassword(VisitorManagementSystem.Api.Application.DTOs.Auth.ChangePasswordDto)">
             <summary>
             Changes user password
             </summary>
-            <param name="request">Password change request</param>
-            <returns>Password change result</returns>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.AuthController.ForgotPassword(VisitorManagementSystem.Api.Controllers.ForgotPasswordRequestDto)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.AuthController.ForgotPassword(VisitorManagementSystem.Api.Application.DTOs.Auth.ForgotPasswordRequestDto)">
             <summary>
             Initiates password reset process
             </summary>
-            <param name="request">Email for password reset</param>
-            <returns>Password reset initiation result</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.AuthController.ResetPassword(VisitorManagementSystem.Api.Application.DTOs.Auth.ResetPasswordDto)">
             <summary>
             Resets password using reset token
             </summary>
-            <param name="request">Password reset request</param>
-            <returns>Password reset result</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.AuthController.GetCurrentUser">
             <summary>
             Gets current user information
             </summary>
-            <returns>Current user details</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.AuthController.GetUserPermissions">
             <summary>
             Gets user permissions
             </summary>
-            <returns>User permissions</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.AuthController.ValidateToken">
             <summary>
             Validates current access token
             </summary>
-            <returns>Token validation result</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.AuthController.GetUserSessions">
             <summary>
             Gets user's active sessions
             </summary>
-            <returns>List of active sessions</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.AuthController.TerminateSession(System.Int32)">
             <summary>
             Terminates a specific session
             </summary>
-            <param name="sessionId">Session ID to terminate</param>
-            <returns>Session termination result</returns>
         </member>
-        <member name="T:VisitorManagementSystem.Api.Controllers.ForgotPasswordRequestDto">
+        <member name="M:VisitorManagementSystem.Api.Controllers.AuthController.DebugClaims">
             <summary>
-            Forgot password request DTO
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Controllers.TokenValidationDto">
-            <summary>
-            Token validation response DTO
+            Debug endpoint to view user claims
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.BaseController">
@@ -3052,242 +3288,196 @@
             <summary>
             Gets the current user ID from claims
             </summary>
-            <returns>Current user ID or null if not authenticated</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetCurrentUserEmail">
             <summary>
             Gets the current user email from claims
             </summary>
-            <returns>Current user email or null if not authenticated</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetCurrentUserName">
             <summary>
             Gets the current user's full name from claims
             </summary>
-            <returns>Current user's full name or null if not authenticated</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetCurrentUserRole">
             <summary>
             Gets the current user's role from claims
             </summary>
-            <returns>Current user's role or null if not authenticated</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetCurrentUserPermissions">
             <summary>
             Gets all user permissions from claims
             </summary>
-            <returns>List of user permissions</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.HasPermission(System.String)">
             <summary>
             Checks if current user has a specific permission
             </summary>
-            <param name="permission">Permission to check</param>
-            <returns>True if user has the permission</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.HasAnyPermission(System.String[])">
             <summary>
             Checks if current user has any of the specified permissions
             </summary>
-            <param name="permissions">Permissions to check</param>
-            <returns>True if user has any of the permissions</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.HasAllPermissions(System.String[])">
             <summary>
             Checks if current user has all of the specified permissions
             </summary>
-            <param name="permissions">Permissions to check</param>
-            <returns>True if user has all permissions</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.HasRole(System.String)">
             <summary>
             Checks if current user has a specific role
             </summary>
-            <param name="role">Role to check</param>
-            <returns>True if user has the role</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.HasAnyRole(System.String[])">
             <summary>
             Checks if current user has any of the specified roles
             </summary>
-            <param name="roles">Roles to check</param>
-            <returns>True if user has any of the roles</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetClientIpAddress">
             <summary>
             Gets the client IP address
             </summary>
-            <returns>Client IP address</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetUserAgent">
             <summary>
             Gets the user agent string
             </summary>
-            <returns>User agent string</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetCorrelationId">
             <summary>
             Gets the correlation ID for request tracking
             </summary>
-            <returns>Correlation ID</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetRequestId">
             <summary>
             Gets the request ID from headers or generates a new one
             </summary>
-            <returns>Request ID</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetSessionId">
             <summary>
             Gets the session ID if available
             </summary>
-            <returns>Session ID</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetModelStateErrors">
             <summary>
             Gets model state errors as a list
             </summary>
-            <returns>List of validation errors</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetModelStateErrorsByField">
             <summary>
             Gets model state errors grouped by field
             </summary>
-            <returns>Dictionary of field errors</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.SuccessResponse``1(``0,System.String)">
+            <summary>
+            Creates a successful response
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.SuccessResponse(System.String)">
+            <summary>
+            Creates a successful response without data
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.BadRequestResponse(System.String,System.String)">
+            <summary>
+            Creates a bad request response with single error
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.BadRequestResponse(System.Collections.Generic.List{System.String},System.String)">
+            <summary>
+            Creates a bad request response with multiple errors
+            </summary>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.ValidationError(System.Collections.Generic.List{System.String},System.String)">
             <summary>
-            Creates a standardized validation error response
+            Creates a validation error response
             </summary>
-            <param name="errors">Validation errors</param>
-            <param name="message">General error message</param>
-            <returns>BadRequest result with validation errors</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.ValidationError(System.Collections.Generic.Dictionary{System.String,System.Collections.Generic.List{System.String}},System.String)">
             <summary>
-            Creates a standardized validation error response with field-specific errors
+            Creates a validation error response with field-specific errors
             </summary>
-            <param name="fieldErrors">Field-specific validation errors</param>
-            <param name="message">General error message</param>
-            <returns>BadRequest result with field validation errors</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.UnauthorizedResponse(System.String)">
             <summary>
-            Creates a standardized unauthorized response
+            Creates an unauthorized response
             </summary>
-            <param name="message">Unauthorized message</param>
-            <returns>Unauthorized result</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.ForbiddenResponse(System.String)">
             <summary>
-            Creates a standardized forbidden response
+            Creates a forbidden response
             </summary>
-            <param name="message">Forbidden message</param>
-            <returns>Forbidden result</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.NotFoundResponse(System.String,System.Object)">
             <summary>
-            Creates a standardized not found response
+            Creates a not found response
             </summary>
-            <param name="resource">Resource that was not found</param>
-            <param name="id">Resource ID</param>
-            <returns>NotFound result</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.ServerErrorResponse(System.String)">
             <summary>
-            Creates a standardized server error response
+            Creates a server error response
             </summary>
-            <param name="message">Error message</param>
-            <returns>Internal server error result</returns>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.SuccessResponse(System.Object,System.String)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.CreatedResponse``1(``0,System.String,System.String)">
             <summary>
-            Creates a standardized success response
+            Creates a created response
             </summary>
-            <param name="data">Response data</param>
-            <param name="message">Success message</param>
-            <returns>OK result with data</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.CreatedResponse(System.Object,System.String,System.String)">
-            <summary>
-            Creates a standardized created response
-            </summary>
-            <param name="data">Created resource data</param>
-            <param name="location">Location of created resource</param>
-            <param name="message">Success message</param>
-            <returns>Created result with data</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.CanAccessUserResource(System.Int32,System.String)">
             <summary>
             Validates that the current user can access a resource owned by a specific user
             </summary>
-            <param name="resourceOwnerId">ID of the resource owner</param>
-            <param name="requiredPermission">Permission required for access if not owner</param>
-            <returns>True if access is allowed</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetPaginationParameters(System.Int32,System.Int32)">
             <summary>
             Gets pagination parameters from query string
             </summary>
-            <param name="defaultPageSize">Default page size</param>
-            <param name="maxPageSize">Maximum allowed page size</param>
-            <returns>Pagination parameters</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetSortParameters(System.String,System.String[])">
             <summary>
             Gets sort parameters from query string
             </summary>
-            <param name="defaultSortBy">Default sort field</param>
-            <param name="allowedSortFields">Allowed sort fields</param>
-            <returns>Sort parameters</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetSearchTerm(System.Int32)">
             <summary>
             Gets search term from query string
             </summary>
-            <param name="minLength">Minimum search term length</param>
-            <returns>Search term or null if invalid</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.SetCacheHeaders(System.TimeSpan,System.Boolean)">
             <summary>
-            Adds cache control headers to the response
+            Adds cache control headers
             </summary>
-            <param name="cacheTime">Cache duration</param>
-            <param name="isPublic">Whether cache is public</param>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.SetNoCacheHeaders">
             <summary>
-            Adds no-cache headers to the response
+            Adds no-cache headers
             </summary>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.SetSecurityHeaders">
             <summary>
-            Adds security headers to the response
+            Adds security headers
             </summary>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.IsMobileRequest">
             <summary>
-            Checks if the request is from a mobile device
+            Checks if request is from mobile device
             </summary>
-            <returns>True if request is from mobile device</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetRequestProtocol">
             <summary>
-            Gets the request protocol (HTTP/HTTPS)
+            Gets request protocol
             </summary>
-            <returns>Request protocol</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetRequestUrl">
             <summary>
-            Gets the full request URL
+            Gets full request URL
             </summary>
-            <returns>Full request URL</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetBaseUrl">
             <summary>
-            Gets the base URL of the request
+            Gets base URL
             </summary>
-            <returns>Base URL</returns>
         </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.UsersController">
             <summary>
@@ -3298,121 +3488,55 @@
             <summary>
             Gets paginated list of users
             </summary>
-            <param name="pageIndex">Page index (0-based)</param>
-            <param name="pageSize">Page size</param>
-            <param name="searchTerm">Search term for filtering</param>
-            <param name="role">Filter by role</param>
-            <param name="status">Filter by status</param>
-            <param name="department">Filter by department</param>
-            <param name="sortBy">Sort field</param>
-            <param name="sortDirection">Sort direction (asc/desc)</param>
-            <returns>Paginated list of users</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.GetUser(System.Int32)">
             <summary>
             Gets user by ID
             </summary>
-            <param name="id">User ID</param>
-            <returns>User details</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.CreateUser(VisitorManagementSystem.Api.Application.DTOs.Users.CreateUserDto)">
             <summary>
             Creates a new user
             </summary>
-            <param name="request">User creation request</param>
-            <returns>Created user</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.UpdateUser(System.Int32,VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserDto)">
             <summary>
             Updates an existing user
             </summary>
-            <param name="id">User ID</param>
-            <param name="request">User update request</param>
-            <returns>Updated user</returns>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.ActivateUser(System.Int32,VisitorManagementSystem.Api.Controllers.UserActivationDto)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.ActivateUser(System.Int32,VisitorManagementSystem.Api.Application.DTOs.Users.UserActivationDto)">
             <summary>
             Activates a user account
             </summary>
-            <param name="id">User ID</param>
-            <param name="request">Activation request</param>
-            <returns>Updated user</returns>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.DeactivateUser(System.Int32,VisitorManagementSystem.Api.Controllers.UserDeactivationDto)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.DeactivateUser(System.Int32,VisitorManagementSystem.Api.Application.DTOs.Users.UserDeactivationDto)">
             <summary>
             Deactivates a user account
             </summary>
-            <param name="id">User ID</param>
-            <param name="request">Deactivation request</param>
-            <returns>Updated user</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.DeleteUser(System.Int32)">
             <summary>
             Deletes a user (soft delete)
             </summary>
-            <param name="id">User ID</param>
-            <returns>Deletion result</returns>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.UnlockUser(System.Int32,VisitorManagementSystem.Api.Controllers.UserUnlockDto)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.UnlockUser(System.Int32,VisitorManagementSystem.Api.Application.DTOs.Users.UserUnlockDto)">
             <summary>
             Unlocks a user account
             </summary>
-            <param name="id">User ID</param>
-            <param name="request">Unlock request</param>
-            <returns>Unlock result</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.GetUserActivity(System.Int32,System.Int32,System.Int32,System.Int32)">
             <summary>
             Gets user's activity log
             </summary>
-            <param name="id">User ID</param>
-            <param name="pageIndex">Page index</param>
-            <param name="pageSize">Page size</param>
-            <param name="days">Number of days to look back</param>
-            <returns>User activity log</returns>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.ResetUserPassword(System.Int32,VisitorManagementSystem.Api.Controllers.AdminPasswordResetDto)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.ResetUserPassword(System.Int32,VisitorManagementSystem.Api.Application.DTOs.Users.AdminPasswordResetDto)">
             <summary>
             Resets user password (admin function)
             </summary>
-            <param name="id">User ID</param>
-            <param name="request">Password reset request</param>
-            <returns>Reset result</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.GetAvailableRoles">
             <summary>
             Gets available roles for assignment
-            </summary>
-            <returns>List of available roles</returns>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Controllers.UserActivationDto">
-            <summary>
-            User activation request DTO
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Controllers.UserDeactivationDto">
-            <summary>
-            User deactivation request DTO
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Controllers.UserUnlockDto">
-            <summary>
-            User unlock request DTO
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Controllers.AdminPasswordResetDto">
-            <summary>
-            Admin password reset request DTO
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Controllers.UserActivityDto">
-            <summary>
-            User activity DTO
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Controllers.RoleDto">
-            <summary>
-            Role DTO
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Constants.Permissions">
@@ -3473,6 +3597,11 @@
         <member name="T:VisitorManagementSystem.Api.Domain.Constants.Permissions.SystemConfig">
             <summary>
             System configuration permissions
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Constants.Permissions.Configuration">
+            <summary>
+            Dynamic configuration management permissions
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Constants.Permissions.Report">
@@ -4171,6 +4300,122 @@
             Marks the entity as active
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit">
+            <summary>
+            Configuration audit entity for tracking configuration changes
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.SystemConfigurationId">
+            <summary>
+            Reference to the system configuration
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.Category">
+            <summary>
+            Configuration category at time of change
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.Key">
+            <summary>
+            Configuration key at time of change
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.OldValue">
+            <summary>
+            Previous value (null for new configurations)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.NewValue">
+            <summary>
+            New value
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.Action">
+            <summary>
+            Type of change (Created, Updated, Deleted, Restored)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.Reason">
+            <summary>
+            Reason for the change
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.IpAddress">
+            <summary>
+            IP address of the user making the change
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.UserAgent">
+            <summary>
+            User agent of the client making the change
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.SessionId">
+            <summary>
+            Session ID when the change was made
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.IsAutomated">
+            <summary>
+            Whether this change was made by an automated process
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.RequiresApproval">
+            <summary>
+            Whether this change requires approval
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.IsApproved">
+            <summary>
+            Whether this change has been approved
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.ApprovedBy">
+            <summary>
+            User who approved the change
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.ApprovedAt">
+            <summary>
+            When the change was approved
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.Metadata">
+            <summary>
+            Additional metadata about the change (JSON)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.SystemConfiguration">
+            <summary>
+            Navigation property to the system configuration
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.ApprovedByUser">
+            <summary>
+            Navigation property to the user who approved the change
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.ChangeDescription">
+            <summary>
+            Gets a description of the change
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.GetSafeValue(System.String)">
+            <summary>
+            Gets a safe representation of a value (masks sensitive data)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.Approve(System.Int32)">
+            <summary>
+            Approves the configuration change
+            </summary>
+            <param name="approvedBy">User ID who approved</param>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit.CompositeKey">
+            <summary>
+            Gets the composite key for the configuration
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Entities.RefreshToken">
             <summary>
             Represents a refresh token for JWT authentication
@@ -4360,6 +4605,131 @@
             Gets the number of days since the entity was deleted
             </summary>
             <returns>Number of days since deletion, or null if not deleted</returns>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration">
+            <summary>
+            System configuration entity for storing dynamic settings
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.Category">
+            <summary>
+            Configuration category (Security, JWT, Lockout, etc.)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.Key">
+            <summary>
+            Configuration key
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.Value">
+            <summary>
+            Configuration value (JSON for complex objects)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.DataType">
+            <summary>
+            Data type of the value
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.Description">
+            <summary>
+            Description of what this setting does
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.RequiresRestart">
+            <summary>
+            Whether this setting requires application restart
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.IsEncrypted">
+            <summary>
+            Whether this setting is encrypted
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.IsReadOnly">
+            <summary>
+            Whether this setting is read-only
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.IsSensitive">
+            <summary>
+            Whether this setting is sensitive (password, secret key, etc.)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.DefaultValue">
+            <summary>
+            Default value for this setting
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.ValidationRules">
+            <summary>
+            Validation rules (JSON)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.MinValue">
+            <summary>
+            Minimum allowed value (for numeric types)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.MaxValue">
+            <summary>
+            Maximum allowed value (for numeric types)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.AllowedValues">
+            <summary>
+            Allowed values (JSON array for enum-like values)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.Group">
+            <summary>
+            Configuration group for UI organization
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.DisplayOrder">
+            <summary>
+            Display order within the group
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.Environment">
+            <summary>
+            Environment where this configuration applies (All, Development, Production, etc.)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.AuditEntries">
+            <summary>
+            Navigation property for configuration audit entries
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.CompositeKey">
+            <summary>
+            Composite key for category and key
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.IsValidValue(System.String)">
+            <summary>
+            Checks if the configuration value is valid based on validation rules
+            </summary>
+            <param name="value">Value to validate</param>
+            <returns>True if valid</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.UpdateValue(System.String,System.Int32)">
+            <summary>
+            Updates the configuration value with validation
+            </summary>
+            <param name="newValue">New value</param>
+            <param name="modifiedBy">User making the change</param>
+            <returns>True if updated successfully</returns>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.DisplayName">
+            <summary>
+            Gets the display name for this configuration
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration.HelpText">
+            <summary>
+            Gets help text for this configuration
+            </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Entities.User">
             <summary>
@@ -5212,6 +5582,104 @@
             <param name="status">User status</param>
             <returns>Priority level</returns>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IConfigurationAuditRepository">
+            <summary>
+            Repository interface for ConfigurationAudit entity
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IConfigurationAuditRepository.GetConfigurationHistoryAsync(System.String,System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Gets audit history for a specific configuration
+            </summary>
+            <param name="category">Configuration category</param>
+            <param name="key">Configuration key</param>
+            <param name="pageSize">Number of records to retrieve</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of audit entries</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IConfigurationAuditRepository.GetConfigurationHistoryByIdAsync(System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Gets audit history for a configuration ID
+            </summary>
+            <param name="configurationId">Configuration ID</param>
+            <param name="pageSize">Number of records to retrieve</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of audit entries</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IConfigurationAuditRepository.GetByUserAsync(System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Gets audit entries by user
+            </summary>
+            <param name="userId">User ID</param>
+            <param name="days">Number of days to look back</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of audit entries</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IConfigurationAuditRepository.GetRecentChangesAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Gets recent configuration changes
+            </summary>
+            <param name="hours">Hours to look back</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of recent audit entries</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IConfigurationAuditRepository.GetByCategoryAsync(System.String,System.DateTime,System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            Gets configuration changes by category
+            </summary>
+            <param name="category">Configuration category</param>
+            <param name="startDate">Start date</param>
+            <param name="endDate">End date</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of audit entries</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IConfigurationAuditRepository.GetByActionAsync(System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Gets configuration changes by action type
+            </summary>
+            <param name="action">Action type (Created, Updated, Deleted)</param>
+            <param name="days">Number of days to look back</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of audit entries</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IConfigurationAuditRepository.GetPendingApprovalsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Gets configuration changes requiring approval
+            </summary>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of audit entries awaiting approval</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IConfigurationAuditRepository.SearchAsync(System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Threading.CancellationToken)">
+            <summary>
+            Searches audit entries
+            </summary>
+            <param name="searchTerm">Search term</param>
+            <param name="startDate">Start date</param>
+            <param name="endDate">End date</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of matching audit entries</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IConfigurationAuditRepository.GetAuditStatsAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Gets audit statistics
+            </summary>
+            <param name="days">Number of days to analyze</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Audit statistics</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IConfigurationAuditRepository.ArchiveOldEntriesAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Archives old audit entries
+            </summary>
+            <param name="olderThanDays">Archive entries older than this many days</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Number of archived entries</returns>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.ConfigurationAuditStats">
+            <summary>
+            Configuration audit statistics
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IGenericRepository`1">
             <summary>
             Generic repository interface for common CRUD operations
@@ -5812,6 +6280,91 @@
             Token cleanup result
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.ISystemConfigurationRepository">
+            <summary>
+            Repository interface for SystemConfiguration entity
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.ISystemConfigurationRepository.GetByCategoryAndKeyAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets configuration by category and key
+            </summary>
+            <param name="category">Configuration category</param>
+            <param name="key">Configuration key</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>System configuration or null</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.ISystemConfigurationRepository.GetByCategoryAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets all configurations for a category
+            </summary>
+            <param name="category">Configuration category</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of configurations</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.ISystemConfigurationRepository.GetCategoriesAsync(System.Threading.CancellationToken)">
+            <summary>
+            Gets all configuration categories
+            </summary>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of categories</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.ISystemConfigurationRepository.GetConfigurationsRequiringRestartAsync(System.Threading.CancellationToken)">
+            <summary>
+            Gets configurations that require restart
+            </summary>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of configurations requiring restart</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.ISystemConfigurationRepository.GetEncryptedConfigurationsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Gets encrypted configurations
+            </summary>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of encrypted configurations</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.ISystemConfigurationRepository.GetByEnvironmentAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets configurations by environment
+            </summary>
+            <param name="environment">Environment name</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of configurations</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.ISystemConfigurationRepository.SearchAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Searches configurations by key or description
+            </summary>
+            <param name="searchTerm">Search term</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of matching configurations</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.ISystemConfigurationRepository.GetModifiedSinceAsync(System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            Gets configurations modified after a specific date
+            </summary>
+            <param name="since">Date to check from</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of recently modified configurations</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.ISystemConfigurationRepository.BulkUpdateAsync(System.Collections.Generic.List{VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration},System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Bulk updates configurations
+            </summary>
+            <param name="configurations">Configurations to update</param>
+            <param name="modifiedBy">User making the changes</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Number of updated configurations</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.ISystemConfigurationRepository.ExistsAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Checks if a configuration exists
+            </summary>
+            <param name="category">Configuration category</param>
+            <param name="key">Configuration key</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>True if exists</returns>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUnitOfWork">
             <summary>
             Unit of Work interface for managing database transactions and repositories
@@ -5830,6 +6383,16 @@
         <member name="P:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUnitOfWork.AuditLogs">
             <summary>
             Audit log repository
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUnitOfWork.SystemConfigurations">
+            <summary>
+            System configuration repository
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUnitOfWork.ConfigurationAudits">
+            <summary>
+            Configuration audit repository
             </summary>
         </member>
         <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUnitOfWork.Repository``1">
@@ -7222,7 +7785,7 @@
         </member>
         <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.RegisterConfiguration(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
             <summary>
-            Registers configuration sections
+            Registers configuration services
             </summary>
         </member>
         <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.RegisterRepositories(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
@@ -7267,7 +7830,8 @@
         </member>
         <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.ConfigureSecurity(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
             <summary>
-            Configures security settings
+            Configures security services with default settings
+            Security settings are now managed dynamically via database
             </summary>
         </member>
         <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.ConfigureRateLimiting(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
@@ -7383,9 +7947,19 @@
             </summary>
             <param name="builder">Entity type builder</param>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Configurations.ConfigurationAuditConfiguration">
+            <summary>
+            Configuration for ConfigurationAudit entity
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Configurations.RefreshTokenConfiguration">
             <summary>
             Entity configuration for RefreshToken
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Configurations.SystemConfigurationConfiguration">
+            <summary>
+            Configuration for SystemConfiguration entity
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Configurations.UserConfiguration">
@@ -7413,11 +7987,12 @@
             <param name="context">Database context</param>
             <returns>Task</returns>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.DbInitializer.SeedSystemConfigAsync(VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext)">
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.DbInitializer.SeedSystemConfigAsync(VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext,System.IServiceProvider)">
             <summary>
             Seeds system configuration
             </summary>
             <param name="context">Database context</param>
+            <param name="serviceProvider">Service provider for dependency injection</param>
             <returns>Task</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.DbInitializer.MigrateAsync(VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext)">
@@ -7446,6 +8021,26 @@
             Database health status information
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Migrations.AddSystemConfiguration">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Migrations.AddSystemConfiguration.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Migrations.AddSystemConfiguration.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Migrations.AddConfigurationTables">
+            <summary>
+            Migration to add SystemConfigurations and ConfigurationAudits tables
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Migrations.AddConfigurationTables.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Migrations.AddConfigurationTables.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.BaseRepository`1">
             <summary>
             Base repository implementation for common CRUD operations
@@ -7465,6 +8060,16 @@
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.UserRepository">
             <summary>
             Repository implementation for User entity operations
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.ComprehensiveConfigurationSeeder">
+            <summary>
+            Comprehensive configuration seeder that migrates ALL settings to database
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.ComprehensiveConfigurationSeeder.SeedAllConfigurationsAsync(VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext,System.IServiceProvider,System.Int32)">
+            <summary>
+            Seeds all system configurations into the database
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.PermissionSeeder">
@@ -7867,6 +8472,16 @@
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Security.Encryption.KeyInfo">
             <summary>
             Key information structure
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Repositories.ConfigurationAuditRepository">
+            <summary>
+            Repository implementation for ConfigurationAudit entity
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Repositories.SystemConfigurationRepository">
+            <summary>
+            Repository implementation for SystemConfiguration entity
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Utilities.CryptoHelper">
@@ -8345,6 +8960,11 @@
             Request logging middleware
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Middleware.ResponseMetadataMiddleware">
+            <summary>
+            Middleware that adds correlation ID and timestamp headers to each response
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Middleware.SecurityHeadersMiddleware">
             <summary>
             Middleware to add security headers to all responses
@@ -8425,6 +9045,18 @@
             <inheritdoc />
         </member>
         <member name="M:VisitorManagementSystem.Api.Migrations.InitialMigrations.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Migrations.addSystemConfigurationIntoDatabase">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.addSystemConfigurationIntoDatabase.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.addSystemConfigurationIntoDatabase.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.addSystemConfigurationIntoDatabase.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:GetUserByIdQueryHandler">

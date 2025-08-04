@@ -28,12 +28,20 @@ public static class DbInitializer
             // Check if database is already seeded
             if (await context.Users.AnyAsync())
             {
+                // Check if system configurations are seeded
+                if (!await context.SystemConfigurations.AnyAsync())
+                {
+                    var logger = serviceProvider.GetService<ILogger<ApplicationDbContext>>();
+                    logger?.LogInformation("Users exist but system configurations missing. Migrating ALL configurations...");
+                    
+                    await ComprehensiveConfigurationSeeder.SeedAllConfigurationsAsync(context, serviceProvider);
+                }
                 return; // Database has already been seeded
             }
 
             // Seed data in order of dependencies
             await SeedUsersAsync(context);
-            await SeedSystemConfigAsync(context);
+            await SeedSystemConfigAsync(context, serviceProvider);
 
             await context.SaveChangesAsync();
         }
@@ -65,12 +73,27 @@ public static class DbInitializer
     /// Seeds system configuration
     /// </summary>
     /// <param name="context">Database context</param>
+    /// <param name="serviceProvider">Service provider for dependency injection</param>
     /// <returns>Task</returns>
-    private static async Task SeedSystemConfigAsync(ApplicationDbContext context)
+    private static async Task SeedSystemConfigAsync(ApplicationDbContext context, IServiceProvider serviceProvider)
     {
+        var logger = serviceProvider.GetService<ILogger<ApplicationDbContext>>();
+        
+        try
+        {
+            // Seed ALL configurations from appsettings.json to database
+            await ComprehensiveConfigurationSeeder.SeedAllConfigurationsAsync(context, serviceProvider);
+            
+            logger?.LogInformation("System configurations migrated successfully from appsettings.json");
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Error migrating system configurations");
+            throw;
+        }
+
         // System configuration seeding would go here
         // For now, we'll add basic audit log entries
-
         var systemUser = await context.Users.FirstOrDefaultAsync(u => u.Role == UserRole.Administrator);
         if (systemUser != null)
         {
@@ -79,7 +102,7 @@ public static class DbInitializer
                 "System",
                 null,
                 "Database Initialized",
-                "Initial database setup completed",
+                "Initial database setup completed with configuration migration",
                 systemUser.Id,
                 "127.0.0.1",
                 "System Initializer"
@@ -150,6 +173,7 @@ public static class DbInitializer
                     health.UserCount = await context.Users.CountAsync();
                     health.AuditLogCount = await context.AuditLogs.CountAsync();
                     health.RefreshTokenCount = await context.RefreshTokens.CountAsync();
+                    health.SystemConfigurationCount = await context.SystemConfigurations.CountAsync();
                 }
 
                 health.IsHealthy = health.TablesExist && health.IsSeeded;
@@ -178,6 +202,7 @@ public class DatabaseHealthStatus
     public int UserCount { get; set; }
     public int AuditLogCount { get; set; }
     public int RefreshTokenCount { get; set; }
+    public int SystemConfigurationCount { get; set; }
     public string? ErrorMessage { get; set; }
     public TimeSpan CheckDuration { get; set; }
 

@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Auth;
 using VisitorManagementSystem.Api.Application.Services.Auth;
+using VisitorManagementSystem.Api.Application.Services.Users;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Auth
 {

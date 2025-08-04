@@ -200,6 +200,33 @@ public static class Permissions
     }
 
     /// <summary>
+    /// Dynamic configuration management permissions
+    /// </summary>
+    public static class Configuration
+    {
+        public const string Read = "Configuration.Read";
+        public const string ReadAll = "Configuration.Read.All";
+        public const string Update = "Configuration.Update";
+        public const string UpdateAll = "Configuration.Update.All";
+        public const string Create = "Configuration.Create";
+        public const string Delete = "Configuration.Delete";
+        public const string ViewHistory = "Configuration.ViewHistory";
+        public const string ViewAudit = "Configuration.ViewAudit";
+        public const string ManageEncrypted = "Configuration.ManageEncrypted";
+        public const string ManageSecurity = "Configuration.ManageSecurity";
+        public const string ManageJWT = "Configuration.ManageJWT";
+        public const string ManagePassword = "Configuration.ManagePassword";
+        public const string ManageLockout = "Configuration.ManageLockout";
+        public const string ManageRateLimit = "Configuration.ManageRateLimit";
+        public const string ManageLogging = "Configuration.ManageLogging";
+        public const string Export = "Configuration.Export";
+        public const string Import = "Configuration.Import";
+        public const string InvalidateCache = "Configuration.InvalidateCache";
+        public const string ViewSensitive = "Configuration.ViewSensitive";
+        public const string ResetToDefaults = "Configuration.ResetToDefaults";
+    }
+
+    /// <summary>
     /// Report management permissions
     /// </summary>
     public static class Report

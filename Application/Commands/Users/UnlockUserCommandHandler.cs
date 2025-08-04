@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
-using VisitorManagementSystem.Api.Application.Services.Auth;
+using VisitorManagementSystem.Api.Application.Services.Users;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Users
@@ -8,7 +8,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
     /// <summary>
     /// Handler for UnlockUserCommand
     /// </summary>
-    public class UnlockUserCommandHandler : IRequestHandler<UnlockUserCommand, CommandResultDto>
+    public class UnlockUserCommandHandler : IRequestHandler<UnlockUserCommand, CommandResultDto<object>>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserLockoutService _lockoutService;
@@ -24,7 +24,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
             _logger = logger;
         }
 
-        public async Task<CommandResultDto> Handle(UnlockUserCommand request, CancellationToken cancellationToken)
+        public async Task<CommandResultDto<object>> Handle(UnlockUserCommand request, CancellationToken cancellationToken)
         {
             try
             {
@@ -34,12 +34,12 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, cancellationToken);
                 if (user == null)
                 {
-                    return CommandResultDto.Failure("User not found");
+                    return CommandResultDto<object>.Failure("User not found");
                 }
 
                 if (!user.IsCurrentlyLockedOut())
                 {
-                    return CommandResultDto.Failure("User account is not currently locked");
+                    return CommandResultDto<object>.Failure("User account is not currently locked");
                 }
 
                 var reason = request.Reason ?? "Administrative unlock";
@@ -50,15 +50,15 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                     _logger.LogInformation("User account unlocked successfully: UserId: {UserId}, UnlockedBy: {UnlockedBy}, Reason: {Reason}",
                         request.UserId, request.UnlockedBy, reason);
 
-                    return CommandResultDto.Success("User account unlocked successfully");
+                    return CommandResultDto<object>.Success("User account unlocked successfully");
                 }
 
-                return CommandResultDto.Failure("Failed to unlock user account");
+                return CommandResultDto<object>.Failure("Failed to unlock user account");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing UnlockUserCommand for UserId: {UserId}", request.UserId);
-                return CommandResultDto.Failure("An error occurred while unlocking the account");
+                return CommandResultDto<object>.Failure("An error occurred while unlocking the account");
             }
         }
     }

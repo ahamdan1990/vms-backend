@@ -4,10 +4,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
 using VisitorManagementSystem.Api.Application.Services.Auth;
+using VisitorManagementSystem.Api.Application.Services.Configuration;
 using VisitorManagementSystem.Api.Configuration;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Infrastructure.Data;
 using VisitorManagementSystem.Api.Infrastructure.Data.Repositories;
+using VisitorManagementSystem.Api.Infrastructure.Data.Seeds;
+using VisitorManagementSystem.Api.Infrastructure.Repositories;
 using VisitorManagementSystem.Api.Infrastructure.Security.Authorization;
 using VisitorManagementSystem.Api.Infrastructure.Security.Authentication;
 using VisitorManagementSystem.Api.Infrastructure.Security.Encryption;
@@ -27,6 +30,7 @@ using Microsoft.AspNetCore.Authentication;
 using StackExchange.Redis;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using VisitorManagementSystem.Api.Domain.Entities;
+using VisitorManagementSystem.Api.Application.Services.Users;
 
 namespace VisitorManagementSystem.Api.Extensions;
 
@@ -72,30 +76,15 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Registers configuration sections
+    /// Registers configuration services
     /// </summary>
     private static IServiceCollection RegisterConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<JwtConfiguration>(configuration.GetSection(JwtConfiguration.SectionName));
-        services.Configure<SecurityConfiguration>(configuration.GetSection(SecurityConfiguration.SectionName));
-        services.Configure<DatabaseConfiguration>(configuration.GetSection(DatabaseConfiguration.SectionName));
-        services.Configure<LoggingConfiguration>(configuration.GetSection(LoggingConfiguration.SectionName));
-
-        // Validate critical configurations on startup
-        services.AddOptions<JwtConfiguration>()
-            .Bind(configuration.GetSection(JwtConfiguration.SectionName))
-            .ValidateDataAnnotations()
-            .Validate(config => !string.IsNullOrWhiteSpace(config.SecretKey), "JWT SecretKey is required")
-            .Validate(config => config.SecretKey.Length >= 32, "JWT SecretKey must be at least 256 bits (32 characters)")
-            .Validate(config => !string.IsNullOrWhiteSpace(config.Issuer), "JWT Issuer is required")
-            .Validate(config => !string.IsNullOrWhiteSpace(config.Audience), "JWT Audience is required")
-            .ValidateOnStart();
-
-        services.AddOptions<SecurityConfiguration>()
-            .Bind(configuration.GetSection(SecurityConfiguration.SectionName))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
+        // Register the dynamic configuration service
+        services.AddScoped<IDynamicConfigurationService, DynamicConfigurationService>();
+        
+        // Note: All other configurations are now stored in database and accessed via IDynamicConfigurationService
+        
         return services;
     }
 
@@ -107,6 +96,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<ISystemConfigurationRepository, SystemConfigurationRepository>();
+        services.AddScoped<IConfigurationAuditRepository, ConfigurationAuditRepository>();
         services.AddScoped(typeof(IGenericRepository<>), typeof(BaseRepository<>));
 
         return services;
@@ -274,21 +265,19 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Configures security settings
+    /// Configures security services with default settings
+    /// Security settings are now managed dynamically via database
     /// </summary>
     private static IServiceCollection ConfigureSecurity(this IServiceCollection services, IConfiguration configuration)
     {
-        var securityConfig = configuration.GetSection(SecurityConfiguration.SectionName).Get<SecurityConfiguration>()
-            ?? new SecurityConfiguration();
-
-        // Configure password hasher
+        // Configure password hasher with secure defaults
         services.Configure<PasswordHasherOptions>(options =>
         {
             options.CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3;
             options.IterationCount = 10000;
         });
 
-        // Configure anti-forgery
+        // Configure anti-forgery with secure defaults
         services.AddAntiforgery(options =>
         {
             options.HeaderName = "X-CSRF-TOKEN";
@@ -298,16 +287,13 @@ public static class ServiceCollectionExtensions
             options.Cookie.SameSite = SameSiteMode.Strict;
         });
 
-        // Configure HSTS
-        if (securityConfig.Https.EnableHsts)
+        // Configure HSTS with secure defaults
+        services.AddHsts(options =>
         {
-            services.AddHsts(options =>
-            {
-                options.MaxAge = securityConfig.Https.HstsMaxAge;
-                options.IncludeSubDomains = securityConfig.Https.HstsIncludeSubdomains;
-                options.Preload = securityConfig.Https.HstsPreload;
-            });
-        }
+            options.MaxAge = TimeSpan.FromDays(365);
+            options.IncludeSubDomains = true;
+            options.Preload = true;
+        });
 
         return services;
     }

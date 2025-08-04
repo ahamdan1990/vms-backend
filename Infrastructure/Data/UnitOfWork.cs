@@ -18,10 +18,14 @@ public class UnitOfWork : IUnitOfWork
     public IUserRepository Users { get; private set; }
     public IRefreshTokenRepository RefreshTokens { get; private set; }
     public IGenericRepository<AuditLog> AuditLogs { get; private set; }
+    public ISystemConfigurationRepository SystemConfigurations { get; private set; }
+    public IConfigurationAuditRepository ConfigurationAudits { get; private set; }
 
     public UnitOfWork(ApplicationDbContext context,
                      IUserRepository userRepository,
-                     IRefreshTokenRepository refreshTokenRepository)
+                     IRefreshTokenRepository refreshTokenRepository,
+                     ISystemConfigurationRepository systemConfigurationRepository,
+                     IConfigurationAuditRepository configurationAuditRepository)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _repositories = new Dictionary<Type, object>();
@@ -29,6 +33,8 @@ public class UnitOfWork : IUnitOfWork
         Users = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         RefreshTokens = refreshTokenRepository ?? throw new ArgumentNullException(nameof(refreshTokenRepository));
         AuditLogs = new Repositories.BaseRepository<AuditLog>(context);
+        SystemConfigurations = systemConfigurationRepository ?? throw new ArgumentNullException(nameof(systemConfigurationRepository));
+        ConfigurationAudits = configurationAuditRepository ?? throw new ArgumentNullException(nameof(configurationAuditRepository));
     }
 
     public IGenericRepository<TEntity> Repository<TEntity>() where TEntity : BaseEntity

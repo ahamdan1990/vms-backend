@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using VisitorManagementSystem.Api.Application.Services.Auth;
+using VisitorManagementSystem.Api.Application.Services.Configuration;
 using VisitorManagementSystem.Api.Configuration;
 using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Domain.Entities;
@@ -17,17 +18,17 @@ namespace VisitorManagementSystem.Api.Application.Services.Auth;
 /// </summary>
 public class PasswordService : IPasswordService
 {
-    private readonly SecurityConfiguration _securityConfig;
+    private readonly IDynamicConfigurationService _dynamicConfig;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<PasswordService> _logger;
     private readonly PasswordPolicy _passwordPolicy;
 
     public PasswordService(
-        IOptions<SecurityConfiguration> securityConfig,
+        IDynamicConfigurationService dynamicConfig,
         IUnitOfWork unitOfWork,
         ILogger<PasswordService> logger)
     {
-        _securityConfig = securityConfig.Value;
+        _dynamicConfig = dynamicConfig;
         _unitOfWork = unitOfWork;
         _logger = logger;
         _passwordPolicy = GetPasswordPolicy();
@@ -380,11 +381,24 @@ public class PasswordService : IPasswordService
 
     public PasswordResetInstructions GenerateResetInstructions(User user)
     {
+        // Since this method needs to be synchronous, we'll use a reasonable default
+        // In a production system, you might want to make this async or cache the configuration
+        var passwordResetTokenExpiryMinutes = 30; // Default value
+
+        try
+        {
+            passwordResetTokenExpiryMinutes = _dynamicConfig.GetConfigurationAsync<int>("Security", "PasswordResetTokenExpiryMinutes", 30).Result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to get password reset token expiry configuration, using default value");
+        }
+
         return new PasswordResetInstructions
         {
             Instructions = "Please create a new password that meets the security requirements listed below.",
             Requirements = GetPasswordRequirements(),
-            ValidUntil = DateTime.UtcNow.AddMinutes(_securityConfig.PasswordResetTokenExpiryMinutes),
+            ValidUntil = DateTime.UtcNow.AddMinutes(passwordResetTokenExpiryMinutes),
             ContactInfo = "If you have trouble resetting your password, please contact IT support.",
             SecurityTips = new List<string>
             {
@@ -445,32 +459,42 @@ public class PasswordService : IPasswordService
 
     public PasswordPolicy GetPasswordPolicy()
     {
-        return new PasswordPolicy
+        // Since this is a synchronous method but we need async calls, we'll use .Result
+        // In a production system, you might want to make this method async or cache the configuration
+        try
         {
-            MinimumLength = _securityConfig.PasswordPolicy?.RequiredLength ?? 8,
-            MaximumLength = 128,
-            RequireDigit = _securityConfig.PasswordPolicy?.RequireDigit ?? true,
-            RequireLowercase = _securityConfig.PasswordPolicy?.RequireLowercase ?? true,
-            RequireUppercase = _securityConfig.PasswordPolicy?.RequireUppercase ?? true,
-            RequireNonAlphanumeric = _securityConfig.PasswordPolicy?.RequireNonAlphanumeric ?? true,
-            RequiredUniqueChars = _securityConfig.PasswordPolicy?.RequiredUniqueChars ?? 3,
-            PasswordHistoryCount = 5,
-            PasswordExpiryDays = 90,
-            PasswordExpiryWarningDays = 14,
-            PreventPersonalInfo = true,
-            CheckCompromisedPasswords = true,
-            RequirePeriodicChange = true,
-            MinimumAge = 1,
-            MaximumAge = 90,
-            MinimumScoreRequired = 60,
-            ForbiddenPasswords = GetCommonPasswords(),
-            ForbiddenPatterns = new List<string>
+            return new PasswordPolicy
             {
-                @"(.)\1{2,}", // Repeated characters
-                @"(012|123|234|345|456|567|678|789|890)", // Sequential numbers
-                @"(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)" // Sequential letters
-            }
-        };
+                MinimumLength = _dynamicConfig.GetConfigurationAsync<int>("Password", "RequiredLength", 8).Result,
+                MaximumLength = _dynamicConfig.GetConfigurationAsync<int>("Password", "MaximumLength", 128).Result,
+                RequireDigit = _dynamicConfig.GetConfigurationAsync<bool>("Password", "RequireDigit", true).Result,
+                RequireLowercase = _dynamicConfig.GetConfigurationAsync<bool>("Password", "RequireLowercase", true).Result,
+                RequireUppercase = _dynamicConfig.GetConfigurationAsync<bool>("Password", "RequireUppercase", true).Result,
+                RequireNonAlphanumeric = _dynamicConfig.GetConfigurationAsync<bool>("Password", "RequireNonAlphanumeric", true).Result,
+                RequiredUniqueChars = _dynamicConfig.GetConfigurationAsync<int>("Password", "RequiredUniqueChars", 3).Result,
+                PasswordHistoryCount = _dynamicConfig.GetConfigurationAsync<int>("Password", "PasswordHistoryCount", 5).Result,
+                PasswordExpiryDays = _dynamicConfig.GetConfigurationAsync<int>("Password", "PasswordExpiryDays", 90).Result,
+                PasswordExpiryWarningDays = _dynamicConfig.GetConfigurationAsync<int>("Password", "PasswordExpiryWarningDays", 14).Result,
+                PreventPersonalInfo = _dynamicConfig.GetConfigurationAsync<bool>("Password", "PreventPersonalInfo", true).Result,
+                CheckCompromisedPasswords = _dynamicConfig.GetConfigurationAsync<bool>("Password", "CheckCompromisedPasswords", true).Result,
+                RequirePeriodicChange = _dynamicConfig.GetConfigurationAsync<bool>("Password", "RequirePeriodicChange", true).Result,
+                MinimumAge = _dynamicConfig.GetConfigurationAsync<int>("Password", "MinimumAge", 1).Result,
+                MaximumAge = _dynamicConfig.GetConfigurationAsync<int>("Password", "MaximumAge", 90).Result,
+                MinimumScoreRequired = _dynamicConfig.GetConfigurationAsync<int>("Password", "MinimumScoreRequired", 60).Result,
+                ForbiddenPasswords = GetCommonPasswords(),
+                ForbiddenPatterns = new List<string>
+                {
+                    @"(.)\1{2,}", // Repeated characters
+                    @"(012|123|234|345|456|567|678|789|890)", // Sequential numbers
+                    @"(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)" // Sequential letters
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting password policy, returning defaults");
+            return new PasswordPolicy(); // Return defaults
+        }
     }
 
     public async Task UpdatePasswordPolicyAsync(PasswordPolicy policy)

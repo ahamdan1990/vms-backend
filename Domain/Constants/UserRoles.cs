@@ -441,8 +441,31 @@ public static class UserRoles
             Permissions.Offline.ViewQueue,
             Permissions.Offline.RetryFailed,
             Permissions.Offline.PurgeCompleted,
-            Permissions.Offline.ViewStatus
-        });
+            Permissions.Offline.ViewStatus,
+
+            // Dynamic configuration management permissions
+            Permissions.Configuration.Read,
+            Permissions.Configuration.ReadAll,
+            Permissions.Configuration.Update,
+            Permissions.Configuration.UpdateAll,
+            Permissions.Configuration.Create,
+            Permissions.Configuration.Delete,
+            Permissions.Configuration.ViewHistory,
+            Permissions.Configuration.ViewAudit,
+            Permissions.Configuration.ManageEncrypted,
+            Permissions.Configuration.ManageSecurity,
+            Permissions.Configuration.ManageJWT,
+            Permissions.Configuration.ManagePassword,
+            Permissions.Configuration.ManageLockout,
+            Permissions.Configuration.ManageRateLimit,
+            Permissions.Configuration.ManageLogging,
+            Permissions.Configuration.Export,
+            Permissions.Configuration.Import,
+            Permissions.Configuration.InvalidateCache,
+            Permissions.Configuration.ViewSensitive,
+            Permissions.Configuration.ResetToDefaults
+
+});
 
         return permissions.Distinct().ToList();
     }

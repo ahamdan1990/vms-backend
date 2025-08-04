@@ -12,6 +12,8 @@ using System.Text;
 
 using VisitorManagementSystem.Api.Application.Services.Auth;
 
+using VisitorManagementSystem.Api.Application.Services.Configuration;
+
 using VisitorManagementSystem.Api.Configuration;
 
 using VisitorManagementSystem.Api.Domain.Constants;
@@ -36,13 +38,11 @@ public class JwtService : IJwtService
 
 {
 
-    private readonly JwtConfiguration _jwtConfig;
-
     private readonly IUnitOfWork _unitOfWork;
 
     private readonly ILogger<JwtService> _logger;
 
-    private readonly SymmetricSecurityKey _signingKey;
+    private readonly IDynamicConfigurationService _dynamicConfig;
 
     private readonly JwtSecurityTokenHandler _tokenHandler;
 
@@ -50,21 +50,19 @@ public class JwtService : IJwtService
 
     public JwtService(
 
-        IOptions<JwtConfiguration> jwtConfig,
-
         IUnitOfWork unitOfWork,
 
-        ILogger<JwtService> logger)
+        ILogger<JwtService> logger,
+
+        IDynamicConfigurationService dynamicConfig)
 
     {
-
-        _jwtConfig = jwtConfig.Value;
 
         _unitOfWork = unitOfWork;
 
         _logger = logger;
 
-        _signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtConfig.SecretKey));
+        _dynamicConfig = dynamicConfig;
 
         _tokenHandler = new JwtSecurityTokenHandler();
 
@@ -86,9 +84,20 @@ public class JwtService : IJwtService
 
             var issuedAt = DateTime.UtcNow;
 
-            var expiry = issuedAt.AddMinutes(_jwtConfig.ExpiryInMinutes);
+            var expiryInMinutes = await _dynamicConfig.GetConfigurationAsync<int>("JWT", "ExpiryInMinutes", 15);
+            var expiry = issuedAt.AddMinutes(expiryInMinutes);
 
+            var secretKey = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "SecretKey", "");
+            var issuer = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Issuer", "");
+            var audience = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Audience", "");
+            var algorithm = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Algorithm", "HS256");
 
+            if (string.IsNullOrEmpty(secretKey))
+            {
+                throw new InvalidOperationException("JWT SecretKey is not configured");
+            }
+
+            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
             // Create claims
 
@@ -104,7 +113,7 @@ public class JwtService : IJwtService
 
             // Create signing credentials
 
-            var signingCredentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256);
+            var signingCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
 
 
 
@@ -118,9 +127,9 @@ public class JwtService : IJwtService
 
                 Expires = expiry,
 
-                Issuer = _jwtConfig.Issuer,
+                Issuer = issuer,
 
-                Audience = _jwtConfig.Audience,
+                Audience = audience,
 
                 SigningCredentials = signingCredentials,
 
@@ -154,9 +163,9 @@ public class JwtService : IJwtService
 
                 IssuedAt = issuedAt,
 
-                Issuer = _jwtConfig.Issuer,
+                Issuer = issuer,
 
-                Audience = _jwtConfig.Audience,
+                Audience = audience,
 
                 Claims = claims
 
@@ -188,6 +197,7 @@ public class JwtService : IJwtService
 
         {
 
+            var refreshTokenExpiryInDays = await _dynamicConfig.GetConfigurationAsync<int>("JWT", "RefreshTokenExpiryInDays", 7);
             var refreshToken = new RefreshToken
 
             {
@@ -198,7 +208,7 @@ public class JwtService : IJwtService
 
                 UserId = user.Id,
 
-                ExpiryDate = DateTime.UtcNow.AddDays(_jwtConfig.RefreshTokenExpiryInDays),
+                ExpiryDate = DateTime.UtcNow.AddDays(refreshTokenExpiryInDays),
 
                 CreatedByIp = ipAddress,
 
@@ -264,29 +274,46 @@ public class JwtService : IJwtService
 
             }
 
+            var secretKey = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "SecretKey", "");
+            var issuer = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Issuer", "");
+            var audience = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Audience", "");
+            var algorithm = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Algorithm", "HS256");
+            var validateIssuerSigningKey = await _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateIssuerSigningKey", true);
+            var validateIssuer = await _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateIssuer", true);
+            var validateAudience = await _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateAudience", true);
+            var validateLifetimeConfig = await _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateLifetime", true);
+            var clockSkewMinutes = await _dynamicConfig.GetConfigurationAsync<int>("JWT", "ClockSkewMinutes", 0);
+            var requireExpirationTime = await _dynamicConfig.GetConfigurationAsync<bool>("JWT", "RequireExpirationTime", true);
 
+            if (string.IsNullOrEmpty(secretKey))
+            {
+                result.ErrorMessage = "JWT SecretKey is not configured";
+                return result;
+            }
+
+            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
             var validationParameters = new TokenValidationParameters
 
             {
 
-                ValidateIssuerSigningKey = _jwtConfig.ValidateIssuerSigningKey,
+                ValidateIssuerSigningKey = validateIssuerSigningKey,
 
-                IssuerSigningKey = _signingKey,
+                IssuerSigningKey = signingKey,
 
-                ValidateIssuer = _jwtConfig.ValidateIssuer,
+                ValidateIssuer = validateIssuer,
 
-                ValidIssuer = _jwtConfig.Issuer,
+                ValidIssuer = issuer,
 
-                ValidateAudience = _jwtConfig.ValidateAudience,
+                ValidateAudience = validateAudience,
 
-                ValidAudience = _jwtConfig.Audience,
+                ValidAudience = audience,
 
-                ValidateLifetime = validateLifetime && _jwtConfig.ValidateLifetime,
+                ValidateLifetime = validateLifetime && validateLifetimeConfig,
 
-                ClockSkew = TimeSpan.FromMinutes(_jwtConfig.ClockSkewMinutes),
+                ClockSkew = TimeSpan.FromMinutes(clockSkewMinutes),
 
-                RequireExpirationTime = _jwtConfig.RequireExpirationTime
+                RequireExpirationTime = requireExpirationTime
 
             };
 
@@ -309,8 +336,8 @@ public class JwtService : IJwtService
 
 
             // Verify algorithm
-
-            if (!jwtToken.Header.Alg.Equals(_jwtConfig.Algorithm, StringComparison.InvariantCultureIgnoreCase))
+            var tokenAlgorithm = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Algorithm", "HS256");
+            if (!jwtToken.Header.Alg.Equals(tokenAlgorithm, StringComparison.InvariantCultureIgnoreCase))
 
             {
 
@@ -676,9 +703,19 @@ public class JwtService : IJwtService
 
 
 
-            var expiry = DateTime.UtcNow.AddMinutes(_jwtConfig.PasswordResetTokenExpiryMinutes);
+            var passwordResetTokenExpiryMinutes = _dynamicConfig.GetConfigurationAsync<int>("JWT", "PasswordResetTokenExpiryMinutes", 30).Result;
+            var expiry = DateTime.UtcNow.AddMinutes(passwordResetTokenExpiryMinutes);
 
+            var secretKey = _dynamicConfig.GetConfigurationAsync<string>("JWT", "SecretKey", "").Result;
+            var issuer = _dynamicConfig.GetConfigurationAsync<string>("JWT", "Issuer", "").Result;
+            var audience = _dynamicConfig.GetConfigurationAsync<string>("JWT", "Audience", "").Result;
+            
+            if (string.IsNullOrEmpty(secretKey))
+            {
+                throw new InvalidOperationException("JWT SecretKey is not configured");
+            }
 
+            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
             var tokenDescriptor = new SecurityTokenDescriptor
 
@@ -688,11 +725,11 @@ public class JwtService : IJwtService
 
                 Expires = expiry,
 
-                Issuer = _jwtConfig.Issuer,
+                Issuer = issuer,
 
-                Audience = _jwtConfig.Audience,
+                Audience = audience,
 
-                SigningCredentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256)
+                SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256)
 
             };
 
@@ -802,9 +839,19 @@ public class JwtService : IJwtService
 
 
 
-            var expiry = DateTime.UtcNow.AddHours(_jwtConfig.EmailConfirmationTokenExpiryHours);
+            var emailConfirmationTokenExpiryHours = _dynamicConfig.GetConfigurationAsync<int>("JWT", "EmailConfirmationTokenExpiryHours", 24).Result;
+            var expiry = DateTime.UtcNow.AddHours(emailConfirmationTokenExpiryHours);
 
+            var secretKey = _dynamicConfig.GetConfigurationAsync<string>("JWT", "SecretKey", "").Result;
+            var issuer = _dynamicConfig.GetConfigurationAsync<string>("JWT", "Issuer", "").Result;
+            var audience = _dynamicConfig.GetConfigurationAsync<string>("JWT", "Audience", "").Result;
+            
+            if (string.IsNullOrEmpty(secretKey))
+            {
+                throw new InvalidOperationException("JWT SecretKey is not configured");
+            }
 
+            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
             var tokenDescriptor = new SecurityTokenDescriptor
 
@@ -814,11 +861,11 @@ public class JwtService : IJwtService
 
                 Expires = expiry,
 
-                Issuer = _jwtConfig.Issuer,
+                Issuer = issuer,
 
-                Audience = _jwtConfig.Audience,
+                Audience = audience,
 
-                SigningCredentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256)
+                SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256)
 
             };
 
@@ -878,9 +925,19 @@ public class JwtService : IJwtService
 
 
 
-            var expiry = DateTime.UtcNow.AddMinutes(_jwtConfig.TwoFactorTokenExpiryMinutes);
+            var twoFactorTokenExpiryMinutes = _dynamicConfig.GetConfigurationAsync<int>("JWT", "TwoFactorTokenExpiryMinutes", 5).Result;
+            var expiry = DateTime.UtcNow.AddMinutes(twoFactorTokenExpiryMinutes);
 
+            var secretKey = _dynamicConfig.GetConfigurationAsync<string>("JWT", "SecretKey", "").Result;
+            var issuer = _dynamicConfig.GetConfigurationAsync<string>("JWT", "Issuer", "").Result;
+            var audience = _dynamicConfig.GetConfigurationAsync<string>("JWT", "Audience", "").Result;
+            
+            if (string.IsNullOrEmpty(secretKey))
+            {
+                throw new InvalidOperationException("JWT SecretKey is not configured");
+            }
 
+            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
             var tokenDescriptor = new SecurityTokenDescriptor
 
@@ -890,11 +947,11 @@ public class JwtService : IJwtService
 
                 Expires = expiry,
 
-                Issuer = _jwtConfig.Issuer,
+                Issuer = issuer,
 
-                Audience = _jwtConfig.Audience,
+                Audience = audience,
 
-                SigningCredentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256)
+                SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256)
 
             };
 
@@ -1055,11 +1112,33 @@ public class JwtService : IJwtService
 
 
     public JwtConfiguration GetTokenConfiguration()
-
     {
-
-        return _jwtConfig;
-
+        // Since this is a synchronous method but we need async calls, we'll use .Result
+        // In a production system, you might want to make this method async or cache the configuration
+        try
+        {
+            return new JwtConfiguration
+            {
+                SecretKey = _dynamicConfig.GetConfigurationAsync<string>("JWT", "SecretKey", "").Result,
+                Issuer = _dynamicConfig.GetConfigurationAsync<string>("JWT", "Issuer", "").Result,
+                Audience = _dynamicConfig.GetConfigurationAsync<string>("JWT", "Audience", "").Result,
+                ExpiryInMinutes = _dynamicConfig.GetConfigurationAsync<int>("JWT", "ExpiryInMinutes", 15).Result,
+                RefreshTokenExpiryInDays = _dynamicConfig.GetConfigurationAsync<int>("JWT", "RefreshTokenExpiryInDays", 7).Result,
+                PasswordResetTokenExpiryMinutes = _dynamicConfig.GetConfigurationAsync<int>("JWT", "PasswordResetTokenExpiryMinutes", 30).Result,
+                ValidateIssuerSigningKey = _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateIssuerSigningKey", true).Result,
+                ValidateIssuer = _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateIssuer", true).Result,
+                ValidateAudience = _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateAudience", true).Result,
+                ValidateLifetime = _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateLifetime", true).Result,
+                ClockSkewMinutes = _dynamicConfig.GetConfigurationAsync<int>("JWT", "ClockSkewMinutes", 0).Result,
+                RequireExpirationTime = _dynamicConfig.GetConfigurationAsync<bool>("JWT", "RequireExpirationTime", true).Result,
+                Algorithm = _dynamicConfig.GetConfigurationAsync<string>("JWT", "Algorithm", "HS256").Result
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting JWT configuration, returning defaults");
+            return new JwtConfiguration(); // Return defaults
+        }
     }
 
 
