@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using VisitorManagementSystem.Api.Application.DTOs.Common;
+using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -210,6 +212,42 @@ public class UserRepository : BaseRepository<User>, IUserRepository
 
         return summary;
     }
+
+    public async Task<PagedResultDto<UserActivityDto>> GetUserAuditLogsAsync(
+    int userId, int days, int pageIndex, int pageSize, CancellationToken cancellationToken)
+    {
+        var startDate = DateTime.UtcNow.AddDays(-days);
+
+        var query = _context.Set<AuditLog>()
+            .Where(al => al.UserId == userId && al.CreatedOn >= startDate);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var auditLogs = await query
+            .OrderByDescending(al => al.CreatedOn)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var items = auditLogs.Select(al => new UserActivityDto
+        {
+            Action = al.Action,
+            Description = al.Description,
+            Timestamp = al.CreatedOn,
+            IpAddress = al.IpAddress,
+            UserAgent = al.UserAgent,
+            IsSuccess = al.IsSuccess
+        }).ToList();
+
+        return new PagedResultDto<UserActivityDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageIndex = pageIndex,
+            PageSize = pageSize
+        };
+    }
+
 
     public async Task<int> BulkUpdateStatusAsync(List<int> userIds, UserStatus status, int modifiedBy, CancellationToken cancellationToken = default)
     {

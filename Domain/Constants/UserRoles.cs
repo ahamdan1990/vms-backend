@@ -149,6 +149,9 @@ public static class UserRoles
     {
         return new List<string>
         {
+            // View own activity
+            Permissions.User.ViewActivity,
+
             // Own invitation management
             Permissions.Invitation.CreateOwn,
             Permissions.Invitation.ReadOwn,
@@ -189,6 +192,9 @@ public static class UserRoles
     {
         return new List<string>
         {
+            // View own activity
+            Permissions.User.ViewActivity,
+
             // Today's visitors
             Permissions.Visitor.ReadToday,
             Permissions.Visitor.Search,

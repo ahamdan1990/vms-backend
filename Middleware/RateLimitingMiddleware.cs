@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using System.Net;
+using VisitorManagementSystem.Api.Application.DTOs.Common;
+using System.Text.Json;
 
 namespace VisitorManagementSystem.Api.Middleware;
 
@@ -48,6 +50,12 @@ public class RateLimitingMiddleware
 
     private async Task<bool> IsRateLimitExceededAsync(string clientId, string endpoint, HttpContext context)
     {
+        if (IsPrivilegedUser(context))
+        {
+            _logger.LogInformation("Bypassing rate limit for privileged user: {ClientId}", clientId);
+            return false;
+        }
+
         var rule = GetApplicableRule(endpoint, context);
         if (rule == null) return false;
 
@@ -75,6 +83,20 @@ public class RateLimitingMiddleware
         return false;
     }
 
+    private bool IsPrivilegedUser(HttpContext context)
+    {
+        if (context.User?.Identity?.IsAuthenticated != true)
+            return false;
+
+        var roles = context.User.Claims
+            .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
+            .Select(c => c.Value)
+            .ToList();
+
+        // Customize role names as needed
+        return roles.Contains("Admin") || roles.Contains("System") || roles.Contains("NoRateLimit");
+    }
+
     private async Task HandleRateLimitExceeded(HttpContext context, string clientId, string endpoint)
     {
         var rule = GetApplicableRule(endpoint, context);
@@ -88,17 +110,31 @@ public class RateLimitingMiddleware
         context.Response.Headers.Add("X-RateLimit-Reset", DateTimeOffset.UtcNow.Add(rule?.Window ?? TimeSpan.Zero).ToUnixTimeSeconds().ToString());
         context.Response.Headers.Add("Retry-After", ((int)(rule?.Window.TotalSeconds ?? 60)).ToString());
 
-        var response = new
+        // ✅ FIXED: Use ApiResponseDto format for consistency
+        var response = ApiResponseDto<object>.ErrorResponse(
+            "Rate limit exceeded. Please try again later.",
+            "Too Many Requests",
+            context.TraceIdentifier
+        );
+
+        // Add metadata for rate limiting details
+        response.Metadata = new
         {
-            success = false,
-            message = "Rate limit exceeded. Please try again later.",
-            error = "too_many_requests",
-            retryAfter = rule?.Window.TotalSeconds ?? 60,
-            timestamp = DateTime.UtcNow
+            RetryAfter = rule?.Window.TotalSeconds ?? 60,
+            Limit = rule?.Limit ?? 0,
+            Window = rule?.Window.ToString() ?? "00:01:00",
+            ClientId = clientId,
+            Endpoint = endpoint
         };
 
-        await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response));
+        var jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
+        await context.Response.WriteAsync(JsonSerializer.Serialize(response, jsonOptions));
     }
+
 
     private string GetClientIdentifier(HttpContext context)
     {
@@ -192,3 +228,5 @@ public class RateLimitRule
     public int Limit { get; set; }
     public TimeSpan Window { get; set; }
 }
+
+

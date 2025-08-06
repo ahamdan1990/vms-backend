@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using System.Text.Json;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Controllers; // For UserActivityDto
@@ -30,6 +31,7 @@ public class GetUserActivityQueryHandler : IRequestHandler<GetUserActivityQuery,
 
             // Check if user exists
             var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, cancellationToken);
+
             if (user == null)
             {
                 return new PagedResultDto<UserActivityDto>
@@ -43,40 +45,34 @@ public class GetUserActivityQueryHandler : IRequestHandler<GetUserActivityQuery,
 
             var startDate = DateTime.UtcNow.AddDays(-request.Days);
 
-            // Get audit logs (simplified - you'll need to implement proper audit log querying)
-            var activities = new List<UserActivityDto>
+            var summary = await _unitOfWork.Users.GetUserActivitySummaryAsync(request.UserId, request.Days, cancellationToken);
+
+            var auditLogs = await _unitOfWork.Users.GetUserAuditLogsAsync(request.UserId, request.Days, request.PageIndex, request.PageSize, cancellationToken);
+
+            // Map audit logs to UserActivityDto
+            var activities = auditLogs.Items.Select(al => new UserActivityDto
             {
-                new UserActivityDto
-                {
-                    Action = "Login",
-                    Description = "User logged in successfully",
-                    Timestamp = DateTime.UtcNow.AddHours(-2),
-                    IpAddress = "192.168.1.100",
-                    UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                    IsSuccess = true
-                },
-                new UserActivityDto
-                {
-                    Action = "Profile Update",
-                    Description = "User updated their profile information",
-                    Timestamp = DateTime.UtcNow.AddDays(-1),
-                    IpAddress = "192.168.1.100",
-                    UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                    IsSuccess = true
-                }
-            };
+                Action = al.Action,
+                Description = al.Description,
+                IpAddress = al.IpAddress,
+                UserAgent = al.UserAgent,
+                IsSuccess = al.IsSuccess,
+                // Fill other fields if necessary, e.g.:
+                LoginCount = 0,
+                LastLogin = summary.LastLogin,
+                FailedLoginAttempts = summary.FailedLoginAttempts,
+                LastFailedLogin = summary.LastFailedLogin,
+                InvitationsCreated = summary.InvitationsCreated,
+                PasswordChanges = summary.PasswordChanges,
+                ActivityByType = new Dictionary<string, int>(),  // or from summary.ActivityByType if you want to expose
+                RecentActions = new List<string>()  // usually empty here, summary has these
+            }).ToList();
 
-            // Apply pagination
-            var totalCount = activities.Count;
-            var pagedActivities = activities
-                .Skip(request.PageIndex * request.PageSize)
-                .Take(request.PageSize)
-                .ToList();
-
+            // Use totalCount from auditLogs.TotalCount
             return new PagedResultDto<UserActivityDto>
             {
-                Items = pagedActivities,
-                TotalCount = totalCount,
+                Items = activities,
+                TotalCount = auditLogs.TotalCount,
                 PageIndex = request.PageIndex,
                 PageSize = request.PageSize
             };

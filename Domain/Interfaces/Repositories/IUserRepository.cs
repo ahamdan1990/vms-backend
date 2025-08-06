@@ -1,4 +1,6 @@
-﻿using VisitorManagementSystem.Api.Domain.Entities;
+﻿using VisitorManagementSystem.Api.Application.DTOs.Common;
+using VisitorManagementSystem.Api.Application.DTOs.Users;
+using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Specifications;
 
@@ -182,6 +184,8 @@ public interface IUserRepository : IGenericRepository<User>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>User activity summary</returns>
     Task<UserActivitySummary> GetUserActivitySummaryAsync(int userId, int days = 30, CancellationToken cancellationToken = default);
+
+    Task<PagedResultDto<UserActivityDto>> GetUserAuditLogsAsync(int userId, int days, int pageIndex, int pageSize, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Bulk updates user status

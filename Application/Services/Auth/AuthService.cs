@@ -100,9 +100,7 @@ public class AuthService : IAuthService
 
 
             // Check lockout status first
-
             var lockoutStatus = await _lockoutService.GetLockoutStatusAsync(loginRequest.Email, cancellationToken);
-
             if (lockoutStatus.IsLockedOut)
 
             {
@@ -123,12 +121,8 @@ public class AuthService : IAuthService
 
             }
 
-
-
             // Get user by email
-
             var user = await _unitOfWork.Users.GetByEmailAsync(loginRequest.Email, cancellationToken);
-
             if (user == null)
 
             {
@@ -155,10 +149,7 @@ public class AuthService : IAuthService
 
             }
 
-
-
             // Validate user status
-
             if (!user.IsValidForAuthentication())
 
             {
@@ -189,10 +180,7 @@ public class AuthService : IAuthService
 
             }
 
-
-
             // Verify password
-
             if (!_passwordService.VerifyPassword(loginRequest.Password, user.PasswordHash, user.PasswordSalt))
 
             {

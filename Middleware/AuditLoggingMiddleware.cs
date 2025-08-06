@@ -18,9 +18,9 @@ public class AuditLoggingMiddleware
     private readonly AuditLoggingOptions _options;
     private readonly ILogger<AuditLoggingMiddleware> _logger;
 
-    // FIXED: Define maximum metadata size based on database column - increased for nvarchar(max)
-    private const int MAX_METADATA_LENGTH = 50000; // Much larger limit for nvarchar(max)
-    private const int MAX_INDIVIDUAL_FIELD_LENGTH = 2000; // Increased limit for individual fields
+    // ✅ PRODUCTION OPTIMIZED: Adjusted metadata size limits based on database schema
+    private const int MAX_METADATA_LENGTH = 32000; // Optimized for nvarchar(max) with better performance
+    private const int MAX_INDIVIDUAL_FIELD_LENGTH = 1500; // Reduced for better database performance
 
     public AuditLoggingMiddleware(
         RequestDelegate next,

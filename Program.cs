@@ -16,6 +16,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Infrastructure.Security.Authorization;
+using VisitorManagementSystem.Api.Application.DTOs.Common;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,36 +78,32 @@ builder.Services.AddAuthentication(options =>
         NameClaimType = ClaimTypes.NameIdentifier // IMPORTANT: This fixes GetCurrentUserId()
     };
 
-    // FIXED: Enhanced cookie token extraction
+    // ✅ ENHANCED: Improved cookie token extraction and validation
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
         {
             var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
 
-            // Log all cookies for debugging
-            var allCookies = string.Join(", ", context.Request.Cookies.Select(c => $"{c.Key}={c.Value?.Substring(0, Math.Min(10, c.Value.Length))}..."));
-            logger.LogInformation("🍪 All cookies: {Cookies}", allCookies);
-
-            // Try Authorization header first
+            // Try Authorization header first (standard approach)
             var authorization = context.Request.Headers["Authorization"].FirstOrDefault();
             if (!string.IsNullOrEmpty(authorization) && authorization.StartsWith("Bearer "))
             {
                 context.Token = authorization.Substring("Bearer ".Length).Trim();
-                logger.LogInformation("🔑 Token from Authorization header: {TokenStart}...", context.Token?.Substring(0, Math.Min(20, context.Token.Length)));
+                logger.LogDebug("🔑 Token from Authorization header");
                 return Task.CompletedTask;
             }
 
-            // Try access_token cookie
+            // Try access_token cookie (for web app)
             var token = context.Request.Cookies["access_token"];
             if (!string.IsNullOrEmpty(token))
             {
                 context.Token = token;
-                logger.LogInformation("🔑 Token from cookie: {TokenStart}...", token?.Substring(0, Math.Min(20, token.Length)));
+                logger.LogDebug("🔑 Token from access_token cookie");
             }
             else
             {
-                logger.LogWarning("❌ No access_token cookie found!");
+                logger.LogDebug("❌ No token found in headers or cookies");
             }
 
             return Task.CompletedTask;
@@ -115,14 +112,44 @@ builder.Services.AddAuthentication(options =>
         {
             var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
             var userId = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            logger.LogInformation("✅ Token validated successfully for user: {UserId}", userId);
+            logger.LogDebug("✅ Token validated for user: {UserId}", userId);
             return Task.CompletedTask;
         },
         OnAuthenticationFailed = context =>
         {
             var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-            logger.LogError("❌ JWT Authentication failed: {Error}", context.Exception.Message);
-            return Task.CompletedTask;
+            logger.LogWarning("❌ JWT Authentication failed: {Error}", context.Exception.Message);
+            
+            // Don't include the exception details in the response for security
+            context.NoResult();
+            context.Response.StatusCode = 401;
+            context.Response.ContentType = "application/json";
+            
+            var response = ApiResponseDto<object>.ErrorResponse(
+                "Authentication failed",
+                "Unauthorized",
+                context.HttpContext.TraceIdentifier
+            );
+            
+            return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response));
+        },
+        OnChallenge = context =>
+        {
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogDebug("🚪 JWT Challenge triggered for path: {Path}", context.Request.Path);
+            
+            // Custom challenge response
+            context.HandleResponse();
+            context.Response.StatusCode = 401;
+            context.Response.ContentType = "application/json";
+            
+            var response = ApiResponseDto<object>.ErrorResponse(
+                "Authentication required",
+                "Unauthorized", 
+                context.HttpContext.TraceIdentifier
+            );
+            
+            return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response));
         }
     };
 });
@@ -162,10 +189,21 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "https://localhost:3000")
+        // ✅ FIXED: Environment-based CORS configuration
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+            ?? new[] { "http://localhost:3000", "https://localhost:3000" }; // Fallback for development
+
+        var allowedMethods = builder.Configuration.GetSection("Cors:AllowedMethods").Get<string[]>()
+            ?? new[] { "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"};
+
+        var allowedHeaders = builder.Configuration.GetSection("Cors:AllowedHeaders").Get<string[]>()
+            ?? new[] { "Content-Type", "Authorization", "X-Request-ID", "X-VMS-Client", "X-VMS-Version"};
+
+        policy.WithOrigins(allowedOrigins)
+              .WithMethods(allowedMethods)
               .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+              .AllowCredentials()
+              .SetPreflightMaxAge(TimeSpan.FromSeconds(86400)); // 24 hours cache for preflight
     });
 });
 
@@ -189,6 +227,9 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// CORS middleware
+app.UseCors("AllowFrontend");
+
 app.UseSession();
 
 // Global exception handling
@@ -201,20 +242,14 @@ app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
 
 // Rate limiting
-app.UseRateLimiter();
+app.UseMiddleware<RateLimitingMiddleware>();
 
-// Authentication middleware
-app.UseMiddleware<AuthenticationMiddleware>();
-
-// Audit logging
-app.UseMiddleware<AuditLoggingMiddleware>();
-
-//app.UseHttpsRedirection();
-
-app.UseCors("AllowFrontend");
-
+// Authentication & Authorization (removed duplicate custom middleware)
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Audit logging (after authentication so we have user context)
+app.UseMiddleware<AuditLoggingMiddleware>();
 
 app.MapControllers()
     .RequireRateLimiting("login") // Apply login rate limiting to auth endpoints

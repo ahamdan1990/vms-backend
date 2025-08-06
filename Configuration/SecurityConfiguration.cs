@@ -88,10 +88,10 @@ public class LockoutConfiguration
 /// </summary>
 public class RateLimitingConfiguration
 {
-    public ApiRateLimit LoginAttempts { get; set; } = new() { PermitLimit = 5, Window = TimeSpan.FromMinutes(5) };
-    public ApiRateLimit GeneralApi { get; set; } = new() { PermitLimit = 100, Window = TimeSpan.FromMinutes(1) };
-    public ApiRateLimit PasswordReset { get; set; } = new() { PermitLimit = 3, Window = TimeSpan.FromHours(1) };
-    public ApiRateLimit TokenRefresh { get; set; } = new() { PermitLimit = 10, Window = TimeSpan.FromMinutes(1) };
+    public ApiRateLimit LoginAttempts { get; set; } = new() { PermitLimit = 50, Window = TimeSpan.FromMinutes(5) };
+    public ApiRateLimit GeneralApi { get; set; } = new() { PermitLimit = 1000, Window = TimeSpan.FromMinutes(1) };
+    public ApiRateLimit PasswordReset { get; set; } = new() { PermitLimit = 20, Window = TimeSpan.FromHours(1) };
+    public ApiRateLimit TokenRefresh { get; set; } = new() { PermitLimit = 30, Window = TimeSpan.FromMinutes(1) };
     public bool EnableGlobalRateLimit { get; set; } = true;
     public bool EnablePerUserRateLimit { get; set; } = true;
     public bool EnablePerIpRateLimit { get; set; } = true;
