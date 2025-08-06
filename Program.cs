@@ -227,6 +227,9 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// Static files (for serving uploaded images)
+app.UseStaticFiles();
+
 // CORS middleware
 app.UseCors("AllowFrontend");
 

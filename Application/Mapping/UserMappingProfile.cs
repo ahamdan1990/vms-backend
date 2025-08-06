@@ -53,7 +53,14 @@ public class UserMappingProfile : Profile
         CreateMap<User, UserProfileDto>()
             .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email.Value))
             .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber != null ? src.PhoneNumber.Value : null))
-            .ForMember(dest => dest.ProfilePhotoUrl, opt => opt.MapFrom(src => src.ProfilePhotoPath));
+            .ForMember(dest => dest.ProfilePhotoUrl, opt => opt.MapFrom(src => src.ProfilePhotoPath))
+            // Address mappings
+            .ForMember(dest => dest.Street1, opt => opt.MapFrom(src => src.Address != null ? src.Address.Street1 : null))
+            .ForMember(dest => dest.Street2, opt => opt.MapFrom(src => src.Address != null ? src.Address.Street2 : null))
+            .ForMember(dest => dest.City, opt => opt.MapFrom(src => src.Address != null ? src.Address.City : null))
+            .ForMember(dest => dest.State, opt => opt.MapFrom(src => src.Address != null ? src.Address.State : null))
+            .ForMember(dest => dest.PostalCode, opt => opt.MapFrom(src => src.Address != null ? src.Address.PostalCode : null))
+            .ForMember(dest => dest.Country, opt => opt.MapFrom(src => src.Address != null ? src.Address.Country : null));
     }
 
     private void CreateCommandMappings()

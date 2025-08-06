@@ -459,6 +459,200 @@ public class UsersController : BaseController
     }
 
     /// <summary>
+    /// Gets current user's profile
+    /// GET /api/Users/profile
+    /// </summary>
+    [HttpGet("profile")]
+    [ProducesResponseType(typeof(ApiResponseDto<UserProfileDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
+    public async Task<IActionResult> GetCurrentUserProfile()
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            if (!currentUserId.HasValue)
+                return BadRequestResponse("User not authenticated");
+
+            var query = new GetCurrentUserProfileQuery { UserId = currentUserId.Value };
+            var profile = await _mediator.Send(query);
+
+            return SuccessResponse(profile);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving current user profile");
+            return ServerErrorResponse("An error occurred while retrieving your profile");
+        }
+    }
+
+    /// <summary>
+    /// Updates current user's profile (self-service)
+    /// PUT /api/Users/profile
+    /// </summary>
+    [HttpPut("profile")]
+    [ProducesResponseType(typeof(ApiResponseDto<UserProfileDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
+    public async Task<IActionResult> UpdateCurrentUserProfile([FromBody] UpdateUserProfileDto request)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return ValidationError(GetModelStateErrors(), "Validation failed");
+
+            var currentUserId = GetCurrentUserId();
+            if (!currentUserId.HasValue)
+                return BadRequestResponse("User not authenticated");
+
+            var command = new UpdateUserProfileCommand
+            {
+                UserId = currentUserId.Value,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Email = request.Email,
+                PhoneNumber = request.PhoneNumber,
+                Department = request.Department,
+                JobTitle = request.JobTitle,
+                EmployeeId = request.EmployeeId,
+                Street1 = request.Street1,
+                Street2 = request.Street2,
+                City = request.City,
+                State = request.State,
+                PostalCode = request.PostalCode,
+                Country = request.Country
+            };
+
+            var result = await _mediator.Send(command);
+
+            _logger.LogInformation("User profile updated successfully: {UserId}", currentUserId.Value);
+
+            return SuccessResponse(result, "Profile updated successfully");
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Profile update failed due to business rule violation");
+            return BadRequestResponse(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating user profile");
+            return ServerErrorResponse("An error occurred while updating your profile");
+        }
+    }
+
+    /// <summary>
+    /// Updates current user's preferences
+    /// PUT /api/Users/profile/preferences
+    /// </summary>
+    [HttpPut("profile/preferences")]
+    [ProducesResponseType(typeof(ApiResponseDto<UserProfileDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
+    public async Task<IActionResult> UpdateCurrentUserPreferences([FromBody] UpdateUserPreferencesDto request)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return ValidationError(GetModelStateErrors(), "Validation failed");
+
+            var currentUserId = GetCurrentUserId();
+            if (!currentUserId.HasValue)
+                return BadRequestResponse("User not authenticated");
+
+            var command = new UpdateUserPreferencesCommand
+            {
+                UserId = currentUserId.Value,
+                TimeZone = request.TimeZone,
+                Language = request.Language,
+                Theme = request.Theme
+            };
+
+            var result = await _mediator.Send(command);
+
+            _logger.LogInformation("User preferences updated successfully: {UserId}", currentUserId.Value);
+
+            return SuccessResponse(result, "Preferences updated successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating user preferences");
+            return ServerErrorResponse("An error occurred while updating your preferences");
+        }
+    }
+
+    /// <summary>
+    /// Uploads current user's profile photo
+    /// POST /api/Users/profile/photo
+    /// </summary>
+    [HttpPost("profile/photo")]
+    [ProducesResponseType(typeof(ApiResponseDto<string>), 200)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
+    public async Task<IActionResult> UploadProfilePhoto(IFormFile file)
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            if (!currentUserId.HasValue)
+                return BadRequestResponse("User not authenticated");
+
+            if (file == null || file.Length == 0)
+                return BadRequestResponse("No file provided");
+
+            var command = new UploadProfilePhotoCommand
+            {
+                UserId = currentUserId.Value,
+                File = file
+            };
+
+            var photoUrl = await _mediator.Send(command);
+
+            _logger.LogInformation("Profile photo uploaded successfully: {UserId}", currentUserId.Value);
+
+            return SuccessResponse(photoUrl, "Profile photo uploaded successfully");
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "Invalid file upload attempt");
+            return BadRequestResponse(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading profile photo");
+            return ServerErrorResponse("An error occurred while uploading your profile photo");
+        }
+    }
+
+    /// <summary>
+    /// Removes current user's profile photo
+    /// DELETE /api/Users/profile/photo
+    /// </summary>
+    [HttpDelete("profile/photo")]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
+    public async Task<IActionResult> RemoveProfilePhoto()
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            if (!currentUserId.HasValue)
+                return BadRequestResponse("User not authenticated");
+
+            var command = new RemoveProfilePhotoCommand
+            {
+                UserId = currentUserId.Value
+            };
+
+            await _mediator.Send(command);
+
+            _logger.LogInformation("Profile photo removed successfully: {UserId}", currentUserId.Value);
+
+            return SuccessResponse("Profile photo removed successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error removing profile photo");
+            return ServerErrorResponse("An error occurred while removing your profile photo");
+        }
+    }
+
+    /// <summary>
     /// Gets available roles for assignment
     /// </summary>
     [HttpGet("roles")]

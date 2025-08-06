@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
+using VisitorManagementSystem.Api.Application.Services;
 using VisitorManagementSystem.Api.Application.Services.Auth;
 using VisitorManagementSystem.Api.Application.Services.Configuration;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -115,6 +116,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPasswordService, PasswordService>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IUserLockoutService, UserLockoutService>();
+
+        // File upload services
+        services.AddScoped<IFileUploadService, FileUploadService>();
 
         // Utility services
         services.AddSingleton<DateTimeProvider>();

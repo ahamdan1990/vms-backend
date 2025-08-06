@@ -134,6 +134,16 @@
             Handler for delete user command
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Users.RemoveProfilePhotoCommand">
+            <summary>
+            Command for removing user profile photo
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Users.RemoveProfilePhotoCommandHandler">
+            <summary>
+            Handler for removing user profile photo
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Commands.Users.UnlockUserCommand">
             <summary>
             Command for unlocking a user account
@@ -152,6 +162,37 @@
         <member name="T:VisitorManagementSystem.Api.Application.Commands.Users.UpdateUserCommandHandler">
             <summary>
             Handler for update user command
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Users.UpdateUserPreferencesCommand">
+            <summary>
+            Command for updating current user's preferences
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Users.UpdateUserPreferencesCommandHandler">
+            <summary>
+            Handler for update user preferences command
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Users.UpdateUserProfileCommand">
+            <summary>
+            Command for updating current user's profile (self-service)
+            Excludes admin-only fields like role and status
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Users.UpdateUserProfileCommandHandler">
+            <summary>
+            Handler for update user profile command (self-service)
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Users.UploadProfilePhotoCommand">
+            <summary>
+            Command for uploading user profile photo
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Users.UploadProfilePhotoCommandHandler">
+            <summary>
+            Handler for uploading user profile photo
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Auth.AuthenticationResult">
@@ -1018,6 +1059,98 @@
             User theme preference
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserPreferencesDto">
+            <summary>
+            Update user preferences request data transfer object
+            Handles only user-controllable preference settings
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserPreferencesDto.TimeZone">
+            <summary>
+            User timezone
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserPreferencesDto.Language">
+            <summary>
+            User language preference
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserPreferencesDto.Theme">
+            <summary>
+            User theme preference
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto">
+            <summary>
+            Update user profile request data transfer object for self-service profile updates
+            Excludes admin-only fields like role and status
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.FirstName">
+            <summary>
+            User first name
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.LastName">
+            <summary>
+            User last name
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.Email">
+            <summary>
+            User email address
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.PhoneNumber">
+            <summary>
+            User phone number
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.Department">
+            <summary>
+            User department
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.JobTitle">
+            <summary>
+            User job title
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.EmployeeId">
+            <summary>
+            Employee ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.Street1">
+            <summary>
+            Street address line 1
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.Street2">
+            <summary>
+            Street address line 2 (optional)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.City">
+            <summary>
+            City name
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.State">
+            <summary>
+            State or province
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.PostalCode">
+            <summary>
+            Postal or ZIP code
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.Country">
+            <summary>
+            Country name
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.UserActivationDto">
             <summary>
             User activation request DTO
@@ -1248,6 +1381,51 @@
             Profile photo URL
             </summary>
         </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.EmployeeId">
+            <summary>
+            Employee ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.Department">
+            <summary>
+            Department
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.JobTitle">
+            <summary>
+            Job title
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.Street1">
+            <summary>
+            Street address line 1
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.Street2">
+            <summary>
+            Street address line 2
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.City">
+            <summary>
+            City
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.State">
+            <summary>
+            State or province
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.PostalCode">
+            <summary>
+            Postal or ZIP code
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.Country">
+            <summary>
+            Country
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.UserUnlockDto">
             <summary>
             User unlock request DTO
@@ -1298,6 +1476,16 @@
         <member name="T:VisitorManagementSystem.Api.Application.Queries.Users.GetAvailableRolesQueryHandler">
             <summary>
             Handler for GetAvailableRolesQuery
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Users.GetCurrentUserProfileQuery">
+            <summary>
+            Query to get current user's profile information
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Users.GetCurrentUserProfileQueryHandler">
+            <summary>
+            Handler for getting current user profile
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Queries.Users.GetUserActivityQuery">
@@ -2477,6 +2665,44 @@
             Configuration validation result
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.FileUploadService">
+            <summary>
+            Implementation of file upload service for handling profile photos
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.IFileUploadService">
+            <summary>
+            Service for handling file uploads, particularly profile photos
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.IFileUploadService.UploadProfilePhotoAsync(System.Int32,Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>
+            Uploads a profile photo for a user
+            </summary>
+            <param name="userId">User ID</param>
+            <param name="file">Image file</param>
+            <returns>File path/URL of uploaded photo</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.IFileUploadService.RemoveProfilePhotoAsync(System.Int32)">
+            <summary>
+            Removes a user's profile photo
+            </summary>
+            <param name="userId">User ID</param>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.IFileUploadService.IsValidImageFile(Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>
+            Validates if file is a valid image
+            </summary>
+            <param name="file">File to validate</param>
+            <returns>True if valid image</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.IFileUploadService.GetProfilePhotoUrl(System.String)">
+            <summary>
+            Gets the full URL for a profile photo
+            </summary>
+            <param name="filePath">File path</param>
+            <returns>Full URL</returns>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Services.Users.IUserLockoutService">
             <summary>
             User lockout service interface for managing account lockouts and failed login attempts
@@ -3439,6 +3665,36 @@
         <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.ResetUserPassword(System.Int32,VisitorManagementSystem.Api.Application.DTOs.Users.AdminPasswordResetDto)">
             <summary>
             Resets user password (admin function)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.GetCurrentUserProfile">
+            <summary>
+            Gets current user's profile
+            GET /api/Users/profile
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.UpdateCurrentUserProfile(VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto)">
+            <summary>
+            Updates current user's profile (self-service)
+            PUT /api/Users/profile
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.UpdateCurrentUserPreferences(VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserPreferencesDto)">
+            <summary>
+            Updates current user's preferences
+            PUT /api/Users/profile/preferences
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.UploadProfilePhoto(Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>
+            Uploads current user's profile photo
+            POST /api/Users/profile/photo
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.RemoveProfilePhoto">
+            <summary>
+            Removes current user's profile photo
+            DELETE /api/Users/profile/photo
             </summary>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.UsersController.GetAvailableRoles">

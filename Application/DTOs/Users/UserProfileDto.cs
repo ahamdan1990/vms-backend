@@ -62,4 +62,50 @@ public class UserProfileDto
     /// Profile photo URL
     /// </summary>
     public string? ProfilePhotoUrl { get; set; }
+
+    /// <summary>
+    /// Employee ID
+    /// </summary>
+    public string? EmployeeId { get; set; }
+
+    /// <summary>
+    /// Department
+    /// </summary>
+    public string? Department { get; set; }
+
+    /// <summary>
+    /// Job title
+    /// </summary>
+    public string? JobTitle { get; set; }
+
+    // Address fields
+    /// <summary>
+    /// Street address line 1
+    /// </summary>
+    public string? Street1 { get; set; }
+
+    /// <summary>
+    /// Street address line 2
+    /// </summary>
+    public string? Street2 { get; set; }
+
+    /// <summary>
+    /// City
+    /// </summary>
+    public string? City { get; set; }
+
+    /// <summary>
+    /// State or province
+    /// </summary>
+    public string? State { get; set; }
+
+    /// <summary>
+    /// Postal or ZIP code
+    /// </summary>
+    public string? PostalCode { get; set; }
+
+    /// <summary>
+    /// Country
+    /// </summary>
+    public string? Country { get; set; }
 }
