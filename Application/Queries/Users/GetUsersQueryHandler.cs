@@ -26,8 +26,8 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResultDt
     {
         try
         {
-            _logger.LogDebug("Processing GetUsersQuery with PageIndex: {PageIndex}, PageSize: {PageSize}",
-                request.PageIndex, request.PageSize);
+            _logger.LogDebug("Processing GetUsersQuery with PageIndex: {PageIndex}, PageSize: {PageSize}, Status: {Status}",
+                request.PageIndex, request.PageSize, request.Status);
 
             var (users, totalCount) = await _unitOfWork.Users.GetPaginatedAsync(
                 request.PageIndex,
@@ -56,6 +56,7 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResultDt
 
             if (request.Status.HasValue)
             {
+                _logger.LogInformation(totalCount, "Filtering users by status: {Status}", request.Status.Value);
                 filteredUsers = filteredUsers.Where(u => u.Status == request.Status.Value);
             }
 
@@ -74,7 +75,7 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResultDt
                 filteredUsers = filteredUsers.Where(u => u.CreatedOn <= request.CreatedBefore.Value);
             }
 
-            if (!request.IncludeInactive)
+            if (!request.Status.HasValue && !request.IncludeInactive)
             {
                 filteredUsers = filteredUsers.Where(u => u.Status == UserStatus.Active);
             }
@@ -82,6 +83,8 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResultDt
             var userList = filteredUsers.Select(u => new UserListDto
             {
                 Id = u.Id,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
                 FullName = u.FullName,
                 Email = u.Email.Value,
                 Role = u.Role.ToString(),

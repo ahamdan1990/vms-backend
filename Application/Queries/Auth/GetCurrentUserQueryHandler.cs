@@ -58,6 +58,8 @@ namespace VisitorManagementSystem.Api.Application.Queries.Auth
                     Status = user.Status.ToString(),
                     Department = user.Department,
                     JobTitle = user.JobTitle,
+                    EmployeeId = user.EmployeeId,
+                    ProfilePhotoUrl = user.ProfilePhotoPath, // Add profile photo URL
                     TimeZone = user.TimeZone,
                     Language = user.Language,
                     Theme = user.Theme,

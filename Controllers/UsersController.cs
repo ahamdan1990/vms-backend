@@ -58,7 +58,9 @@ public class UsersController : BaseController
                 Status = status,
                 Department = department?.Trim(),
                 SortBy = sortBy,
-                SortDescending = SortDescending
+                SortDescending = SortDescending,
+                IncludeInactive = status == null || status == UserStatus.Inactive || status == UserStatus.Suspended
+
             };
 
             var result = await _mediator.Send(query);
@@ -76,7 +78,7 @@ public class UsersController : BaseController
     /// </summary>
     [HttpGet("{id}")]
     [Authorize(Policy = Permissions.User.ReadAll)]
-    [ProducesResponseType(typeof(ApiResponseDto<UserDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponseDto<UserDetailDto>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
     public async Task<IActionResult> GetUser(int id)
     {

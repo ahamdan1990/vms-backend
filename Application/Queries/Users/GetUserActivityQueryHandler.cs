@@ -52,20 +52,21 @@ public class GetUserActivityQueryHandler : IRequestHandler<GetUserActivityQuery,
             // Map audit logs to UserActivityDto
             var activities = auditLogs.Items.Select(al => new UserActivityDto
             {
-                Action = al.Action,
-                Description = al.Description,
+                Action = al.ActivityByType.ToString(), // Map EventType to Action for table display
+                Description = al.Description ?? $"{al.Action}",
+                Timestamp = al.Timestamp,
                 IpAddress = al.IpAddress,
                 UserAgent = al.UserAgent,
                 IsSuccess = al.IsSuccess,
-                // Fill other fields if necessary, e.g.:
+                // Summary fields (not used for individual activity records but required by DTO)
                 LoginCount = 0,
-                LastLogin = summary.LastLogin,
-                FailedLoginAttempts = summary.FailedLoginAttempts,
-                LastFailedLogin = summary.LastFailedLogin,
-                InvitationsCreated = summary.InvitationsCreated,
-                PasswordChanges = summary.PasswordChanges,
-                ActivityByType = new Dictionary<string, int>(),  // or from summary.ActivityByType if you want to expose
-                RecentActions = new List<string>()  // usually empty here, summary has these
+                LastLogin = null,
+                FailedLoginAttempts = 0,
+                LastFailedLogin = null,
+                InvitationsCreated = 0,
+                PasswordChanges = 0,
+                ActivityByType = new Dictionary<string, int>(),
+                RecentActions = new List<string>()
             }).ToList();
 
             // Use totalCount from auditLogs.TotalCount
