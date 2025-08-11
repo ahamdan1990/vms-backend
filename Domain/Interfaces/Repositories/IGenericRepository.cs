@@ -199,6 +199,12 @@ public interface IGenericRepository<TEntity> where TEntity : BaseEntity
     void Remove(TEntity entity);
 
     /// <summary>
+    /// Deletes an entity (alias for Remove)
+    /// </summary>
+    /// <param name="entity">Entity to delete</param>
+    void Delete(TEntity entity);
+
+    /// <summary>
     /// Removes entities by ID
     /// </summary>
     /// <param name="id">Entity ID</param>
@@ -391,4 +397,10 @@ public interface IGenericRepository<TEntity> where TEntity : BaseEntity
     /// </summary>
     /// <param name="entity">Entity to attach</param>
     void Attach(TEntity entity);
+
+    /// <summary>
+    /// Gets queryable for advanced querying (use with caution)
+    /// </summary>
+    /// <returns>IQueryable of entities</returns>
+    IQueryable<TEntity> GetQueryable();
 }

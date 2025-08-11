@@ -14,27 +14,53 @@ public class UnitOfWork : IUnitOfWork
     private readonly Dictionary<Type, object> _repositories;
     private bool _disposed;
 
-    // Repository properties
+    // Repository properties - Authentication & System
     public IUserRepository Users { get; private set; }
     public IRefreshTokenRepository RefreshTokens { get; private set; }
     public IGenericRepository<AuditLog> AuditLogs { get; private set; }
     public ISystemConfigurationRepository SystemConfigurations { get; private set; }
     public IConfigurationAuditRepository ConfigurationAudits { get; private set; }
 
+    // Repository properties - Visitor Domain
+    public IVisitorRepository Visitors { get; private set; }
+    public IVisitorDocumentRepository VisitorDocuments { get; private set; }
+    public IVisitorNoteRepository VisitorNotes { get; private set; }
+    public IEmergencyContactRepository EmergencyContacts { get; private set; }
+    public IVisitPurposeRepository VisitPurposes { get; private set; }
+    public ILocationRepository Locations { get; private set; }
+    public IInvitationRepository Invitations { get; private set; }
+
     public UnitOfWork(ApplicationDbContext context,
                      IUserRepository userRepository,
                      IRefreshTokenRepository refreshTokenRepository,
                      ISystemConfigurationRepository systemConfigurationRepository,
-                     IConfigurationAuditRepository configurationAuditRepository)
+                     IConfigurationAuditRepository configurationAuditRepository,
+                     IVisitorRepository visitorRepository,
+                     IVisitorDocumentRepository visitorDocumentRepository,
+                     IVisitorNoteRepository visitorNoteRepository,
+                     IEmergencyContactRepository emergencyContactRepository,
+                     IVisitPurposeRepository visitPurposeRepository,
+                     ILocationRepository locationRepository,
+                     IInvitationRepository invitationRepository)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _repositories = new Dictionary<Type, object>();
 
+        // Initialize system repositories
         Users = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         RefreshTokens = refreshTokenRepository ?? throw new ArgumentNullException(nameof(refreshTokenRepository));
         AuditLogs = new Repositories.BaseRepository<AuditLog>(context);
         SystemConfigurations = systemConfigurationRepository ?? throw new ArgumentNullException(nameof(systemConfigurationRepository));
         ConfigurationAudits = configurationAuditRepository ?? throw new ArgumentNullException(nameof(configurationAuditRepository));
+
+        // Initialize visitor domain repositories
+        Visitors = visitorRepository ?? throw new ArgumentNullException(nameof(visitorRepository));
+        VisitorDocuments = visitorDocumentRepository ?? throw new ArgumentNullException(nameof(visitorDocumentRepository));
+        VisitorNotes = visitorNoteRepository ?? throw new ArgumentNullException(nameof(visitorNoteRepository));
+        EmergencyContacts = emergencyContactRepository ?? throw new ArgumentNullException(nameof(emergencyContactRepository));
+        VisitPurposes = visitPurposeRepository ?? throw new ArgumentNullException(nameof(visitPurposeRepository));
+        Locations = locationRepository ?? throw new ArgumentNullException(nameof(locationRepository));
+        Invitations = invitationRepository ?? throw new ArgumentNullException(nameof(invitationRepository));
     }
 
     public IGenericRepository<TEntity> Repository<TEntity>() where TEntity : BaseEntity
@@ -386,8 +412,20 @@ public class UnitOfWork : IUnitOfWork
                 _context.Set<TEntity>().RemoveRange(entities);
                 break;
             case BulkOperation.Merge:
-                // Custom merge logic would go here
-                throw new NotImplementedException("Merge operation not implemented");
+                // Simple merge implementation: update existing, add new
+                foreach (var entity in entities)
+                {
+                    var existingEntity = _context.Set<TEntity>().Find(entity.Id);
+                    if (existingEntity != null)
+                    {
+                        _context.Entry(existingEntity).CurrentValues.SetValues(entity);
+                    }
+                    else
+                    {
+                        _context.Set<TEntity>().Add(entity);
+                    }
+                }
+                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(operation));
         }

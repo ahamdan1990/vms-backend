@@ -27,58 +27,31 @@ public class SecurityHeadersMiddleware
 
     private void AddSecurityHeaders(HttpContext context)
     {
-        var response = context.Response; // For convenience
+        var response = context.Response;
 
-        // Prevent MIME-type confusion attacks
-        if (!response.Headers.ContainsKey("X-Content-Type-Options"))
-            response.Headers.Add("X-Content-Type-Options", "nosniff");
+        response.Headers["X-Content-Type-Options"] = "nosniff";
+        response.Headers["X-Frame-Options"] = _options.FrameOptions;
+        response.Headers["X-XSS-Protection"] = "1; mode=block";
+        response.Headers["Referrer-Policy"] = _options.ReferrerPolicy;
 
-        // Prevent clickjacking attacks
-        if (!response.Headers.ContainsKey("X-Frame-Options"))
-            response.Headers.Add("X-Frame-Options", _options.FrameOptions);
+        if (!string.IsNullOrEmpty(_options.ContentSecurityPolicy))
+            response.Headers["Content-Security-Policy"] = _options.ContentSecurityPolicy;
 
-        // XSS Protection (legacy but still useful)
-        if (!response.Headers.ContainsKey("X-XSS-Protection"))
-            response.Headers.Add("X-XSS-Protection", "1; mode=block");
-
-        // Control referrer information
-        if (!response.Headers.ContainsKey("Referrer-Policy"))
-            response.Headers.Add("Referrer-Policy", _options.ReferrerPolicy);
-
-        // Content Security Policy
-        if (!string.IsNullOrEmpty(_options.ContentSecurityPolicy) &&
-            !response.Headers.ContainsKey("Content-Security-Policy"))
-            response.Headers.Add("Content-Security-Policy", _options.ContentSecurityPolicy);
-
-        // Strict Transport Security (HSTS)
-        if (_options.UseHsts && context.Request.IsHttps && // This line is now fixed
-            !response.Headers.ContainsKey("Strict-Transport-Security"))
+        if (_options.UseHsts && context.Request.IsHttps)
         {
             var hstsValue = $"max-age={_options.HstsMaxAge}";
-            if (_options.HstsIncludeSubdomains)
-                hstsValue += "; includeSubDomains";
-            if (_options.HstsPreload)
-                hstsValue += "; preload";
-
-            response.Headers.Add("Strict-Transport-Security", hstsValue);
+            if (_options.HstsIncludeSubdomains) hstsValue += "; includeSubDomains";
+            if (_options.HstsPreload) hstsValue += "; preload";
+            response.Headers["Strict-Transport-Security"] = hstsValue;
         }
 
-        // Permissions Policy (formerly Feature Policy)
-        if (!string.IsNullOrEmpty(_options.PermissionsPolicy) &&
-            !response.Headers.ContainsKey("Permissions-Policy"))
-            response.Headers.Add("Permissions-Policy", _options.PermissionsPolicy);
+        if (!string.IsNullOrEmpty(_options.PermissionsPolicy))
+            response.Headers["Permissions-Policy"] = _options.PermissionsPolicy;
 
-        // Cross-Origin policies for enhanced security
-        if (!response.Headers.ContainsKey("Cross-Origin-Embedder-Policy"))
-            response.Headers.Add("Cross-Origin-Embedder-Policy", "require-corp");
+        response.Headers["Cross-Origin-Embedder-Policy"] = "require-corp";
+        response.Headers["Cross-Origin-Opener-Policy"] = "same-origin";
+        response.Headers["Cross-Origin-Resource-Policy"] = "same-origin";
 
-        if (!response.Headers.ContainsKey("Cross-Origin-Opener-Policy"))
-            response.Headers.Add("Cross-Origin-Opener-Policy", "same-origin");
-
-        if (!response.Headers.ContainsKey("Cross-Origin-Resource-Policy"))
-            response.Headers.Add("Cross-Origin-Resource-Policy", "same-origin");
-
-        // Remove server information
         if (_options.RemoveServerHeader)
         {
             response.Headers.Remove("Server");
@@ -87,11 +60,9 @@ public class SecurityHeadersMiddleware
             response.Headers.Remove("X-AspNetMvc-Version");
         }
 
-        // Add custom headers
         foreach (var header in _options.CustomHeaders)
         {
-            if (!response.Headers.ContainsKey(header.Key))
-                response.Headers.Add(header.Key, header.Value);
+            response.Headers[header.Key] = header.Value;
         }
     }
 }

@@ -1,10 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
-using VisitorManagementSystem.Api.Infrastructure.Data;
-using VisitorManagementSystem.Api.Infrastructure.Data.Repositories;
 
-namespace VisitorManagementSystem.Api.Infrastructure.Repositories;
+namespace VisitorManagementSystem.Api.Infrastructure.Data.Repositories;
 
 /// <summary>
 /// Repository implementation for ConfigurationAudit entity
@@ -104,7 +102,7 @@ public class ConfigurationAuditRepository : BaseRepository<ConfigurationAudit>, 
         query = query.Where(a => a.Category.ToLower().Contains(lowerSearchTerm) ||
                                 a.Key.ToLower().Contains(lowerSearchTerm) ||
                                 a.Action.ToLower().Contains(lowerSearchTerm) ||
-                                (a.Reason != null && a.Reason.ToLower().Contains(lowerSearchTerm)));
+                                a.Reason != null && a.Reason.ToLower().Contains(lowerSearchTerm));
 
         if (startDate.HasValue)
         {

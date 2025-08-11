@@ -32,12 +32,12 @@ namespace VisitorManagementSystem.Api.Middleware
             {
                 if (!context.Response.Headers.ContainsKey("X-Correlation-ID"))
                 {
-                    context.Response.Headers.Add("X-Correlation-ID", correlationId);
+                    context.Response.Headers["X-Correlation-ID"] = correlationId;
                 }
 
                 if (!context.Response.Headers.ContainsKey("X-Timestamp"))
                 {
-                    context.Response.Headers.Add("X-Timestamp", DateTime.UtcNow.ToString("o")); // ISO8601 UTC
+                    context.Response.Headers["X-Timestamp"] = DateTime.UtcNow.ToString("o"); // ISO8601 UTC
                 }
 
                 return Task.CompletedTask;

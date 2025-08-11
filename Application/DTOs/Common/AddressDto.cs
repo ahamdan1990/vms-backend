@@ -25,6 +25,9 @@ public class AddressDto
     [MaxLength(50)]
     public string? Country { get; set; }
 
+    [MaxLength(50)]
+    public string? AddressType { get; set; }
+
     public string FormattedAddress { get; set; } = string.Empty;
 }
 
@@ -50,4 +53,7 @@ public class CreateAddressDto
 
     [MaxLength(50)]
     public string? Country { get; set; }
+
+    [MaxLength(50)]
+    public string? AddressType { get; set; }
 }

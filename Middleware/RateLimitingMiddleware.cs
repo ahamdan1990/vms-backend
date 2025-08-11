@@ -48,40 +48,37 @@ public class RateLimitingMiddleware
         await _next(context);
     }
 
-    private async Task<bool> IsRateLimitExceededAsync(string clientId, string endpoint, HttpContext context)
+    private Task<bool> IsRateLimitExceededAsync(string clientId, string endpoint, HttpContext context)
     {
         if (IsPrivilegedUser(context))
         {
             _logger.LogInformation("Bypassing rate limit for privileged user: {ClientId}", clientId);
-            return false;
+            return Task.FromResult(false);
         }
 
         var rule = GetApplicableRule(endpoint, context);
-        if (rule == null) return false;
+        if (rule == null) return Task.FromResult(false);
 
         var key = $"rate_limit:{clientId}:{endpoint}";
         var requestCount = _cache.Get<RequestCounter>(key) ?? new RequestCounter();
 
-        // Clean up old requests
         var cutoff = DateTime.UtcNow.Subtract(rule.Window);
         requestCount.Requests.RemoveAll(r => r < cutoff);
 
-        // Check if limit exceeded
         if (requestCount.Requests.Count >= rule.Limit)
         {
             _logger.LogWarning("Rate limit exceeded for client {ClientId} on endpoint {Endpoint}. Count: {Count}, Limit: {Limit}",
                 clientId, endpoint, requestCount.Requests.Count, rule.Limit);
-            return true;
+            return Task.FromResult(true);
         }
 
-        // Add current request
         requestCount.Requests.Add(DateTime.UtcNow);
 
-        // Update cache
         _cache.Set(key, requestCount, rule.Window);
 
-        return false;
+        return Task.FromResult(false);
     }
+
 
     private bool IsPrivilegedUser(HttpContext context)
     {
@@ -104,20 +101,22 @@ public class RateLimitingMiddleware
         context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
         context.Response.ContentType = "application/json";
 
-        // Add rate limit headers
-        context.Response.Headers.Add("X-RateLimit-Limit", rule?.Limit.ToString() ?? "0");
-        context.Response.Headers.Add("X-RateLimit-Remaining", "0");
-        context.Response.Headers.Add("X-RateLimit-Reset", DateTimeOffset.UtcNow.Add(rule?.Window ?? TimeSpan.Zero).ToUnixTimeSeconds().ToString());
-        context.Response.Headers.Add("Retry-After", ((int)(rule?.Window.TotalSeconds ?? 60)).ToString());
+        // Use indexer to set headers safely
+        context.Response.Headers["X-RateLimit-Limit"] = rule?.Limit.ToString() ?? "0";
+        context.Response.Headers["X-RateLimit-Remaining"] = "0";
+        context.Response.Headers["X-RateLimit-Reset"] = DateTimeOffset.UtcNow
+            .Add(rule?.Window ?? TimeSpan.Zero)
+            .ToUnixTimeSeconds()
+            .ToString();
+        context.Response.Headers["Retry-After"] = ((int)(rule?.Window.TotalSeconds ?? 60)).ToString();
 
-        // ✅ FIXED: Use ApiResponseDto format for consistency
+        // Create consistent error response DTO
         var response = ApiResponseDto<object>.ErrorResponse(
             "Rate limit exceeded. Please try again later.",
             "Too Many Requests",
             context.TraceIdentifier
         );
 
-        // Add metadata for rate limiting details
         response.Metadata = new
         {
             RetryAfter = rule?.Window.TotalSeconds ?? 60,

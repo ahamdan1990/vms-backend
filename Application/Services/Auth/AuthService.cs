@@ -41,6 +41,8 @@ public class AuthService : IAuthService
 
     private readonly IDynamicConfigurationService _dynamicConfig;
 
+    private readonly IServiceProvider _serviceProvider;
+
 
 
     public AuthService(
@@ -59,7 +61,9 @@ public class AuthService : IAuthService
 
         ILogger<AuthService> logger,
 
-        IDynamicConfigurationService dynamicConfig)
+        IDynamicConfigurationService dynamicConfig,
+
+        IServiceProvider serviceProvider)
 
     {
 
@@ -78,6 +82,8 @@ public class AuthService : IAuthService
         _logger = logger;
 
         _dynamicConfig = dynamicConfig;
+
+        _serviceProvider = serviceProvider;
 
     }
 
@@ -932,9 +938,29 @@ public class AuthService : IAuthService
 
 
 
-            // TODO: Send email with reset token
-
-            // This would be implemented with an email service
+            // Send password reset email
+            try
+            {
+                var emailService = _serviceProvider.GetService<Application.Services.Email.IEmailService>();
+                var emailTemplateService = _serviceProvider.GetService<Application.Services.Email.IEmailTemplateService>();
+                
+                if (emailService != null && emailTemplateService != null)
+                {
+                    var emailContent = await emailTemplateService.GeneratePasswordResetTemplateAsync(user, resetToken);
+                    await emailService.SendAsync(user.Email, "Password Reset Request", emailContent);
+                    
+                    _logger.LogInformation("Password reset email sent to {Email}", user.Email);
+                }
+                else
+                {
+                    _logger.LogWarning("Email services not available. Password reset token generated but email not sent.");
+                }
+            }
+            catch (Exception emailEx)
+            {
+                _logger.LogError(emailEx, "Failed to send password reset email to {Email}", user.Email);
+                // Don't throw - the token was created successfully
+            }
 
 
 

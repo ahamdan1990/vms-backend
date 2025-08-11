@@ -88,11 +88,12 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDet
                 };
             }
 
-            // Include active sessions if requested (placeholder for now)
+            // Include active sessions if requested
             if (request.IncludeSessions)
             {
-                // TODO: Implement session retrieval
+                // Session retrieval not implemented - would require session tracking mechanism
                 userDetailDto.ActiveSessions = new List<UserSessionDto>();
+                _logger.LogDebug("Session retrieval requested but not implemented for user {UserId}", request.UserId);
             }
 
             return userDetailDto;

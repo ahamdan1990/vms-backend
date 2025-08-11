@@ -21,28 +21,63 @@ public class ApplicationDbContext : DbContext
         _domainEventPublisher = serviceProvider.GetService<IDomainEventPublisher>();
     }
 
-    // DbSets
+    // DbSets - Authentication & System
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
     public DbSet<SystemConfiguration> SystemConfigurations { get; set; } = null!;
     public DbSet<ConfigurationAudit> ConfigurationAudits { get; set; } = null!;
 
+    // DbSets - Visitor Domain
+    public DbSet<Visitor> Visitors { get; set; } = null!;
+    public DbSet<VisitorDocument> VisitorDocuments { get; set; } = null!;
+    public DbSet<VisitorNote> VisitorNotes { get; set; } = null!;
+    public DbSet<EmergencyContact> EmergencyContacts { get; set; } = null!;
+    public DbSet<VisitPurpose> VisitPurposes { get; set; } = null!;
+    public DbSet<Location> Locations { get; set; } = null!;
+
+    // DbSets - Invitation Domain
+    public DbSet<Invitation> Invitations { get; set; } = null!;
+    public DbSet<InvitationApproval> InvitationApprovals { get; set; } = null!;
+    public DbSet<InvitationEvent> InvitationEvents { get; set; } = null!;
+    public DbSet<InvitationTemplate> InvitationTemplates { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // Apply all configurations
+        // Apply all configurations - System
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new RefreshTokenConfiguration());
         modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
         modelBuilder.ApplyConfiguration(new SystemConfigurationConfiguration());
         modelBuilder.ApplyConfiguration(new ConfigurationAuditConfiguration());
 
-        // Global query filters for soft delete
-        modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
+        // Apply all configurations - Visitor Domain
+        modelBuilder.ApplyConfiguration(new VisitorConfiguration());
+        modelBuilder.ApplyConfiguration(new VisitorDocumentConfiguration());
+        modelBuilder.ApplyConfiguration(new VisitorNoteConfiguration());
+        modelBuilder.ApplyConfiguration(new EmergencyContactConfiguration());
+        modelBuilder.ApplyConfiguration(new VisitPurposeConfiguration());
+        modelBuilder.ApplyConfiguration(new LocationConfiguration());
 
+        // Apply all configurations - Invitation Domain
+        modelBuilder.ApplyConfiguration(new InvitationConfiguration());
+        modelBuilder.ApplyConfiguration(new InvitationApprovalConfiguration());
+        modelBuilder.ApplyConfiguration(new InvitationEventConfiguration());
+        modelBuilder.ApplyConfiguration(new InvitationTemplateConfiguration());
+
+        // Global query filters for soft delete (standardized on IsDeleted pattern)
+        modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
         modelBuilder.Entity<RefreshToken>().HasQueryFilter(rt => !rt.User.IsDeleted);
+
+        // Visitor domain soft delete filters (standardized on IsDeleted pattern)
+        modelBuilder.Entity<Visitor>().HasQueryFilter(v => !v.IsDeleted);
+        modelBuilder.Entity<VisitorDocument>().HasQueryFilter(d => !d.IsDeleted);
+        modelBuilder.Entity<VisitorNote>().HasQueryFilter(n => !n.IsDeleted);
+        modelBuilder.Entity<EmergencyContact>().HasQueryFilter(c => !c.IsDeleted);
+        modelBuilder.Entity<VisitPurpose>().HasQueryFilter(p => !p.IsDeleted);
+        modelBuilder.Entity<Location>().HasQueryFilter(l => !l.IsDeleted);
 
         // Configure decimal precision globally
         foreach (var property in modelBuilder.Model.GetEntityTypes()

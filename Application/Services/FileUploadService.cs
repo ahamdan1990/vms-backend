@@ -188,4 +188,144 @@ public class FileUploadService : IFileUploadService
             // Don't throw - continue with upload even if old file can't be deleted
         }
     }
+
+    public async Task<string> UploadVisitorDocumentAsync(int visitorId, IFormFile file, string documentType)
+    {
+        try
+        {
+            // Validate file
+            if (!IsValidDocumentFile(file))
+            {
+                throw new ArgumentException("Invalid document file type or size");
+            }
+
+            // Verify visitor exists
+            var visitor = await _unitOfWork.Repository<Domain.Entities.Visitor>().GetByIdAsync(visitorId);
+            if (visitor == null)
+            {
+                throw new InvalidOperationException($"Visitor with ID {visitorId} not found");
+            }
+
+            // Generate unique filename
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            var fileName = $"visitor_{visitorId}_{documentType}_{Guid.NewGuid()}{fileExtension}";
+            
+            // Create upload directory if it doesn't exist
+            var uploadDir = Path.Combine(_environment.WebRootPath, "uploads", "visitor-documents", visitorId.ToString());
+            Directory.CreateDirectory(uploadDir);
+
+            var filePath = Path.Combine(uploadDir, fileName);
+            var relativePath = $"uploads/visitor-documents/{visitorId}/{fileName}";
+
+            // Save file
+            using var stream = new FileStream(filePath, FileMode.Create);
+            await file.CopyToAsync(stream);
+
+            _logger.LogInformation("Successfully uploaded visitor document for visitor {VisitorId}: {FileName}", 
+                visitorId, fileName);
+
+            return relativePath;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to upload visitor document for visitor {VisitorId}", visitorId);
+            throw;
+        }
+    }
+
+    public async Task RemoveVisitorDocumentAsync(string filePath)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(filePath))
+                return;
+
+            var fullPath = Path.Combine(_environment.WebRootPath, filePath.TrimStart('/'));
+            
+            if (File.Exists(fullPath))
+            {
+                File.Delete(fullPath);
+                _logger.LogInformation("Successfully removed visitor document: {FilePath}", filePath);
+            }
+            else
+            {
+                _logger.LogWarning("Visitor document file not found: {FilePath}", filePath);
+            }
+
+            await Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to remove visitor document: {FilePath}", filePath);
+            throw;
+        }
+    }
+    public bool IsValidDocumentFile(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return false;
+
+        // Check file size (max 10MB)
+        var maxSize = GetMaxDocumentFileSize();
+        if (file.Length > maxSize)
+            return false;
+
+        // Check file extension
+        var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        var allowedExtensions = GetAllowedDocumentExtensions();
+        
+        if (!allowedExtensions.Contains(fileExtension))
+            return false;
+
+        // Check MIME type
+        var allowedMimeTypes = new[]
+        {
+            "application/pdf",
+            "image/jpeg",
+            "image/jpg", 
+            "image/png",
+            "image/gif",
+            "image/bmp",
+            "image/tiff",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        };
+
+        if (!allowedMimeTypes.Contains(file.ContentType.ToLowerInvariant()))
+            return false;
+
+        return true;
+    }
+
+    public string GetVisitorDocumentUrl(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath))
+            return string.Empty;
+
+        var baseUrl = _configuration["BaseUrl"] ?? "https://localhost";
+        return $"{baseUrl.TrimEnd('/')}/{filePath.TrimStart('/')}";
+    }
+
+    public List<string> GetAllowedDocumentExtensions()
+    {
+        return new List<string>
+        {
+            ".pdf",    // PDF documents
+            ".jpg",    // JPEG images
+            ".jpeg",   // JPEG images
+            ".png",    // PNG images
+            ".gif",    // GIF images
+            ".bmp",    // Bitmap images
+            ".tiff",   // TIFF images
+            ".doc",    // Word documents
+            ".docx"    // Word documents (newer format)
+        };
+    }
+
+    public long GetMaxDocumentFileSize()
+    {
+        // Default to 10MB, but allow configuration override
+        var configSize = _configuration.GetValue<long?>("FileUpload:MaxDocumentSize");
+        return configSize ?? (10 * 1024 * 1024); // 10MB in bytes
+    }
 }

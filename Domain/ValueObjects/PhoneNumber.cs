@@ -112,7 +112,7 @@ public class PhoneNumber : IEquatable<PhoneNumber>
         var digitsOnly = DigitsOnlyRegex.Replace(phoneNumber, "");
 
         // Phone number should have between 7 and 15 digits
-        if (digitsOnly.Length < 7 || digitsOnly.Length > 15)
+        if (digitsOnly.Length < 5 || digitsOnly.Length > 15)
             return false;
 
         // Check various formats

@@ -21,7 +21,7 @@ public class ApiResponseDto<T>
     /// <summary>
     /// Response data
     /// </summary>
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public T? Data { get; set; }
 
     /// <summary>
@@ -44,7 +44,7 @@ public class ApiResponseDto<T>
     /// <param name="message">Success message</param>
     ///  <param name="correlationId">Correlation Id</param>
     /// <returns>Successful API response</returns>
-    public static ApiResponseDto<T> SuccessResponse(T data, string? message = null, string? correlationId = null)
+    public static ApiResponseDto<T> SuccessResponse(T? data, string? message = null, string? correlationId = null)
     {
         return new ApiResponseDto<T>
         {

@@ -2,9 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Infrastructure.Data;
-using VisitorManagementSystem.Api.Infrastructure.Data.Repositories;
 
-namespace VisitorManagementSystem.Api.Infrastructure.Repositories;
+namespace VisitorManagementSystem.Api.Infrastructure.Data.Repositories;
 
 /// <summary>
 /// Repository implementation for SystemConfiguration entity
@@ -74,7 +73,7 @@ public class SystemConfigurationRepository : BaseRepository<SystemConfiguration>
         return await _context.SystemConfigurations
             .Where(c => c.Key.ToLower().Contains(lowerSearchTerm) ||
                        c.Category.ToLower().Contains(lowerSearchTerm) ||
-                       (c.Description != null && c.Description.ToLower().Contains(lowerSearchTerm)))
+                       c.Description != null && c.Description.ToLower().Contains(lowerSearchTerm))
             .OrderBy(c => c.Category)
             .ThenBy(c => c.Key)
             .ToListAsync(cancellationToken);

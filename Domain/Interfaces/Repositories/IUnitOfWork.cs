@@ -34,6 +34,41 @@ public interface IUnitOfWork : IDisposable
     IConfigurationAuditRepository ConfigurationAudits { get; }
 
     /// <summary>
+    /// Visitor repository
+    /// </summary>
+    IVisitorRepository Visitors { get; }
+
+    /// <summary>
+    /// Visitor document repository
+    /// </summary>
+    IVisitorDocumentRepository VisitorDocuments { get; }
+
+    /// <summary>
+    /// Visitor note repository
+    /// </summary>
+    IVisitorNoteRepository VisitorNotes { get; }
+
+    /// <summary>
+    /// Emergency contact repository
+    /// </summary>
+    IEmergencyContactRepository EmergencyContacts { get; }
+
+    /// <summary>
+    /// Visit purpose repository
+    /// </summary>
+    IVisitPurposeRepository VisitPurposes { get; }
+
+    /// <summary>
+    /// Location repository
+    /// </summary>
+    ILocationRepository Locations { get; }
+
+    /// <summary>
+    /// Invitation repository
+    /// </summary>
+    IInvitationRepository Invitations { get; }
+
+    /// <summary>
     /// Gets a generic repository for any entity type
     /// </summary>
     /// <typeparam name="TEntity">Entity type</typeparam>

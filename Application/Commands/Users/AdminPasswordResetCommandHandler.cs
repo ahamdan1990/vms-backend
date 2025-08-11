@@ -15,17 +15,20 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPasswordService _passwordService;
         private readonly IAuthService _authService;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<AdminPasswordResetCommandHandler> _logger;
 
         public AdminPasswordResetCommandHandler(
             IUnitOfWork unitOfWork,
             IPasswordService passwordService,
             IAuthService authService,
+            IServiceProvider serviceProvider,
             ILogger<AdminPasswordResetCommandHandler> logger)
         {
             _unitOfWork = unitOfWork;
             _passwordService = passwordService;
             _authService = authService;
+            _serviceProvider = serviceProvider;
             _logger = logger;
         }
 
@@ -108,11 +111,31 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
 
 
 
-                // TODO: Send notification to user if requested
+                // Send notification to user if requested
                 if (request.NotifyUser)
                 {
-                    // This would be implemented with email service in later chunks
-                    _logger.LogInformation("Password reset notification requested for user: {UserId}", request.UserId);
+                    try
+                    {
+                        var emailService = _serviceProvider.GetService<Application.Services.Email.IEmailService>();
+                        var emailTemplateService = _serviceProvider.GetService<Application.Services.Email.IEmailTemplateService>();
+                        
+                        if (emailService != null && emailTemplateService != null)
+                        {
+                            var emailContent = await emailTemplateService.GenerateWelcomeTemplateAsync(user, request.NewPassword);
+                            await emailService.SendAsync(user.Email, "Password Reset - New Credentials", emailContent);
+                            
+                            _logger.LogInformation("Password reset notification sent to user: {UserId}", request.UserId);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Email services not available. Password reset completed but notification not sent.");
+                        }
+                    }
+                    catch (Exception emailEx)
+                    {
+                        _logger.LogError(emailEx, "Failed to send password reset notification to user: {UserId}", request.UserId);
+                        // Don't throw - the password reset was successful
+                    }
                 }
 
                 return result;

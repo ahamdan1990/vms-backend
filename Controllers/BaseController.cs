@@ -364,8 +364,8 @@ public abstract class BaseController : ControllerBase
     protected void SetCacheHeaders(TimeSpan cacheTime, bool isPublic = false)
     {
         var cacheControl = isPublic ? "public" : "private";
-        Response.Headers.Add("Cache-Control", $"{cacheControl}, max-age={cacheTime.TotalSeconds}");
-        Response.Headers.Add("Expires", DateTime.UtcNow.Add(cacheTime).ToString("R"));
+        Response.Headers["Cache-Control"] = $"{cacheControl}, max-age={cacheTime.TotalSeconds}";
+        Response.Headers["Expires"] = DateTime.UtcNow.Add(cacheTime).ToString("R");
     }
 
     /// <summary>
@@ -373,20 +373,9 @@ public abstract class BaseController : ControllerBase
     /// </summary>
     protected void SetNoCacheHeaders()
     {
-        Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate");
-        Response.Headers.Add("Pragma", "no-cache");
-        Response.Headers.Add("Expires", "0");
-    }
-
-    /// <summary>
-    /// Adds security headers
-    /// </summary>
-    protected void SetSecurityHeaders()
-    {
-        Response.Headers.Add("X-Content-Type-Options", "nosniff");
-        Response.Headers.Add("X-Frame-Options", "DENY");
-        Response.Headers.Add("X-XSS-Protection", "1; mode=block");
-        Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+        Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+        Response.Headers["Pragma"] = "no-cache";
+        Response.Headers["Expires"] = "0";
     }
 
     /// <summary>

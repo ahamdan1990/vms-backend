@@ -343,6 +343,768 @@ namespace VisitorManagementSystem.Api.Migrations
                     b.ToTable("ConfigurationAudits", (string)null);
                 });
 
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.EmergencyContact", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DeletedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Priority")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<string>("Relationship")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("VisitorId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("IX_EmergencyContact_CreatedBy");
+
+                    b.HasIndex("CreatedOn")
+                        .HasDatabaseName("IX_EmergencyContact_CreatedOn");
+
+                    b.HasIndex("DeletedByUserId");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_EmergencyContact_IsActive");
+
+                    b.HasIndex("IsPrimary")
+                        .HasDatabaseName("IX_EmergencyContacts_IsPrimary");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("IX_EmergencyContact_ModifiedBy");
+
+                    b.HasIndex("Priority")
+                        .HasDatabaseName("IX_EmergencyContacts_Priority");
+
+                    b.HasIndex("VisitorId")
+                        .HasDatabaseName("IX_EmergencyContacts_VisitorId");
+
+                    b.HasIndex("IsActive", "CreatedOn")
+                        .HasDatabaseName("IX_EmergencyContact_IsActive_CreatedOn");
+
+                    b.ToTable("EmergencyContacts", (string)null);
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Invitation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApprovalComments")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("ApprovedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ApprovedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CheckedInAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CheckedOutAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DeletedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ExpectedVisitorCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<string>("ExternalId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("HostId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ImportBatchId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("InvitationNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<int?>("LocationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ModifiedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("NeedsParking")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("ParkingInstructions")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("QrCode")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("RejectedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("RejectedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("RequiresApproval")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("RequiresBadge")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("RequiresEscort")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("ScheduledEndTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ScheduledStartTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("SentOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SpecialInstructions")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("VisitPurposeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VisitorId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApprovedBy");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("CreatedOn");
+
+                    b.HasIndex("DeletedByUserId");
+
+                    b.HasIndex("HostId");
+
+                    b.HasIndex("InvitationNumber")
+                        .IsUnique();
+
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("ModifiedByUserId");
+
+                    b.HasIndex("RejectedBy");
+
+                    b.HasIndex("ScheduledStartTime");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("VisitPurposeId");
+
+                    b.HasIndex("VisitorId");
+
+                    b.HasIndex("Status", "ScheduledStartTime");
+
+                    b.ToTable("Invitations", (string)null);
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.InvitationApproval", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ApproverId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comments")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Decision")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DecisionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("EscalatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EscalatedToUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InvitationId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsRequired")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ModifiedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("StepOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApproverId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("Decision");
+
+                    b.HasIndex("EscalatedToUserId");
+
+                    b.HasIndex("ModifiedByUserId");
+
+                    b.HasIndex("InvitationId", "StepOrder")
+                        .IsUnique();
+
+                    b.ToTable("InvitationApprovals", (string)null);
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.InvitationEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("EventData")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EventTimestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("InvitationId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ModifiedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int?>("TriggeredBy")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("EventTimestamp");
+
+                    b.HasIndex("EventType");
+
+                    b.HasIndex("InvitationId");
+
+                    b.HasIndex("ModifiedByUserId");
+
+                    b.HasIndex("TriggeredBy");
+
+                    b.HasIndex("InvitationId", "EventTimestamp");
+
+                    b.ToTable("InvitationEvents", (string)null);
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.InvitationTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<double>("DefaultDurationHours")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("float")
+                        .HasDefaultValue(2.0);
+
+                    b.Property<int?>("DefaultLocationId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("DefaultRequiresApproval")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("DefaultRequiresBadge")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("DefaultRequiresEscort")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("DefaultSpecialInstructions")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("DefaultVisitPurposeId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DeletedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsShared")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsSystemTemplate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("LastUsedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("MessageTemplate")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ModifiedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SubjectTemplate")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("UsageCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("DefaultLocationId");
+
+                    b.HasIndex("DefaultVisitPurposeId");
+
+                    b.HasIndex("DeletedByUserId");
+
+                    b.HasIndex("IsShared");
+
+                    b.HasIndex("IsSystemTemplate");
+
+                    b.HasIndex("ModifiedByUserId");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("UsageCount");
+
+                    b.HasIndex("Category", "IsShared");
+
+                    b.ToTable("InvitationTemplates", (string)null);
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Location", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccessInstructions")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("AccessLevel")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Building")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<string>("Floor")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<bool>("IsAccessible")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("float");
+
+                    b.Property<string>("LocationType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("float");
+
+                    b.Property<int>("MaxCapacity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxOccupancy")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("ParentLocationId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("RequiresEscort")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequiresSecurityClearance")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Room")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SecurityClearanceLevel")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Zone")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Locations_Code");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("IX_Location_CreatedBy");
+
+                    b.HasIndex("CreatedOn")
+                        .HasDatabaseName("IX_Location_CreatedOn");
+
+                    b.HasIndex("DisplayOrder")
+                        .HasDatabaseName("IX_Locations_DisplayOrder");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_Location_IsActive");
+
+                    b.HasIndex("LocationType")
+                        .HasDatabaseName("IX_Locations_LocationType");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("IX_Location_ModifiedBy");
+
+                    b.HasIndex("Name")
+                        .HasDatabaseName("IX_Locations_Name");
+
+                    b.HasIndex("ParentLocationId")
+                        .HasDatabaseName("IX_Locations_ParentLocationId");
+
+                    b.HasIndex("SecurityClearanceLevel")
+                        .HasDatabaseName("IX_Locations_SecurityClearanceLevel");
+
+                    b.HasIndex("IsActive", "CreatedOn")
+                        .HasDatabaseName("IX_Location_IsActive_CreatedOn");
+
+                    b.ToTable("Locations", (string)null);
+                });
+
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<int>("Id")
@@ -802,6 +1564,589 @@ namespace VisitorManagementSystem.Api.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.VisitPurpose", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("ColorCode")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("IconName")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("MaxDurationHours")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(8);
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Requirements")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("RequiresApproval")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("RequiresBackgroundCheck")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("RequiresSecurityClearance")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("IX_VisitPurposes_Code");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("IX_VisitPurpose_CreatedBy");
+
+                    b.HasIndex("CreatedOn")
+                        .HasDatabaseName("IX_VisitPurpose_CreatedOn");
+
+                    b.HasIndex("DisplayOrder")
+                        .HasDatabaseName("IX_VisitPurposes_DisplayOrder");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_VisitPurpose_IsActive");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("IX_VisitPurpose_ModifiedBy");
+
+                    b.HasIndex("Name")
+                        .HasDatabaseName("IX_VisitPurposes_Name");
+
+                    b.HasIndex("IsActive", "CreatedOn")
+                        .HasDatabaseName("IX_VisitPurpose_IsActive_CreatedOn");
+
+                    b.ToTable("VisitPurposes", (string)null);
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Visitor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccessibilityRequirements")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("BlacklistReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("BlacklistedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("BlacklistedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Company")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DeletedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DietaryRequirements")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ExternalId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("GovernmentId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("GovernmentIdType")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsBlacklisted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsVip")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("JobTitle")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasDefaultValue("en-US");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("LastVisitDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Nationality")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("NormalizedEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ProfilePhotoPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SecurityClearance")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("VisitCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlacklistedBy");
+
+                    b.HasIndex("Company")
+                        .HasDatabaseName("IX_Visitors_Company");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("IX_Visitor_CreatedBy");
+
+                    b.HasIndex("CreatedOn")
+                        .HasDatabaseName("IX_Visitor_CreatedOn");
+
+                    b.HasIndex("DeletedByUserId");
+
+                    b.HasIndex("GovernmentId")
+                        .HasDatabaseName("IX_Visitors_GovernmentId");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_Visitor_IsActive");
+
+                    b.HasIndex("IsBlacklisted")
+                        .HasDatabaseName("IX_Visitors_IsBlacklisted");
+
+                    b.HasIndex("IsVip")
+                        .HasDatabaseName("IX_Visitors_IsVip");
+
+                    b.HasIndex("LastVisitDate")
+                        .HasDatabaseName("IX_Visitors_LastVisitDate");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("IX_Visitor_ModifiedBy");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("IX_Visitors_NormalizedEmail");
+
+                    b.HasIndex("IsActive", "CreatedOn")
+                        .HasDatabaseName("IX_Visitor_IsActive_CreatedOn");
+
+                    b.ToTable("Visitors", (string)null);
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.VisitorDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccessLevel")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("Standard");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DeletedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("DocumentName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("ExpirationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FileExtension")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("FileHash")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsEncrypted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSensitive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MimeType")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("StoredFileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("Version")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<int>("VisitorId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("IX_VisitorDocument_CreatedBy");
+
+                    b.HasIndex("CreatedOn")
+                        .HasDatabaseName("IX_VisitorDocument_CreatedOn");
+
+                    b.HasIndex("DeletedByUserId");
+
+                    b.HasIndex("DocumentType")
+                        .HasDatabaseName("IX_VisitorDocuments_DocumentType");
+
+                    b.HasIndex("ExpirationDate")
+                        .HasDatabaseName("IX_VisitorDocuments_ExpirationDate");
+
+                    b.HasIndex("FileHash")
+                        .HasDatabaseName("IX_VisitorDocuments_FileHash");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_VisitorDocument_IsActive");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("IX_VisitorDocument_ModifiedBy");
+
+                    b.HasIndex("VisitorId")
+                        .HasDatabaseName("IX_VisitorDocuments_VisitorId");
+
+                    b.HasIndex("IsActive", "CreatedOn")
+                        .HasDatabaseName("IX_VisitorDocument_IsActive_CreatedOn");
+
+                    b.ToTable("VisitorDocuments", (string)null);
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.VisitorNote", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("General");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DeletedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FollowUpDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsConfidential")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsFlagged")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Medium");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("VisitorId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category")
+                        .HasDatabaseName("IX_VisitorNotes_Category");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("IX_VisitorNote_CreatedBy");
+
+                    b.HasIndex("CreatedOn")
+                        .HasDatabaseName("IX_VisitorNote_CreatedOn");
+
+                    b.HasIndex("DeletedByUserId");
+
+                    b.HasIndex("FollowUpDate")
+                        .HasDatabaseName("IX_VisitorNotes_FollowUpDate");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_VisitorNote_IsActive");
+
+                    b.HasIndex("IsFlagged")
+                        .HasDatabaseName("IX_VisitorNotes_IsFlagged");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("IX_VisitorNote_ModifiedBy");
+
+                    b.HasIndex("Priority")
+                        .HasDatabaseName("IX_VisitorNotes_Priority");
+
+                    b.HasIndex("VisitorId")
+                        .HasDatabaseName("IX_VisitorNotes_VisitorId");
+
+                    b.HasIndex("IsActive", "CreatedOn")
+                        .HasDatabaseName("IX_VisitorNote_IsActive_CreatedOn");
+
+                    b.ToTable("VisitorNotes", (string)null);
+                });
+
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.AuditLog", b =>
                 {
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "User")
@@ -842,6 +2187,427 @@ namespace VisitorManagementSystem.Api.Migrations
                     b.Navigation("ModifiedByUser");
 
                     b.Navigation("SystemConfiguration");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.EmergencyContact", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_EmergencyContact_CreatedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "DeletedByUser")
+                        .WithMany()
+                        .HasForeignKey("DeletedByUserId");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_EmergencyContact_ModifiedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Visitor", "Visitor")
+                        .WithMany("EmergencyContacts")
+                        .HasForeignKey("VisitorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("VisitorManagementSystem.Api.Domain.ValueObjects.Address", "Address", b1 =>
+                        {
+                            b1.Property<int>("EmergencyContactId")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("AddressType")
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)")
+                                .HasColumnName("AddressType");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)")
+                                .HasColumnName("AddressCity");
+
+                            b1.Property<string>("Country")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)")
+                                .HasColumnName("AddressCountry");
+
+                            b1.Property<bool?>("IsValidated")
+                                .HasColumnType("bit")
+                                .HasColumnName("AddressIsValidated");
+
+                            b1.Property<double?>("Latitude")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("float(18)")
+                                .HasColumnName("AddressLatitude");
+
+                            b1.Property<double?>("Longitude")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("float(18)")
+                                .HasColumnName("AddressLongitude");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)")
+                                .HasColumnName("AddressPostalCode");
+
+                            b1.Property<string>("State")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)")
+                                .HasColumnName("AddressState");
+
+                            b1.Property<string>("Street1")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
+                                .HasColumnName("AddressStreet1");
+
+                            b1.Property<string>("Street2")
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
+                                .HasColumnName("AddressStreet2");
+
+                            b1.HasKey("EmergencyContactId");
+
+                            b1.ToTable("EmergencyContacts");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EmergencyContactId");
+                        });
+
+                    b.OwnsOne("VisitorManagementSystem.Api.Domain.ValueObjects.PhoneNumber", "AlternatePhoneNumber", b1 =>
+                        {
+                            b1.Property<int>("EmergencyContactId")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("AreaCode")
+                                .HasMaxLength(4)
+                                .HasColumnType("nvarchar(4)")
+                                .HasColumnName("AlternatePhoneAreaCode");
+
+                            b1.Property<string>("CountryCode")
+                                .HasMaxLength(4)
+                                .HasColumnType("nvarchar(4)")
+                                .HasColumnName("AlternatePhoneCountryCode");
+
+                            b1.Property<string>("DigitsOnly")
+                                .IsRequired()
+                                .HasMaxLength(15)
+                                .HasColumnType("nvarchar(15)")
+                                .HasColumnName("AlternatePhoneNumberDigitsOnly");
+
+                            b1.Property<string>("FormattedValue")
+                                .IsRequired()
+                                .HasMaxLength(25)
+                                .HasColumnType("nvarchar(25)")
+                                .HasColumnName("AlternatePhoneNumberFormatted");
+
+                            b1.Property<bool>("IsVerified")
+                                .HasColumnType("bit")
+                                .HasColumnName("AlternatePhoneIsVerified");
+
+                            b1.Property<string>("PhoneType")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("nvarchar(10)")
+                                .HasColumnName("AlternatePhoneType");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)")
+                                .HasColumnName("AlternatePhoneNumber");
+
+                            b1.HasKey("EmergencyContactId");
+
+                            b1.ToTable("EmergencyContacts");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EmergencyContactId");
+                        });
+
+                    b.OwnsOne("VisitorManagementSystem.Api.Domain.ValueObjects.Email", "Email", b1 =>
+                        {
+                            b1.Property<int>("EmergencyContactId")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(256)
+                                .HasColumnType("nvarchar(256)")
+                                .HasColumnName("Email");
+
+                            b1.HasKey("EmergencyContactId");
+
+                            b1.ToTable("EmergencyContacts");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EmergencyContactId");
+                        });
+
+                    b.OwnsOne("VisitorManagementSystem.Api.Domain.ValueObjects.PhoneNumber", "PhoneNumber", b1 =>
+                        {
+                            b1.Property<int>("EmergencyContactId")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("AreaCode")
+                                .HasMaxLength(4)
+                                .HasColumnType("nvarchar(4)")
+                                .HasColumnName("PhoneAreaCode");
+
+                            b1.Property<string>("CountryCode")
+                                .HasMaxLength(4)
+                                .HasColumnType("nvarchar(4)")
+                                .HasColumnName("PhoneCountryCode");
+
+                            b1.Property<string>("DigitsOnly")
+                                .IsRequired()
+                                .HasMaxLength(15)
+                                .HasColumnType("nvarchar(15)")
+                                .HasColumnName("PhoneNumberDigitsOnly");
+
+                            b1.Property<string>("FormattedValue")
+                                .IsRequired()
+                                .HasMaxLength(25)
+                                .HasColumnType("nvarchar(25)")
+                                .HasColumnName("PhoneNumberFormatted");
+
+                            b1.Property<bool>("IsVerified")
+                                .HasColumnType("bit")
+                                .HasColumnName("PhoneIsVerified");
+
+                            b1.Property<string>("PhoneType")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("nvarchar(10)")
+                                .HasColumnName("PhoneType");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)")
+                                .HasColumnName("PhoneNumber");
+
+                            b1.HasKey("EmergencyContactId");
+
+                            b1.ToTable("EmergencyContacts");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EmergencyContactId");
+                        });
+
+                    b.Navigation("Address");
+
+                    b.Navigation("AlternatePhoneNumber");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("DeletedByUser");
+
+                    b.Navigation("Email");
+
+                    b.Navigation("ModifiedByUser");
+
+                    b.Navigation("PhoneNumber")
+                        .IsRequired();
+
+                    b.Navigation("Visitor");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Invitation", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ApprovedByUser")
+                        .WithMany()
+                        .HasForeignKey("ApprovedBy")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "DeletedByUser")
+                        .WithMany()
+                        .HasForeignKey("DeletedByUserId");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "Host")
+                        .WithMany()
+                        .HasForeignKey("HostId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Location", "Location")
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedByUserId");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "RejectedByUser")
+                        .WithMany()
+                        .HasForeignKey("RejectedBy")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.VisitPurpose", "VisitPurpose")
+                        .WithMany()
+                        .HasForeignKey("VisitPurposeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Visitor", "Visitor")
+                        .WithMany()
+                        .HasForeignKey("VisitorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ApprovedByUser");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("DeletedByUser");
+
+                    b.Navigation("Host");
+
+                    b.Navigation("Location");
+
+                    b.Navigation("ModifiedByUser");
+
+                    b.Navigation("RejectedByUser");
+
+                    b.Navigation("VisitPurpose");
+
+                    b.Navigation("Visitor");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.InvitationApproval", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "Approver")
+                        .WithMany()
+                        .HasForeignKey("ApproverId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "EscalatedToUser")
+                        .WithMany()
+                        .HasForeignKey("EscalatedToUserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Invitation", "Invitation")
+                        .WithMany("Approvals")
+                        .HasForeignKey("InvitationId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedByUserId");
+
+                    b.Navigation("Approver");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("EscalatedToUser");
+
+                    b.Navigation("Invitation");
+
+                    b.Navigation("ModifiedByUser");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.InvitationEvent", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Invitation", "Invitation")
+                        .WithMany("Events")
+                        .HasForeignKey("InvitationId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedByUserId");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "TriggeredByUser")
+                        .WithMany()
+                        .HasForeignKey("TriggeredBy")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Invitation");
+
+                    b.Navigation("ModifiedByUser");
+
+                    b.Navigation("TriggeredByUser");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.InvitationTemplate", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Location", "DefaultLocation")
+                        .WithMany()
+                        .HasForeignKey("DefaultLocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.VisitPurpose", "DefaultVisitPurpose")
+                        .WithMany()
+                        .HasForeignKey("DefaultVisitPurposeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "DeletedByUser")
+                        .WithMany()
+                        .HasForeignKey("DeletedByUserId");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedByUserId");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("DefaultLocation");
+
+                    b.Navigation("DefaultVisitPurpose");
+
+                    b.Navigation("DeletedByUser");
+
+                    b.Navigation("ModifiedByUser");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Location", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Location_CreatedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Location_ModifiedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Location", "ParentLocation")
+                        .WithMany("ChildLocations")
+                        .HasForeignKey("ParentLocationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("ModifiedByUser");
+
+                    b.Navigation("ParentLocation");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.RefreshToken", b =>
@@ -1047,6 +2813,279 @@ namespace VisitorManagementSystem.Api.Migrations
                     b.Navigation("PhoneNumber");
                 });
 
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.VisitPurpose", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_VisitPurpose_CreatedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_VisitPurpose_ModifiedBy_User");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("ModifiedByUser");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Visitor", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "BlacklistedByUser")
+                        .WithMany()
+                        .HasForeignKey("BlacklistedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Visitor_CreatedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "DeletedByUser")
+                        .WithMany()
+                        .HasForeignKey("DeletedByUserId");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Visitor_ModifiedBy_User");
+
+                    b.OwnsOne("VisitorManagementSystem.Api.Domain.ValueObjects.Address", "Address", b1 =>
+                        {
+                            b1.Property<int>("VisitorId")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("AddressType")
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)")
+                                .HasColumnName("AddressType");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)")
+                                .HasColumnName("AddressCity");
+
+                            b1.Property<string>("Country")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)")
+                                .HasColumnName("AddressCountry");
+
+                            b1.Property<bool?>("IsValidated")
+                                .HasColumnType("bit")
+                                .HasColumnName("AddressIsValidated");
+
+                            b1.Property<double?>("Latitude")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("float(18)")
+                                .HasColumnName("AddressLatitude");
+
+                            b1.Property<double?>("Longitude")
+                                .HasPrecision(18, 6)
+                                .HasColumnType("float(18)")
+                                .HasColumnName("AddressLongitude");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)")
+                                .HasColumnName("AddressPostalCode");
+
+                            b1.Property<string>("State")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)")
+                                .HasColumnName("AddressState");
+
+                            b1.Property<string>("Street1")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
+                                .HasColumnName("AddressStreet1");
+
+                            b1.Property<string>("Street2")
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
+                                .HasColumnName("AddressStreet2");
+
+                            b1.HasKey("VisitorId");
+
+                            b1.ToTable("Visitors");
+
+                            b1.WithOwner()
+                                .HasForeignKey("VisitorId");
+                        });
+
+                    b.OwnsOne("VisitorManagementSystem.Api.Domain.ValueObjects.Email", "Email", b1 =>
+                        {
+                            b1.Property<int>("VisitorId")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(256)
+                                .HasColumnType("nvarchar(256)")
+                                .HasColumnName("Email");
+
+                            b1.HasKey("VisitorId");
+
+                            b1.ToTable("Visitors");
+
+                            b1.WithOwner()
+                                .HasForeignKey("VisitorId");
+                        });
+
+                    b.OwnsOne("VisitorManagementSystem.Api.Domain.ValueObjects.PhoneNumber", "PhoneNumber", b1 =>
+                        {
+                            b1.Property<int>("VisitorId")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("AreaCode")
+                                .HasMaxLength(4)
+                                .HasColumnType("nvarchar(4)")
+                                .HasColumnName("PhoneAreaCode");
+
+                            b1.Property<string>("CountryCode")
+                                .HasMaxLength(4)
+                                .HasColumnType("nvarchar(4)")
+                                .HasColumnName("PhoneCountryCode");
+
+                            b1.Property<string>("DigitsOnly")
+                                .IsRequired()
+                                .HasMaxLength(15)
+                                .HasColumnType("nvarchar(15)")
+                                .HasColumnName("PhoneNumberDigitsOnly");
+
+                            b1.Property<string>("FormattedValue")
+                                .IsRequired()
+                                .HasMaxLength(25)
+                                .HasColumnType("nvarchar(25)")
+                                .HasColumnName("PhoneNumberFormatted");
+
+                            b1.Property<bool>("IsVerified")
+                                .HasColumnType("bit")
+                                .HasColumnName("PhoneIsVerified");
+
+                            b1.Property<string>("PhoneType")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("nvarchar(10)")
+                                .HasColumnName("PhoneType");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)")
+                                .HasColumnName("PhoneNumber");
+
+                            b1.HasKey("VisitorId");
+
+                            b1.ToTable("Visitors");
+
+                            b1.WithOwner()
+                                .HasForeignKey("VisitorId");
+                        });
+
+                    b.Navigation("Address");
+
+                    b.Navigation("BlacklistedByUser");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("DeletedByUser");
+
+                    b.Navigation("Email")
+                        .IsRequired();
+
+                    b.Navigation("ModifiedByUser");
+
+                    b.Navigation("PhoneNumber");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.VisitorDocument", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_VisitorDocument_CreatedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "DeletedByUser")
+                        .WithMany()
+                        .HasForeignKey("DeletedByUserId");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_VisitorDocument_ModifiedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Visitor", "Visitor")
+                        .WithMany("Documents")
+                        .HasForeignKey("VisitorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("DeletedByUser");
+
+                    b.Navigation("ModifiedByUser");
+
+                    b.Navigation("Visitor");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.VisitorNote", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_VisitorNote_CreatedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "DeletedByUser")
+                        .WithMany()
+                        .HasForeignKey("DeletedByUserId");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_VisitorNote_ModifiedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Visitor", "Visitor")
+                        .WithMany("VisitorNotes")
+                        .HasForeignKey("VisitorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("DeletedByUser");
+
+                    b.Navigation("ModifiedByUser");
+
+                    b.Navigation("Visitor");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Invitation", b =>
+                {
+                    b.Navigation("Approvals");
+
+                    b.Navigation("Events");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Location", b =>
+                {
+                    b.Navigation("ChildLocations");
+                });
+
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.RefreshToken", b =>
                 {
                     b.Navigation("ReplacesToken");
@@ -1062,6 +3101,15 @@ namespace VisitorManagementSystem.Api.Migrations
                     b.Navigation("CreatedAuditLogs");
 
                     b.Navigation("RefreshTokens");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Visitor", b =>
+                {
+                    b.Navigation("Documents");
+
+                    b.Navigation("EmergencyContacts");
+
+                    b.Navigation("VisitorNotes");
                 });
 #pragma warning restore 612, 618
         }

@@ -82,7 +82,7 @@ public class AuditLoggingMiddleware
         }
     }
 
-    private async Task CompleteAuditEntryAsync(HttpContext context, AuditLog auditEntry,
+    private Task CompleteAuditEntryAsync(HttpContext context, AuditLog auditEntry,
         long durationMs, string? requestBody, MemoryStream responseBody)
     {
         var response = context.Response;
@@ -114,6 +114,7 @@ public class AuditLoggingMiddleware
         {
             auditEntry.Metadata = CreateSafeMetadata(context, requestBody, responseBody);
         }
+        return Task.CompletedTask;
     }
 
     // FIXED: New method to create safe metadata that fits in database column
@@ -344,7 +345,7 @@ public class AuditLoggingMiddleware
     }
 
     // ... (rest of the existing methods remain the same)
-    private async Task<AuditLog> CreateAuditEntryAsync(HttpContext context)
+    private Task<AuditLog> CreateAuditEntryAsync(HttpContext context)
     {
         var request = context.Request;
         var user = context.User;
@@ -371,7 +372,7 @@ public class AuditLoggingMiddleware
         // Set entity ID if available
         auditEntry.EntityId = ExtractEntityId(request.Path);
 
-        return auditEntry;
+        return Task.FromResult(auditEntry);
     }
 
     private static EventType DetermineEventType(HttpRequest request)
@@ -506,11 +507,21 @@ public class AuditLoggingMiddleware
         try
         {
             context.Request.EnableBuffering();
-            var buffer = new byte[Math.Min(context.Request.ContentLength ?? 0, _options.MaxRequestBodySize)];
-            await context.Request.Body.ReadAsync(buffer, 0, buffer.Length);
+
+            var maxSize = (int)Math.Min(context.Request.ContentLength ?? 0, _options.MaxRequestBodySize);
+            var buffer = new byte[maxSize];
+
+            int totalRead = 0;
+            while (totalRead < maxSize)
+            {
+                int bytesRead = await context.Request.Body.ReadAsync(buffer, totalRead, maxSize - totalRead);
+                if (bytesRead == 0) break; // End of stream
+                totalRead += bytesRead;
+            }
+
             context.Request.Body.Position = 0;
 
-            return Encoding.UTF8.GetString(buffer);
+            return Encoding.UTF8.GetString(buffer, 0, totalRead);
         }
         catch (Exception ex)
         {

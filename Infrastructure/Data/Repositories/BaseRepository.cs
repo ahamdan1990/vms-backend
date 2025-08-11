@@ -13,6 +13,16 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Repositories;
 /// <typeparam name="TEntity">Entity type</typeparam>
 public class BaseRepository<TEntity> : IGenericRepository<TEntity> where TEntity : BaseEntity
 {
+
+    /// <summary>
+    /// Gets queryable for advanced querying (use with caution)
+    /// </summary>
+    /// <returns>IQueryable of entities</returns>
+    public virtual IQueryable<TEntity> GetQueryable()
+    {
+        return _dbSet.AsQueryable();
+    }
+
     protected readonly ApplicationDbContext _context;
     protected readonly DbSet<TEntity> _dbSet;
 
@@ -170,6 +180,14 @@ public class BaseRepository<TEntity> : IGenericRepository<TEntity> where TEntity
     public virtual void Remove(TEntity entity)
     {
         _dbSet.Remove(entity);
+    }
+
+    /// <summary>
+    /// Delete method alias for consistency with handlers
+    /// </summary>
+    public virtual void Delete(TEntity entity)
+    {
+        Remove(entity);
     }
 
     public virtual async Task RemoveAsync(int id, CancellationToken cancellationToken = default)
@@ -381,7 +399,7 @@ public class BaseRepository<TEntity> : IGenericRepository<TEntity> where TEntity
 public static class SpecificationEvaluator
 {
     public static IQueryable<T> GetQuery<T>(IQueryable<T> inputQuery, BaseSpecification<T> specification, bool ignorePaging = false)
-        where T : class
+        where T : BaseEntity
     {
         var query = inputQuery;
 
@@ -422,9 +440,14 @@ public static class SpecificationEvaluator
         // Apply paging
         if (specification.IsPagingEnabled && !ignorePaging)
         {
-            query = query.Skip(specification.Skip).Take(specification.Take);
+            var skip = specification.Skip!.Value;
+            var take = specification.Take!.Value;
+
+            query = query.Skip(skip).Take(take);
         }
+
 
         return query;
     }
 }
+

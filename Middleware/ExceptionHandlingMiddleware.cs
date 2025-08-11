@@ -223,17 +223,10 @@ public class ExceptionHandlingMiddleware
 
     private static void AddSecurityHeaders(HttpResponse response)
     {
-        if (!response.Headers.ContainsKey("X-Content-Type-Options"))
-            response.Headers.Add("X-Content-Type-Options", "nosniff");
-
-        if (!response.Headers.ContainsKey("X-Frame-Options"))
-            response.Headers.Add("X-Frame-Options", "DENY");
-
-        if (!response.Headers.ContainsKey("X-XSS-Protection"))
-            response.Headers.Add("X-XSS-Protection", "1; mode=block");
-
-        if (!response.Headers.ContainsKey("Referrer-Policy"))
-            response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+        response.Headers["X-Content-Type-Options"] = "nosniff";
+        response.Headers["X-Frame-Options"] = "DENY";
+        response.Headers["X-XSS-Protection"] = "1; mode=block";
+        response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
     }
 
     private record ErrorResponse

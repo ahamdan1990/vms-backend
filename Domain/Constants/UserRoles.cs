@@ -296,9 +296,26 @@ public static class UserRoles
             Permissions.Invitation.BulkApprove,
             Permissions.Invitation.ViewHistory,
             Permissions.Invitation.Export,
-            
+            Permissions.Invitation.CreateOwn,
+            Permissions.Invitation.Create,
+            Permissions.Invitation.ReadOwn,
+            Permissions.Invitation.Read,
+            Permissions.Invitation.UpdateOwn,
+            Permissions.Invitation.Approve,
+            Permissions.Invitation.CancelOwn,
+            Permissions.Invitation.ViewPending,
+
+
             // All visitor management
+            Permissions.Visitor.Read,
+            Permissions.Visitor.ReadToday,
+            Permissions.Visitor.Search,
+            Permissions.Visitor.Blacklist,
+            Permissions.Visitor.RemoveBlacklist,
+            Permissions.Visitor.MarkAsVip,
+            Permissions.Visitor.RemoveVipStatus,
             Permissions.Visitor.Create,
+            Permissions.Visitor.ViewStatistics,
             Permissions.Visitor.ReadAll,
             Permissions.Visitor.Update,
             Permissions.Visitor.Delete,

@@ -392,8 +392,13 @@ public class UserLockoutService : IUserLockoutService
                 return cachedAttempts;
             }
 
-            // In a production system, this would query a dedicated table for IP-based attempts
-            var attempts = 0; // Placeholder
+            // Implement IP-based lockout tracking using cache
+            // For production, consider using a dedicated table for persistent tracking
+            var attempts = 0;
+            
+            // Check if there are any recent failed attempts for this IP
+            var recentFailures = await GetRecentFailedAttemptsForIpAsync(ipAddress, TimeSpan.FromMinutes(15));
+            attempts = recentFailures;
 
             _cache.Set(cacheKey, attempts, TimeSpan.FromMinutes(5));
             return attempts;
@@ -842,6 +847,77 @@ public class UserLockoutService : IUserLockoutService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error recording IP failed attempt for: {IpAddress}", ipAddress);
+        }
+    }
+
+    private async Task<int> GetRecentFailedAttemptsForIpAsync(string ipAddress, TimeSpan timeWindow)
+    {
+        try
+        {
+            // For production implementation, this could query a dedicated audit log table
+            // For now, we'll use a simplified cache-based approach
+            var cacheKey = $"ip_failed_attempts_{ipAddress}";
+            
+            if (_cache.TryGetValue(cacheKey, out List<DateTime> attemptTimes))
+            {
+                // Remove attempts outside the time window
+                var cutoffTime = DateTime.UtcNow.Subtract(timeWindow);
+                attemptTimes = attemptTimes.Where(t => t > cutoffTime).ToList();
+                
+                // Update cache with cleaned list
+                _cache.Set(cacheKey, attemptTimes, timeWindow);
+                
+                return attemptTimes.Count;
+            }
+
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving recent failed attempts for IP {IpAddress}", ipAddress);
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Records a failed login attempt for an IP address
+    /// </summary>
+    /// <param name="ipAddress">IP address</param>
+    public async Task RecordFailedAttemptForIpAsync(string ipAddress)
+    {
+        try
+        {
+            var cacheKey = $"ip_failed_attempts_{ipAddress}";
+            var timeWindow = TimeSpan.FromMinutes(15);
+            
+            List<DateTime> attemptTimes;
+            if (_cache.TryGetValue(cacheKey, out List<DateTime> existingTimes))
+            {
+                attemptTimes = existingTimes ?? new List<DateTime>();
+            }
+            else
+            {
+                attemptTimes = new List<DateTime>();
+            }
+            
+            // Add current attempt
+            attemptTimes.Add(DateTime.UtcNow);
+            
+            // Remove old attempts outside time window
+            var cutoffTime = DateTime.UtcNow.Subtract(timeWindow);
+            attemptTimes = attemptTimes.Where(t => t > cutoffTime).ToList();
+            
+            // Update cache
+            _cache.Set(cacheKey, attemptTimes, timeWindow);
+            
+            _logger.LogWarning("Failed login attempt recorded for IP {IpAddress}. Total recent attempts: {Count}", 
+                ipAddress, attemptTimes.Count);
+                
+            await Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error recording failed attempt for IP {IpAddress}", ipAddress);
         }
     }
 }

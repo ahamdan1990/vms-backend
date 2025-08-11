@@ -31,6 +31,7 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // Add services to the container.
+
 builder.Services.AddControllers();
 
 // Database Configuration
@@ -68,7 +69,8 @@ builder.Services.AddAuthentication(options =>
     {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(
-            builder.Configuration["JWT:SecretKey"] ?? "your-super-secret-jwt-key-that-must-be-at-least-32-characters-long-for-security")),
+            builder.Configuration["JWT:SecretKey"] ?? 
+            throw new InvalidOperationException("JWT:SecretKey configuration is required for production"))),
         ValidateIssuer = true,
         ValidIssuer = builder.Configuration["JWT:Issuer"] ?? "VisitorManagementSystem",
         ValidateAudience = true,
@@ -211,7 +213,7 @@ builder.Services.AddCors(options =>
 builder.Services.ConfigureSwagger();
 
 // Register application services
-builder.Services.RegisterApplicationServices(builder.Configuration);
+// Services are already registered through the main registration method
 
 
 var app = builder.Build();

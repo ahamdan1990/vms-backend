@@ -5,6 +5,7 @@
 /// </summary>
 public static class Permissions
 {
+
     /// <summary>
     /// User management permissions
     /// </summary>
@@ -32,11 +33,14 @@ public static class Permissions
     {
         public const string CreateOwn = "Invitation.Create.Own";
         public const string CreateAll = "Invitation.Create.All";
+        public const string Create = "Invitation.Create"; // General create permission
         public const string ReadOwn = "Invitation.Read.Own";
         public const string ReadAll = "Invitation.Read.All";
+        public const string Read = "Invitation.Read"; // General read permission
         public const string UpdateOwn = "Invitation.Update.Own";
         public const string UpdateAll = "Invitation.Update.All";
         public const string ApproveAll = "Invitation.Approve.All";
+        public const string Approve = "Invitation.Approve"; // General approve permission
         public const string DenyAll = "Invitation.Deny.All";
         public const string CancelOwn = "Invitation.Cancel.Own";
         public const string CancelAll = "Invitation.Cancel.All";
@@ -52,6 +56,7 @@ public static class Permissions
     public static class Visitor
     {
         public const string Create = "Visitor.Create";
+        public const string Read = "Visitor.Read";
         public const string ReadToday = "Visitor.Read.Today";
         public const string ReadAll = "Visitor.Read.All";
         public const string Update = "Visitor.Update";
@@ -62,6 +67,50 @@ public static class Permissions
         public const string Export = "Visitor.Export";
         public const string ViewPersonalInfo = "Visitor.ViewPersonalInfo";
         public const string ManagePhotos = "Visitor.ManagePhotos";
+        public const string Blacklist = "Visitor.Blacklist";
+        public const string RemoveBlacklist = "Visitor.RemoveBlacklist";
+        public const string MarkAsVip = "Visitor.MarkAsVip";
+        public const string RemoveVipStatus = "Visitor.RemoveVipStatus";
+        public const string ViewStatistics = "Visitor.ViewStatistics";
+    }
+
+    /// <summary>
+    /// Visitor document permissions
+    /// </summary>
+    public static class VisitorDocument
+    {
+        public const string Create = "VisitorDocument.Create";
+        public const string Read = "VisitorDocument.Read";
+        public const string Update = "VisitorDocument.Update";
+        public const string Delete = "VisitorDocument.Delete";
+        public const string Download = "VisitorDocument.Download";
+        public const string Upload = "VisitorDocument.Upload";
+        public const string ViewSensitive = "VisitorDocument.ViewSensitive";
+    }
+
+    /// <summary>
+    /// Visitor note permissions
+    /// </summary>
+    public static class VisitorNote
+    {
+        public const string Create = "VisitorNote.Create";
+        public const string Read = "VisitorNote.Read";
+        public const string Update = "VisitorNote.Update";
+        public const string Delete = "VisitorNote.Delete";
+        public const string ViewConfidential = "VisitorNote.ViewConfidential";
+        public const string ViewFlagged = "VisitorNote.ViewFlagged";
+    }
+
+    /// <summary>
+    /// Emergency contact permissions
+    /// </summary>
+    public static class EmergencyContact
+    {
+        public const string Create = "EmergencyContact.Create";
+        public const string Read = "EmergencyContact.Read";
+        public const string Update = "EmergencyContact.Update";
+        public const string Delete = "EmergencyContact.Delete";
+        public const string ViewPersonalInfo = "EmergencyContact.ViewPersonalInfo";
     }
 
     /// <summary>
@@ -187,8 +236,10 @@ public static class Permissions
     /// </summary>
     public static class SystemConfig
     {
+        public const string Create = "SystemConfig.Create";
         public const string Read = "SystemConfig.Read";
         public const string Update = "SystemConfig.Update";
+        public const string Delete = "SystemConfig.Delete";
         public const string ViewAll = "SystemConfig.ViewAll";
         public const string ManageIntegrations = "SystemConfig.ManageIntegrations";
         public const string ManageNotifications = "SystemConfig.ManageNotifications";
