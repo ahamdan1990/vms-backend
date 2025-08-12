@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using VisitorManagementSystem.Api.Application.Services.Email;
-using VisitorManagementSystem.Api.Application.Services.Pdf;
+using VisitorManagementSystem.Api.Application.Services.Csv;
 using VisitorManagementSystem.Api.Domain.Constants;
 using MediatR;
 using VisitorManagementSystem.Api.Application.Commands.Visitors;
@@ -11,148 +11,147 @@ using VisitorManagementSystem.Api.Application.Commands.Invitations;
 namespace VisitorManagementSystem.Api.Controllers;
 
 /// <summary>
-/// Controller for PDF operations in visitor management
+/// Controller for CSV operations in visitor management
 /// </summary>
 [ApiController]
-[Route("api/pdf")]
+[Route("api/csv")]
 [Authorize]
-public class PdfController : BaseController
+public class CsvController : BaseController
 {
-    private readonly IPdfService _pdfService;
+    private readonly ICsvService _csvService;
     private readonly IEmailService _emailService;
     private readonly IEmailTemplateService _emailTemplateService;
     private readonly IMediator _mediator;
-    private readonly ILogger<PdfController> _logger;
+    private readonly ILogger<CsvController> _logger;
 
-    public PdfController(
-        IPdfService pdfService,
+    public CsvController(
+        ICsvService csvService,
         IEmailService emailService,
         IEmailTemplateService emailTemplateService,
         IMediator mediator,
-        ILogger<PdfController> logger)
+        ILogger<CsvController> logger)
     {
-        _pdfService = pdfService;
+        _csvService = csvService;
         _emailService = emailService;
         _emailTemplateService = emailTemplateService;
         _mediator = mediator;
         _logger = logger;
     }
-
     /// <summary>
-    /// Downloads a blank PDF invitation template
+    /// Downloads a blank CSV invitation template with reference sheets
     /// </summary>
     /// <param name="multipleVisitors">Include sections for multiple visitors</param>
-    /// <returns>PDF template file</returns>
+    /// <returns>ZIP file containing CSV template and reference sheets</returns>
     [HttpGet("invitation-template")]
     [Authorize(Policy = Permissions.Invitation.Create)]
     public async Task<IActionResult> DownloadInvitationTemplate([FromQuery] bool multipleVisitors = true)
     {
         try
         {
-            var pdfBytes = await _pdfService.GenerateInvitationTemplateAsync(multipleVisitors);
+            var zipBytes = await _csvService.GenerateInvitationTemplateAsync(multipleVisitors);
             
             var fileName = multipleVisitors 
-                ? "invitation-template-multiple-visitors.pdf" 
-                : "invitation-template-single-visitor.pdf";
+                ? "invitation-template-multiple-visitors.zip" 
+                : "invitation-template-single-visitor.zip";
 
-            return File(pdfBytes, "application/pdf", fileName);
+            return File(zipBytes, "application/zip", fileName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to generate PDF invitation template");
-            return BadRequestResponse("Failed to generate PDF template");
+            _logger.LogError(ex, "Failed to generate CSV invitation template");
+            return BadRequestResponse("Failed to generate CSV template");
         }
     }
 
     /// <summary>
-    /// Uploads and processes a filled PDF invitation
+    /// Uploads and processes a filled CSV invitation
     /// </summary>
-    /// <param name="pdfFile">Filled PDF invitation file</param>
+    /// <param name="csvFile">Filled CSV invitation file</param>
     /// <returns>Processing result with created invitation details</returns>
     [HttpPost("upload-invitation")]
     [Authorize(Policy = Permissions.Invitation.Create)]
-    public async Task<IActionResult> UploadFilledInvitation(IFormFile pdfFile)
+    public async Task<IActionResult> UploadFilledInvitation(IFormFile csvFile)
     {
         try
         {
             // Validate file
-            if (pdfFile == null || pdfFile.Length == 0)
+            if (csvFile == null || csvFile.Length == 0)
             {
-                return BadRequestResponse("PDF file is required");
+                return BadRequestResponse("CSV file is required");
             }
 
-            if (!pdfFile.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase))
+            if (!csvFile.ContentType.Equals("text/csv", StringComparison.OrdinalIgnoreCase) &&
+                !csvFile.ContentType.Equals("application/csv", StringComparison.OrdinalIgnoreCase) &&
+                !csvFile.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
             {
-                return BadRequestResponse("Only PDF files are allowed");
+                return BadRequestResponse("Only CSV files are allowed");
+            }
+            if (csvFile.Length > 5 * 1024 * 1024) // 5MB limit (CSV files are typically much smaller)
+            {
+                return BadRequestResponse("CSV file size cannot exceed 5MB");
             }
 
-            if (pdfFile.Length > 10 * 1024 * 1024) // 10MB limit
-            {
-                return BadRequestResponse("PDF file size cannot exceed 10MB");
-            }
-
-            // Parse the PDF
-            using var stream = pdfFile.OpenReadStream();
-            var parsedData = await _pdfService.ParseFilledInvitationAsync(stream);
+            // Parse the CSV
+            using var stream = csvFile.OpenReadStream();
+            var parsedData = await _csvService.ParseFilledInvitationAsync(stream);
 
             if (!parsedData.IsValid)
             {
-                return BadRequestResponse($"PDF parsing failed: {string.Join(", ", parsedData.ValidationErrors)}");
+                return BadRequestResponse($"CSV parsing failed: {string.Join(", ", parsedData.ValidationErrors)}");
             }
 
             // Process the parsed data - create visitors and invitation
             var result = await ProcessParsedInvitationData(parsedData);
 
-            return SuccessResponse(result, "PDF invitation processed successfully");
+            return SuccessResponse(result, "CSV invitation processed successfully");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to process uploaded PDF invitation");
-            return BadRequestResponse("Failed to process PDF invitation");
+            _logger.LogError(ex, "Failed to process uploaded CSV invitation");
+            return BadRequestResponse("Failed to process CSV invitation");
         }
     }
 
     /// <summary>
-    /// Validates PDF structure and form fields
+    /// Validates CSV structure and required fields
     /// </summary>
-    /// <param name="pdfFile">PDF file to validate</param>
+    /// <param name="csvFile">CSV file to validate</param>
     /// <returns>Validation result</returns>
     [HttpPost("validate")]
     [Authorize(Policy = Permissions.Invitation.Read)]
-    public async Task<IActionResult> ValidatePdf(IFormFile pdfFile)
+    public async Task<IActionResult> ValidateCsv(IFormFile csvFile)
     {
         try
         {
-            if (pdfFile == null || pdfFile.Length == 0)
+            if (csvFile == null || csvFile.Length == 0)
             {
-                return BadRequestResponse("PDF file is required");
+                return BadRequestResponse("CSV file is required");
             }
 
-            using var stream = pdfFile.OpenReadStream();
-            var validationResult = await _pdfService.ValidatePdfStructureAsync(stream);
+            using var stream = csvFile.OpenReadStream();
+            var validationResult = await _csvService.ValidateCsvStructureAsync(stream);
 
             return SuccessResponse(validationResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to validate PDF structure");
-            return BadRequestResponse("Failed to validate PDF");
+            _logger.LogError(ex, "Failed to validate CSV structure");
+            return BadRequestResponse("Failed to validate CSV");
         }
     }
-
     /// <summary>
-    /// Sends PDF invitation template via email to a host
+    /// Sends CSV invitation template via email to a host
     /// </summary>
     /// <param name="emailDto">Email details</param>
     /// <returns>Email sending result</returns>
     [HttpPost("send-template")]
     [Authorize(Policy = Permissions.Invitation.Create)]
-    public async Task<IActionResult> SendPdfTemplate([FromBody] SendPdfTemplateDto emailDto)
+    public async Task<IActionResult> SendCsvTemplate([FromBody] SendCsvTemplateDto emailDto)
     {
         try
         {
-            // Generate PDF template
-            var pdfBytes = await _pdfService.GenerateInvitationTemplateAsync(emailDto.IncludeMultipleVisitors);
+            // Generate enhanced CSV template with reference sheets
+            var zipBytes = await _csvService.GenerateInvitationTemplateAsync(emailDto.IncludeMultipleVisitors);
 
             // Get host user information (simplified - in production, validate user exists)
             var hostUser = new Domain.Entities.User 
@@ -163,34 +162,34 @@ public class PdfController : BaseController
             };
 
             // Generate email content
-            var emailContent = await _emailTemplateService.GeneratePdfInvitationTemplateAsync(hostUser);
+            var emailContent = await _emailTemplateService.GenerateCsvInvitationTemplateAsync(hostUser, emailDto.CustomMessage);
 
             // Create attachment
             var attachment = new Application.Services.Email.EmailAttachment
             {
                 FileName = emailDto.IncludeMultipleVisitors 
-                    ? "invitation-template-multiple-visitors.pdf" 
-                    : "invitation-template-single-visitor.pdf",
-                Content = pdfBytes,
-                MimeType = "application/pdf"
+                    ? "invitation-template-multiple-visitors.zip" 
+                    : "invitation-template-single-visitor.zip",
+                Content = zipBytes,
+                MimeType = "application/zip"
             };
 
-            // Send email with PDF attachment
+            // Send email with ZIP attachment
             await _emailService.SendWithAttachmentsAsync(
                 emailDto.HostEmail,
-                "Visitor Invitation Template",
+                "Visitor Invitation Template (Enhanced CSV Format)",
                 emailContent,
                 new List<Application.Services.Email.EmailAttachment> { attachment });
 
-            return SuccessResponse("PDF template sent successfully");
+            return SuccessResponse("Enhanced CSV template sent successfully");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send PDF template to {Email}", emailDto.HostEmail);
-            return BadRequestResponse("Failed to send PDF template");
+            _logger.LogError(ex, "Failed to send CSV template to {Email}", emailDto.HostEmail);
+            return BadRequestResponse("Failed to send CSV template");
         }
     }
-    private async Task<object> ProcessParsedInvitationData(ParsedInvitationData parsedData)
+    private async Task<object> ProcessParsedInvitationData(Application.Services.Pdf.ParsedInvitationData parsedData)
     {
         var createdVisitors = new List<object>();
         var createdInvitations = new List<object>();
@@ -233,7 +232,6 @@ public class PdfController : BaseController
                     Name = createdVisitor.FullName,
                     Email = createdVisitor.Email 
                 });
-
                 // Create invitation for this visitor
                 var createInvitationCommand = new CreateInvitationCommand
                 {
@@ -286,11 +284,10 @@ public class PdfController : BaseController
         }
     }
 }
-
 /// <summary>
-/// DTO for sending PDF template via email
+/// DTO for sending CSV template via email
 /// </summary>
-public class SendPdfTemplateDto
+public class SendCsvTemplateDto
 {
     /// <summary>
     /// Host name

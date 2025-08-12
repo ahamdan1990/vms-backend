@@ -160,4 +160,9 @@ public class InvitationRepository : BaseRepository<Invitation>, IInvitationRepos
             .Include(i => i.Location)
             .FirstOrDefaultAsync(i => i.QrCode == qrCode, cancellationToken);
     }
+
+    public async Task<List<Invitation>> GetByVisitorIdAndStatusAsync(int visitorId, InvitationStatus status, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet.Where(i => i.VisitorId == visitorId && i.Status == status).ToListAsync(cancellationToken);
+    }
 }

@@ -204,6 +204,15 @@ public class UserRepository : BaseRepository<User>, IUserRepository
             .GroupBy(al => al.Action)
             .ToDictionary(g => g.Key, g => g.Count());
 
+        // Calculate missing fields from audit logs
+        summary.LoginCount = auditLogs.Count(al => al.Action == "Login" && al.IsSuccess);
+        summary.LastFailedLogin = auditLogs
+            .Where(al => al.Action == "Login" && !al.IsSuccess)
+            .OrderByDescending(al => al.CreatedOn)
+            .FirstOrDefault()?.CreatedOn;
+        summary.InvitationsCreated = auditLogs.Count(al => al.Action == "InvitationCreated");
+        summary.PasswordChanges = auditLogs.Count(al => al.Action == "PasswordChanged");
+
         summary.RecentActions = auditLogs
             .OrderByDescending(al => al.CreatedOn)
             .Take(10)

@@ -984,6 +984,15 @@ namespace VisitorManagementSystem.Api.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DeletedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -1006,6 +1015,9 @@ namespace VisitorManagementSystem.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<double?>("Latitude")
                         .HasColumnType("float");
@@ -1077,6 +1089,8 @@ namespace VisitorManagementSystem.Api.Migrations
 
                     b.HasIndex("CreatedOn")
                         .HasDatabaseName("IX_Location_CreatedOn");
+
+                    b.HasIndex("DeletedByUserId");
 
                     b.HasIndex("DisplayOrder")
                         .HasDatabaseName("IX_Locations_DisplayOrder");
@@ -1590,6 +1604,15 @@ namespace VisitorManagementSystem.Api.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DeletedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -1609,6 +1632,9 @@ namespace VisitorManagementSystem.Api.Migrations
                         .HasDefaultValue(true);
 
                     b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<int>("MaxDurationHours")
@@ -1659,6 +1685,8 @@ namespace VisitorManagementSystem.Api.Migrations
 
                     b.HasIndex("CreatedOn")
                         .HasDatabaseName("IX_VisitPurpose_CreatedOn");
+
+                    b.HasIndex("DeletedByUserId");
 
                     b.HasIndex("DisplayOrder")
                         .HasDatabaseName("IX_VisitPurposes_DisplayOrder");
@@ -2441,7 +2469,7 @@ namespace VisitorManagementSystem.Api.Migrations
                         .IsRequired();
 
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Location", "Location")
-                        .WithMany()
+                        .WithMany("Invitations")
                         .HasForeignKey("LocationId")
                         .OnDelete(DeleteBehavior.SetNull);
 
@@ -2455,7 +2483,7 @@ namespace VisitorManagementSystem.Api.Migrations
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.VisitPurpose", "VisitPurpose")
-                        .WithMany()
+                        .WithMany("Invitations")
                         .HasForeignKey("VisitPurposeId")
                         .OnDelete(DeleteBehavior.SetNull);
 
@@ -2592,6 +2620,10 @@ namespace VisitorManagementSystem.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK_Location_CreatedBy_User");
 
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "DeletedByUser")
+                        .WithMany()
+                        .HasForeignKey("DeletedByUserId");
+
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
                         .WithMany()
                         .HasForeignKey("ModifiedBy")
@@ -2604,6 +2636,8 @@ namespace VisitorManagementSystem.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("DeletedByUser");
 
                     b.Navigation("ModifiedByUser");
 
@@ -2821,6 +2855,10 @@ namespace VisitorManagementSystem.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK_VisitPurpose_CreatedBy_User");
 
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "DeletedByUser")
+                        .WithMany()
+                        .HasForeignKey("DeletedByUserId");
+
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
                         .WithMany()
                         .HasForeignKey("ModifiedBy")
@@ -2828,6 +2866,8 @@ namespace VisitorManagementSystem.Api.Migrations
                         .HasConstraintName("FK_VisitPurpose_ModifiedBy_User");
 
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("DeletedByUser");
 
                     b.Navigation("ModifiedByUser");
                 });
@@ -3084,6 +3124,8 @@ namespace VisitorManagementSystem.Api.Migrations
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Location", b =>
                 {
                     b.Navigation("ChildLocations");
+
+                    b.Navigation("Invitations");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.RefreshToken", b =>
@@ -3101,6 +3143,11 @@ namespace VisitorManagementSystem.Api.Migrations
                     b.Navigation("CreatedAuditLogs");
 
                     b.Navigation("RefreshTokens");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.VisitPurpose", b =>
+                {
+                    b.Navigation("Invitations");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Visitor", b =>

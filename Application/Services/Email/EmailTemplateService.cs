@@ -45,6 +45,22 @@ public interface IEmailTemplateService
     /// <param name="temporaryPassword">Temporary password</param>
     /// <returns>Email content</returns>
     Task<string> GenerateWelcomeTemplateAsync(User user, string temporaryPassword);
+
+    /// <summary>
+    /// Generates CSV invitation template email
+    /// </summary>
+    /// <param name="host">Host user</param>
+    /// <param name="customMessage">Custom message to include</param>
+    /// <returns>Email content</returns>
+    Task<string> GenerateCsvInvitationTemplateAsync(User host, string? customMessage = null);
+
+    /// <summary>
+    /// Generates XLSX invitation template email
+    /// </summary>
+    /// <param name="host">Host user</param>
+    /// <param name="customMessage">Custom message to include</param>
+    /// <returns>Email content</returns>
+    Task<string> GenerateXlsxInvitationTemplateAsync(User host, string? customMessage = null);
 }
 
 /// <summary>
@@ -367,6 +383,188 @@ public class EmailTemplateService : IEmailTemplateService
 </html>";
 
         return await Task.FromResult(template);
+    }
+
+    /// <summary>
+    /// Generates CSV invitation template email
+    /// </summary>
+    public async Task<string> GenerateCsvInvitationTemplateAsync(User host, string? customMessage = null)
+    {
+        var htmlContent = $@"
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ text-align: center; margin-bottom: 30px; }}
+                .logo {{ max-width: 200px; height: auto; }}
+                .content {{ background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; }}
+                .steps {{ background-color: #e8f4fd; padding: 15px; border-radius: 5px; margin: 15px 0; }}
+                .footer {{ margin-top: 30px; text-align: center; color: #666; font-size: 12px; }}
+                .highlight {{ background-color: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0; }}
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    {GetLogoHtml()}
+                    <h2>Visitor Invitation Template (CSV Format)</h2>
+                </div>
+                
+                <div class='content'>
+                    <p>Hello {host.FirstName},</p>
+                    
+                    <p>You've requested a CSV invitation template for creating visitor invitations. This enhanced template now includes reference sheets with available hosts and visitors, making it easier to fill and more reliable to process.</p>
+                    
+                    {(string.IsNullOrEmpty(customMessage) ? "" : $"<p><strong>Message:</strong> {customMessage}</p>")}
+                    
+                    <div class='steps'>
+                        <h3>How to use the enhanced CSV template:</h3>
+                        <ol>
+                            <li><strong>Download & Extract</strong> the attached ZIP file</li>
+                            <li><strong>Review</strong> available-hosts.csv and available-visitors.csv for reference data</li>
+                            <li><strong>Open</strong> invitation-template.csv in Excel, Google Sheets, or any spreadsheet application</li>
+                            <li><strong>Select hosts</strong> using exact text from available-hosts.csv Display Format column</li>
+                            <li><strong>Select visitors</strong> from available-visitors.csv or use 'Create New Visitor'</li>
+                            <li><strong>Fill in</strong> all required fields following the instructions</li>
+                            <li><strong>Save</strong> only the invitation-template.csv file in CSV format</li>
+                            <li><strong>Upload</strong> the completed invitation-template.csv file through our system</li>
+                        </ol>
+                    </div>
+                    
+                    <div class='highlight'>
+                        <p><strong>Enhanced Template Benefits:</strong></p>
+                        <ul>
+                            <li>✅ Reference sheets with active hosts and recent visitors</li>
+                            <li>✅ No more guessing - exact names and details provided</li>
+                            <li>✅ Prevents duplicate visitor creation</li>
+                            <li>✅ Smart host selection from system users</li>
+                            <li>✅ More reliable parsing and processing</li>
+                            <li>✅ Support for multiple visitors in one file</li>
+                            <li>✅ Clear field instructions and examples</li>
+                            <li>✅ Works with any spreadsheet application</li>
+                        </ul>
+                    </div>
+                    
+                    <p><strong>Important Notes:</strong></p>
+                    <ul>
+                        <li>Extract the ZIP file to access all reference sheets</li>
+                        <li>Use exact text from Display Format columns in reference sheets</li>
+                        <li>Upload only the filled invitation-template.csv file (not the ZIP)</li>
+                        <li>For hosts: copy exact text from available-hosts.csv Display Format</li>
+                        <li>For visitors: copy from available-visitors.csv or use 'Create New Visitor'</li>
+                        <li>Use the date format: YYYY-MM-DD HH:mm for meeting times</li>
+                        <li>For boolean fields (Yes/No), use ""Yes"" or ""No""</li>
+                        <li>Keep the CSV structure intact - don't add or remove columns</li>
+                    </ul>
+                    
+                    <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+                    
+                    <p>Best regards,<br>
+                    Visitor Management System</p>
+                </div>
+                
+                {GetFooterHtml()}
+            </div>
+        </body>
+        </html>";
+
+        return await Task.FromResult(htmlContent);
+    }
+
+    /// <summary>
+    /// Generates XLSX invitation template email
+    /// </summary>
+    public async Task<string> GenerateXlsxInvitationTemplateAsync(User host, string? customMessage = null)
+    {
+        var htmlContent = $@"
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ text-align: center; margin-bottom: 30px; }}
+                .logo {{ max-width: 200px; height: auto; }}
+                .content {{ background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; }}
+                .features {{ background-color: #e8f4fd; padding: 15px; border-radius: 5px; margin: 15px 0; }}
+                .footer {{ margin-top: 30px; text-align: center; color: #666; font-size: 12px; }}
+                .highlight {{ background-color: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0; }}
+                .excel-features {{ background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 15px 0; }}
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    {GetLogoHtml()}
+                    <h2>Visitor Invitation Template (Excel Format)</h2>
+                </div>
+                
+                <div class='content'>
+                    <p>Hello {host.FirstName},</p>
+                    
+                    <p>You've requested an Excel invitation template with intelligent dropdowns for creating visitor invitations. This advanced template provides the most user-friendly experience with built-in validation and smart features.</p>
+                    
+                    {(string.IsNullOrEmpty(customMessage) ? "" : $"<p><strong>Message:</strong> {customMessage}</p>")}
+                    
+                    <div class='excel-features'>
+                        <h3>🎯 Excel Template Features:</h3>
+                        <ul>
+                            <li><strong>Smart Dropdowns:</strong> Host selection populated from active system users</li>
+                            <li><strong>Visitor Intelligence:</strong> Choose existing visitors or create new ones</li>
+                            <li><strong>Built-in Validation:</strong> Excel prevents errors before upload</li>
+                            <li><strong>Professional Interface:</strong> Formatted worksheets with instructions</li>
+                            <li><strong>Multiple Visitors:</strong> Easy to add multiple visitors in one file</li>
+                            <li><strong>Date Pickers:</strong> Calendar integration for meeting times</li>
+                        </ul>
+                    </div>
+                    
+                    <div class='features'>
+                        <h3>📋 How to use the Excel template:</h3>
+                        <ol>
+                            <li><strong>Download</strong> the attached Excel file (.xlsx)</li>
+                            <li><strong>Open</strong> in Microsoft Excel, Google Sheets, or LibreOffice</li>
+                            <li><strong>Select hosts</strong> from the dropdown (populated with active users)</li>
+                            <li><strong>Choose visitors</strong> from dropdown or select ""Create New Visitor""</li>
+                            <li><strong>Fill required fields</strong> (marked with * and highlighted)</li>
+                            <li><strong>Use dropdowns</strong> for Yes/No fields and date pickers for times</li>
+                            <li><strong>Save</strong> the file in Excel format (.xlsx)</li>
+                            <li><strong>Upload</strong> through our system for processing</li>
+                        </ol>
+                    </div>
+                    
+                    <div class='highlight'>
+                        <p><strong>🚀 Advantages over CSV/PDF:</strong></p>
+                        <ul>
+                            <li>✅ No typing errors - all selections from dropdowns</li>
+                            <li>✅ Real-time validation prevents upload failures</li>
+                            <li>✅ Smart host/visitor matching eliminates duplicates</li>
+                            <li>✅ Professional appearance with embedded instructions</li>
+                            <li>✅ Works offline once downloaded</li>
+                            <li>✅ Familiar Excel interface for all users</li>
+                        </ul>
+                    </div>
+                    
+                    <p><strong>💡 Pro Tips:</strong></p>
+                    <ul>
+                        <li>Use the dropdowns - don't type manually to ensure accuracy</li>
+                        <li>Check the Instructions worksheet for detailed guidance</li>
+                        <li>Date format is automatically handled by Excel</li>
+                        <li>Multiple visitor rows can be filled for group invitations</li>
+                        <li>Save regularly while working on the template</li>
+                    </ul>
+                    
+                    <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+                    
+                    <p>Best regards,<br>
+                    Visitor Management System</p>
+                </div>
+                
+                {GetFooterHtml()}
+            </div>
+        </body>
+        </html>";
+
+        return await Task.FromResult(htmlContent);
     }
 
     private string GetLogoHtml()

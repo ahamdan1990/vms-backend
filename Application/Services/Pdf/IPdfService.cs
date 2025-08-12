@@ -104,6 +104,16 @@ public class ParsedVisitorData
     public string GovernmentId { get; set; } = string.Empty;
     public string Nationality { get; set; } = string.Empty;
     public ParsedEmergencyContact? EmergencyContact { get; set; }
+    
+    /// <summary>
+    /// Indicates if this is an existing visitor from the system
+    /// </summary>
+    public bool IsExistingVisitor { get; set; }
+    
+    /// <summary>
+    /// The ID of the existing visitor (if IsExistingVisitor is true)
+    /// </summary>
+    public int? ExistingVisitorId { get; set; }
 }
 
 /// <summary>

@@ -40,6 +40,12 @@ public class VisitPurposeConfiguration : AuditableEntityConfiguration<VisitPurpo
         builder.Property(p => p.MaxDurationHours)
             .HasDefaultValue(8);
 
+        // Relationship with Invitations (reverse side)
+        builder.HasMany(p => p.Invitations)
+            .WithOne(i => i.VisitPurpose)
+            .HasForeignKey(i => i.VisitPurposeId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Indexes
         builder.HasIndex(p => p.Code)
             .HasDatabaseName("IX_VisitPurposes_Code")

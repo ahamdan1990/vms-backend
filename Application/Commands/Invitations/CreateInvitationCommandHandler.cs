@@ -1,7 +1,9 @@
 using AutoMapper;
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Invitations;
+using VisitorManagementSystem.Api.Application.Services.QrCode;
 using VisitorManagementSystem.Api.Domain.Entities;
+using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Invitations;
@@ -14,15 +16,17 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<CreateInvitationCommandHandler> _logger;
-
+    private readonly IQrCodeService _qrCodeService;
     public CreateInvitationCommandHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        ILogger<CreateInvitationCommandHandler> logger)
+        ILogger<CreateInvitationCommandHandler> logger,
+        IQrCodeService qrCodeService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
+        _qrCodeService = qrCodeService;
     }
 
     public async Task<InvitationDto> Handle(CreateInvitationCommand request, CancellationToken cancellationToken)
@@ -99,8 +103,13 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                 RequiresEscort = request.RequiresEscort || (template?.DefaultRequiresEscort ?? false),
                 RequiresBadge = request.RequiresBadge || (template?.DefaultRequiresBadge ?? true),
                 NeedsParking = request.NeedsParking,
-                ParkingInstructions = request.ParkingInstructions?.Trim()
+                ParkingInstructions = request.ParkingInstructions?.Trim(),
+                Status = request.RequiresApproval ? InvitationStatus.Submitted : InvitationStatus.UnderReview
             };
+
+            // Generate QR code for the invitation
+            var qrCodeData = await _qrCodeService.GenerateInvitationQrDataAsync(invitation, cancellationToken);
+            invitation.UpdateQrCode(qrCodeData);
 
             // Validate invitation data
             var validationErrors = invitation.ValidateInvitation();

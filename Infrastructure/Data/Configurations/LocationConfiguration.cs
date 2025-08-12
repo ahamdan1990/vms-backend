@@ -62,6 +62,12 @@ public class LocationConfiguration : AuditableEntityConfiguration<Location>
             .HasForeignKey(l => l.ParentLocationId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Relationship with Invitations (reverse side)
+        builder.HasMany(l => l.Invitations)
+            .WithOne(i => i.Location)
+            .HasForeignKey(i => i.LocationId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Indexes
         builder.HasIndex(l => l.Code)
             .HasDatabaseName("IX_Locations_Code")

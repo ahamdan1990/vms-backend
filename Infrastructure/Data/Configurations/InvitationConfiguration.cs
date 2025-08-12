@@ -20,7 +20,7 @@ public class InvitationConfiguration : IEntityTypeConfiguration<Invitation>
         // Configure required properties
         builder.Property(i => i.InvitationNumber)
             .IsRequired()
-            .HasMaxLength(20);
+            .HasMaxLength(40);
         
         builder.HasIndex(i => i.InvitationNumber)
             .IsUnique();
@@ -104,12 +104,12 @@ public class InvitationConfiguration : IEntityTypeConfiguration<Invitation>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(i => i.VisitPurpose)
-            .WithMany()
+            .WithMany(vp => vp.Invitations)
             .HasForeignKey(i => i.VisitPurposeId)
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasOne(i => i.Location)
-            .WithMany()
+            .WithMany(l => l.Invitations)
             .HasForeignKey(i => i.LocationId)
             .OnDelete(DeleteBehavior.SetNull);
 

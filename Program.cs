@@ -214,7 +214,7 @@ builder.Services.ConfigureSwagger();
 
 // Register application services
 // Services are already registered through the main registration method
-
+builder.Services.ConfigureApplicationServices(builder.Configuration);
 
 var app = builder.Build();
 

@@ -93,6 +93,8 @@ public interface IInvitationRepository : IGenericRepository<Invitation>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Invitation if found</returns>
     Task<Invitation?> GetByQrCodeAsync(string qrCode, CancellationToken cancellationToken = default);
+    Task<List<Invitation>> GetByVisitorIdAndStatusAsync(int visitorId, InvitationStatus status, CancellationToken cancellationToken = default);
+    
 }
 
 /// <summary>

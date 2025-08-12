@@ -379,6 +379,21 @@ public abstract class BaseController : ControllerBase
     }
 
     /// <summary>
+    /// Adds security headers to the response.
+    /// </summary>
+    protected void SetSecurityHeaders()
+    {
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+        Response.Headers["X-Frame-Options"] = "DENY";
+
+        // Deprecated in modern browsers but kept for legacy support
+        Response.Headers["X-XSS-Protection"] = "1; mode=block";
+
+        Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    }
+
+
+    /// <summary>
     /// Checks if request is from mobile device
     /// </summary>
     protected bool IsMobileRequest()

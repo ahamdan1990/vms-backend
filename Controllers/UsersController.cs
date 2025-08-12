@@ -436,6 +436,8 @@ public class UsersController : BaseController
             if (!currentUserId.HasValue)
                 return BadRequestResponse("User not authenticated");
 
+            _logger.LogDebug("Reset request details: NewPassword={NewPassword}, MustChangePassword={MustChangePassword}, NotifyUser={NotifyUser}, Reason={Reason}",
+                request.NewPassword, request.MustChangePassword, request.NotifyUser, request.Reason);
             var command = new AdminPasswordResetCommand
             {
                 UserId = id,
@@ -443,7 +445,8 @@ public class UsersController : BaseController
                 MustChangePassword = request.MustChangePassword,
                 NotifyUser = request.NotifyUser,
                 ResetBy = currentUserId.Value,
-                Reason = request.Reason
+                Reason = request.Reason,
+                GenerateTemporaryPassword = string.IsNullOrWhiteSpace(request.NewPassword)
             };
 
             var result = await _mediator.Send(command);

@@ -39,6 +39,7 @@ public static class Permissions
         public const string Read = "Invitation.Read"; // General read permission
         public const string UpdateOwn = "Invitation.Update.Own";
         public const string UpdateAll = "Invitation.Update.All";
+        public const string Delete = "Invitation.Delete"; // Delete cancelled invitations
         public const string ApproveAll = "Invitation.Approve.All";
         public const string Approve = "Invitation.Approve"; // General approve permission
         public const string DenyAll = "Invitation.Deny.All";

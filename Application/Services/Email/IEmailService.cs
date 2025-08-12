@@ -24,7 +24,7 @@ public interface IEmailService
     /// <param name="attachments">Email attachments</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Task</returns>
-    Task SendWithAttachmentsAsync(string to, string subject, string body, 
+    Task SendWithAttachmentsAsync(string to, string subject, string body,
         IEnumerable<EmailAttachment> attachments, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -38,8 +38,9 @@ public interface IEmailService
     /// <summary>
     /// Validates email configuration
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if configuration is valid</returns>
-    Task<bool> ValidateConfigurationAsync();
+    Task<bool> ValidateConfigurationAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Tests email connectivity
@@ -49,8 +50,13 @@ public interface IEmailService
     Task<bool> TestConnectionAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Validates the email connection and configuration
+    /// Validates the email connection and configuration (synchronous wrapper)
     /// </summary>
     /// <returns>True if connection is valid</returns>
     Task<bool> ValidateConnectionAsync();
+
+    /// <summary>
+    /// Invalidates email configuration cache (call this when email settings are updated)
+    /// </summary>
+    void InvalidateConfigurationCache();
 }

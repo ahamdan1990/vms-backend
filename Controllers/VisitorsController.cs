@@ -206,9 +206,16 @@ public class VisitorsController : BaseController
             DeletedBy = GetCurrentUserId() ?? throw new UnauthorizedAccessException("User must be authenticated"),
             PermanentDelete = permanentDelete
         };
+        try
+        {
+            var result = await _mediator.Send(command);
+            return SuccessResponse(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
 
-        var result = await _mediator.Send(command);
-        return SuccessResponse(result);
     }
 
     /// <summary>

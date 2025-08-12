@@ -667,37 +667,69 @@ public static class ComprehensiveConfigurationSeeder
     private static async Task SeedEmailConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int? systemUserId)
     {
         var emailSection = configuration.GetSection("Email");
-        
+
         configurations.AddRange(new[]
         {
-            CreateConfiguration("Email", "SmtpHost", 
-                emailSection["SmtpHost"] ?? "localhost",
-                "string", "SMTP server hostname", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Email", "SmtpPort", 
-                emailSection["SmtpPort"] ?? "587",
-                "int", "SMTP server port", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Email", "EnableSsl", 
-                emailSection["EnableSsl"] ?? "true",
-                "bool", "Enable SSL for SMTP connection", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Email", "Username", 
-                emailSection["Username"] ?? "",
-                "string", "SMTP username", false, true, false, now, systemUserId),
-                
-            CreateConfiguration("Email", "Password", 
-                emailSection["Password"] ?? "",
-                "string", "SMTP password", false, true, true, now, systemUserId),
-                
-            CreateConfiguration("Email", "FromAddress", 
-                emailSection["FromAddress"] ?? "noreply@vms.com",
-                "string", "Default sender email address", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Email", "FromName", 
-                emailSection["FromName"] ?? "Visitor Management System",
-                "string", "Default sender name", false, false, false, now, systemUserId)
-        });
+        CreateConfiguration("Email", "SmtpHost",
+            emailSection["SmtpHost"] ?? "localhost",
+            "string", "SMTP server hostname", false, false, false, now, systemUserId),
+
+        CreateConfiguration("Email", "SmtpPort",
+            emailSection["SmtpPort"] ?? "587",
+            "int", "SMTP server port", false, false, false, now, systemUserId),
+
+        CreateConfiguration("Email", "EnableSsl",
+            emailSection["EnableSsl"] ?? "true",
+            "bool", "Enable SSL for SMTP connection", false, false, false, now, systemUserId),
+
+        CreateConfiguration("Email", "Username",
+            emailSection["Username"] ?? "",
+            "string", "SMTP username", false, true, false, now, systemUserId),
+
+        CreateConfiguration("Email", "Password",
+            emailSection["Password"] ?? "",
+            "string", "SMTP password", false, true, true, now, systemUserId),
+
+        CreateConfiguration("Email", "FromEmail",
+            emailSection["FromEmail"] ?? "noreply@vms.com",
+            "string", "Default sender email address", false, false, false, now, systemUserId),
+
+        CreateConfiguration("Email", "FromName",
+            emailSection["FromName"] ?? "Visitor Management System",
+            "string", "Default sender name", false, false, false, now, systemUserId),
+
+        CreateConfiguration("Email", "TimeoutSeconds",
+            emailSection["TimeoutSeconds"] ?? "30",
+            "int", "Connection timeout in seconds", false, false, false, now, systemUserId),
+
+        CreateConfiguration("Email", "MaxAttachmentSizeMB",
+            emailSection["MaxAttachmentSizeMB"] ?? "25",
+            "int", "Maximum attachment size in MB", false, false, false, now, systemUserId),
+
+        CreateConfiguration("Email", "EnableSending",
+            emailSection["EnableSending"] ?? "true",
+            "bool", "Enable email sending (for testing/staging environments)", false, false, false, now, systemUserId),
+
+        CreateConfiguration("Email", "TestEmail",
+            emailSection["TestEmail"] ?? "",
+            "string", "Fallback email for testing (when EnableSending is false)", false, false, false, now, systemUserId),
+
+        CreateConfiguration("Email", "TemplateDirectory",
+            emailSection["TemplateDirectory"] ?? "EmailTemplates",
+            "string", "Email template directory path", false, false, false, now, systemUserId),
+
+        CreateConfiguration("Email", "CompanyLogoUrl",
+            emailSection["CompanyLogoUrl"] ?? "",
+            "string", "Company logo URL for email templates", false, false, false, now, systemUserId),
+
+        CreateConfiguration("Email", "CompanyWebsiteUrl",
+            emailSection["CompanyWebsiteUrl"] ?? "",
+            "string", "Company website URL", false, false, false, now, systemUserId),
+
+        CreateConfiguration("Email", "SupportEmail",
+            emailSection["SupportEmail"] ?? "",
+            "string", "Support email address", false, false, false, now, systemUserId)
+    });
 
         await Task.CompletedTask;
     }

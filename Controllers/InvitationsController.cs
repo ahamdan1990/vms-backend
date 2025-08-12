@@ -321,7 +321,7 @@ public class InvitationsController : BaseController
     /// <param name="cancellationDto">Cancellation data</param>
     /// <returns>Updated invitation</returns>
     [HttpPost("{id:int}/cancel")]
-    [Authorize(Policy = Permissions.Invitation.CancelOwn)]
+    [Authorize(Policy = Permissions.Invitation.CancelAll)]
     public async Task<IActionResult> CancelInvitation(int id, [FromBody] CancelInvitationDto cancellationDto)
     {
         var command = new CancelInvitationCommand
@@ -333,6 +333,32 @@ public class InvitationsController : BaseController
 
         var result = await _mediator.Send(command);
         return SuccessResponse(result);
+    }
+
+    /// <summary>
+    /// Deletes an invitation (only if status is Cancelled)
+    /// </summary>
+    /// <param name="id">Invitation ID</param>
+    /// <returns>Success result</returns>
+    [HttpDelete("{id:int}")]
+    [Authorize(Policy = Permissions.Invitation.Delete)]
+    public async Task<IActionResult> DeleteInvitation(int id)
+    {
+        var command = new DeleteInvitationCommand
+        {
+            Id = id,
+            DeletedBy = GetCurrentUserId() ?? throw new UnauthorizedAccessException("User must be authenticated")
+        };
+
+        try
+        {
+            var result = await _mediator.Send(command);
+            return SuccessResponse(result, "Invitation deleted successfully");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequestResponse(ex.Message);
+        }
     }
 
     /// <summary>

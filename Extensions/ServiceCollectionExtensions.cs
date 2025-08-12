@@ -10,6 +10,8 @@ using VisitorManagementSystem.Api.Application.Services.Auth;
 using VisitorManagementSystem.Api.Application.Services.Email;
 using VisitorManagementSystem.Api.Application.Services.QrCode;
 using VisitorManagementSystem.Api.Application.Services.Pdf;
+using VisitorManagementSystem.Api.Application.Services.Csv;
+using VisitorManagementSystem.Api.Application.Services.Xlsx;
 using VisitorManagementSystem.Api.Application.Services.Users;
 using VisitorManagementSystem.Api.Application.Services.Visitors;
 using VisitorManagementSystem.Api.Application.Services;
@@ -20,6 +22,15 @@ using VisitorManagementSystem.Api.Domain.Interfaces.Services;
 using VisitorManagementSystem.Api.Infrastructure.Data;
 using VisitorManagementSystem.Api.Infrastructure.Data.Repositories;
 using VisitorManagementSystem.Api.Middleware;
+using VisitorManagementSystem.Api.Application.Services.Configuration;
+using VisitorManagementSystem.Api.Infrastructure.Utilities;
+using Microsoft.AspNetCore.Authorization;
+using VisitorManagementSystem.Api.Infrastructure.Security.Authorization;
+using VisitorManagementSystem.Api.Infrastructure.Security.Encryption;
+using Microsoft.AspNetCore.DataProtection;
+using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.RateLimiting;
 
 namespace VisitorManagementSystem.Api.Extensions;
 
@@ -39,17 +50,29 @@ public static class ServiceCollectionExtensions
         services.RegisterRepositories();
         services.RegisterExternalServices();
         services.RegisterBackgroundServices();
-        
+        services.RegisterInfrastructureServices();
+        services.RegisterValidators();
+
+        // Configure security
+        services.ConfigureSecurity(configuration);
+        // Configure rate limiting
+        services.ConfigureRateLimiting(configuration);
+        // Configure API behavior
+        services.ConfigureApiOptions();
+
         return services;
     }
 
     /// <summary>
-    /// Registers configuration classes
+    /// Registers configuration services
     /// </summary>
     private static IServiceCollection RegisterConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<SecurityConfiguration>(configuration.GetSection("Security"));
-        
+        // Register the dynamic configuration service
+        services.AddScoped<IDynamicConfigurationService, DynamicConfigurationService>();
+
+        // Note: All other configurations are now stored in database and accessed via IDynamicConfigurationService
+
         return services;
     }
 
@@ -60,9 +83,11 @@ public static class ServiceCollectionExtensions
     {
         // Auth services
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         services.AddScoped<IPasswordService, PasswordService>();
         services.AddScoped<ITwoFactorService, TwoFactorService>();
+        services.AddScoped<IPermissionService, PermissionService>();
 
         // User management services
         services.AddScoped<IUserService, UserService>();
@@ -75,6 +100,111 @@ public static class ServiceCollectionExtensions
 
         // File upload service
         services.AddScoped<IFileUploadService, FileUploadService>();
+
+        // Utility services
+        services.AddSingleton<DateTimeProvider>();
+        services.AddSingleton<GuidGenerator>();
+
+        // Encryption services
+        services.AddSingleton<IEncryptionService, AESEncryptionService>();
+        services.AddSingleton<IKeyManagementService, KeyManagementService>();
+
+        // Authorization handlers
+        services.AddScoped<IAuthorizationHandler, PermissionHandler>();
+        services.AddScoped<IAuthorizationHandler, RoleHandler>();
+        services.AddSingleton<IAuthorizationPolicyProvider, PolicyProvider>();
+
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers external service implementations
+    /// </summary>
+    private static IServiceCollection RegisterExternalServices(this IServiceCollection services)
+    {
+        // Email services
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+
+        // QR Code service
+        services.AddScoped<IQrCodeService, QrCodeService>();
+
+        // PDF service
+        services.AddScoped<IPdfService, PdfService>();
+
+        // CSV service
+        services.AddScoped<ICsvService, CsvService>();
+
+        // XLSX service  
+        services.AddScoped<IXlsxService, XlsxService>();
+
+        // Other services (will be implemented)
+        services.AddScoped<ISMSService, StubSMSService>();
+        services.AddScoped<IFileStorageService, StubFileStorageService>();
+        services.AddScoped<INotificationService, StubNotificationService>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers background services
+    /// </summary>
+    private static IServiceCollection RegisterBackgroundServices(this IServiceCollection services)
+    {
+        // Token cleanup service
+        services.AddHostedService<TokenCleanupBackgroundService>();
+
+        // Audit cleanup service  
+        services.AddHostedService<AuditCleanupBackgroundService>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers validators
+    /// </summary>
+    private static IServiceCollection RegisterValidators(this IServiceCollection services)
+    {
+        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.SuppressModelStateInvalidFilter = true; // Handle validation manually
+        });
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers infrastructure services
+    /// </summary>
+    private static IServiceCollection RegisterInfrastructureServices(this IServiceCollection services)
+    {
+        // HTTP client services
+        services.AddHttpClient();
+
+        // In-memory cache
+        services.AddMemoryCache();
+
+        // —— SESSION: backing store + registration ——
+        services.AddDistributedMemoryCache();
+        services.AddSession(options =>
+        {
+            options.IdleTimeout = TimeSpan.FromMinutes(30);
+            options.Cookie.HttpOnly = true;
+            options.Cookie.IsEssential = true;
+        });
+
+        // Distributed cache (Redis)
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = Environment.GetEnvironmentVariable("REDIS_CONNECTION") ?? "localhost:6379";
+        });
+        //services.AddDistributedMemoryCache();
+        // Data protection
+        services.AddDataProtection()
+            .SetApplicationName("VisitorManagementSystem")
+            .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
 
         return services;
     }
@@ -90,29 +220,14 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IInvitationRepository, InvitationRepository>();
         services.AddScoped<IVisitorRepository, VisitorRepository>();
-
-        return services;
-    }
-
-    /// <summary>
-    /// Registers external service implementations
-    /// </summary>
-    private static IServiceCollection RegisterExternalServices(this IServiceCollection services)
-    {
-        // Email services
-        services.AddScoped<IEmailService, EmailService>();
-        services.AddScoped<IEmailTemplateService, EmailTemplateService>();
-        
-        // QR Code service
-        services.AddScoped<IQrCodeService, QrCodeService>();
-        
-        // PDF service
-        services.AddScoped<IPdfService, PdfService>();
-        
-        // Other services (will be implemented)
-        services.AddScoped<ISMSService, StubSMSService>();
-        services.AddScoped<IFileStorageService, StubFileStorageService>();
-        services.AddScoped<INotificationService, StubNotificationService>();
+        services.AddScoped<ISystemConfigurationRepository, SystemConfigurationRepository>();
+        services.AddScoped<IConfigurationAuditRepository, ConfigurationAuditRepository>();
+        services.AddScoped(typeof(IGenericRepository<>), typeof(BaseRepository<>));
+        services.AddScoped<IEmergencyContactRepository, EmergencyContactRepository>();
+        services.AddScoped<ILocationRepository, LocationRepository>();
+        services.AddScoped<IVisitorDocumentRepository, VisitorDocumentRepository>();
+        services.AddScoped<IVisitorNoteRepository, VisitorNoteRepository>();
+        services.AddScoped<IVisitPurposeRepository, VisitPurposeRepository>();
 
         return services;
     }
@@ -187,6 +302,153 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>
+    /// Configures security services with default settings
+    /// Security settings are now managed dynamically via database
+    /// </summary>
+    private static IServiceCollection ConfigureSecurity(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Configure password hasher with secure defaults
+        services.Configure<PasswordHasherOptions>(options =>
+        {
+            options.CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3;
+            options.IterationCount = 10000;
+        });
+
+        // Configure anti-forgery with secure defaults
+        services.AddAntiforgery(options =>
+        {
+            options.HeaderName = "X-CSRF-TOKEN";
+            options.Cookie.Name = "__RequestVerificationToken";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SameSite = SameSiteMode.Strict;
+        });
+
+        // Configure HSTS with secure defaults
+        services.AddHsts(options =>
+        {
+            options.MaxAge = TimeSpan.FromDays(365);
+            options.IncludeSubDomains = true;
+            options.Preload = true;
+        });
+
+        return services;
+    }
+
+    /// <summary>
+    /// Configures rate limiting
+    /// </summary>
+    private static IServiceCollection ConfigureRateLimiting(this IServiceCollection services, IConfiguration configuration)
+    {
+        var securityConfig = configuration.GetSection(SecurityConfiguration.SectionName).Get<SecurityConfiguration>()
+            ?? new SecurityConfiguration();
+
+        services.AddRateLimiter(options =>
+        {
+            // Global rate limit
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: partition => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = securityConfig.RateLimiting.GeneralApi.PermitLimit,
+                        Window = securityConfig.RateLimiting.GeneralApi.Window,
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = securityConfig.RateLimiting.GeneralApi.QueueLimit
+                    }));
+
+            // Login endpoint rate limit
+            options.AddPolicy("login", httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: partition => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = securityConfig.RateLimiting.LoginAttempts.PermitLimit,
+                        Window = securityConfig.RateLimiting.LoginAttempts.Window,
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0 // No queuing for login attempts
+                    }));
+
+            // Token refresh rate limit
+            options.AddPolicy("token-refresh", httpContext =>
+                RateLimitPartition.GetTokenBucketLimiter(
+                    partitionKey: httpContext.User.Identity?.Name ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: partition => new TokenBucketRateLimiterOptions
+                    {
+                        TokenLimit = securityConfig.RateLimiting.TokenRefresh.PermitLimit,
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0,
+                        ReplenishmentPeriod = securityConfig.RateLimiting.TokenRefresh.ReplenishmentPeriod,
+                        TokensPerPeriod = 1,
+                        AutoReplenishment = securityConfig.RateLimiting.TokenRefresh.AutoReplenishment
+                    }));
+
+            // Password reset rate limit
+            options.AddPolicy("password-reset", httpContext =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: partition => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = securityConfig.RateLimiting.PasswordReset.PermitLimit,
+                        Window = securityConfig.RateLimiting.PasswordReset.Window,
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0
+                    }));
+
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.OnRejected = async (context, cancellationToken) =>
+            {
+                if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+                {
+                    context.HttpContext.Response.Headers.RetryAfter = retryAfter.TotalSeconds.ToString();
+                }
+
+                context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                await context.HttpContext.Response.WriteAsync("Rate limit exceeded. Please try again later.", cancellationToken);
+            };
+        });
+
+        return services;
+    }
+
+    /// <summary>
+    /// Configures API options
+    /// </summary>
+    private static IServiceCollection ConfigureApiOptions(this IServiceCollection services)
+    {
+        services.Configure<ApiBehaviorOptions>(options =>
+        {
+            // Customize model state validation responses
+            options.InvalidModelStateResponseFactory = context =>
+            {
+                var errors = context.ModelState
+                    .Where(e => e.Value?.Errors.Count > 0)
+                    .SelectMany(e => e.Value!.Errors.Select(er => er.ErrorMessage))
+                    .ToList();
+
+                var response = new
+                {
+                    success = false,
+                    message = "Validation failed",
+                    errors = errors,
+                    timestamp = DateTime.UtcNow
+                };
+
+                return new BadRequestObjectResult(response);
+            };
+        });
+
+        // Configure JSON options
+        services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+            options.SerializerOptions.WriteIndented = false;
+            options.SerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+        });
+
+        return services;
+    }
     /// <summary>
     /// Configures response compression
     /// </summary>
@@ -278,19 +540,6 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    /// <summary>
-    /// Registers background services
-    /// </summary>
-    private static IServiceCollection RegisterBackgroundServices(this IServiceCollection services)
-    {
-        // Token cleanup service
-        services.AddHostedService<TokenCleanupBackgroundService>();
-
-        // Audit cleanup service  
-        services.AddHostedService<AuditCleanupBackgroundService>();
-
-        return services;
-    }
 }
 
 // Stub service implementations (to be replaced with actual implementations)

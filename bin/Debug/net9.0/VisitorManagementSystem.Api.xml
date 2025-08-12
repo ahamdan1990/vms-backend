@@ -414,6 +414,16 @@
             Handler for create invitation command
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Invitations.DeleteInvitationCommand">
+            <summary>
+            Command for deleting an invitation (only if status is Cancelled)
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Invitations.DeleteInvitationCommandHandler">
+            <summary>
+            Handler for delete invitation command
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Commands.Invitations.SubmitInvitationCommand">
             <summary>
             Command to submit an invitation for approval
@@ -6803,6 +6813,188 @@
             Configuration validation result
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Csv.CsvService">
+            <summary>
+            CSV service implementation for invitation workflows
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.GenerateInvitationTemplateAsync(System.Boolean,System.Threading.CancellationToken)">
+            <summary>
+            Generates a blank CSV template for manual invitation creation with reference sheets
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.GetActiveHostsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Gets active hosts from the database for reference data
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.GetRecentVisitorsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Gets recent visitors from the database for reference data
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.CreateMainTemplateCSV(System.IO.Compression.ZipArchive,System.Boolean)">
+            <summary>
+            Creates the main invitation template CSV in the archive
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.CreateHostsReferenceCSV(System.IO.Compression.ZipArchive,System.Collections.Generic.List{VisitorManagementSystem.Api.Application.DTOs.Users.UserListDto})">
+            <summary>
+            Creates the hosts reference CSV in the archive
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.CreateVisitorsReferenceCSV(System.IO.Compression.ZipArchive,System.Collections.Generic.List{VisitorManagementSystem.Api.Application.DTOs.Visitors.VisitorListDto})">
+            <summary>
+            Creates the visitors reference CSV in the archive
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.CreateInstructionsCSV(System.IO.Compression.ZipArchive,System.Boolean)">
+            <summary>
+            Creates the instructions CSV in the archive
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.GenerateEnhancedTemplateRows(System.Boolean)">
+            <summary>
+            Generates enhanced template rows with reference to IDs
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.ParseFilledInvitationAsync(System.IO.Stream,System.Threading.CancellationToken)">
+            <summary>
+            Parses a filled CSV invitation file
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.GenerateFilledInvitationCsvAsync(VisitorManagementSystem.Api.Domain.Entities.Invitation,System.Threading.CancellationToken)">
+            <summary>
+            Generates a filled invitation CSV for an existing invitation
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.ValidateCsvStructureAsync(System.IO.Stream,System.Threading.CancellationToken)">
+            <summary>
+            Validates CSV structure and required fields
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.GenerateFilledRows(VisitorManagementSystem.Api.Domain.Entities.Invitation)">
+            <summary>
+            Generates filled rows for an existing invitation
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.ParseHostSection(System.Collections.Generic.List{VisitorManagementSystem.Api.Application.Services.Csv.CsvInvitationRow},VisitorManagementSystem.Api.Application.Services.Pdf.ParsedInvitationData)">
+            <summary>
+            Parses host section from CSV records
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.ParseVisitorSections(System.Collections.Generic.List{VisitorManagementSystem.Api.Application.Services.Csv.CsvInvitationRow},VisitorManagementSystem.Api.Application.Services.Pdf.ParsedInvitationData)">
+            <summary>
+            Parses visitor sections from CSV records
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.ParseMeetingSection(System.Collections.Generic.List{VisitorManagementSystem.Api.Application.Services.Csv.CsvInvitationRow},VisitorManagementSystem.Api.Application.Services.Pdf.ParsedInvitationData)">
+            <summary>
+            Parses meeting section from CSV records
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.ValidateParsedData(VisitorManagementSystem.Api.Application.Services.Pdf.ParsedInvitationData)">
+            <summary>
+            Validates parsed invitation data
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.GetFieldValue(System.Collections.Generic.List{VisitorManagementSystem.Api.Application.Services.Csv.CsvInvitationRow},System.String)">
+            <summary>
+            Gets field value from CSV records
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.ParseBooleanField(System.String)">
+            <summary>
+            Parses boolean field from string
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvService.GetCsvConfiguration">
+            <summary>
+            Gets CSV configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Csv.CsvInvitationRow">
+            <summary>
+            CSV invitation row model
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Csv.ICsvService">
+            <summary>
+            CSV service interface for invitation workflows
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.ICsvService.GenerateInvitationTemplateAsync(System.Boolean,System.Threading.CancellationToken)">
+            <summary>
+            Generates a blank CSV template for manual invitation creation
+            </summary>
+            <param name="includeMultipleVisitors">Whether to include rows for multiple visitors</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>CSV template as byte array</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.ICsvService.ParseFilledInvitationAsync(System.IO.Stream,System.Threading.CancellationToken)">
+            <summary>
+            Parses a filled CSV invitation file
+            </summary>
+            <param name="csvStream">CSV stream to parse</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Parsed invitation data</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.ICsvService.GenerateFilledInvitationCsvAsync(VisitorManagementSystem.Api.Domain.Entities.Invitation,System.Threading.CancellationToken)">
+            <summary>
+            Generates a filled invitation CSV for an existing invitation
+            </summary>
+            <param name="invitation">Invitation entity</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Filled CSV as byte array</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.ICsvService.ValidateCsvStructureAsync(System.IO.Stream,System.Threading.CancellationToken)">
+            <summary>
+            Validates CSV structure and required fields
+            </summary>
+            <param name="csvStream">CSV stream to validate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Validation result</returns>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Csv.CsvValidationResult">
+            <summary>
+            CSV validation result
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Services.Csv.CsvValidationResult.IsValid">
+            <summary>
+            Whether the CSV is valid
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Services.Csv.CsvValidationResult.Errors">
+            <summary>
+            Validation errors
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Services.Csv.CsvValidationResult.RowCount">
+            <summary>
+            Number of rows found
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Services.Csv.CsvValidationResult.ColumnHeaders">
+            <summary>
+            List of found column headers
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Services.Csv.CsvValidationResult.VisitorRowCount">
+            <summary>
+            Number of visitor rows detected
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvValidationResult.Success(System.Int32,System.Collections.Generic.List{System.String},System.Int32)">
+            <summary>
+            Creates a successful validation result
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Csv.CsvValidationResult.Failure(System.Collections.Generic.List{System.String})">
+            <summary>
+            Creates a failed validation result
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Services.Email.EmailAttachment">
             <summary>
             Email attachment model
@@ -6887,6 +7079,35 @@
             Email service implementation using MailKit
             </summary>
         </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.EmailService.GetEmailConfigurationAsync(System.Threading.CancellationToken)">
+            <summary>
+            Gets email configuration with caching
+            </summary>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Populated EmailConfiguration object</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.EmailService.LoadEmailConfigurationFromDatabaseAsync(System.Threading.CancellationToken)">
+            <summary>
+            Loads all email configuration from database and populates EmailConfiguration object
+            </summary>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Populated EmailConfiguration object</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.EmailService.InvalidateConfigurationCache">
+            <summary>
+            Invalidates email configuration cache (call this when email settings are updated)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.EmailService.GetConfigValue``1(System.Collections.Generic.Dictionary{System.String,System.Object},System.String,``0)">
+            <summary>
+            Helper method to safely get configuration values with type conversion
+            </summary>
+            <typeparam name="T">Target type</typeparam>
+            <param name="configs">Configuration dictionary</param>
+            <param name="key">Configuration key</param>
+            <param name="defaultValue">Default value if not found or conversion fails</param>
+            <returns>Converted value or default</returns>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService">
             <summary>
             Email template service interface
@@ -6929,9 +7150,35 @@
             <param name="temporaryPassword">Temporary password</param>
             <returns>Email content</returns>
         </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService.GenerateCsvInvitationTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.User,System.String)">
+            <summary>
+            Generates CSV invitation template email
+            </summary>
+            <param name="host">Host user</param>
+            <param name="customMessage">Custom message to include</param>
+            <returns>Email content</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService.GenerateXlsxInvitationTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.User,System.String)">
+            <summary>
+            Generates XLSX invitation template email
+            </summary>
+            <param name="host">Host user</param>
+            <param name="customMessage">Custom message to include</param>
+            <returns>Email content</returns>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Services.Email.EmailTemplateService">
             <summary>
             Email template service implementation
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.EmailTemplateService.GenerateCsvInvitationTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.User,System.String)">
+            <summary>
+            Generates CSV invitation template email
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.EmailTemplateService.GenerateXlsxInvitationTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.User,System.String)">
+            <summary>
+            Generates XLSX invitation template email
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Services.Email.IEmailService">
@@ -6968,10 +7215,11 @@
             <param name="cancellationToken">Cancellation token</param>
             <returns>Task</returns>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailService.ValidateConfigurationAsync">
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailService.ValidateConfigurationAsync(System.Threading.CancellationToken)">
             <summary>
             Validates email configuration
             </summary>
+            <param name="cancellationToken">Cancellation token</param>
             <returns>True if configuration is valid</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailService.TestConnectionAsync(System.Threading.CancellationToken)">
@@ -6983,9 +7231,14 @@
         </member>
         <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailService.ValidateConnectionAsync">
             <summary>
-            Validates the email connection and configuration
+            Validates the email connection and configuration (synchronous wrapper)
             </summary>
             <returns>True if connection is valid</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailService.InvalidateConfigurationCache">
+            <summary>
+            Invalidates email configuration cache (call this when email settings are updated)
+            </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Services.FileUploadService">
             <summary>
@@ -7195,6 +7448,16 @@
         <member name="T:VisitorManagementSystem.Api.Application.Services.Pdf.ParsedVisitorData">
             <summary>
             Parsed visitor data
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Services.Pdf.ParsedVisitorData.IsExistingVisitor">
+            <summary>
+            Indicates if this is an existing visitor from the system
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Services.Pdf.ParsedVisitorData.ExistingVisitorId">
+            <summary>
+            The ID of the existing visitor (if IsExistingVisitor is true)
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Services.Pdf.ParsedEmergencyContact">
@@ -7959,6 +8222,243 @@
             Service for visitor business logic
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Xlsx.IXlsxService">
+            <summary>
+            XLSX service interface for invitation workflows with dropdown support
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.IXlsxService.GenerateInvitationTemplateAsync(System.Boolean,System.Threading.CancellationToken)">
+            <summary>
+            Generates a blank XLSX template with dropdowns for manual invitation creation
+            </summary>
+            <param name="includeMultipleVisitors">Whether to include rows for multiple visitors</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>XLSX template as byte array</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.IXlsxService.ParseFilledInvitationAsync(System.IO.Stream,System.Threading.CancellationToken)">
+            <summary>
+            Parses a filled XLSX invitation file
+            </summary>
+            <param name="xlsxStream">XLSX stream to parse</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Parsed invitation data</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.IXlsxService.GenerateFilledInvitationXlsxAsync(VisitorManagementSystem.Api.Domain.Entities.Invitation,System.Threading.CancellationToken)">
+            <summary>
+            Generates a filled invitation XLSX for an existing invitation
+            </summary>
+            <param name="invitation">Invitation entity</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Filled XLSX as byte array</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.IXlsxService.ValidateXlsxStructureAsync(System.IO.Stream,System.Threading.CancellationToken)">
+            <summary>
+            Validates XLSX structure and required fields
+            </summary>
+            <param name="xlsxStream">XLSX stream to validate</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Validation result</returns>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxValidationResult">
+            <summary>
+            XLSX validation result
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxValidationResult.IsValid">
+            <summary>
+            Whether the XLSX is valid
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxValidationResult.Errors">
+            <summary>
+            Validation errors
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxValidationResult.DataRowCount">
+            <summary>
+            Number of data rows found
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxValidationResult.WorksheetNames">
+            <summary>
+            List of found worksheets
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxValidationResult.VisitorRowCount">
+            <summary>
+            Number of visitor rows detected
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxValidationResult.HasRequiredWorksheets">
+            <summary>
+            Whether required worksheets exist
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxValidationResult.Success(System.Int32,System.Collections.Generic.List{System.String},System.Int32,System.Boolean)">
+            <summary>
+            Creates a successful validation result
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxValidationResult.Failure(System.Collections.Generic.List{System.String})">
+            <summary>
+            Creates a failed validation result
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService">
+            <summary>
+            XLSX service implementation for invitation workflows with dropdown support
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.GenerateInvitationTemplateAsync(System.Boolean,System.Threading.CancellationToken)">
+            <summary>
+            Generates a blank XLSX template with dropdowns for manual invitation creation
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.GetActiveHostsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Gets active hosts from the database for dropdown population
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.GetRecentVisitorsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Gets recent visitors from the database for dropdown population
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.CreateInstructionsWorksheet(OfficeOpenXml.ExcelPackage)">
+            <summary>
+            Creates the instructions worksheet with usage guide
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.CreateMainDataWorksheet(OfficeOpenXml.ExcelPackage,System.Boolean)">
+            <summary>
+            Creates the main data entry worksheet with structured input fields
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.CreateHostSection(OfficeOpenXml.ExcelWorksheet,System.Int32)">
+            <summary>
+            Creates the host selection section
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.CreateMeetingSection(OfficeOpenXml.ExcelWorksheet,System.Int32)">
+            <summary>
+            Creates the meeting details section
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.CreateVisitorsSection(OfficeOpenXml.ExcelWorksheet,System.Int32,System.Int32)">
+            <summary>
+            Creates the visitors section with support for multiple visitors
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.CreateHostsReferenceWorksheet(OfficeOpenXml.ExcelPackage,System.Collections.Generic.List{VisitorManagementSystem.Api.Application.DTOs.Users.UserListDto})">
+            <summary>
+            Creates the hosts reference worksheet (hidden from users)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.CreateVisitorsReferenceWorksheet(OfficeOpenXml.ExcelPackage,System.Collections.Generic.List{VisitorManagementSystem.Api.Application.DTOs.Visitors.VisitorListDto})">
+            <summary>
+            Creates the visitors reference worksheet (hidden from users)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.CreateMetadataWorksheet(OfficeOpenXml.ExcelPackage,System.Boolean)">
+            <summary>
+            Creates the metadata worksheet with template information
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.ConfigureDropdownsAndValidation(OfficeOpenXml.ExcelPackage,System.Collections.Generic.List{VisitorManagementSystem.Api.Application.DTOs.Users.UserListDto},System.Collections.Generic.List{VisitorManagementSystem.Api.Application.DTOs.Visitors.VisitorListDto},System.Boolean)">
+            <summary>
+            Configures dropdowns and data validation for the main worksheet
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.FindFieldRow(OfficeOpenXml.ExcelWorksheet,System.String,System.Int32)">
+            <summary>
+            Finds the row number for a specific field in the worksheet
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.ConfigureYesNoDropdowns(OfficeOpenXml.ExcelWorksheet)">
+            <summary>
+            Configures Yes/No dropdowns for boolean fields
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.ConfigureDateValidation(OfficeOpenXml.ExcelWorksheet)">
+            <summary>
+            Configures date validation for date/time fields
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.ParseFilledInvitationAsync(System.IO.Stream,System.Threading.CancellationToken)">
+            <summary>
+            Parses a filled XLSX invitation file
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.ParseHostInformation(OfficeOpenXml.ExcelWorksheet,VisitorManagementSystem.Api.Application.Services.Pdf.ParsedInvitationData,OfficeOpenXml.ExcelPackage,System.Threading.CancellationToken)">
+            <summary>
+            Parses host information from the XLSX file
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.ParseHostFromDropdownValue(System.String,OfficeOpenXml.ExcelPackage)">
+            <summary>
+            Parses host information from dropdown value format
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.ParseMeetingInformation(OfficeOpenXml.ExcelWorksheet,VisitorManagementSystem.Api.Application.Services.Pdf.ParsedInvitationData)">
+            <summary>
+            Parses meeting information from the XLSX file
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.GetFieldValue(OfficeOpenXml.ExcelWorksheet,System.String)">
+            <summary>
+            Gets field value from worksheet by field name
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.ParseBooleanField(System.String)">
+            <summary>
+            Parses boolean field from string value
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.ParseVisitorInformation(OfficeOpenXml.ExcelWorksheet,VisitorManagementSystem.Api.Application.Services.Pdf.ParsedInvitationData,OfficeOpenXml.ExcelPackage,System.Threading.CancellationToken)">
+            <summary>
+            Parses visitor information from the XLSX file
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.GetVisitorFieldValue(OfficeOpenXml.ExcelWorksheet,System.String,System.Int32)">
+            <summary>
+            Gets visitor-specific field value by visitor index
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.ParseVisitorFromDropdownValue(System.String,OfficeOpenXml.ExcelPackage,System.Threading.CancellationToken)">
+            <summary>
+            Parses existing visitor from dropdown value
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.GetWorksheetByName(System.String)">
+            <summary>
+            Gets worksheet by name from the package
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.ValidateParsedData(VisitorManagementSystem.Api.Application.Services.Pdf.ParsedInvitationData)">
+            <summary>
+            Validates the parsed invitation data
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.GenerateFilledInvitationXlsxAsync(VisitorManagementSystem.Api.Domain.Entities.Invitation,System.Threading.CancellationToken)">
+            <summary>
+            Generates a filled invitation XLSX for an existing invitation
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.FillInvitationData(OfficeOpenXml.ExcelPackage,VisitorManagementSystem.Api.Domain.Entities.Invitation)">
+            <summary>
+            Fills the XLSX template with invitation data
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.SetFieldValue(OfficeOpenXml.ExcelWorksheet,System.String,System.String)">
+            <summary>
+            Sets field value in worksheet by field name
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Xlsx.XlsxService.ValidateXlsxStructureAsync(System.IO.Stream,System.Threading.CancellationToken)">
+            <summary>
+            Validates XLSX structure and required fields
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Configuration.EmailConfiguration">
             <summary>
             Email service configuration
@@ -8639,6 +9139,11 @@
             Adds no-cache headers
             </summary>
         </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.SetSecurityHeaders">
+            <summary>
+            Adds security headers to the response.
+            </summary>
+        </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.IsMobileRequest">
             <summary>
             Checks if request is from mobile device
@@ -8657,6 +9162,64 @@
         <member name="M:VisitorManagementSystem.Api.Controllers.BaseController.GetBaseUrl">
             <summary>
             Gets base URL
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.CsvController">
+            <summary>
+            Controller for CSV operations in visitor management
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.CsvController.DownloadInvitationTemplate(System.Boolean)">
+            <summary>
+            Downloads a blank CSV invitation template with reference sheets
+            </summary>
+            <param name="multipleVisitors">Include sections for multiple visitors</param>
+            <returns>ZIP file containing CSV template and reference sheets</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.CsvController.UploadFilledInvitation(Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>
+            Uploads and processes a filled CSV invitation
+            </summary>
+            <param name="csvFile">Filled CSV invitation file</param>
+            <returns>Processing result with created invitation details</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.CsvController.ValidateCsv(Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>
+            Validates CSV structure and required fields
+            </summary>
+            <param name="csvFile">CSV file to validate</param>
+            <returns>Validation result</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.CsvController.SendCsvTemplate(VisitorManagementSystem.Api.Controllers.SendCsvTemplateDto)">
+            <summary>
+            Sends CSV invitation template via email to a host
+            </summary>
+            <param name="emailDto">Email details</param>
+            <returns>Email sending result</returns>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.SendCsvTemplateDto">
+            <summary>
+            DTO for sending CSV template via email
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.SendCsvTemplateDto.HostName">
+            <summary>
+            Host name
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.SendCsvTemplateDto.HostEmail">
+            <summary>
+            Host email address
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.SendCsvTemplateDto.IncludeMultipleVisitors">
+            <summary>
+            Include multiple visitor sections
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.SendCsvTemplateDto.CustomMessage">
+            <summary>
+            Custom message to include in email
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.EmergencyContactsController">
@@ -8807,6 +9370,13 @@
             <param name="id">Invitation ID</param>
             <param name="cancellationDto">Cancellation data</param>
             <returns>Updated invitation</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.InvitationsController.DeleteInvitation(System.Int32)">
+            <summary>
+            Deletes an invitation (only if status is Cancelled)
+            </summary>
+            <param name="id">Invitation ID</param>
+            <returns>Success result</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.InvitationsController.SubmitInvitation(System.Int32)">
             <summary>
@@ -9383,6 +9953,64 @@
             <param name="id">Visit purpose ID</param>
             <param name="hardDelete">Whether to perform hard delete (default: false)</param>
             <returns>Deletion result</returns>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.XlsxController">
+            <summary>
+            Controller for XLSX operations in visitor management with dropdown support
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.XlsxController.DownloadInvitationTemplate(System.Boolean)">
+            <summary>
+            Downloads a blank XLSX invitation template with dropdowns
+            </summary>
+            <param name="multipleVisitors">Include sections for multiple visitors</param>
+            <returns>XLSX template file with embedded dropdowns</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.XlsxController.UploadFilledInvitation(Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>
+            Uploads and processes a filled XLSX invitation with dropdown selections
+            </summary>
+            <param name="xlsxFile">Filled XLSX invitation file</param>
+            <returns>Processing result with created invitation details</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.XlsxController.ValidateXlsx(Microsoft.AspNetCore.Http.IFormFile)">
+            <summary>
+            Validates XLSX structure and required fields
+            </summary>
+            <param name="xlsxFile">XLSX file to validate</param>
+            <returns>Validation result</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.XlsxController.SendXlsxTemplate(VisitorManagementSystem.Api.Controllers.SendXlsxTemplateDto)">
+            <summary>
+            Sends XLSX invitation template via email to a host
+            </summary>
+            <param name="emailDto">Email details</param>
+            <returns>Email sending result</returns>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.SendXlsxTemplateDto">
+            <summary>
+            DTO for sending XLSX template via email
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.SendXlsxTemplateDto.HostName">
+            <summary>
+            Host name
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.SendXlsxTemplateDto.HostEmail">
+            <summary>
+            Host email address
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.SendXlsxTemplateDto.IncludeMultipleVisitors">
+            <summary>
+            Include multiple visitor sections
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.SendXlsxTemplateDto.CustomMessage">
+            <summary>
+            Custom message to include in email
+            </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Constants.Permissions">
             <summary>
@@ -15776,7 +16404,7 @@
         </member>
         <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.RegisterConfiguration(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
             <summary>
-            Registers configuration classes
+            Registers configuration services
             </summary>
         </member>
         <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.RegisterServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
@@ -15784,14 +16412,29 @@
             Registers core application services
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.RegisterRepositories(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
-            <summary>
-            Registers repository implementations
-            </summary>
-        </member>
         <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.RegisterExternalServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
             <summary>
             Registers external service implementations
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.RegisterBackgroundServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Registers background services
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.RegisterValidators(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Registers validators
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.RegisterInfrastructureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Registers infrastructure services
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.RegisterRepositories(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Registers repository implementations
             </summary>
         </member>
         <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.ConfigureSwagger(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
@@ -15802,6 +16445,22 @@
         <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.ConfigureHealthChecks(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
             <summary>
             Configures health checks for the application
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.ConfigureSecurity(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Configures security services with default settings
+            Security settings are now managed dynamically via database
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.ConfigureRateLimiting(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Configures rate limiting
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.ConfigureApiOptions(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Configures API options
             </summary>
         </member>
         <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.ConfigureCompression(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
@@ -15822,11 +16481,6 @@
         <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.ConfigureIdentity(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
             <summary>
             Configures ASP.NET Core Identity
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Extensions.ServiceCollectionExtensions.RegisterBackgroundServices(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
-            <summary>
-            Registers background services
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext">
@@ -17070,6 +17724,18 @@
             <inheritdoc />
         </member>
         <member name="M:VisitorManagementSystem.Api.Migrations.AddInvitationModule.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Migrations.AddRemainingEntities">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.AddRemainingEntities.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.AddRemainingEntities.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.AddRemainingEntities.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:GetUserByIdQueryHandler">
