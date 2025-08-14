@@ -80,11 +80,11 @@ public class CreateVisitorCommandHandler : IRequestHandler<CreateVisitorCommand,
             if (request.Address != null)
             {
                 visitor.Address = new Address(
-                    request.Address.Street1!,
-                    request.Address.City!,
-                    request.Address.State!,
-                    request.Address.PostalCode!,
-                    request.Address.Country!,
+                    request.Address.Street1,
+                    request.Address.City,
+                    request.Address.State,
+                    request.Address.PostalCode,
+                    request.Address.Country,
                     request.Address.Street2,
                     request.Address.AddressType ?? "Home"
                 );
@@ -135,11 +135,11 @@ public class CreateVisitorCommandHandler : IRequestHandler<CreateVisitorCommand,
                 if (contactDto.Address != null)
                 {
                     contact.Address = new Address(
-                        contactDto.Address.Street1!,
-                        contactDto.Address.City!,
-                        contactDto.Address.State!,
-                        contactDto.Address.PostalCode!,
-                        contactDto.Address.Country!,
+                        contactDto.Address.Street1,
+                        contactDto.Address.City,
+                        contactDto.Address.State,
+                        contactDto.Address.PostalCode,
+                        contactDto.Address.Country,
                         contactDto.Address.Street2,
                         contactDto.Address.AddressType ?? "Home"
                     );

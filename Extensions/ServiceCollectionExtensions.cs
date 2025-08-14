@@ -843,39 +843,64 @@ public class ExternalServicesHealthCheck : IHealthCheck
         _logger = logger;
     }
 
-    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+    public async Task<HealthCheckResult> CheckHealthAsync(
+        HealthCheckContext context,
+        CancellationToken cancellationToken = default)
     {
+        var healthData = new Dictionary<string, object>
+        {
+            { "timestamp", DateTime.UtcNow }
+        };
+
+        var hasError = false;
+
         try
         {
             using var scope = _serviceProvider.CreateScope();
-            
-            var healthData = new Dictionary<string, object>
-            {
-                { "timestamp", DateTime.UtcNow }
-            };
 
             try
             {
-                var emailService = scope.ServiceProvider.GetRequiredService<Application.Services.Email.IEmailService>();
+                var emailService = scope.ServiceProvider
+                    .GetRequiredService<Application.Services.Email.IEmailService>();
+
                 var isEmailHealthy = await emailService.ValidateConnectionAsync();
-                healthData.Add("emailService", isEmailHealthy ? "connected" : "disconnected");
+                healthData["emailService"] = isEmailHealthy ? "connected" : "disconnected";
+
+                if (!isEmailHealthy)
+                    hasError = true;
             }
             catch (Exception emailEx)
             {
-                healthData.Add("emailService", "error");
-                healthData.Add("emailError", emailEx.Message);
+                healthData["emailService"] = "error";
+                healthData["emailError"] = emailEx.Message;
+                hasError = true;
             }
 
-            healthData.Add("qrCodeService", "operational");
-            healthData.Add("pdfService", "operational");
-            healthData.Add("fileUploadService", "operational");
-
-            return HealthCheckResult.Healthy("External services are operational", healthData);
+            // Other service checks
+            healthData["qrCodeService"] = "operational";
+            healthData["pdfService"] = "operational";
+            healthData["fileUploadService"] = "operational";
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "External services health check failed");
-            return HealthCheckResult.Degraded("Some external services may be unavailable", ex);
+            return HealthCheckResult.Unhealthy(
+                description: "External services check failed completely",
+                exception: ex
+            );
         }
+
+        if (hasError)
+        {
+            return HealthCheckResult.Degraded(
+                description: "One or more external services have issues",
+                data: healthData
+            );
+        }
+
+        return HealthCheckResult.Healthy(
+            description: "External services are operational",
+            data: healthData
+        );
     }
 }

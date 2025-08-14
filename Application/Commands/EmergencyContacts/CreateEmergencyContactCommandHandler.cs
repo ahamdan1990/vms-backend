@@ -85,11 +85,11 @@ public class CreateEmergencyContactCommandHandler : IRequestHandler<CreateEmerge
             if (request.Address != null)
             {
                 emergencyContact.Address = new Address(
-                    request.Address.Street1!,
-                    request.Address.City!,
-                    request.Address.State!,
-                    request.Address.PostalCode!,
-                    request.Address.Country!,
+                    request.Address.Street1,
+                    request.Address.City,
+                    request.Address.State,
+                    request.Address.PostalCode,
+                    request.Address.Country,
                     request.Address.Street2,
                     request.Address.AddressType ?? "Home"
                 );

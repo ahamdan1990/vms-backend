@@ -78,12 +78,12 @@ Admin creates Invitation and assigns Staff as host
 System checks capacity + conflicts (warnings only)
 Admin approves immediately or queues for review
 
-Workflow 3: PDF Template Workflow
+Workflow 3: XLSX Template Workflow
 
-Staff downloads PDF Template from system OR Admin emails template
-Staff fills PDF form manually (offline)
+Staff downloads XLSX Template from system OR Admin emails template
+Staff fills XLSX form manually (offline)
 Admin uploads completed PDF to system
-System auto-parses PDF → Creates Visitor Profile + Invitation
+System auto-parses XLSX → Creates Visitor Profile + Invitation
 System checks capacity + conflicts
 Admin reviews auto-created invitation → approves/rejects
 
@@ -244,8 +244,8 @@ CustomFieldValue - Visitor-specific custom field data
 Template - Form templates and configurations
 ValidationRule - Custom validation rules for fields
 FieldDependency - Conditional field dependencies
-PdfUpload - Uploaded PDF document tracking
-PdfParsingResult - OCR/parsing results and validation
+XLSXUpload - Uploaded XLSX document tracking
+XLSXParsingResult - OCR/parsing results and validation
 
 🔔 NOTIFICATIONS & REAL-TIME
 
@@ -390,8 +390,8 @@ CHUNK 3A Backend (75 files) - Check-in/out & Badge Management
 CHUNK 3B Frontend (70 files) - Check-in/out & Badge Management UI
 CHUNK 4A Backend (85 files) - Facial Recognition Integration
 CHUNK 4B Frontend (80 files) - Facial Recognition Integration UI
-CHUNK 5A Backend (95 files) - Bulk Operations & Custom Fields
-CHUNK 5B Frontend (95 files) - Bulk Operations & Custom Fields UI
+CHUNK 5A Backend (95 files) - Custom Fields
+CHUNK 5B Frontend (95 files) - Custom Fields UI
 CHUNK 6A Backend (75 files) - Reports & Analytics Engine
 CHUNK 6B Frontend (85 files) - Reports & Analytics Dashboard
 CHUNK 7A Backend (85 files) - System Administration & Security

@@ -17702,42 +17702,6 @@
         <member name="M:VisitorManagementSystem.Api.Migrations.AddInitialMigration.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
-        <member name="T:VisitorManagementSystem.Api.Migrations.AddVisitorEntity">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.AddVisitorEntity.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.AddVisitorEntity.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.AddVisitorEntity.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Migrations.AddInvitationModule">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.AddInvitationModule.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.AddInvitationModule.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.AddInvitationModule.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Migrations.AddRemainingEntities">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.AddRemainingEntities.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.AddRemainingEntities.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.AddRemainingEntities.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
         <member name="T:GetUserByIdQueryHandler">
             <summary>
             Handler for GetUserByIdQuery

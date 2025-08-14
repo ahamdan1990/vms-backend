@@ -384,6 +384,7 @@ public static class UserRoles
             Permissions.SystemConfig.ViewLogs,
             Permissions.SystemConfig.Backup,
             Permissions.SystemConfig.Restore,
+            Permissions.SystemConfig.Create,
             
             // All reporting
             Permissions.Report.GenerateAll,

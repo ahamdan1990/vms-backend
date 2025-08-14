@@ -177,10 +177,9 @@ public class DynamicConfigurationService : IDynamicConfigurationService
                 }
 
                 var value = ConvertValue<object>(config.Value, config.DataType);
-                if (value != null)
-                {
+
                     result[config.Category][config.Key] = value;
-                }
+                
             }
 
             return result;

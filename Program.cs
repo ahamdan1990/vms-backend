@@ -17,6 +17,8 @@ using Microsoft.AspNetCore.Authorization;
 using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Infrastructure.Security.Authorization;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -260,7 +262,26 @@ app.MapControllers()
     .RequireRateLimiting("login") // Apply login rate limiting to auth endpoints
     .WithOpenApi();
 
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var result = JsonSerializer.Serialize(new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                description = e.Value.Description,
+                data = e.Value.Data
+            }),
+            duration = report.TotalDuration
+        });
+        await context.Response.WriteAsync(result);
+    }
+});
 
 // Initialize database
 using (var scope = app.Services.CreateScope())

@@ -509,8 +509,8 @@ namespace VisitorManagementSystem.Api.Migrations
 
                     b.Property<string>("InvitationNumber")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
