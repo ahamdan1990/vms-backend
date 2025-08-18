@@ -14,6 +14,22 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Repositories;
 public class BaseRepository<TEntity> : IGenericRepository<TEntity> where TEntity : BaseEntity
 {
 
+    public async Task<List<TEntity>> GetAllIncludingAsync(
+    CancellationToken cancellationToken = default,
+    params Expression<Func<TEntity, object>>[] includes
+)
+    {
+        IQueryable<TEntity> query = _dbSet;
+
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+
+        return await query.ToListAsync(cancellationToken);
+    }
+
+
     /// <summary>
     /// Gets queryable for advanced querying (use with caution)
     /// </summary>

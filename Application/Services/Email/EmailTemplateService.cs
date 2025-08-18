@@ -5,65 +5,6 @@ using Microsoft.Extensions.Options;
 namespace VisitorManagementSystem.Api.Application.Services.Email;
 
 /// <summary>
-/// Email template service interface
-/// </summary>
-public interface IEmailTemplateService
-{
-    /// <summary>
-    /// Generates invitation approved email template
-    /// </summary>
-    /// <param name="invitation">Invitation</param>
-    /// <returns>Email content</returns>
-    Task<string> GenerateInvitationApprovedTemplateAsync(Invitation invitation);
-
-    /// <summary>
-    /// Generates password reset email template
-    /// </summary>
-    /// <param name="user">User</param>
-    /// <param name="resetToken">Reset token</param>
-    /// <returns>Email content</returns>
-    Task<string> GeneratePasswordResetTemplateAsync(User user, string resetToken);
-
-    /// <summary>
-    /// Generates PDF invitation template email
-    /// </summary>
-    /// <param name="host">Host user</param>
-    /// <returns>Email content</returns>
-    Task<string> GeneratePdfInvitationTemplateAsync(User host);
-
-    /// <summary>
-    /// Generates visitor check-in notification template
-    /// </summary>
-    /// <param name="invitation">Invitation</param>
-    /// <returns>Email content</returns>
-    Task<string> GenerateVisitorCheckedInTemplateAsync(Invitation invitation);
-
-    /// <summary>
-    /// Generates welcome email template
-    /// </summary>
-    /// <param name="user">User</param>
-    /// <param name="temporaryPassword">Temporary password</param>
-    /// <returns>Email content</returns>
-    Task<string> GenerateWelcomeTemplateAsync(User user, string temporaryPassword);
-
-    /// <summary>
-    /// Generates CSV invitation template email
-    /// </summary>
-    /// <param name="host">Host user</param>
-    /// <param name="customMessage">Custom message to include</param>
-    /// <returns>Email content</returns>
-    Task<string> GenerateCsvInvitationTemplateAsync(User host, string? customMessage = null);
-
-    /// <summary>
-    /// Generates XLSX invitation template email
-    /// </summary>
-    /// <param name="host">Host user</param>
-    /// <param name="customMessage">Custom message to include</param>
-    /// <returns>Email content</returns>
-    Task<string> GenerateXlsxInvitationTemplateAsync(User host, string? customMessage = null);
-}
-
-/// <summary>
 /// Email template service implementation
 /// </summary>
 public class EmailTemplateService : IEmailTemplateService
@@ -75,6 +16,61 @@ public class EmailTemplateService : IEmailTemplateService
     {
         _emailConfig = emailConfig.Value;
         _logger = logger;
+    }
+
+    public string GenerateQrInvitationTemplate(string visitorName, string subject, DateTime visitDate, Location location)
+    {
+        return $@"
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset=""UTF-8"">
+                    <style>
+                        body {{
+                            font-family: Arial, sans-serif;
+                            color: #333;
+                            background-color: #f7f7f7;
+                            padding: 20px;
+                        }}
+                        .container {{
+                            background-color: #fff;
+                            border-radius: 8px;
+                            padding: 20px;
+                            max-width: 600px;
+                            margin: auto;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                        }}
+                        h2 {{
+                            color: #2c3e50;
+                        }}
+                        .details {{
+                            margin-top: 15px;
+                        }}
+                        .footer {{
+                            font-size: 12px;
+                            color: #888;
+                            margin-top: 20px;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div class=""container"">
+                        <h2>Your Visit QR Code</h2>
+                        <p>Dear {visitorName},</p>
+                        <p>Your visit has been scheduled. Please find your QR code attached to this email.</p>
+                        <div class=""details"">
+                            <p><strong>Subject:</strong> {subject}</p>
+                            <p><strong>Date:</strong> {visitDate:dddd, dd MMM yyyy}</p>
+                            <p><strong>Location:</strong> {location}</p>
+                        </div>
+                        <p>Please present this QR code when you arrive at the reception.</p>
+                        <div class=""footer"">
+                            <p>Thank you,<br/>Visitor Management Team</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                ";
     }
 
     public async Task<string> GenerateInvitationApprovedTemplateAsync(Invitation invitation)

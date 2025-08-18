@@ -26,6 +26,13 @@ public class UserListDto
     public string Email { get; set; } = string.Empty;
 
     /// <summary>
+    /// Enhanced phone fields
+    /// </summary>
+    public string? PhoneNumber { get; set; }
+    public string? PhoneCountryCode { get; set; }
+    public string? PhoneType { get; set; }
+
+    /// <summary>
     /// User role
     /// </summary>
     public string Role { get; set; } = string.Empty;

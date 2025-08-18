@@ -193,17 +193,18 @@ public class EmailService : IEmailService
             client.Timeout = (int)TimeSpan.FromSeconds(config.TimeoutSeconds).TotalMilliseconds;
 
             // Connect to SMTP server
-            await client.ConnectAsync(config.SmtpHost, config.SmtpPort,
-                config.EnableSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.None,
-                cancellationToken);
+            SecureSocketOptions socketOption;
 
-            // Authenticate if credentials provided
+            if (config.SmtpPort == 465)
+                socketOption = SecureSocketOptions.SslOnConnect;
+            else
+                socketOption = SecureSocketOptions.StartTls;
+
+            await client.ConnectAsync(config.SmtpHost, config.SmtpPort, socketOption, cancellationToken);
+
             if (!string.IsNullOrEmpty(config.Username))
-            {
                 await client.AuthenticateAsync(config.Username, config.Password, cancellationToken);
-            }
 
-            // Send the message
             await client.SendAsync(mimeMessage, cancellationToken);
             await client.DisconnectAsync(true, cancellationToken);
 

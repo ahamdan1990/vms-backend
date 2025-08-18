@@ -33,31 +33,25 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
     {
         try
         {
-            _logger.LogDebug("Processing create invitation command for visitor: {VisitorId} by host: {HostId}", 
+            _logger.LogDebug("Processing create invitation command for visitor: {VisitorId} by host: {HostId}",
                 request.VisitorId, request.HostId);
 
             // Validate visitor exists
             var visitor = await _unitOfWork.Visitors.GetByIdAsync(request.VisitorId, cancellationToken);
             if (visitor == null)
-            {
                 throw new InvalidOperationException($"Visitor with ID '{request.VisitorId}' not found.");
-            }
 
             // Validate host exists
             var host = await _unitOfWork.Users.GetByIdAsync(request.HostId, cancellationToken);
             if (host == null)
-            {
                 throw new InvalidOperationException($"Host with ID '{request.HostId}' not found.");
-            }
 
             // Validate visit purpose if specified
             if (request.VisitPurposeId.HasValue)
             {
                 var visitPurpose = await _unitOfWork.VisitPurposes.GetByIdAsync(request.VisitPurposeId.Value, cancellationToken);
                 if (visitPurpose == null)
-                {
                     throw new InvalidOperationException($"Visit purpose with ID '{request.VisitPurposeId}' not found.");
-                }
             }
 
             // Validate location if specified
@@ -65,9 +59,7 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
             {
                 var location = await _unitOfWork.Locations.GetByIdAsync(request.LocationId.Value, cancellationToken);
                 if (location == null)
-                {
                     throw new InvalidOperationException($"Location with ID '{request.LocationId}' not found.");
-                }
             }
 
             // Apply template if specified
@@ -76,10 +68,19 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
             {
                 template = await _unitOfWork.Repository<InvitationTemplate>().GetByIdAsync(request.TemplateId.Value, cancellationToken);
                 if (template == null)
-                {
                     throw new InvalidOperationException($"Template with ID '{request.TemplateId}' not found.");
-                }
             }
+
+            // Ensure mandatory fields with fallback or error
+            var subject = request.Subject?.Trim() ?? throw new InvalidOperationException("Subject is required.");
+
+            var visitPurposeId = request.VisitPurposeId ?? template?.DefaultVisitPurposeId
+                                 ?? throw new InvalidOperationException("VisitPurposeId is required.");
+            var locationId = request.LocationId ?? template?.DefaultLocationId
+                             ?? throw new InvalidOperationException("LocationId is required.");
+
+            var specialInstructions = request.SpecialInstructions?.Trim()
+                                      ?? template?.DefaultSpecialInstructions;
 
             // Generate unique invitation number
             var invitationNumber = await GenerateUniqueInvitationNumberAsync(cancellationToken);
@@ -90,15 +91,15 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                 InvitationNumber = invitationNumber,
                 VisitorId = request.VisitorId,
                 HostId = request.HostId,
-                VisitPurposeId = request.VisitPurposeId ?? template?.DefaultVisitPurposeId,
-                LocationId = request.LocationId ?? template?.DefaultLocationId,
+                VisitPurposeId = visitPurposeId,
+                LocationId = locationId,
                 Type = request.Type,
-                Subject = request.Subject.Trim(),
+                Subject = subject,
                 Message = request.Message?.Trim(),
                 ScheduledStartTime = request.ScheduledStartTime,
                 ScheduledEndTime = request.ScheduledEndTime,
                 ExpectedVisitorCount = request.ExpectedVisitorCount,
-                SpecialInstructions = request.SpecialInstructions?.Trim() ?? template?.DefaultSpecialInstructions,
+                SpecialInstructions = specialInstructions,
                 RequiresApproval = request.RequiresApproval || (template?.DefaultRequiresApproval ?? true),
                 RequiresEscort = request.RequiresEscort || (template?.DefaultRequiresEscort ?? false),
                 RequiresBadge = request.RequiresBadge || (template?.DefaultRequiresBadge ?? true),
@@ -108,15 +109,16 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
             };
 
             // Generate QR code for the invitation
+            if (_qrCodeService == null)
+                throw new InvalidOperationException("QR code service is not initialized.");
+
             var qrCodeData = await _qrCodeService.GenerateInvitationQrDataAsync(invitation, cancellationToken);
-            invitation.UpdateQrCode(qrCodeData);
+            invitation.UpdateQrCode(qrCodeData ?? throw new InvalidOperationException("QR code generation failed."));
 
             // Validate invitation data
             var validationErrors = invitation.ValidateInvitation();
             if (validationErrors.Any())
-            {
                 throw new InvalidOperationException($"Invitation validation failed: {string.Join(", ", validationErrors)}");
-            }
 
             // Set audit information
             invitation.SetCreatedBy(request.CreatedBy);
@@ -132,7 +134,7 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                 var invitationEvent = InvitationEvent.Create(
                     invitation.Id,
                     InvitationEventTypes.Created,
-                    $"Invitation created by {host.FullName}",
+                    $"Invitation created by {host.FullName ?? "Unknown"}",
                     request.CreatedBy
                 );
                 await _unitOfWork.Repository<InvitationEvent>().AddAsync(invitationEvent, cancellationToken);
@@ -141,7 +143,7 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                 if (request.SubmitForApproval)
                 {
                     invitation.Submit(request.CreatedBy);
-                    
+
                     var submitEvent = InvitationEvent.Create(
                         invitation.Id,
                         InvitationEventTypes.Submitted,
@@ -165,8 +167,12 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                     invitation.Id, invitation.InvitationNumber, request.VisitorId, request.CreatedBy);
 
                 // Load complete invitation with navigation properties
-                var completeInvitation = await _unitOfWork.Invitations.GetByIdAsync(invitation.Id, cancellationToken);
-                var invitationDto = _mapper.Map<InvitationDto>(completeInvitation);
+                var completeInvitation = await _unitOfWork.Invitations.GetByIdAsync(invitation.Id, cancellationToken)
+                                         ?? throw new InvalidOperationException("Failed to retrieve created invitation.");
+
+                var invitationDto = _mapper.Map<InvitationDto>(completeInvitation)
+                                     ?? throw new InvalidOperationException("Mapping to InvitationDto failed.");
+
                 return invitationDto;
             }
             catch

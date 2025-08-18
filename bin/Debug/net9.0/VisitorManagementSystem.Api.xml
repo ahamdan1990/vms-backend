@@ -804,16 +804,6 @@
             Handler for AdminPasswordResetCommand
             </summary>
         </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Commands.Users.CreateUserCommand">
-            <summary>
-            Command for creating a new user
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Commands.Users.CreateUserCommandHandler">
-            <summary>
-            Handler for create user command
-            </summary>
-        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Commands.Users.DeactivateUserCommand">
             <summary>
             Command for deactivating a user account
@@ -2121,7 +2111,12 @@
         </member>
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Invitations.CreateInvitationDto.VisitorId">
             <summary>
-            Visitor ID this invitation is for
+            Visitor ID this invitation is for (for single visitor invitations)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Invitations.CreateInvitationDto.VisitorIds">
+            <summary>
+            Multiple visitor IDs for group invitations
             </summary>
         </member>
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Invitations.CreateInvitationDto.VisitPurposeId">
@@ -2202,6 +2197,11 @@
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Invitations.CreateInvitationDto.SubmitForApproval">
             <summary>
             Whether to submit immediately for approval
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.DTOs.Invitations.CreateInvitationDto.Validate(System.ComponentModel.DataAnnotations.ValidationContext)">
+            <summary>
+            Custom validation logic
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Invitations.ApproveInvitationDto">
@@ -3074,144 +3074,9 @@
             Admin password reset request DTO
             </summary>
         </member>
-        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.CreateUserDto">
-            <summary>
-            Create user request data transfer object
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.CreateUserDto.FirstName">
-            <summary>
-            User first name
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.CreateUserDto.LastName">
-            <summary>
-            User last name
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.CreateUserDto.Email">
-            <summary>
-            User email address
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.CreateUserDto.PhoneNumber">
-            <summary>
-            User phone number
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.CreateUserDto.Role">
-            <summary>
-            User role
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.CreateUserDto.Department">
-            <summary>
-            User department
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.CreateUserDto.JobTitle">
-            <summary>
-            User job title
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.CreateUserDto.EmployeeId">
-            <summary>
-            Employee ID
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.CreateUserDto.TimeZone">
-            <summary>
-            User timezone
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.CreateUserDto.Language">
-            <summary>
-            User language preference
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.CreateUserDto.Theme">
-            <summary>
-            User theme preference
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.CreateUserDto.MustChangePassword">
-            <summary>
-            Whether user must change password on first login
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.CreateUserDto.SendWelcomeEmail">
-            <summary>
-            Send welcome email to user
-            </summary>
-        </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.RoleDto">
             <summary>
             Role DTO
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserDto">
-            <summary>
-            Update user request data transfer object
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserDto.FirstName">
-            <summary>
-            User first name
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserDto.LastName">
-            <summary>
-            User last name
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserDto.Email">
-            <summary>
-            User email address
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserDto.PhoneNumber">
-            <summary>
-            User phone number
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserDto.Role">
-            <summary>
-            User role
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserDto.Status">
-            <summary>
-            User status
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserDto.Department">
-            <summary>
-            User department
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserDto.JobTitle">
-            <summary>
-            User job title
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserDto.EmployeeId">
-            <summary>
-            Employee ID
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserDto.TimeZone">
-            <summary>
-            User timezone
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserDto.Language">
-            <summary>
-            User language preference
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserDto.Theme">
-            <summary>
-            User theme preference
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserPreferencesDto">
@@ -3261,6 +3126,16 @@
             User phone number
             </summary>
         </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.PhoneCountryCode">
+            <summary>
+            Phone country code
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.PhoneType">
+            <summary>
+            Phone type (Mobile, Landline, etc.)
+            </summary>
+        </member>
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.Department">
             <summary>
             User department
@@ -3274,6 +3149,11 @@
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.EmployeeId">
             <summary>
             Employee ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.AddressType">
+            <summary>
+            Address type (Home, Work, etc.)
             </summary>
         </member>
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.Street1">
@@ -3306,6 +3186,16 @@
             Country name
             </summary>
         </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.Latitude">
+            <summary>
+            Latitude coordinate
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UpdateUserProfileDto.Longitude">
+            <summary>
+            Longitude coordinate
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.UserActivationDto">
             <summary>
             User activation request DTO
@@ -3314,121 +3204,6 @@
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.UserDeactivationDto">
             <summary>
             User deactivation request DTO
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto">
-            <summary>
-            User data transfer object
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.Id">
-            <summary>
-            User ID
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.FirstName">
-            <summary>
-            User first name
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.LastName">
-            <summary>
-            User last name
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.FullName">
-            <summary>
-            User full name
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.Email">
-            <summary>
-            User email address
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.PhoneNumber">
-            <summary>
-            User phone number
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.Role">
-            <summary>
-            User role
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.Status">
-            <summary>
-            User status
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.Department">
-            <summary>
-            User department
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.JobTitle">
-            <summary>
-            User job title
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.EmployeeId">
-            <summary>
-            Employee ID
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.ProfilePhotoUrl">
-            <summary>
-            Profile photo URL
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.TimeZone">
-            <summary>
-            User timezone
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.Language">
-            <summary>
-            User language preference
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.Theme">
-            <summary>
-            User theme preference
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.LastLoginDate">
-            <summary>
-            Last login date
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.CreatedOn">
-            <summary>
-            User creation date
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.IsActive">
-            <summary>
-            Whether user is active
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.IsLockedOut">
-            <summary>
-            Whether user is locked out
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.FailedLoginAttempts">
-            <summary>
-            Failed login attempts
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.MustChangePassword">
-            <summary>
-            Whether user must change password
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserDto.PasswordChangedDate">
-            <summary>
-            Password changed date
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.UserListDto">
@@ -3449,6 +3224,11 @@
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserListDto.Email">
             <summary>
             User email address
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserListDto.PhoneNumber">
+            <summary>
+            Enhanced phone fields
             </summary>
         </member>
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserListDto.Role">
@@ -3516,6 +3296,16 @@
             User phone number
             </summary>
         </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.PhoneCountryCode">
+            <summary>
+            Phone country code
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.PhoneType">
+            <summary>
+            Phone type (Mobile, Landline, etc.)
+            </summary>
+        </member>
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.TimeZone">
             <summary>
             User timezone
@@ -3551,6 +3341,11 @@
             Job title
             </summary>
         </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.AddressType">
+            <summary>
+            Address type (Home, Work, etc.)
+            </summary>
+        </member>
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.Street1">
             <summary>
             Street address line 1
@@ -3579,6 +3374,16 @@
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.Country">
             <summary>
             Country
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.Latitude">
+            <summary>
+            Latitude coordinate
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Users.UserProfileDto.Longitude">
+            <summary>
+            Longitude coordinate
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.UserUnlockDto">
@@ -7108,64 +6913,6 @@
             <param name="defaultValue">Default value if not found or conversion fails</param>
             <returns>Converted value or default</returns>
         </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService">
-            <summary>
-            Email template service interface
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService.GenerateInvitationApprovedTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.Invitation)">
-            <summary>
-            Generates invitation approved email template
-            </summary>
-            <param name="invitation">Invitation</param>
-            <returns>Email content</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService.GeneratePasswordResetTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.User,System.String)">
-            <summary>
-            Generates password reset email template
-            </summary>
-            <param name="user">User</param>
-            <param name="resetToken">Reset token</param>
-            <returns>Email content</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService.GeneratePdfInvitationTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.User)">
-            <summary>
-            Generates PDF invitation template email
-            </summary>
-            <param name="host">Host user</param>
-            <returns>Email content</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService.GenerateVisitorCheckedInTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.Invitation)">
-            <summary>
-            Generates visitor check-in notification template
-            </summary>
-            <param name="invitation">Invitation</param>
-            <returns>Email content</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService.GenerateWelcomeTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.User,System.String)">
-            <summary>
-            Generates welcome email template
-            </summary>
-            <param name="user">User</param>
-            <param name="temporaryPassword">Temporary password</param>
-            <returns>Email content</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService.GenerateCsvInvitationTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.User,System.String)">
-            <summary>
-            Generates CSV invitation template email
-            </summary>
-            <param name="host">Host user</param>
-            <param name="customMessage">Custom message to include</param>
-            <returns>Email content</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService.GenerateXlsxInvitationTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.User,System.String)">
-            <summary>
-            Generates XLSX invitation template email
-            </summary>
-            <param name="host">Host user</param>
-            <param name="customMessage">Custom message to include</param>
-            <returns>Email content</returns>
-        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Services.Email.EmailTemplateService">
             <summary>
             Email template service implementation
@@ -7239,6 +6986,64 @@
             <summary>
             Invalidates email configuration cache (call this when email settings are updated)
             </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService">
+            <summary>
+            Email template service interface
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService.GenerateInvitationApprovedTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.Invitation)">
+            <summary>
+            Generates invitation approved email template
+            </summary>
+            <param name="invitation">Invitation</param>
+            <returns>Email content</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService.GeneratePasswordResetTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.User,System.String)">
+            <summary>
+            Generates password reset email template
+            </summary>
+            <param name="user">User</param>
+            <param name="resetToken">Reset token</param>
+            <returns>Email content</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService.GeneratePdfInvitationTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.User)">
+            <summary>
+            Generates PDF invitation template email
+            </summary>
+            <param name="host">Host user</param>
+            <returns>Email content</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService.GenerateVisitorCheckedInTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.Invitation)">
+            <summary>
+            Generates visitor check-in notification template
+            </summary>
+            <param name="invitation">Invitation</param>
+            <returns>Email content</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService.GenerateWelcomeTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.User,System.String)">
+            <summary>
+            Generates welcome email template
+            </summary>
+            <param name="user">User</param>
+            <param name="temporaryPassword">Temporary password</param>
+            <returns>Email content</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService.GenerateCsvInvitationTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.User,System.String)">
+            <summary>
+            Generates CSV invitation template email
+            </summary>
+            <param name="host">Host user</param>
+            <param name="customMessage">Custom message to include</param>
+            <returns>Email content</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailTemplateService.GenerateXlsxInvitationTemplateAsync(VisitorManagementSystem.Api.Domain.Entities.User,System.String)">
+            <summary>
+            Generates XLSX invitation template email
+            </summary>
+            <param name="host">Host user</param>
+            <param name="customMessage">Custom message to include</param>
+            <returns>Email content</returns>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Services.FileUploadService">
             <summary>
@@ -9423,6 +9228,14 @@
             <param name="id">Invitation ID</param>
             <returns>QR code data</returns>
         </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.InvitationsController.SendQrCodeEmail(System.Int32,VisitorManagementSystem.Api.Controllers.SendQrEmailDto)">
+            <summary>
+            Sends QR code to visitor via email
+            </summary>
+            <param name="id">Invitation ID</param>
+            <param name="emailDto">Email sending options</param>
+            <returns>Email sending result</returns>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.CancelInvitationDto">
             <summary>
             Additional DTOs for workflow operations
@@ -9456,6 +9269,26 @@
         <member name="P:VisitorManagementSystem.Api.Controllers.ValidateQrCodeDto.QrData">
             <summary>
             QR code data to validate
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.SendQrEmailDto">
+            <summary>
+            DTO for sending QR code via email
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.SendQrEmailDto.CustomMessage">
+            <summary>
+            Custom message to include in email (optional)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.SendQrEmailDto.IncludeQrImage">
+            <summary>
+            Include QR code as image attachment
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.SendQrEmailDto.AlternativeEmail">
+            <summary>
+            Alternative email address (if different from visitor's email)
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.LocationsController">

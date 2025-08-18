@@ -125,14 +125,35 @@ public class UsersController : BaseController
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Email = request.Email,
+                
+                // Enhanced phone fields
                 PhoneNumber = request.PhoneNumber,
+                PhoneCountryCode = request.PhoneCountryCode,
+                PhoneType = request.PhoneType,
+                
                 Role = targetRole,
                 Department = request.Department,
                 JobTitle = request.JobTitle,
                 EmployeeId = request.EmployeeId,
+                
+                // User preferences
                 TimeZone = request.TimeZone,
                 Language = request.Language,
+                Theme = request.Theme,
+                
+                // Enhanced address fields
+                AddressType = request.AddressType,
+                Street1 = request.Street1,
+                Street2 = request.Street2,
+                City = request.City,
+                State = request.State,
+                PostalCode = request.PostalCode,
+                Country = request.Country,
+                Latitude = request.Latitude,
+                Longitude = request.Longitude,
+                
                 MustChangePassword = request.MustChangePassword,
+                SendWelcomeEmail = request.SendWelcomeEmail,
                 CreatedBy = currentUserId.Value
             };
 
@@ -187,14 +208,34 @@ public class UsersController : BaseController
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Email = request.Email,
+                
+                // Enhanced phone fields
                 PhoneNumber = request.PhoneNumber,
+                PhoneCountryCode = request.PhoneCountryCode,
+                PhoneType = request.PhoneType,
+                
                 Role = targetRole,
                 Status = targetStatus,
                 Department = request.Department,
                 JobTitle = request.JobTitle,
                 EmployeeId = request.EmployeeId,
+                
+                // User preferences
                 TimeZone = request.TimeZone,
                 Language = request.Language,
+                Theme = request.Theme,
+                
+                // Enhanced address fields
+                AddressType = request.AddressType,
+                Street1 = request.Street1,
+                Street2 = request.Street2,
+                City = request.City,
+                State = request.State,
+                PostalCode = request.PostalCode,
+                Country = request.Country,
+                Latitude = request.Latitude,
+                Longitude = request.Longitude,
+                
                 ModifiedBy = currentUserId.Value
             };
 
@@ -514,16 +555,26 @@ public class UsersController : BaseController
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Email = request.Email,
+                
+                // Enhanced phone fields
                 PhoneNumber = request.PhoneNumber,
+                PhoneCountryCode = request.PhoneCountryCode,
+                PhoneType = request.PhoneType,
+                
                 Department = request.Department,
                 JobTitle = request.JobTitle,
                 EmployeeId = request.EmployeeId,
+                
+                // Enhanced address fields
+                AddressType = request.AddressType,
                 Street1 = request.Street1,
                 Street2 = request.Street2,
                 City = request.City,
                 State = request.State,
                 PostalCode = request.PostalCode,
-                Country = request.Country
+                Country = request.Country,
+                Latitude = request.Latitude,
+                Longitude = request.Longitude
             };
 
             var result = await _mediator.Send(command);

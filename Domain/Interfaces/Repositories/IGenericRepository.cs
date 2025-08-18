@@ -403,4 +403,10 @@ public interface IGenericRepository<TEntity> where TEntity : BaseEntity
     /// </summary>
     /// <returns>IQueryable of entities</returns>
     IQueryable<TEntity> GetQueryable();
+
+    Task<List<TEntity>> GetAllIncludingAsync(
+        CancellationToken cancellationToken = default,
+        params Expression<Func<TEntity, object>>[] includes
+    );
+
 }

@@ -69,7 +69,13 @@ public class GetInvitationsQueryHandler : IRequestHandler<GetInvitationsQuery, P
             {
                 // Get all invitations - this would need a new repository method
                 var repository = _unitOfWork.Repository<Invitation>();
-                allInvitations = await repository.GetAllAsync(cancellationToken);
+                allInvitations = await repository.GetAllIncludingAsync(
+                                                                        cancellationToken,
+                                                                        i => i.Visitor,
+                                                                        i => i.Host,
+                                                                        i => i.VisitPurpose,
+                                                                        i => i.Location
+                                                                    );
             }
 
             // Apply additional filters in memory (for complex combinations)

@@ -87,13 +87,22 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResultDt
                 LastName = u.LastName,
                 FullName = u.FullName,
                 Email = u.Email.Value,
+                
+                // Enhanced phone fields
+                PhoneNumber = u.PhoneNumber != null ? u.PhoneNumber.Value : null,
+                PhoneCountryCode = u.PhoneNumber != null ? u.PhoneNumber.CountryCode : null,
+                PhoneType = u.PhoneNumber != null ? u.PhoneNumber.PhoneType : null,
+                
                 Role = u.Role.ToString(),
                 Status = u.Status.ToString(),
                 Department = u.Department,
+                JobTitle = u.JobTitle,
+                EmployeeId = u.EmployeeId,
                 LastLoginDate = u.LastLoginDate,
                 CreatedOn = u.CreatedOn,
                 IsActive = u.Status == UserStatus.Active,
-                IsLockedOut = u.IsCurrentlyLockedOut()
+                IsLockedOut = u.IsCurrentlyLockedOut(),
+                FailedLoginAttempts = u.FailedLoginAttempts
             }).ToList();
 
             var actualTotalCount = filteredUsers.Count();

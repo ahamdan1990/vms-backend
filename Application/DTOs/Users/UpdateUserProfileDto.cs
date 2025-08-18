@@ -37,6 +37,16 @@ public class UpdateUserProfileDto
     public string? PhoneNumber { get; set; }
 
     /// <summary>
+    /// Phone country code
+    /// </summary>
+    public string? PhoneCountryCode { get; set; }
+
+    /// <summary>
+    /// Phone type (Mobile, Landline, etc.)
+    /// </summary>
+    public string? PhoneType { get; set; }
+
+    /// <summary>
     /// User department
     /// </summary>
     [StringLength(100, ErrorMessage = "Department cannot exceed 100 characters")]
@@ -53,6 +63,11 @@ public class UpdateUserProfileDto
     /// </summary>
     [StringLength(50, ErrorMessage = "Employee ID cannot exceed 50 characters")]
     public string? EmployeeId { get; set; }
+
+    /// <summary>
+    /// Address type (Home, Work, etc.)
+    /// </summary>
+    public string? AddressType { get; set; }
 
     /// <summary>
     /// Street address line 1
@@ -89,4 +104,14 @@ public class UpdateUserProfileDto
     /// </summary>
     [StringLength(50, ErrorMessage = "Country cannot exceed 50 characters")]
     public string? Country { get; set; }
+
+    /// <summary>
+    /// Latitude coordinate
+    /// </summary>
+    public double? Latitude { get; set; }
+
+    /// <summary>
+    /// Longitude coordinate
+    /// </summary>
+    public double? Longitude { get; set; }
 }

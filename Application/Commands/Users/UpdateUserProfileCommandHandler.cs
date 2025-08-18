@@ -69,34 +69,37 @@ public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfile
             user.JobTitle = request.JobTitle?.Trim();
             user.EmployeeId = request.EmployeeId?.Trim();
 
-            // Update phone number
+            // Update enhanced phone number
             if (!string.IsNullOrEmpty(request.PhoneNumber))
             {
-                user.PhoneNumber = new PhoneNumber(request.PhoneNumber);
+                var fullPhoneNumber = !string.IsNullOrEmpty(request.PhoneCountryCode)
+                    ? $"+{request.PhoneCountryCode}{request.PhoneNumber}"
+                    : request.PhoneNumber;
+
+                user.PhoneNumber = new PhoneNumber(fullPhoneNumber, request.PhoneCountryCode);
             }
             else
             {
                 user.PhoneNumber = null;
             }
 
-            // Update address if provided
-            if (!string.IsNullOrEmpty(request.Street1) && !string.IsNullOrEmpty(request.City) &&
-                !string.IsNullOrEmpty(request.State) && !string.IsNullOrEmpty(request.PostalCode) &&
-                !string.IsNullOrEmpty(request.Country))
+            // Update enhanced address if provided
+            if (!string.IsNullOrEmpty(request.Street1) || !string.IsNullOrEmpty(request.City))
             {
                 user.Address = new Address(
-                    street1: request.Street1.Trim(),
-                    city: request.City.Trim(),
-                    state: request.State.Trim(),
-                    postalCode: request.PostalCode.Trim(),
-                    country: request.Country.Trim(),
-                    street2: request.Street2?.Trim(),
-                    addressType: "Home"
+                    request.Street1,
+                    request.City,
+                    request.State,
+                    request.PostalCode,
+                    request.Country,
+                    request.Street2,
+                    request.AddressType ?? "Home",
+                    request.Latitude,
+                    request.Longitude
                 );
             }
-            else if (string.IsNullOrEmpty(request.Street1))
+            else
             {
-                // Clear address if street1 is empty
                 user.Address = null;
             }
             // Set audit information

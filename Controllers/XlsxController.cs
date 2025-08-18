@@ -167,7 +167,7 @@ public class XlsxController : BaseController
             var emailContent = await _emailTemplateService.GenerateXlsxInvitationTemplateAsync(hostUser, emailDto.CustomMessage);
 
             // Create attachment
-            var attachment = new Application.Services.Email.EmailAttachment
+            var attachment = new EmailAttachment
             {
                 FileName = emailDto.IncludeMultipleVisitors 
                     ? "invitation-template-multiple-visitors.xlsx" 
@@ -181,7 +181,7 @@ public class XlsxController : BaseController
                 emailDto.HostEmail,
                 "Visitor Invitation Template (Excel Format)",
                 emailContent,
-                new List<Application.Services.Email.EmailAttachment> { attachment });
+                new List<EmailAttachment> { attachment });
 
             return SuccessResponse("XLSX template sent successfully");
         }

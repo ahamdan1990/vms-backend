@@ -1,7 +1,9 @@
-﻿using AutoMapper;
+﻿// Application/Commands/Users/CreateUserCommandHandler.cs
+using AutoMapper;
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Application.Services.Auth;
+using VisitorManagementSystem.Api.Application.Services.Email;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -9,24 +11,27 @@ using VisitorManagementSystem.Api.Domain.ValueObjects;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Users
 {
-    /// <summary>
-    /// Handler for create user command
-    /// </summary>
     public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserDto>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPasswordService _passwordService;
+        private readonly IEmailService _emailService;
+        private readonly IEmailTemplateService _emailTemplateService;
         private readonly IMapper _mapper;
         private readonly ILogger<CreateUserCommandHandler> _logger;
 
         public CreateUserCommandHandler(
             IUnitOfWork unitOfWork,
             IPasswordService passwordService,
+            IEmailService emailService,
+            IEmailTemplateService emailTemplateService,
             IMapper mapper,
             ILogger<CreateUserCommandHandler> logger)
         {
             _unitOfWork = unitOfWork;
             _passwordService = passwordService;
+            _emailService = emailService;
+            _emailTemplateService = emailTemplateService;
             _mapper = mapper;
             _logger = logger;
         }
@@ -84,16 +89,37 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                     EmployeeId = request.EmployeeId?.Trim(),
                     TimeZone = request.TimeZone ?? "UTC",
                     Language = request.Language ?? "en-US",
+                    Theme = request.Theme ?? "light",
                     MustChangePassword = request.MustChangePassword,
                     PasswordChangedDate = DateTime.UtcNow,
                     SecurityStamp = Guid.NewGuid().ToString(),
                     IsActive = true
                 };
 
-                // Set phone number if provided
+                // Set enhanced phone number if provided
                 if (!string.IsNullOrEmpty(request.PhoneNumber))
                 {
-                    user.PhoneNumber = new PhoneNumber(request.PhoneNumber);
+                    var fullPhoneNumber = !string.IsNullOrEmpty(request.PhoneCountryCode)
+                        ? $"+{request.PhoneCountryCode}{request.PhoneNumber}"
+                        : request.PhoneNumber;
+
+                    user.PhoneNumber = new PhoneNumber(fullPhoneNumber, request.PhoneCountryCode);
+                }
+
+                // Set enhanced address if provided
+                if (!string.IsNullOrEmpty(request.Street1) || !string.IsNullOrEmpty(request.City))
+                {
+                    user.Address = new Address(
+                        request.Street1,
+                        request.City,
+                        request.State,
+                        request.PostalCode,
+                        request.Country,
+                        request.Street2,
+                        request.AddressType ?? "Home",
+                        request.Latitude,
+                        request.Longitude
+                    );
                 }
 
                 // Set audit information
@@ -113,16 +139,32 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 _logger.LogInformation("User created successfully: {UserId} ({Email}) by {CreatedBy}",
                     user.Id, user.Email.Value, request.CreatedBy);
 
-                // Map to DTO
+                // Send welcome email with temporary password (SECURE METHOD)
+                if (request.SendWelcomeEmail)
+                {
+                    try
+                    {
+                        var emailTemplate = await _emailTemplateService.GenerateWelcomeTemplateAsync(user, password);
+
+                        await _emailService.SendAsync(
+                            user.Email.Value,
+                            "Welcome to Visitor Management System - Account Created",
+                            emailTemplate,
+                            cancellationToken);
+
+                        _logger.LogInformation("Welcome email sent successfully to: {Email}", user.Email.Value);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send welcome email to: {Email}", user.Email.Value);
+                        // Don't fail user creation if email fails
+                        // This could be handled with a notification system
+                    }
+                }
+
+                // Map to DTO (NO PASSWORD INCLUDED - SECURITY IMPROVEMENT)
                 var userDto = _mapper.Map<UserDto>(user);
 
-                // Add temporary password to response for admin notification
-                // Note: In production, this should be sent via secure channel
-                if (!string.IsNullOrEmpty(request.TemporaryPassword))
-                {
-                    userDto.TemporaryPassword = password; // This should be handled securely
-                }
-                userDto.TemporaryPassword = password;
                 return userDto;
             }
             catch (Exception ex)

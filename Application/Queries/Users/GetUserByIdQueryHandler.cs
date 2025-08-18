@@ -41,7 +41,12 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDet
                 LastName = user.LastName,
                 FullName = user.FullName,
                 Email = user.Email.Value,
+                
+                // Enhanced phone fields
                 PhoneNumber = user.PhoneNumber?.Value,
+                PhoneCountryCode = user.PhoneNumber?.CountryCode,
+                PhoneType = user.PhoneNumber?.PhoneType,
+                
                 Role = user.Role.ToString(),
                 Status = user.Status.ToString(),
                 Department = user.Department,
@@ -51,6 +56,18 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDet
                 TimeZone = user.TimeZone,
                 Language = user.Language,
                 Theme = user.Theme,
+                
+                // Enhanced address fields
+                AddressType = user.Address?.AddressType,
+                Street1 = user.Address?.Street1,
+                Street2 = user.Address?.Street2,
+                City = user.Address?.City,
+                State = user.Address?.State,
+                PostalCode = user.Address?.PostalCode,
+                Country = user.Address?.Country,
+                Latitude = user.Address?.Latitude,
+                Longitude = user.Address?.Longitude,
+                
                 LastLoginDate = user.LastLoginDate,
                 CreatedOn = user.CreatedOn,
                 IsActive = user.Status == UserStatus.Active,

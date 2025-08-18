@@ -5,7 +5,7 @@ namespace VisitorManagementSystem.Api.Application.DTOs.Users;
 /// <summary>
 /// User profile data transfer object
 /// </summary>
-public class UserProfileDto
+public class UserProfileDto : UserDto
 {
     /// <summary>
     /// User ID
@@ -39,6 +39,16 @@ public class UserProfileDto
     /// </summary>
     [Phone(ErrorMessage = "Please enter a valid phone number")]
     public string? PhoneNumber { get; set; }
+
+    /// <summary>
+    /// Phone country code
+    /// </summary>
+    public string? PhoneCountryCode { get; set; }
+
+    /// <summary>
+    /// Phone type (Mobile, Landline, etc.)
+    /// </summary>
+    public string? PhoneType { get; set; }
 
     /// <summary>
     /// User timezone
@@ -78,7 +88,12 @@ public class UserProfileDto
     /// </summary>
     public string? JobTitle { get; set; }
 
-    // Address fields
+    // Enhanced address fields
+    /// <summary>
+    /// Address type (Home, Work, etc.)
+    /// </summary>
+    public string? AddressType { get; set; }
+
     /// <summary>
     /// Street address line 1
     /// </summary>
@@ -108,4 +123,14 @@ public class UserProfileDto
     /// Country
     /// </summary>
     public string? Country { get; set; }
+
+    /// <summary>
+    /// Latitude coordinate
+    /// </summary>
+    public double? Latitude { get; set; }
+
+    /// <summary>
+    /// Longitude coordinate
+    /// </summary>
+    public double? Longitude { get; set; }
 }

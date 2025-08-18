@@ -21,11 +21,13 @@ public class InvitationsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly IQrCodeService _qrCodeService;
+    private readonly ILogger<InvitationsController> _logger;
 
-    public InvitationsController(IMediator mediator, IQrCodeService qrCodeService)
+    public InvitationsController(IMediator mediator, IQrCodeService qrCodeService, ILogger<InvitationsController> logger)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _qrCodeService = qrCodeService ?? throw new ArgumentNullException(nameof(qrCodeService));
+        _logger = logger;
     }
 
     /// <summary>
@@ -50,7 +52,7 @@ public class InvitationsController : BaseController
     /// <param name="sortDirection">Sort direction</param>
     /// <returns>Paged list of invitations</returns>
     [HttpGet]
-    [Authorize(Policy = Permissions.Invitation.Read)]
+    [Authorize(Policy = Permissions.Invitation.ReadOwn)]
     public async Task<IActionResult> GetInvitations(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
@@ -103,7 +105,7 @@ public class InvitationsController : BaseController
     /// <param name="includeApprovals">Include approvals workflow</param>
     /// <returns>Invitation details</returns>
     [HttpGet("{id:int}")]
-    [Authorize(Policy = Permissions.Invitation.Read)]
+    [Authorize(Policy = Permissions.Invitation.ReadOwn)]
     public async Task<IActionResult> GetInvitation(
         int id,
         [FromQuery] bool includeDeleted = false,
@@ -137,9 +139,48 @@ public class InvitationsController : BaseController
     [Authorize(Policy = Permissions.Invitation.Create)]
     public async Task<IActionResult> CreateInvitation([FromBody] CreateInvitationDto createDto)
     {
+        var correlationId = HttpContext.TraceIdentifier;
+        
+        // Enhanced logging for debugging
+        _logger.LogDebug("CreateInvitation called. CorrelationId: {CorrelationId}", correlationId);
+        _logger.LogDebug("Request Content-Type: {ContentType}", HttpContext.Request.ContentType);
+        
+        if (createDto == null)
+        {
+            _logger.LogWarning("CreateInvitationDto is null. CorrelationId: {CorrelationId}", correlationId);
+            return BadRequest("Request body cannot be null.");
+        }
+
+        // Log the received DTO for debugging
+        _logger.LogDebug("Received CreateInvitationDto: {@CreateDto}. CorrelationId: {CorrelationId}", createDto, correlationId);
+        // Determine the visitor ID based on invitation type
+        int visitorId;
+        if (createDto.Type == InvitationType.Single)
+        {
+            if (!createDto.VisitorId.HasValue)
+            {
+                return BadRequest("VisitorId is required for single visitor invitations.");
+            }
+            visitorId = createDto.VisitorId.Value;
+        }
+        else if (createDto.Type == InvitationType.Group)
+        {
+            if (createDto.VisitorIds == null || !createDto.VisitorIds.Any())
+            {
+                return BadRequest("At least one visitor ID is required for group invitations.");
+            }
+            // For now, use the first visitor as the primary visitor
+            // TODO: Enhance system to support multiple visitors properly
+            visitorId = createDto.VisitorIds.First();
+        }
+        else
+        {
+            return BadRequest("Invalid invitation type specified.");
+        }
+
         var command = new CreateInvitationCommand
         {
-            VisitorId = createDto.VisitorId,
+            VisitorId = visitorId,
             HostId = GetCurrentUserId() ?? throw new UnauthorizedAccessException("User must be authenticated"),
             VisitPurposeId = createDto.VisitPurposeId,
             LocationId = createDto.LocationId,
@@ -269,7 +310,7 @@ public class InvitationsController : BaseController
     /// <param name="includeDeleted">Include deleted invitations</param>
     /// <returns>Statistics</returns>
     [HttpGet("statistics")]
-    [Authorize(Policy = Permissions.Invitation.Read)]
+    [Authorize(Policy = Permissions.Invitation.ReadOwn)]
     public async Task<IActionResult> GetInvitationStatistics(
         [FromQuery] DateTime? startDate = null,
         [FromQuery] DateTime? endDate = null,
@@ -294,7 +335,7 @@ public class InvitationsController : BaseController
     /// <param name="id">Invitation ID</param>
     /// <returns>QR code data</returns>
     [HttpGet("{id:int}/qr-code")]
-    [Authorize(Policy = Permissions.Invitation.Read)]
+    [Authorize(Policy = Permissions.Invitation.ReadOwn)]
     public async Task<IActionResult> GetInvitationQrCode(int id)
     {
         var query = new GetInvitationByIdQuery { Id = id };
@@ -527,6 +568,27 @@ public class InvitationsController : BaseController
             return BadRequestResponse($"Failed to get QR code data: {ex.Message}");
         }
     }
+
+    /// <summary>
+    /// Sends QR code to visitor via email
+    /// </summary>
+    /// <param name="id">Invitation ID</param>
+    /// <param name="emailDto">Email sending options</param>
+    /// <returns>Email sending result</returns>
+    [HttpPost("{id:int}/send-qr-email")]
+    [Authorize(Policy = Permissions.Invitation.Read)]
+    public async Task<IActionResult> SendQrCodeEmail(int id, [FromBody] SendQrEmailDto emailDto)
+    {
+        try { 
+            var response = await _mediator.Send(new SendQrEmailCommand(id, emailDto));
+
+            return SuccessResponse("QR code sent successfully to visitor's email");
+        }
+        catch (Exception ex)
+        {
+            return BadRequestResponse($"Failed to send QR code: {ex.Message}");
+        }
+    }
 }
 
 /// <summary>
@@ -574,4 +636,27 @@ public class ValidateQrCodeDto
     /// </summary>
     [Required]
     public string QrData { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// DTO for sending QR code via email
+/// </summary>
+public class SendQrEmailDto
+{
+    /// <summary>
+    /// Custom message to include in email (optional)
+    /// </summary>
+    [MaxLength(500)]
+    public string? CustomMessage { get; set; }
+
+    /// <summary>
+    /// Include QR code as image attachment
+    /// </summary>
+    public bool IncludeQrImage { get; set; } = true;
+
+    /// <summary>
+    /// Alternative email address (if different from visitor's email)
+    /// </summary>
+    [EmailAddress]
+    public string? AlternativeEmail { get; set; }
 }

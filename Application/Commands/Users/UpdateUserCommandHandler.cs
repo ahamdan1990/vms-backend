@@ -75,14 +75,38 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 user.JobTitle = request.JobTitle?.Trim();
                 user.EmployeeId = request.EmployeeId?.Trim();
 
-                // Update phone number
+                // Update enhanced phone number
                 if (!string.IsNullOrEmpty(request.PhoneNumber))
                 {
-                    user.PhoneNumber = new PhoneNumber(request.PhoneNumber);
+                    var fullPhoneNumber = !string.IsNullOrEmpty(request.PhoneCountryCode)
+                        ? $"+{request.PhoneCountryCode}{request.PhoneNumber}"
+                        : request.PhoneNumber;
+
+                    user.PhoneNumber = new PhoneNumber(fullPhoneNumber, request.PhoneCountryCode);
                 }
                 else
                 {
                     user.PhoneNumber = null;
+                }
+
+                // Update enhanced address
+                if (!string.IsNullOrEmpty(request.Street1) || !string.IsNullOrEmpty(request.City))
+                {
+                    user.Address = new Address(
+                        request.Street1,
+                        request.City,
+                        request.State,
+                        request.PostalCode,
+                        request.Country,
+                        request.Street2,
+                        request.AddressType ?? "Home",
+                        request.Latitude,
+                        request.Longitude
+                    );
+                }
+                else
+                {
+                    user.Address = null;
                 }
 
                 // Update preferences
