@@ -4,6 +4,26 @@
         <name>VisitorManagementSystem.Api</name>
     </assembly>
     <members>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Audit.ExportAuditLogsCommand">
+            <summary>
+            Command to export audit logs
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Audit.MarkAuditLogsReviewedCommand">
+            <summary>
+            Command to mark audit logs as reviewed
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Audit.ExportAuditLogsCommandHandler">
+            <summary>
+            Handler for exporting audit logs to various formats
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Audit.MarkAuditLogsReviewedCommandHandler">
+            <summary>
+            Handler for marking audit logs as reviewed
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Commands.Auth.ChangePasswordCommand">
             <summary>
             Command for changing user password
@@ -82,6 +102,46 @@
         <member name="T:VisitorManagementSystem.Api.Application.Commands.Auth.ResetPasswordCommandHandler">
             <summary>
             Handler for reset password command
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Configuration.CreateConfigurationCommand">
+            <summary>
+            Command to create a new configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Configuration.UpdateConfigurationCommand">
+            <summary>
+            Command to update a configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Configuration.DeleteConfigurationCommand">
+            <summary>
+            Command to delete a configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Configuration.InvalidateConfigurationCacheCommand">
+            <summary>
+            Command to invalidate configuration cache
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Configuration.CreateConfigurationCommandHandler">
+            <summary>
+            Handler for creating a new configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Configuration.DeleteConfigurationCommandHandler">
+            <summary>
+            Handler for deleting a configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Configuration.InvalidateConfigurationCacheCommandHandler">
+            <summary>
+            Handler for invalidating configuration cache
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Configuration.UpdateConfigurationCommandHandler">
+            <summary>
+            Handler for updating a configuration
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Commands.EmergencyContacts.CreateEmergencyContactCommand">
@@ -784,6 +844,36 @@
             Handler for update location command
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.TimeSlots.CreateTimeSlotCommandHandler">
+            <summary>
+            Handler for creating a time slot
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.TimeSlots.DeleteTimeSlotCommandHandler">
+            <summary>
+            Handler for deleting a time slot
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.TimeSlots.CreateTimeSlotCommand">
+            <summary>
+            Command to create a new time slot
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.TimeSlots.UpdateTimeSlotCommand">
+            <summary>
+            Command to update an existing time slot
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.TimeSlots.DeleteTimeSlotCommand">
+            <summary>
+            Command to delete a time slot
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.TimeSlots.UpdateTimeSlotCommandHandler">
+            <summary>
+            Handler for updating a time slot
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Commands.Users.ActivateUserCommand">
             <summary>
             Command for activating a user account
@@ -1385,6 +1475,31 @@
             Handler for update visit purpose command
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Audit.AuditLogDto">
+            <summary>
+            DTO for audit log data
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Audit.AuditLogDetailDto">
+            <summary>
+            DTO for detailed audit log data
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Audit.MarkAuditLogsReviewedDto">
+            <summary>
+            DTO for marking audit logs as reviewed
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Audit.ExportAuditLogsResultDto">
+            <summary>
+            DTO for export audit logs result
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Audit.MarkReviewedResultDto">
+            <summary>
+            DTO for mark reviewed result
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Auth.AuthenticationResult">
             <summary>
             Authentication result data transfer object
@@ -1950,6 +2065,41 @@
             Whether this is the current session
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacitySettingsDto">
+            <summary>
+            DTO for capacity settings
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.CreateCapacitySettingsDto">
+            <summary>
+            DTO for creating capacity settings
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.UpdateCapacitySettingsDto">
+            <summary>
+            DTO for updating capacity settings
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.OccupancyDto">
+            <summary>
+            DTO for occupancy information
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityStatisticsDto">
+            <summary>
+            DTO for capacity statistics
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.DailyCapacityDto">
+            <summary>
+            DTO for daily capacity breakdown
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityTrendsDto">
+            <summary>
+            DTO for capacity trends
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationRequestDto">
             <summary>
             DTO for capacity validation request
@@ -2028,6 +2178,31 @@
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationResponseDto.AlternativeSlots">
             <summary>
             Alternative time slots if current is unavailable
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.LocationCapacityOverviewDto">
+            <summary>
+            DTO for location capacity overview
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.TimeSlotCapacityDto">
+            <summary>
+            DTO for time slot capacity within a location
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.AlternativeTimeSlotDto">
+            <summary>
+            DTO for alternative time slot suggestion
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityTrendDataPointDto">
+            <summary>
+            DTO for individual trend data point
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityTrendSummaryDto">
+            <summary>
+            DTO for capacity trend summary
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.TimeSlotDto">
@@ -2138,36 +2313,6 @@
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CreateTimeSlotDto.DisplayOrder">
             <summary>
             Display order
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.AlternativeTimeSlotDto">
-            <summary>
-            DTO for alternative time slot suggestions
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.AlternativeTimeSlotDto.TimeSlotId">
-            <summary>
-            Time slot ID
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.AlternativeTimeSlotDto.Name">
-            <summary>
-            Time slot name
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.AlternativeTimeSlotDto.DateTime">
-            <summary>
-            Suggested date and time
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.AlternativeTimeSlotDto.AvailableCapacity">
-            <summary>
-            Available capacity
-            </summary>
-        </member>
-        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.AlternativeTimeSlotDto.OccupancyPercentage">
-            <summary>
-            Occupancy percentage
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Common.AddressDto">
@@ -2322,6 +2467,51 @@
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Common.SelectListItemDto.Data">
             <summary>
             Additional data
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Configuration.ConfigurationDto">
+            <summary>
+            DTO for configuration data
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Configuration.CreateConfigurationDto">
+            <summary>
+            DTO for creating a configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Configuration.ConfigurationHistoryDto">
+            <summary>
+            DTO for configuration history entry
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Configuration.UpdateConfigurationDto">
+            <summary>
+            DTO for updating a configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Configuration.DeleteConfigurationDto">
+            <summary>
+            DTO for deleting a configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Configuration.ValidateConfigurationDto">
+            <summary>
+            DTO for validating a configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Configuration.ConfigurationValidationResultDto">
+            <summary>
+            DTO for configuration validation result
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Configuration.ConfigurationUpdateResultDto">
+            <summary>
+            DTO for configuration update result
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Configuration.CacheInvalidationResultDto">
+            <summary>
+            DTO for cache invalidation result
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Invitations.CreateInvitationDto">
@@ -3287,6 +3477,26 @@
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Locations.LocationDto.ChildLocations">
             <summary>
             Child locations
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.TimeSlots.CreateTimeSlotDto">
+            <summary>
+            DTO for creating a time slot
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.TimeSlots.UpdateTimeSlotDto">
+            <summary>
+            DTO for updating a time slot
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.TimeSlots.AvailableTimeSlotDto">
+            <summary>
+            DTO for available time slot
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.TimeSlots.TimeSlotDto">
+            <summary>
+            DTO for time slot data
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Users.AdminPasswordResetDto">
@@ -5126,6 +5336,66 @@
             AutoMapper profile for visit purpose mappings
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Audit.GetAuditLogsQuery">
+            <summary>
+            Query to get audit logs with filtering and pagination
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Audit.GetAuditLogByIdQuery">
+            <summary>
+            Query to get a specific audit log by ID
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Audit.GetUserActivityQuery">
+            <summary>
+            Query to get user activity logs
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Audit.GetSystemEventsQuery">
+            <summary>
+            Query to get system events logs
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Audit.GetSecurityEventsQuery">
+            <summary>
+            Query to get security events logs
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Audit.SearchAuditLogsQuery">
+            <summary>
+            Query to search audit logs
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Audit.GetAuditLogByIdQueryHandler">
+            <summary>
+            Handler for getting a specific audit log by ID
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Audit.GetAuditLogsQueryHandler">
+            <summary>
+            Handler for getting audit logs with filtering and pagination
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Audit.GetSecurityEventsQueryHandler">
+            <summary>
+            Handler for getting security events
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Audit.GetSystemEventsQueryHandler">
+            <summary>
+            Handler for getting system events
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Audit.GetUserActivityQueryHandler">
+            <summary>
+            Handler for getting user activity logs
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Audit.SearchAuditLogsQueryHandler">
+            <summary>
+            Handler for searching audit logs
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Queries.Auth.GetCurrentUserQuery">
             <summary>
             Query for getting current user information
@@ -5156,6 +5426,46 @@
         <member name="T:VisitorManagementSystem.Api.Application.Queries.Auth.ValidateTokenQueryHandler">
             <summary>
             Handler for validate token query
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Capacity.GetCapacityOverviewQuery">
+            <summary>
+            Query to get capacity overview for multiple locations
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Capacity.GetCapacityUtilizationTrendsQuery">
+            <summary>
+            Query to get capacity utilization trends
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Capacity.GetAlternativeTimeSlotsQuery">
+            <summary>
+            Query to get alternative time slots
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Capacity.GetCapacitySettingsQuery">
+            <summary>
+            Query to get capacity settings for all locations
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Capacity.GetLocationCapacitySettingsQuery">
+            <summary>
+            Query to get capacity settings for a specific location
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Capacity.GetOccupancyQuery">
+            <summary>
+            Query to get current occupancy
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Capacity.GetCapacityStatisticsQuery">
+            <summary>
+            Query to get capacity statistics
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Capacity.GetCapacityTrendsQuery">
+            <summary>
+            Query to get capacity trends
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Queries.Capacity.ValidateCapacityQuery">
@@ -5196,6 +5506,66 @@
         <member name="T:VisitorManagementSystem.Api.Application.Queries.Capacity.ValidateCapacityQueryHandler">
             <summary>
             Handler for capacity validation query
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Configuration.GetAllConfigurationsQuery">
+            <summary>
+            Query to get all configurations grouped by category
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Configuration.GetCategoryConfigurationQuery">
+            <summary>
+            Query to get configurations for a specific category
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Configuration.GetConfigurationQuery">
+            <summary>
+            Query to get a specific configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Configuration.GetConfigurationHistoryQuery">
+            <summary>
+            Query to get configuration history
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Configuration.SearchConfigurationsQuery">
+            <summary>
+            Query to search configurations
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Configuration.ValidateConfigurationQuery">
+            <summary>
+            Query to validate a configuration value
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Configuration.GetAllConfigurationsQueryHandler">
+            <summary>
+            Handler for getting all configurations grouped by category
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Configuration.GetCategoryConfigurationQueryHandler">
+            <summary>
+            Handler for getting configurations by category
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Configuration.GetConfigurationHistoryQueryHandler">
+            <summary>
+            Handler for getting configuration history
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Configuration.GetConfigurationQueryHandler">
+            <summary>
+            Handler for getting a specific configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Configuration.SearchConfigurationsQueryHandler">
+            <summary>
+            Handler for searching configurations
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Configuration.ValidateConfigurationQueryHandler">
+            <summary>
+            Handler for validating configuration values
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Queries.EmergencyContacts.GetEmergencyContactByIdQuery">
@@ -5456,6 +5826,36 @@
         <member name="T:VisitorManagementSystem.Api.Application.Queries.Locations.GetLocationsQueryHandler">
             <summary>
             Handler for get locations query
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.TimeSlots.GetAvailableTimeSlotsQueryHandler">
+            <summary>
+            Handler for getting available time slots for a specific date
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.TimeSlots.GetTimeSlotByIdQueryHandler">
+            <summary>
+            Handler for getting a time slot by ID
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.TimeSlots.GetTimeSlotsQueryHandler">
+            <summary>
+            Handler for getting paginated time slots
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.TimeSlots.GetTimeSlotsQuery">
+            <summary>
+            Query to get time slots with filtering and pagination
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.TimeSlots.GetTimeSlotByIdQuery">
+            <summary>
+            Query to get a time slot by ID
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.TimeSlots.GetAvailableTimeSlotsQuery">
+            <summary>
+            Query to get available time slots for a specific date
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Queries.Users.GetAvailableRolesQuery">
@@ -6965,6 +7365,12 @@
             Invalidates cache for specific category or all configurations
             </summary>
             <param name="category">Category to invalidate, null for all</param>
+            <returns>Task</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Configuration.IDynamicConfigurationService.InvalidateAllCacheAsync">
+            <summary>
+            Invalidates all configuration caches
+            </summary>
             <returns>Task</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Application.Services.Configuration.IDynamicConfigurationService.GetConfigurationMetadataAsync(System.String,System.String,System.Threading.CancellationToken)">
@@ -8940,89 +9346,44 @@
             Admin controller for managing audit logs and system activity tracking
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.GetAuditLogs(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String,System.String,System.Boolean,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.GetAuditLogs(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String,System.String,System.Boolean)">
             <summary>
             Gets paginated audit logs with filtering and sorting
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.GetAuditLog(System.Int32,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.GetAuditLog(System.Int32)">
             <summary>
             Gets a specific audit log entry
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.GetUserActivity(System.Int32,System.Int32,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.GetUserActivity(System.Int32,System.Int32,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)">
             <summary>
             Gets user activity audit logs
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.GetSystemEvents(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.GetSystemEvents(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
             Gets system events audit logs
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.GetSecurityEvents(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.GetSecurityEvents(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)">
             <summary>
             Gets security events audit logs
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.SearchAuditLogs(System.String,System.Int32,System.Int32,System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.SearchAuditLogs(System.String,System.Int32,System.Int32,System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
             <summary>
             Searches audit logs
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.ExportAuditLogs(System.String,System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Boolean,System.Int32,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.ExportAuditLogs(System.String,System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Boolean,System.Int32)">
             <summary>
             Exports audit logs to CSV or Excel
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.GetCurrentUserId">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.MarkAuditLogsAsReviewed(VisitorManagementSystem.Api.Application.DTOs.Audit.MarkAuditLogsReviewedDto)">
             <summary>
-            Gets current user ID from claims
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.BuildAuditLogPredicate(System.String,System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)">
-            <summary>
-            Builds predicate for general audit log filtering
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.BuildUserActivityPredicate(VisitorManagementSystem.Api.Domain.Enums.EventType[],System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)">
-            <summary>
-            Builds predicate for user activity filtering
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.BuildSystemEventsPredicate(VisitorManagementSystem.Api.Domain.Enums.EventType[],System.String,System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
-            <summary>
-            Builds predicate for system events filtering
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.BuildSecurityEventsPredicate(System.Collections.Generic.List{VisitorManagementSystem.Api.Domain.Enums.EventType},System.String,System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.String)">
-            <summary>
-            Builds predicate for security events filtering
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.BuildSearchPredicate(System.String,System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
-            <summary>
-            Builds predicate for search filtering
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.BuildExportPredicate(System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
-            <summary>
-            Builds predicate for export filtering
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.GetEventTypesForCategory(System.String)">
-            <summary>
-            Gets event types for a specific category
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.GenerateCsvContent(System.Collections.Generic.List{VisitorManagementSystem.Api.Domain.Entities.AuditLog},System.Boolean)">
-            <summary>
-            Generates CSV content from audit log data
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.AuditController.EscapeCsvValue(System.Object)">
-            <summary>
-            Escapes CSV values to handle commas and quotes
+            Marks audit logs as reviewed
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController">
@@ -9030,47 +9391,47 @@
             Admin controller for managing system configurations
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetAllConfigurations(System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetAllConfigurations">
             <summary>
             Gets all configurations grouped by category
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetCategoryConfiguration(System.String,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetCategoryConfiguration(System.String)">
             <summary>
             Gets all configurations for a specific category
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetConfiguration(System.String,System.String,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetConfiguration(System.String,System.String)">
             <summary>
             Gets a specific configuration value
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.UpdateConfiguration(System.String,System.String,VisitorManagementSystem.Api.Controllers.Admin.UpdateConfigurationRequest,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.UpdateConfiguration(System.String,System.String,VisitorManagementSystem.Api.Application.DTOs.Configuration.UpdateConfigurationDto)">
             <summary>
             Updates a configuration value
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.CreateConfiguration(VisitorManagementSystem.Api.Controllers.Admin.CreateConfigurationRequest,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.CreateConfiguration(VisitorManagementSystem.Api.Application.DTOs.Configuration.CreateConfigurationDto)">
             <summary>
             Creates a new configuration
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.DeleteConfiguration(System.String,System.String,VisitorManagementSystem.Api.Controllers.Admin.DeleteConfigurationRequest,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.DeleteConfiguration(System.String,System.String,VisitorManagementSystem.Api.Application.DTOs.Configuration.DeleteConfigurationDto)">
             <summary>
             Deletes a configuration
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetConfigurationHistory(System.String,System.String,System.Threading.CancellationToken,System.Int32)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetConfigurationHistory(System.String,System.String,System.Int32)">
             <summary>
             Gets configuration history/audit trail
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.SearchConfigurations(System.String,System.String,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.SearchConfigurations(System.String,System.String)">
             <summary>
             Searches configurations
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.ValidateConfiguration(System.String,System.String,VisitorManagementSystem.Api.Controllers.Admin.ValidateConfigurationRequest,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.ValidateConfiguration(System.String,System.String,VisitorManagementSystem.Api.Application.DTOs.Configuration.ValidateConfigurationDto)">
             <summary>
             Validates a configuration value without saving
             </summary>
@@ -9078,31 +9439,6 @@
         <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.InvalidateCache(System.String)">
             <summary>
             Invalidates configuration cache
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetCurrentUserId">
-            <summary>
-            Gets current user ID from claims
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Controllers.Admin.UpdateConfigurationRequest">
-            <summary>
-            Request DTO for updating configuration
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Controllers.Admin.CreateConfigurationRequest">
-            <summary>
-            Request DTO for creating configuration
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Controllers.Admin.DeleteConfigurationRequest">
-            <summary>
-            Request DTO for deleting configuration
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Controllers.Admin.ValidateConfigurationRequest">
-            <summary>
-            Request DTO for validating configuration
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.AuthController">
@@ -9372,7 +9708,8 @@
         </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.CapacityController">
             <summary>
-            Controller for capacity management operations
+            Controller for capacity monitoring and validation operations
+            Focuses on monitoring existing capacity rather than CRUD operations
             </summary>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.CapacityController.ValidateCapacity(System.Nullable{System.Int32},System.Nullable{System.Int32},System.DateTime,System.Int32,System.Boolean,System.Nullable{System.Int32})">
@@ -9397,12 +9734,39 @@
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.CapacityController.GetCapacityStatistics(System.DateTime,System.DateTime,System.Nullable{System.Int32})">
             <summary>
-            Gets capacity statistics for a date range
+            Gets occupancy statistics for a date range
             </summary>
             <param name="startDate">Start date</param>
             <param name="endDate">End date</param>
             <param name="locationId">Location ID (optional)</param>
             <returns>Capacity statistics</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.CapacityController.GetAlternativeTimeSlots(System.DateTime,System.Int32,System.Nullable{System.Int32})">
+            <summary>
+            Gets alternative time slots when capacity is unavailable
+            </summary>
+            <param name="originalDateTime">Original requested date/time</param>
+            <param name="expectedVisitors">Number of expected visitors</param>
+            <param name="locationId">Location ID (optional)</param>
+            <returns>Alternative time slots</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.CapacityController.GetCapacityOverview(System.Nullable{System.DateTime},System.Int32[])">
+            <summary>
+            Gets real-time capacity overview for multiple locations
+            </summary>
+            <param name="dateTime">Date and time to check</param>
+            <param name="locationIds">Specific location IDs (optional)</param>
+            <returns>Capacity overview for all/specified locations</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.CapacityController.GetCapacityTrends(System.DateTime,System.DateTime,System.Nullable{System.Int32},System.String)">
+            <summary>
+            Gets capacity utilization trends for monitoring
+            </summary>
+            <param name="startDate">Start date</param>
+            <param name="endDate">End date</param>
+            <param name="locationId">Location ID (optional)</param>
+            <param name="groupBy">Group by period (hour, day, week)</param>
+            <returns>Capacity utilization trends</returns>
         </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.CsvController">
             <summary>
@@ -9835,20 +10199,17 @@
             Controller for time slot management operations
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.TimeSlotsController.GetTimeSlots(System.Nullable{System.Int32},System.Boolean)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.TimeSlotsController.GetTimeSlots(System.Nullable{System.Int32},System.Boolean,System.Int32,System.Int32,System.String,System.String)">
             <summary>
             Gets all time slots with optional filtering
             </summary>
             <param name="locationId">Filter by location ID</param>
             <param name="activeOnly">Only return active time slots</param>
+            <param name="pageIndex">Page index</param>
+            <param name="pageSize">Page size</param>
+            <param name="sortBy">Sort field</param>
+            <param name="sortDirection">Sort direction</param>
             <returns>List of time slots</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.TimeSlotsController.CreateTimeSlot(VisitorManagementSystem.Api.Application.DTOs.Capacity.CreateTimeSlotDto)">
-            <summary>
-            Creates a new time slot
-            </summary>
-            <param name="createDto">Time slot creation data</param>
-            <returns>Created time slot</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.TimeSlotsController.GetTimeSlot(System.Int32)">
             <summary>
@@ -9856,6 +10217,37 @@
             </summary>
             <param name="id">Time slot ID</param>
             <returns>Time slot details</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.TimeSlotsController.CreateTimeSlot(VisitorManagementSystem.Api.Application.DTOs.TimeSlots.CreateTimeSlotDto)">
+            <summary>
+            Creates a new time slot
+            </summary>
+            <param name="createDto">Time slot creation data</param>
+            <returns>Created time slot</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.TimeSlotsController.UpdateTimeSlot(System.Int32,VisitorManagementSystem.Api.Application.DTOs.TimeSlots.UpdateTimeSlotDto)">
+            <summary>
+            Updates an existing time slot
+            </summary>
+            <param name="id">Time slot ID</param>
+            <param name="updateDto">Time slot update data</param>
+            <returns>Updated time slot</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.TimeSlotsController.DeleteTimeSlot(System.Int32,System.Boolean)">
+            <summary>
+            Deletes a time slot (soft delete)
+            </summary>
+            <param name="id">Time slot ID</param>
+            <param name="hardDelete">Whether to perform hard delete</param>
+            <returns>Success result</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.TimeSlotsController.GetAvailableTimeSlots(System.DateTime,System.Nullable{System.Int32})">
+            <summary>
+            Gets available time slots for a specific date and location
+            </summary>
+            <param name="date">Date</param>
+            <param name="locationId">Location ID</param>
+            <returns>Available time slots</returns>
         </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.UsersController">
             <summary>

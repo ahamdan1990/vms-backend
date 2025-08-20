@@ -87,6 +87,12 @@ public interface IDynamicConfigurationService
     Task InvalidateCacheAsync(string? category = null);
 
     /// <summary>
+    /// Invalidates all configuration caches
+    /// </summary>
+    /// <returns>Task</returns>
+    Task InvalidateAllCacheAsync();
+
+    /// <summary>
     /// Gets configuration metadata
     /// </summary>
     /// <param name="category">Configuration category</param>

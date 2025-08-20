@@ -122,33 +122,3 @@ public class CreateTimeSlotDto
     public int DisplayOrder { get; set; } = 1;
 }
 
-/// <summary>
-/// DTO for alternative time slot suggestions
-/// </summary>
-public class AlternativeTimeSlotDto
-{
-    /// <summary>
-    /// Time slot ID
-    /// </summary>
-    public int TimeSlotId { get; set; }
-
-    /// <summary>
-    /// Time slot name
-    /// </summary>
-    public string Name { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Suggested date and time
-    /// </summary>
-    public DateTime DateTime { get; set; }
-
-    /// <summary>
-    /// Available capacity
-    /// </summary>
-    public int AvailableCapacity { get; set; }
-
-    /// <summary>
-    /// Occupancy percentage
-    /// </summary>
-    public decimal OccupancyPercentage { get; set; }
-}

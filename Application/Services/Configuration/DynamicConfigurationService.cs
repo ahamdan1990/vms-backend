@@ -276,6 +276,11 @@ public class DynamicConfigurationService : IDynamicConfigurationService
             _logger.LogError(ex, "Error invalidating cache for category: {Category}", category);
         }
     }
+
+    public async Task InvalidateAllCacheAsync()
+    {
+        await InvalidateCacheAsync(null);
+    }
     public async Task<SystemConfiguration?> GetConfigurationMetadataAsync(string category, string key, CancellationToken cancellationToken = default)
     {
         try
