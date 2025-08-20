@@ -1119,6 +1119,112 @@ namespace VisitorManagementSystem.Api.Migrations
                     b.ToTable("Locations", (string)null);
                 });
 
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.OccupancyLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AvailableCapacity")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("int")
+                        .HasComputedColumnSql("[MaxCapacity] - [CurrentCount] - [ReservedCount]", false);
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("CurrentCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime>("LastUpdated")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int?>("LocationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxCapacity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("OccupancyPercentage")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("decimal(18,2)")
+                        .HasComputedColumnSql("CASE WHEN [MaxCapacity] > 0 THEN CAST(([CurrentCount] + [ReservedCount]) * 100.0 / [MaxCapacity] AS DECIMAL(5,2)) ELSE 0 END", false);
+
+                    b.Property<int>("ReservedCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int?>("TimeSlotId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedOn")
+                        .HasDatabaseName("IX_OccupancyLog_CreatedOn");
+
+                    b.HasIndex("Date")
+                        .HasDatabaseName("IX_OccupancyLogs_Date");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_OccupancyLog_IsActive");
+
+                    b.HasIndex("LastUpdated")
+                        .HasDatabaseName("IX_OccupancyLogs_LastUpdated");
+
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("TimeSlotId");
+
+                    b.HasIndex("Date", "LocationId")
+                        .HasDatabaseName("IX_OccupancyLogs_Date_Location");
+
+                    b.HasIndex("Date", "TimeSlotId")
+                        .HasDatabaseName("IX_OccupancyLogs_Date_TimeSlot");
+
+                    b.HasIndex("IsActive", "CreatedOn")
+                        .HasDatabaseName("IX_OccupancyLog_IsActive_CreatedOn");
+
+                    b.HasIndex("Date", "TimeSlotId", "LocationId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_OccupancyLogs_Date_TimeSlot_Location")
+                        .HasFilter("[TimeSlotId] IS NOT NULL AND [LocationId] IS NOT NULL");
+
+                    b.ToTable("OccupancyLogs", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_OccupancyLogs_CurrentCount", "[CurrentCount] >= 0");
+
+                            t.HasCheckConstraint("CK_OccupancyLogs_MaxCapacity", "[MaxCapacity] > 0");
+
+                            t.HasCheckConstraint("CK_OccupancyLogs_ReservedCount", "[ReservedCount] >= 0");
+                        });
+                });
+
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<int>("Id")
@@ -1369,6 +1475,131 @@ namespace VisitorManagementSystem.Api.Migrations
                         .HasDatabaseName("IX_SystemConfigurations_Category_Key");
 
                     b.ToTable("SystemConfigurations", (string)null);
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.TimeSlot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActiveDays")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("1,2,3,4,5");
+
+                    b.Property<bool>("AllowOverlapping")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<int>("BufferMinutes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(15);
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<int?>("LocationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxVisitors")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(50);
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("IX_TimeSlot_CreatedBy");
+
+                    b.HasIndex("CreatedOn")
+                        .HasDatabaseName("IX_TimeSlot_CreatedOn");
+
+                    b.HasIndex("DeletedBy")
+                        .HasDatabaseName("IX_TimeSlot_DeletedBy");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_TimeSlot_IsActive");
+
+                    b.HasIndex("IsDeleted")
+                        .HasDatabaseName("IX_TimeSlot_IsDeleted");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("IX_TimeSlot_ModifiedBy");
+
+                    b.HasIndex("Name")
+                        .HasDatabaseName("IX_TimeSlots_Name");
+
+                    b.HasIndex("IsActive", "CreatedOn")
+                        .HasDatabaseName("IX_TimeSlot_IsActive_CreatedOn");
+
+                    b.HasIndex("IsDeleted", "DeletedOn")
+                        .HasDatabaseName("IX_TimeSlot_IsDeleted_DeletedOn");
+
+                    b.HasIndex("LocationId", "StartTime", "EndTime")
+                        .HasDatabaseName("IX_TimeSlots_Location_Time");
+
+                    b.ToTable("TimeSlots", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_TimeSlots_BufferMinutes", "[BufferMinutes] >= 0");
+
+                            t.HasCheckConstraint("CK_TimeSlots_MaxVisitors", "[MaxVisitors] > 0");
+                        });
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.User", b =>
@@ -2644,6 +2875,23 @@ namespace VisitorManagementSystem.Api.Migrations
                     b.Navigation("ParentLocation");
                 });
 
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.OccupancyLog", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Location", "Location")
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.TimeSlot", "TimeSlot")
+                        .WithMany()
+                        .HasForeignKey("TimeSlotId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Location");
+
+                    b.Navigation("TimeSlot");
+                });
+
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.RefreshToken", b =>
                 {
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.RefreshToken", "ReplacedByToken")
@@ -2675,6 +2923,40 @@ namespace VisitorManagementSystem.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("ModifiedByUser");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.TimeSlot", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_TimeSlot_CreatedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "DeletedByUser")
+                        .WithMany()
+                        .HasForeignKey("DeletedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_TimeSlot_DeletedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Location", "Location")
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_TimeSlot_ModifiedBy_User");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("DeletedByUser");
+
+                    b.Navigation("Location");
 
                     b.Navigation("ModifiedByUser");
                 });

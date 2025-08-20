@@ -14,6 +14,7 @@ using VisitorManagementSystem.Api.Application.Services.Csv;
 using VisitorManagementSystem.Api.Application.Services.Xlsx;
 using VisitorManagementSystem.Api.Application.Services.Users;
 using VisitorManagementSystem.Api.Application.Services.Visitors;
+using VisitorManagementSystem.Api.Application.Services.Capacity;
 using VisitorManagementSystem.Api.Application.Services;
 using VisitorManagementSystem.Api.Configuration;
 using VisitorManagementSystem.Api.Domain.Entities;
@@ -97,6 +98,9 @@ public static class ServiceCollectionExtensions
 
         // Visitor services
         services.AddScoped<IVisitorService, VisitorService>();
+
+        // Capacity management services
+        services.AddScoped<ICapacityService, CapacityService>();
 
         // File upload service
         services.AddScoped<IFileUploadService, FileUploadService>();

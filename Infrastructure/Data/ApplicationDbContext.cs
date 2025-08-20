@@ -36,6 +36,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<VisitPurpose> VisitPurposes { get; set; } = null!;
     public DbSet<Location> Locations { get; set; } = null!;
 
+    // DbSets - Capacity Management
+    public DbSet<TimeSlot> TimeSlots { get; set; } = null!;
+    public DbSet<OccupancyLog> OccupancyLogs { get; set; } = null!;
+
     // DbSets - Invitation Domain
     public DbSet<Invitation> Invitations { get; set; } = null!;
     public DbSet<InvitationApproval> InvitationApprovals { get; set; } = null!;
@@ -61,6 +65,10 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new VisitPurposeConfiguration());
         modelBuilder.ApplyConfiguration(new LocationConfiguration());
 
+        // Apply all configurations - Capacity Management
+        modelBuilder.ApplyConfiguration(new TimeSlotConfiguration());
+        modelBuilder.ApplyConfiguration(new OccupancyLogConfiguration());
+
         // Apply all configurations - Invitation Domain
         modelBuilder.ApplyConfiguration(new InvitationConfiguration());
         modelBuilder.ApplyConfiguration(new InvitationApprovalConfiguration());
@@ -78,6 +86,9 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<EmergencyContact>().HasQueryFilter(c => !c.IsDeleted);
         modelBuilder.Entity<VisitPurpose>().HasQueryFilter(p => !p.IsDeleted);
         modelBuilder.Entity<Location>().HasQueryFilter(l => !l.IsDeleted);
+
+        // Capacity management soft delete filters
+        modelBuilder.Entity<TimeSlot>().HasQueryFilter(ts => !ts.IsDeleted);
 
         // Configure decimal precision globally
         foreach (var property in modelBuilder.Model.GetEntityTypes()

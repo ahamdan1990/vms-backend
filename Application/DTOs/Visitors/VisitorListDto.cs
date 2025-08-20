@@ -31,6 +31,16 @@ public class VisitorListDto
     public string? PhoneNumber { get; set; }
 
     /// <summary>
+    /// Phone country code
+    /// </summary>
+    public string? PhoneCountryCode { get; set; }
+
+    /// <summary>
+    /// Phone type (Mobile, Landline, etc.)
+    /// </summary>
+    public string? PhoneType { get; set; }
+
+    /// <summary>
     /// Whether visitor is VIP
     /// </summary>
     public bool IsVip { get; set; }

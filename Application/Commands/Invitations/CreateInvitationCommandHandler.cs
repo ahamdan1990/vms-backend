@@ -2,6 +2,8 @@ using AutoMapper;
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Invitations;
 using VisitorManagementSystem.Api.Application.Services.QrCode;
+using VisitorManagementSystem.Api.Application.Services.Capacity;
+using VisitorManagementSystem.Api.Application.DTOs.Capacity;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -17,16 +19,20 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
     private readonly IMapper _mapper;
     private readonly ILogger<CreateInvitationCommandHandler> _logger;
     private readonly IQrCodeService _qrCodeService;
+    private readonly ICapacityService _capacityService;
+    
     public CreateInvitationCommandHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
         ILogger<CreateInvitationCommandHandler> logger,
-        IQrCodeService qrCodeService)
+        IQrCodeService qrCodeService,
+        ICapacityService capacityService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
         _qrCodeService = qrCodeService;
+        _capacityService = capacityService;
     }
 
     public async Task<InvitationDto> Handle(CreateInvitationCommand request, CancellationToken cancellationToken)
@@ -61,6 +67,35 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                 if (location == null)
                     throw new InvalidOperationException($"Location with ID '{request.LocationId}' not found.");
             }
+
+            // Validate capacity before creating invitation
+            var capacityRequest = new CapacityValidationRequestDto
+            {
+                LocationId = request.LocationId,
+                DateTime = request.ScheduledStartTime,
+                ExpectedVisitors = request.ExpectedVisitorCount,
+                IsVipRequest = false // TODO: Determine VIP status from user permissions or visitor VIP flag
+            };
+
+            var capacityValidation = await _capacityService.ValidateCapacityAsync(capacityRequest, cancellationToken);
+            
+            if (!capacityValidation.IsAvailable)
+            {
+                var errorMessage = $"Capacity validation failed: {string.Join(", ", capacityValidation.Messages)}";
+                if (capacityValidation.AlternativeSlots.Any())
+                {
+                    var alternatives = string.Join(", ", capacityValidation.AlternativeSlots
+                        .Take(3).Select(a => $"{a.DateTime:MM/dd HH:mm}"));
+                    errorMessage += $" Alternative times available: {alternatives}";
+                }
+                throw new InvalidOperationException(errorMessage);
+            }
+
+            // Log capacity validation result
+            _logger.LogInformation("Capacity validation passed: {ExpectedVisitors} visitors at {DateTime}, " +
+                "Occupancy: {OccupancyPercentage}%, Available slots: {AvailableSlots}",
+                request.ExpectedVisitorCount, request.ScheduledStartTime, 
+                capacityValidation.OccupancyPercentage, capacityValidation.AvailableSlots);
 
             // Apply template if specified
             InvitationTemplate? template = null;

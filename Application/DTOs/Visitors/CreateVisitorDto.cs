@@ -37,6 +37,18 @@ public class CreateVisitorDto
     public string? PhoneNumber { get; set; }
 
     /// <summary>
+    /// Phone country code
+    /// </summary>
+    [MaxLength(4)]
+    public string? PhoneCountryCode { get; set; }
+
+    /// <summary>
+    /// Phone type (Mobile, Landline, etc.)
+    /// </summary>
+    [MaxLength(20)]
+    public string? PhoneType { get; set; }
+
+    /// <summary>
     /// Company name
     /// </summary>
     [MaxLength(100)]

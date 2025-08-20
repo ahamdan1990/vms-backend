@@ -38,6 +38,16 @@ public class VisitorDto
     public string? PhoneNumber { get; set; }
 
     /// <summary>
+    /// Phone country code
+    /// </summary>
+    public string? PhoneCountryCode { get; set; }
+
+    /// <summary>
+    /// Phone type (Mobile, Landline, etc.)
+    /// </summary>
+    public string? PhoneType { get; set; }
+
+    /// <summary>
     /// Company name
     /// </summary>
     public string? Company { get; set; }    /// <summary>

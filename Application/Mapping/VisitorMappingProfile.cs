@@ -22,7 +22,9 @@ public class VisitorMappingProfile : Profile
 
         CreateMap<Visitor, VisitorDto>()
             .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email.Value))
-            .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber != null ? src.PhoneNumber.FormattedValue : null))
+            .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber != null ? src.PhoneNumber.Value : null))
+            .ForMember(dest => dest.PhoneCountryCode, opt => opt.MapFrom(src => src.PhoneNumber != null ? src.PhoneNumber.CountryCode : null))
+            .ForMember(dest => dest.PhoneType, opt => opt.MapFrom(src => src.PhoneNumber != null ? src.PhoneNumber.PhoneType : null))
             .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
             .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src => src.CreatedByUser != null ? src.CreatedByUser.FullName : null))
             .ForMember(dest => dest.ModifiedByName, opt => opt.MapFrom(src => src.ModifiedByUser != null ? src.ModifiedByUser.FullName : null))
@@ -30,7 +32,9 @@ public class VisitorMappingProfile : Profile
 
         CreateMap<Visitor, VisitorListDto>()
             .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email.Value))
-            .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber != null ? src.PhoneNumber.FormattedValue : null))
+            .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber != null ? src.PhoneNumber.Value : null))
+            .ForMember(dest => dest.PhoneCountryCode, opt => opt.MapFrom(src => src.PhoneNumber != null ? src.PhoneNumber.CountryCode : null))
+            .ForMember(dest => dest.PhoneType, opt => opt.MapFrom(src => src.PhoneNumber != null ? src.PhoneNumber.PhoneType : null))
             .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName));
 
         // Add mapping for VisitorDisplayInfo (used in VIP visitors and statistics)

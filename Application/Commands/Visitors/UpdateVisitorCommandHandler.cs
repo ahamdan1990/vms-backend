@@ -78,11 +78,21 @@ public class UpdateVisitorCommandHandler : IRequestHandler<UpdateVisitorCommand,
             visitor.Notes = request.Notes?.Trim();
             visitor.ExternalId = request.ExternalId?.Trim();
 
-            // Update phone number with validation
-            if (!string.IsNullOrEmpty(request.PhoneNumber) &&
-                PhoneNumber.IsValidPhoneNumber(request.PhoneNumber))
+            // Update enhanced phone number
+            if (!string.IsNullOrEmpty(request.PhoneNumber))
             {
-                visitor.PhoneNumber = new PhoneNumber(request.PhoneNumber);
+                var fullPhoneNumber = !string.IsNullOrEmpty(request.PhoneCountryCode)
+                    ? $"+{request.PhoneCountryCode}{request.PhoneNumber}"
+                    : request.PhoneNumber;
+
+                if (PhoneNumber.IsValidPhoneNumber(fullPhoneNumber))
+                {
+                    visitor.PhoneNumber = new PhoneNumber(fullPhoneNumber, request.PhoneCountryCode);
+                }
+                else
+                {
+                    visitor.PhoneNumber = null;
+                }
             }
             else
             {

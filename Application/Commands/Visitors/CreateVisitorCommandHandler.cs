@@ -69,11 +69,17 @@ public class CreateVisitorCommandHandler : IRequestHandler<CreateVisitorCommand,
                 IsActive = true
             };
 
-            // Set phone number if provided and valid
-            if (!string.IsNullOrEmpty(request.PhoneNumber) && 
-                PhoneNumber.IsValidPhoneNumber(request.PhoneNumber))
+            // Set enhanced phone number if provided
+            if (!string.IsNullOrEmpty(request.PhoneNumber))
             {
-                visitor.PhoneNumber = new PhoneNumber(request.PhoneNumber);
+                var fullPhoneNumber = !string.IsNullOrEmpty(request.PhoneCountryCode)
+                    ? $"+{request.PhoneCountryCode}{request.PhoneNumber}"
+                    : request.PhoneNumber;
+
+                if (PhoneNumber.IsValidPhoneNumber(fullPhoneNumber))
+                {
+                    visitor.PhoneNumber = new PhoneNumber(fullPhoneNumber, request.PhoneCountryCode);
+                }
             }
 
             // Set address if provided

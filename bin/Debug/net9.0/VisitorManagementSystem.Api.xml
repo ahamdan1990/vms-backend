@@ -1950,6 +1950,226 @@
             Whether this is the current session
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationRequestDto">
+            <summary>
+            DTO for capacity validation request
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationRequestDto.LocationId">
+            <summary>
+            Location ID to check capacity for
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationRequestDto.TimeSlotId">
+            <summary>
+            Time slot ID to check capacity for
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationRequestDto.DateTime">
+            <summary>
+            Date and time for the appointment
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationRequestDto.ExpectedVisitors">
+            <summary>
+            Number of expected visitors
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationRequestDto.IsVipRequest">
+            <summary>
+            Whether this is a VIP request (can override capacity)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationRequestDto.ExcludeInvitationId">
+            <summary>
+            Invitation ID to exclude from capacity calculation (for updates)
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationResponseDto">
+            <summary>
+            DTO for capacity validation response
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationResponseDto.IsAvailable">
+            <summary>
+            Whether capacity is available
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationResponseDto.CurrentOccupancy">
+            <summary>
+            Current occupancy count
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationResponseDto.MaxCapacity">
+            <summary>
+            Maximum capacity
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationResponseDto.AvailableSlots">
+            <summary>
+            Available slots remaining
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationResponseDto.OccupancyPercentage">
+            <summary>
+            Occupancy percentage
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationResponseDto.IsWarningLevel">
+            <summary>
+            Warning level reached (>80% capacity)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationResponseDto.Messages">
+            <summary>
+            Validation messages
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationResponseDto.AlternativeSlots">
+            <summary>
+            Alternative time slots if current is unavailable
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.TimeSlotDto">
+            <summary>
+            DTO for time slot information
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.TimeSlotDto.Id">
+            <summary>
+            Time slot ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.TimeSlotDto.Name">
+            <summary>
+            Time slot name
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.TimeSlotDto.StartTime">
+            <summary>
+            Start time
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.TimeSlotDto.EndTime">
+            <summary>
+            End time
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.TimeSlotDto.MaxVisitors">
+            <summary>
+            Maximum visitors
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.TimeSlotDto.ActiveDays">
+            <summary>
+            Active days
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.TimeSlotDto.LocationId">
+            <summary>
+            Location ID (if specific to a location)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.TimeSlotDto.LocationName">
+            <summary>
+            Location name
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.TimeSlotDto.IsActive">
+            <summary>
+            Whether the slot is active
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.TimeSlotDto.BufferMinutes">
+            <summary>
+            Buffer minutes
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.TimeSlotDto.DurationMinutes">
+            <summary>
+            Duration in minutes
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.TimeSlotDto.DisplayOrder">
+            <summary>
+            Display order
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.CreateTimeSlotDto">
+            <summary>
+            DTO for creating a time slot
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CreateTimeSlotDto.Name">
+            <summary>
+            Time slot name
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CreateTimeSlotDto.StartTime">
+            <summary>
+            Start time
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CreateTimeSlotDto.EndTime">
+            <summary>
+            End time
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CreateTimeSlotDto.MaxVisitors">
+            <summary>
+            Maximum visitors
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CreateTimeSlotDto.ActiveDays">
+            <summary>
+            Active days (1=Monday, 7=Sunday)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CreateTimeSlotDto.LocationId">
+            <summary>
+            Location ID (optional)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CreateTimeSlotDto.BufferMinutes">
+            <summary>
+            Buffer minutes
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.CreateTimeSlotDto.DisplayOrder">
+            <summary>
+            Display order
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.AlternativeTimeSlotDto">
+            <summary>
+            DTO for alternative time slot suggestions
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.AlternativeTimeSlotDto.TimeSlotId">
+            <summary>
+            Time slot ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.AlternativeTimeSlotDto.Name">
+            <summary>
+            Time slot name
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.AlternativeTimeSlotDto.DateTime">
+            <summary>
+            Suggested date and time
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.AlternativeTimeSlotDto.AvailableCapacity">
+            <summary>
+            Available capacity
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.AlternativeTimeSlotDto.OccupancyPercentage">
+            <summary>
+            Occupancy percentage
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Common.AddressDto">
             <summary>
             Data transfer object for address information
@@ -3556,6 +3776,16 @@
             Visitor phone number
             </summary>
         </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.PhoneCountryCode">
+            <summary>
+            Phone country code
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.PhoneType">
+            <summary>
+            Phone type (Mobile, Landline, etc.)
+            </summary>
+        </member>
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.Company">
             <summary>
             Company name
@@ -3896,6 +4126,16 @@
             Visitor phone number
             </summary>
         </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.UpdateVisitorDto.PhoneCountryCode">
+            <summary>
+            Phone country code
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.UpdateVisitorDto.PhoneType">
+            <summary>
+            Phone type (Mobile, Landline, etc.)
+            </summary>
+        </member>
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.UpdateVisitorDto.Company">
             <summary>
             Company name
@@ -4156,6 +4396,16 @@
             Visitor phone number
             </summary>
         </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.VisitorDto.PhoneCountryCode">
+            <summary>
+            Phone country code
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.VisitorDto.PhoneType">
+            <summary>
+            Phone type (Mobile, Landline, etc.)
+            </summary>
+        </member>
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.VisitorDto.Company">
             <summary>
             Company name
@@ -4319,6 +4569,16 @@
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.VisitorListDto.PhoneNumber">
             <summary>
             Phone number (masked)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.VisitorListDto.PhoneCountryCode">
+            <summary>
+            Phone country code
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.VisitorListDto.PhoneType">
+            <summary>
+            Phone type (Mobile, Landline, etc.)
             </summary>
         </member>
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.VisitorListDto.IsVip">
@@ -4896,6 +5156,46 @@
         <member name="T:VisitorManagementSystem.Api.Application.Queries.Auth.ValidateTokenQueryHandler">
             <summary>
             Handler for validate token query
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Capacity.ValidateCapacityQuery">
+            <summary>
+            Query to validate capacity for an invitation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Capacity.ValidateCapacityQuery.LocationId">
+            <summary>
+            Location ID to check capacity for
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Capacity.ValidateCapacityQuery.TimeSlotId">
+            <summary>
+            Time slot ID to check capacity for
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Capacity.ValidateCapacityQuery.DateTime">
+            <summary>
+            Date and time for the appointment
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Capacity.ValidateCapacityQuery.ExpectedVisitors">
+            <summary>
+            Number of expected visitors
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Capacity.ValidateCapacityQuery.IsVipRequest">
+            <summary>
+            Whether this is a VIP request (can override capacity)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Capacity.ValidateCapacityQuery.ExcludeInvitationId">
+            <summary>
+            Invitation ID to exclude from capacity calculation (for updates)
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Capacity.ValidateCapacityQueryHandler">
+            <summary>
+            Handler for capacity validation query
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Queries.EmergencyContacts.GetEmergencyContactByIdQuery">
@@ -6466,6 +6766,107 @@
             <summary>
             Two-factor authentication service implementation
             </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Capacity.CapacityService">
+            <summary>
+            Service for managing facility capacity and occupancy
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Capacity.CapacityService.ValidateCapacityAsync(VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationRequestDto,System.Threading.CancellationToken)">
+            <summary>
+            Validates if capacity is available for a new invitation
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Capacity.CapacityService.GetCurrentOccupancyAsync(System.DateTime,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Gets current occupancy for a specific date/time/location
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Capacity.CapacityService.GetMaxCapacityAsync(System.DateTime,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Gets maximum capacity for a specific date/time/location
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Capacity.CapacityService.GetActiveTimeSlotForDateTime(System.DateTime,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Gets active time slot for a specific date/time
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Capacity.CapacityService.GetAlternativeTimeSlotsAsync(System.DateTime,System.Int32,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Gets alternative time slots when capacity is unavailable
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Capacity.CapacityService.UpdateOccupancyForInvitationAsync(System.Int32,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Updates occupancy when invitation status changes
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Capacity.CapacityService.GetOccupancyStatisticsAsync(System.DateTime,System.DateTime,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Gets occupancy statistics for a date range
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Capacity.ICapacityService">
+            <summary>
+            Interface for capacity management services
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Capacity.ICapacityService.ValidateCapacityAsync(VisitorManagementSystem.Api.Application.DTOs.Capacity.CapacityValidationRequestDto,System.Threading.CancellationToken)">
+            <summary>
+            Validates if capacity is available for a new invitation
+            </summary>
+            <param name="request">Capacity validation request</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Capacity validation response</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Capacity.ICapacityService.GetCurrentOccupancyAsync(System.DateTime,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Gets current occupancy for a specific date/time/location
+            </summary>
+            <param name="dateTime">Date and time</param>
+            <param name="locationId">Location ID (optional)</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Current occupancy count</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Capacity.ICapacityService.GetMaxCapacityAsync(System.DateTime,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Gets maximum capacity for a specific date/time/location
+            </summary>
+            <param name="dateTime">Date and time</param>
+            <param name="locationId">Location ID (optional)</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Maximum capacity</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Capacity.ICapacityService.GetAlternativeTimeSlotsAsync(System.DateTime,System.Int32,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Gets alternative time slots when capacity is unavailable
+            </summary>
+            <param name="originalDateTime">Original requested date/time</param>
+            <param name="expectedVisitors">Number of expected visitors</param>
+            <param name="locationId">Location ID (optional)</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of alternative time slots</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Capacity.ICapacityService.UpdateOccupancyForInvitationAsync(System.Int32,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Updates occupancy when invitation status changes
+            </summary>
+            <param name="invitationId">Invitation ID</param>
+            <param name="oldStatus">Previous status</param>
+            <param name="newStatus">New status</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Task</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Capacity.ICapacityService.GetOccupancyStatisticsAsync(System.DateTime,System.DateTime,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Gets occupancy statistics for a date range
+            </summary>
+            <param name="startDate">Start date</param>
+            <param name="endDate">End date</param>
+            <param name="locationId">Location ID (optional)</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Occupancy statistics</returns>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Services.Configuration.DynamicConfigurationService">
             <summary>
@@ -8969,6 +9370,40 @@
             Gets base URL
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.CapacityController">
+            <summary>
+            Controller for capacity management operations
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.CapacityController.ValidateCapacity(System.Nullable{System.Int32},System.Nullable{System.Int32},System.DateTime,System.Int32,System.Boolean,System.Nullable{System.Int32})">
+            <summary>
+            Validates capacity for a specific date/time/location
+            </summary>
+            <param name="locationId">Location ID (optional)</param>
+            <param name="timeSlotId">Time slot ID (optional)</param>
+            <param name="dateTime">Date and time</param>
+            <param name="expectedVisitors">Expected number of visitors</param>
+            <param name="isVipRequest">Whether this is a VIP request</param>
+            <param name="excludeInvitationId">Invitation ID to exclude (for updates)</param>
+            <returns>Capacity validation result</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.CapacityController.GetOccupancy(System.DateTime,System.Nullable{System.Int32})">
+            <summary>
+            Gets current occupancy for a specific date/time/location
+            </summary>
+            <param name="dateTime">Date and time</param>
+            <param name="locationId">Location ID (optional)</param>
+            <returns>Current occupancy information</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.CapacityController.GetCapacityStatistics(System.DateTime,System.DateTime,System.Nullable{System.Int32})">
+            <summary>
+            Gets capacity statistics for a date range
+            </summary>
+            <param name="startDate">Start date</param>
+            <param name="endDate">End date</param>
+            <param name="locationId">Location ID (optional)</param>
+            <returns>Capacity statistics</returns>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.CsvController">
             <summary>
             Controller for CSV operations in visitor management
@@ -9394,6 +9829,33 @@
             <summary>
             Custom message to include in email
             </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.TimeSlotsController">
+            <summary>
+            Controller for time slot management operations
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.TimeSlotsController.GetTimeSlots(System.Nullable{System.Int32},System.Boolean)">
+            <summary>
+            Gets all time slots with optional filtering
+            </summary>
+            <param name="locationId">Filter by location ID</param>
+            <param name="activeOnly">Only return active time slots</param>
+            <returns>List of time slots</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.TimeSlotsController.CreateTimeSlot(VisitorManagementSystem.Api.Application.DTOs.Capacity.CreateTimeSlotDto)">
+            <summary>
+            Creates a new time slot
+            </summary>
+            <param name="createDto">Time slot creation data</param>
+            <returns>Created time slot</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.TimeSlotsController.GetTimeSlot(System.Int32)">
+            <summary>
+            Gets a specific time slot by ID
+            </summary>
+            <param name="id">Time slot ID</param>
+            <returns>Time slot details</returns>
         </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.UsersController">
             <summary>
@@ -11513,6 +11975,110 @@
             Navigation property for related invitations
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog">
+            <summary>
+            Tracks real-time facility occupancy for capacity management
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.Date">
+            <summary>
+            Date of the occupancy record
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.TimeSlotId">
+            <summary>
+            Time slot this record applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.LocationId">
+            <summary>
+            Location this record applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.CurrentCount">
+            <summary>
+            Current visitor count for this time/location
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.MaxCapacity">
+            <summary>
+            Maximum capacity for this time/location
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.ReservedCount">
+            <summary>
+            Reserved capacity (pre-approved invitations)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.AvailableCapacity">
+            <summary>
+            Available capacity (calculated)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.OccupancyPercentage">
+            <summary>
+            Occupancy percentage (0-100)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.LastUpdated">
+            <summary>
+            Last updated timestamp
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.TimeSlot">
+            <summary>
+            Navigation property to time slot
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.Location">
+            <summary>
+            Navigation property to location
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.IsOverCapacity">
+            <summary>
+            Checks if capacity is exceeded
+            </summary>
+            <returns>True if over capacity</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.IsAtWarningLevel">
+            <summary>
+            Checks if capacity is at warning level (>80%)
+            </summary>
+            <returns>True if at warning level</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.HasAvailableCapacity(System.Int32)">
+            <summary>
+            Checks if there's available capacity for additional visitors
+            </summary>
+            <param name="additionalVisitors">Number of additional visitors</param>
+            <returns>True if capacity is available</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.GetCalculatedAvailableCapacity">
+            <summary>
+            Calculates available capacity manually (for when computed column isn't available)
+            </summary>
+            <returns>Available capacity</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.GetCalculatedOccupancyPercentage">
+            <summary>
+            Calculates occupancy percentage manually (for when computed column isn't available)
+            </summary>
+            <returns>Occupancy percentage</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.UpdateCounts(System.Int32,System.Int32)">
+            <summary>
+            Updates the occupancy counts
+            </summary>
+            <param name="currentCount">New current count</param>
+            <param name="reservedCount">New reserved count</param>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog.ValidateOccupancyLog">
+            <summary>
+            Validates the occupancy log data
+            </summary>
+            <returns>List of validation errors</returns>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Entities.RefreshToken">
             <summary>
             Represents a refresh token for JWT authentication
@@ -11827,6 +12393,105 @@
             <summary>
             Gets help text for this configuration
             </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Entities.TimeSlot">
+            <summary>
+            Represents available time slots for visitor appointments with capacity management
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.TimeSlot.Name">
+            <summary>
+            Time slot name/identifier
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.TimeSlot.StartTime">
+            <summary>
+            Start time of the slot
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.TimeSlot.EndTime">
+            <summary>
+            End time of the slot
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.TimeSlot.MaxVisitors">
+            <summary>
+            Maximum visitors allowed in this time slot
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.TimeSlot.ActiveDays">
+            <summary>
+            Days of week this slot is active (comma-separated: 1=Monday, 7=Sunday)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.TimeSlot.LocationId">
+            <summary>
+            Location this time slot applies to (null = applies to all locations)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.TimeSlot.IsActive">
+            <summary>
+            Whether this time slot is currently active
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.TimeSlot.DisplayOrder">
+            <summary>
+            Display order for sorting
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.TimeSlot.BufferMinutes">
+            <summary>
+            Buffer time between appointments in minutes
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.TimeSlot.AllowOverlapping">
+            <summary>
+            Whether to allow overlapping appointments
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.TimeSlot.Location">
+            <summary>
+            Navigation property to location
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.TimeSlot.DurationMinutes">
+            <summary>
+            Gets the duration of this time slot in minutes
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.TimeSlot.ContainsTime(System.DateTime)">
+            <summary>
+            Checks if a given time falls within this slot
+            </summary>
+            <param name="dateTime">DateTime to check</param>
+            <returns>True if the time falls within this slot</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.TimeSlot.IsActiveOnDay(System.DayOfWeek)">
+            <summary>
+            Checks if this time slot is active on a specific day
+            </summary>
+            <param name="dayOfWeek">Day of week to check</param>
+            <returns>True if active on this day</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.TimeSlot.HasTimeConflict(System.DateTime,System.DateTime)">
+            <summary>
+            Checks if an appointment time conflicts with this slot considering buffer time
+            </summary>
+            <param name="appointmentStart">Appointment start time</param>
+            <param name="appointmentEnd">Appointment end time</param>
+            <returns>True if there's a conflict</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.TimeSlot.ValidateTimeSlot">
+            <summary>
+            Validates the time slot configuration
+            </summary>
+            <returns>List of validation errors</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.TimeSlot.GetDisplayString">
+            <summary>
+            Gets formatted display string
+            </summary>
+            <returns>Formatted time slot display</returns>
         </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Entities.User">
             <summary>
@@ -16449,14 +17114,36 @@
             Entity configuration for Location
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Configurations.OccupancyLogConfiguration">
+            <summary>
+            Entity configuration for OccupancyLog
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Configurations.RefreshTokenConfiguration">
             <summary>
             Entity configuration for RefreshToken
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Configurations.SoftDeleteEntityConfiguration`1">
+            <summary>
+            Configuration for soft delete entities
+            </summary>
+            <typeparam name="TEntity">Entity type</typeparam>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Configurations.SoftDeleteEntityConfiguration`1.ConfigureSoftDeleteEntity(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder{`0})">
+            <summary>
+            Override this method to configure soft delete entity-specific properties
+            </summary>
+            <param name="builder">Entity type builder</param>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Configurations.SystemConfigurationConfiguration">
             <summary>
             Configuration for SystemConfiguration entity
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Configurations.TimeSlotConfiguration">
+            <summary>
+            Entity configuration for TimeSlot
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Configurations.UserConfiguration">
@@ -17533,6 +18220,18 @@
             <inheritdoc />
         </member>
         <member name="M:VisitorManagementSystem.Api.Migrations.AddInitialMigration.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Migrations.AddCapacityManagement">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.AddCapacityManagement.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.AddCapacityManagement.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.AddCapacityManagement.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:GetUserByIdQueryHandler">
