@@ -175,7 +175,7 @@ public class VisitorDto
     /// Notes count
     /// </summary>
     public int NotesCount { get; set; }
-    public object CreatedByName { get; internal set; }
-    public object ModifiedByName { get; internal set; }
-    public object BlacklistedByName { get; internal set; }
+    public string? CreatedByName { get; internal set; }
+    public string? ModifiedByName { get; internal set; }
+    public string? BlacklistedByName { get; internal set; }
 }

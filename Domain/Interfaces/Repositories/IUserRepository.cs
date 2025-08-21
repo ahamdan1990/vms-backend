@@ -227,7 +227,7 @@ public interface IUserRepository : IGenericRepository<User>
     /// Marks a user for deletion (hard delete)
     /// </summary>
     /// <param name="user">User to delete</param>
-    void Delete(User user);
+    new void Delete(User user);
 }
 
 /// <summary>

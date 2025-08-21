@@ -50,11 +50,11 @@ public class DeleteTimeSlotCommandHandler : IRequestHandler<DeleteTimeSlotComman
         return true;
     }
 
-    private async Task<bool> CheckIfTimeSlotInUse(int timeSlotId)
+    private Task<bool> CheckIfTimeSlotInUse(int timeSlotId)
     {
         // Check if there are any active invitations using this time slot
         // This would need to be implemented based on your invitation structure
         // For now, returning false as a placeholder
-        return false;
+        return Task.FromResult(false);
     }
 }

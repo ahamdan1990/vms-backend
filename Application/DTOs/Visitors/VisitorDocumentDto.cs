@@ -114,5 +114,5 @@ public class VisitorDocumentDto
     /// Whether document is active
     /// </summary>
     public bool IsActive { get; set; }
-    public object ModifiedByName { get; internal set; }
+    public string? ModifiedByName { get; internal set; }
 }

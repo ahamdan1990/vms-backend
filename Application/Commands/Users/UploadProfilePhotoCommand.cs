@@ -8,5 +8,5 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users;
 public class UploadProfilePhotoCommand : IRequest<string>
 {
     public int UserId { get; set; }
-    public IFormFile File { get; set; }
+    public IFormFile? File { get; set; }
 }

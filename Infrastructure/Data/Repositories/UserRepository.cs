@@ -298,7 +298,7 @@ public class UserRepository : BaseRepository<User>, IUserRepository
         return users.ToDictionary(u => u.Id, u => u);
     }
 
-    public void Delete(User user)
+    public new void Delete(User user)
     {
         _dbSet.Remove(user);
     }
