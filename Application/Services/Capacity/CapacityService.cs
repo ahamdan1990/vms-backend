@@ -322,16 +322,20 @@ public class CapacityService : ICapacityService
 
             var invitations = await query.ToListAsync(cancellationToken);
 
+            // Handle empty data gracefully
+            var dailyGroups = invitations.GroupBy(i => i.ScheduledStartTime.Date).ToList();
+            
             var stats = new
             {
                 TotalInvitations = invitations.Count,
                 TotalVisitors = invitations.Sum(i => i.ExpectedVisitorCount),
-                AverageVisitorsPerDay = invitations.GroupBy(i => i.ScheduledStartTime.Date)
-                    .Average(g => g.Sum(i => i.ExpectedVisitorCount)),
-                PeakDay = invitations.GroupBy(i => i.ScheduledStartTime.Date)
+                AverageVisitorsPerDay = dailyGroups.Any() 
+                    ? dailyGroups.Average(g => g.Sum(i => i.ExpectedVisitorCount))
+                    : 0,
+                PeakDay = dailyGroups
                     .OrderByDescending(g => g.Sum(i => i.ExpectedVisitorCount))
                     .FirstOrDefault()?.Key,
-                DailyBreakdown = invitations.GroupBy(i => i.ScheduledStartTime.Date)
+                DailyBreakdown = dailyGroups
                     .ToDictionary(g => g.Key, g => g.Sum(i => i.ExpectedVisitorCount))
             };
 

@@ -5321,6 +5321,11 @@
             AutoMapper profile for location mappings
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Mapping.TimeSlotMappingProfile">
+            <summary>
+            AutoMapper profile for time slot mappings
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Mapping.UserMappingProfile">
             <summary>
             AutoMapper profile for User entity and related DTO mappings
@@ -9391,47 +9396,47 @@
             Admin controller for managing system configurations
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetAllConfigurations">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetAllConfigurations(System.Threading.CancellationToken)">
             <summary>
             Gets all configurations grouped by category
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetCategoryConfiguration(System.String)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetCategoryConfiguration(System.String,System.Threading.CancellationToken)">
             <summary>
             Gets all configurations for a specific category
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetConfiguration(System.String,System.String)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetConfiguration(System.String,System.String,System.Threading.CancellationToken)">
             <summary>
             Gets a specific configuration value
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.UpdateConfiguration(System.String,System.String,VisitorManagementSystem.Api.Application.DTOs.Configuration.UpdateConfigurationDto)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.UpdateConfiguration(System.String,System.String,VisitorManagementSystem.Api.Controllers.Admin.UpdateConfigurationRequest,System.Threading.CancellationToken)">
             <summary>
             Updates a configuration value
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.CreateConfiguration(VisitorManagementSystem.Api.Application.DTOs.Configuration.CreateConfigurationDto)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.CreateConfiguration(VisitorManagementSystem.Api.Controllers.Admin.CreateConfigurationRequest,System.Threading.CancellationToken)">
             <summary>
             Creates a new configuration
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.DeleteConfiguration(System.String,System.String,VisitorManagementSystem.Api.Application.DTOs.Configuration.DeleteConfigurationDto)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.DeleteConfiguration(System.String,System.String,VisitorManagementSystem.Api.Controllers.Admin.DeleteConfigurationRequest,System.Threading.CancellationToken)">
             <summary>
             Deletes a configuration
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetConfigurationHistory(System.String,System.String,System.Int32)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetConfigurationHistory(System.String,System.String,System.Threading.CancellationToken,System.Int32)">
             <summary>
             Gets configuration history/audit trail
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.SearchConfigurations(System.String,System.String)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.SearchConfigurations(System.String,System.String,System.Threading.CancellationToken)">
             <summary>
             Searches configurations
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.ValidateConfiguration(System.String,System.String,VisitorManagementSystem.Api.Application.DTOs.Configuration.ValidateConfigurationDto)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.ValidateConfiguration(System.String,System.String,VisitorManagementSystem.Api.Controllers.Admin.ValidateConfigurationRequest,System.Threading.CancellationToken)">
             <summary>
             Validates a configuration value without saving
             </summary>
@@ -9439,6 +9444,31 @@
         <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.InvalidateCache(System.String)">
             <summary>
             Invalidates configuration cache
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetCurrentUserId">
+            <summary>
+            Gets current user ID from claims
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.Admin.UpdateConfigurationRequest">
+            <summary>
+            Request DTO for updating configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.Admin.CreateConfigurationRequest">
+            <summary>
+            Request DTO for creating configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.Admin.DeleteConfigurationRequest">
+            <summary>
+            Request DTO for deleting configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.Admin.ValidateConfigurationRequest">
+            <summary>
+            Request DTO for validating configuration
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.AuthController">
