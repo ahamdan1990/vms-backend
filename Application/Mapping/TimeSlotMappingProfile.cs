@@ -14,9 +14,11 @@ public class TimeSlotMappingProfile : Profile
         // Entity to DTO mappings
         CreateMap<TimeSlot, TimeSlotDto>()
             .ForMember(dest => dest.LocationName, opt => opt.MapFrom(src => src.Location != null ? src.Location.Name : null))
+            .ForMember(dest => dest.MaxVisitors, opt => opt.MapFrom(src => src.Location != null ? src.Location.MaxCapacity : 0))
             .ForMember(dest => dest.DurationMinutes, opt => opt.MapFrom(src => src.DurationMinutes))
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedOn))
             .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => src.ModifiedOn));
+
 
         // Command to Entity mappings
         CreateMap<Application.Commands.TimeSlots.CreateTimeSlotCommand, TimeSlot>()

@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
 using VisitorManagementSystem.Api.Application.DTOs.TimeSlots;
+using VisitorManagementSystem.Api.Application.Queries.Auth;
 using VisitorManagementSystem.Api.Application.Queries.TimeSlots;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -16,11 +17,13 @@ public class GetTimeSlotsQueryHandler : IRequestHandler<GetTimeSlotsQuery, Paged
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly ILogger<GetTimeSlotsQueryHandler> _logger;
 
-    public GetTimeSlotsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
+    public GetTimeSlotsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper, ILogger<GetTimeSlotsQueryHandler> logger)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _logger = logger;
     }
 
     public async Task<PagedResultDto<TimeSlotDto>> Handle(GetTimeSlotsQuery request, CancellationToken cancellationToken)
