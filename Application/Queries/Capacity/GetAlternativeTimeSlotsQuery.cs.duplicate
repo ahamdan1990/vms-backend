@@ -1,0 +1,25 @@
+using MediatR;
+using VisitorManagementSystem.Api.Application.DTOs.Capacity;
+
+namespace VisitorManagementSystem.Api.Application.Queries.Capacity;
+
+/// <summary>
+/// Query to get alternative time slots when capacity is unavailable
+/// </summary>
+public class GetAlternativeTimeSlotsQuery : IRequest<List<AlternativeTimeSlotDto>>
+{
+    /// <summary>
+    /// Original requested date/time
+    /// </summary>
+    public DateTime OriginalDateTime { get; set; }
+
+    /// <summary>
+    /// Number of expected visitors
+    /// </summary>
+    public int ExpectedVisitors { get; set; } = 1;
+
+    /// <summary>
+    /// Location ID to check (optional)
+    /// </summary>
+    public int? LocationId { get; set; }
+}

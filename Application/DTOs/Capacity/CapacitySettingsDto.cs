@@ -45,17 +45,20 @@ public class UpdateCapacitySettingsDto
 }
 
 /// <summary>
-/// DTO for occupancy information
+/// DTO for occupancy information that matches frontend OccupancyCard expectations
 /// </summary>
 public class OccupancyDto
 {
     public DateTime DateTime { get; set; }
     public int? LocationId { get; set; }
     public string? LocationName { get; set; }
+    public int? TimeSlotId { get; set; }
+    public string? TimeSlotName { get; set; }
     public int CurrentOccupancy { get; set; }
     public int MaxCapacity { get; set; }
     public int AvailableSlots { get; set; }
-    public double OccupancyPercentage { get; set; }
+    public decimal OccupancyPercentage { get; set; }
     public bool IsWarningLevel { get; set; }
     public bool IsAtCapacity { get; set; }
+    public DateTime LastUpdated { get; set; }
 }

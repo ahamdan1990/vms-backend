@@ -156,11 +156,7 @@ public class CapacityService : ICapacityService
                 if (location != null)
                 {
                     // Use smaller of time slot or location capacity
-                    var locationCapacity = location.MaxOccupancy;
-                    capacity = timeSlot != null ? Math.Min(capacity, locationCapacity) : locationCapacity;
-                    
-                    _logger.LogDebug("Location capacity: {LocationCapacity}, final capacity: {FinalCapacity}",
-                        locationCapacity, capacity);
+                capacity = location.MaxCapacity;
                 }
             }
 
@@ -348,4 +344,36 @@ public class CapacityService : ICapacityService
             throw;
         }
     }
+
+    public async Task<int> GetSystemWideOccupancyAsync(
+    DateTime dateTime,
+    CancellationToken cancellationToken = default)
+    {
+        var locations = await _unitOfWork.Locations.GetAllAsync(cancellationToken);
+        var total = 0;
+
+        foreach (var location in locations)
+        {
+            total += await GetCurrentOccupancyAsync(dateTime, location.Id, cancellationToken);
+        }
+
+        return total;
+    }
+
+    public async Task<int> GetSystemWideMaxCapacityAsync(
+        DateTime dateTime,
+        CancellationToken cancellationToken = default)
+    {
+        var locations = await _unitOfWork.Locations.GetAllAsync(cancellationToken);
+        var total = 0;
+
+        foreach (var location in locations)
+        {
+            total += await GetMaxCapacityAsync(dateTime, location.Id, cancellationToken);
+            _logger.LogInformation("System wide max capacity for {DateTime} is {TotalCapacity}", dateTime, total);
+        }
+
+        return total > 0 ? total : 100; // fallback system default
+    }
+
 }

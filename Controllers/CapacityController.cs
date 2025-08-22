@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using VisitorManagementSystem.Api.Application.DTOs.Capacity;
 using VisitorManagementSystem.Api.Application.Queries.Capacity;
-using VisitorManagementSystem.Api.Application.Services.Capacity;
 using VisitorManagementSystem.Api.Domain.Constants;
 
 namespace VisitorManagementSystem.Api.Controllers;
@@ -19,12 +18,10 @@ namespace VisitorManagementSystem.Api.Controllers;
 public class CapacityController : BaseController
 {
     private readonly IMediator _mediator;
-    private readonly ICapacityService _capacityService;
 
-    public CapacityController(IMediator mediator, ICapacityService capacityService)
+    public CapacityController(IMediator mediator)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-        _capacityService = capacityService ?? throw new ArgumentNullException(nameof(capacityService));
     }
 
     /// <summary>
@@ -90,22 +87,14 @@ public class CapacityController : BaseController
 
         try
         {
-            var currentOccupancy = await _capacityService.GetCurrentOccupancyAsync(dateTime, locationId);
-            var maxCapacity = await _capacityService.GetMaxCapacityAsync(dateTime, locationId);
-            
-            var occupancyInfo = new
+            var query = new GetOccupancyQuery
             {
                 DateTime = dateTime,
-                LocationId = locationId,
-                CurrentOccupancy = currentOccupancy,
-                MaxCapacity = maxCapacity,
-                AvailableSlots = Math.Max(0, maxCapacity - currentOccupancy),
-                OccupancyPercentage = maxCapacity > 0 ? Math.Round((decimal)currentOccupancy / maxCapacity * 100, 2) : 0,
-                IsWarningLevel = maxCapacity > 0 && (currentOccupancy / (decimal)maxCapacity) >= 0.8m,
-                IsAtCapacity = currentOccupancy >= maxCapacity
+                LocationId = locationId
             };
 
-            return SuccessResponse(occupancyInfo);
+            var result = await _mediator.Send(query);
+            return SuccessResponse(result);
         }
         catch (Exception ex)
         {
@@ -143,8 +132,15 @@ public class CapacityController : BaseController
 
         try
         {
-            var statistics = await _capacityService.GetOccupancyStatisticsAsync(startDate, endDate, locationId);
-            return SuccessResponse(statistics);
+            var query = new GetCapacityStatisticsQuery
+            {
+                StartDate = startDate,
+                EndDate = endDate,
+                LocationId = locationId
+            };
+
+            var result = await _mediator.Send(query);
+            return SuccessResponse(result);
         }
         catch (Exception ex)
         {
@@ -173,10 +169,15 @@ public class CapacityController : BaseController
 
         try
         {
-            var alternatives = await _capacityService.GetAlternativeTimeSlotsAsync(
-                originalDateTime, expectedVisitors, locationId);
-            
-            return SuccessResponse(alternatives);
+            var query = new GetAlternativeTimeSlotsQuery
+            {
+                OriginalDateTime = originalDateTime,
+                ExpectedVisitors = expectedVisitors,
+                LocationId = locationId
+            };
+
+            var result = await _mediator.Send(query);
+            return SuccessResponse(result);
         }
         catch (Exception ex)
         {

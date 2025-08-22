@@ -8,6 +8,10 @@ namespace VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 /// </summary>
 public interface IInvitationRepository : IGenericRepository<Invitation>
 {
+    Task<Invitation?> GetByIdAsync(
+       int id,
+       CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Gets invitations by visitor ID
     /// </summary>

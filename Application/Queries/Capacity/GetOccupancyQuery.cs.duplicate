@@ -1,0 +1,20 @@
+using MediatR;
+using VisitorManagementSystem.Api.Application.DTOs.Capacity;
+
+namespace VisitorManagementSystem.Api.Application.Queries.Capacity;
+
+/// <summary>
+/// Query to get current occupancy for a specific date/time/location
+/// </summary>
+public class GetOccupancyQuery : IRequest<OccupancyDto>
+{
+    /// <summary>
+    /// Date and time to check occupancy for
+    /// </summary>
+    public DateTime DateTime { get; set; }
+
+    /// <summary>
+    /// Location ID to check (optional - if null, gets system-wide occupancy)
+    /// </summary>
+    public int? LocationId { get; set; }
+}

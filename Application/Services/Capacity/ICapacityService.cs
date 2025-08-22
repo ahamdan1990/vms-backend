@@ -82,4 +82,13 @@ public interface ICapacityService
         DateTime endDate,
         int? locationId = null,
         CancellationToken cancellationToken = default);
+
+
+    Task<int> GetSystemWideOccupancyAsync(
+    DateTime dateTime,
+    CancellationToken cancellationToken = default);
+
+    Task<int> GetSystemWideMaxCapacityAsync(
+        DateTime dateTime,
+        CancellationToken cancellationToken = default);
 }

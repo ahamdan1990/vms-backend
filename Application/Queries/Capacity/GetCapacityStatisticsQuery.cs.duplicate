@@ -1,0 +1,25 @@
+using MediatR;
+using VisitorManagementSystem.Api.Application.DTOs.Capacity;
+
+namespace VisitorManagementSystem.Api.Application.Queries.Capacity;
+
+/// <summary>
+/// Query to get capacity statistics for a date range
+/// </summary>
+public class GetCapacityStatisticsQuery : IRequest<CapacityStatisticsDto>
+{
+    /// <summary>
+    /// Start date for statistics
+    /// </summary>
+    public DateTime StartDate { get; set; }
+
+    /// <summary>
+    /// End date for statistics
+    /// </summary>
+    public DateTime EndDate { get; set; }
+
+    /// <summary>
+    /// Location ID to analyze (optional - if null, gets system-wide statistics)
+    /// </summary>
+    public int? LocationId { get; set; }
+}

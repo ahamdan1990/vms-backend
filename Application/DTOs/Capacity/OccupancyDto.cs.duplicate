@@ -1,0 +1,67 @@
+namespace VisitorManagementSystem.Api.Application.DTOs.Capacity;
+
+/// <summary>
+/// DTO for occupancy information that matches frontend OccupancyCard expectations
+/// </summary>
+public class OccupancyDto
+{
+    /// <summary>
+    /// Current occupancy count
+    /// </summary>
+    public int CurrentOccupancy { get; set; }
+
+    /// <summary>
+    /// Maximum capacity
+    /// </summary>
+    public int MaxCapacity { get; set; }
+
+    /// <summary>
+    /// Available slots remaining
+    /// </summary>
+    public int AvailableSlots { get; set; }
+
+    /// <summary>
+    /// Occupancy percentage (0-100+)
+    /// </summary>
+    public decimal OccupancyPercentage { get; set; }
+
+    /// <summary>
+    /// Whether the location is at full capacity
+    /// </summary>
+    public bool IsAtCapacity { get; set; }
+
+    /// <summary>
+    /// Whether the location is at warning level (>= 80% capacity)
+    /// </summary>
+    public bool IsWarningLevel { get; set; }
+
+    /// <summary>
+    /// Date and time for this occupancy data
+    /// </summary>
+    public DateTime DateTime { get; set; }
+
+    /// <summary>
+    /// Location ID (optional)
+    /// </summary>
+    public int? LocationId { get; set; }
+
+    /// <summary>
+    /// Location name (optional)
+    /// </summary>
+    public string? LocationName { get; set; }
+
+    /// <summary>
+    /// Time slot ID (optional)
+    /// </summary>
+    public int? TimeSlotId { get; set; }
+
+    /// <summary>
+    /// Time slot name (optional)
+    /// </summary>
+    public string? TimeSlotName { get; set; }
+
+    /// <summary>
+    /// When this data was last updated
+    /// </summary>
+    public DateTime LastUpdated { get; set; }
+}

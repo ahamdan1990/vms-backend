@@ -14,6 +14,23 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Repositories
         {
         }
 
+        public override async Task<Invitation?> GetByIdAsync(
+       int id,
+       CancellationToken cancellationToken = default)
+        {
+            return await _dbSet
+                .Include(i => i.Visitor)
+                .Include(i => i.Host)
+                .Include(i => i.VisitPurpose)
+                .Include(i => i.Location)
+                .Include(i => i.ApprovedByUser)
+                .Include(i => i.RejectedByUser)
+                .Include(i => i.Approvals)
+                .Include(i => i.Events)
+                .AsSplitQuery()
+                .FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
+        }
+
         // Centralized includes
         protected IQueryable<Invitation> ApplyIncludes(IQueryable<Invitation> query)
         {
