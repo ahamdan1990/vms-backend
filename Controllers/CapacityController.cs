@@ -189,27 +189,40 @@ public class CapacityController : BaseController
     /// </summary>
     /// <param name="dateTime">Date and time to check</param>
     /// <param name="locationIds">Specific location IDs (optional)</param>
+    /// <param name="includeInactive">Include inactive locations</param>
+    /// <param name="locationType">Filter by location type</param>
     /// <returns>Capacity overview for all/specified locations</returns>
     [HttpGet("overview")]
     [Authorize(Policy = Permissions.Dashboard.ViewBasic)]
     public async Task<IActionResult> GetCapacityOverview(
         [FromQuery] DateTime? dateTime = null,
-        [FromQuery] int[]? locationIds = null)
+        [FromQuery] int[]? locationIds = null,
+        [FromQuery] bool includeInactive = false,
+        [FromQuery] string? locationType = null)
     {
-        var checkDateTime = dateTime ?? DateTime.Now;
-        
         try
         {
-            // If no specific locations specified, get overview for all active locations
-            // This would need to be implemented to get active locations and their capacity
-            var overview = new
+            var query = new GetCapacityOverviewQuery
             {
-                DateTime = checkDateTime,
-                Message = "Capacity overview endpoint - implementation depends on your specific requirements",
-                Note = "This endpoint can be enhanced to show capacity overview for multiple locations simultaneously"
+                DateTime = dateTime ?? DateTime.Now,
+                LocationIds = locationIds,
+                IncludeInactive = includeInactive
             };
 
-            return SuccessResponse(overview);
+            var overview = await _mediator.Send(query);
+            
+            // Transform to frontend-compatible format
+            var frontendOverview = overview.Select(loc => new FrontendCapacityOverviewDto
+            {
+                Id = loc.LocationId,
+                Name = loc.LocationName,
+                MaxCapacity = loc.MaxCapacity,
+                CurrentOccupancy = loc.CurrentOccupancy,
+                IsAtCapacity = loc.IsAtCapacity,
+                IsWarningLevel = loc.IsWarningLevel
+            }).ToList();
+            
+            return SuccessResponse(frontendOverview);
         }
         catch (Exception ex)
         {
@@ -251,16 +264,15 @@ public class CapacityController : BaseController
 
         try
         {
-            // This would be implemented based on your specific trending requirements
-            var trends = new
+            var query = new GetCapacityTrendsQuery
             {
                 StartDate = startDate,
                 EndDate = endDate,
                 LocationId = locationId,
-                GroupBy = groupBy,
-                Message = "Capacity trends endpoint - can be enhanced with specific trend analysis based on your requirements"
+                GroupBy = groupBy
             };
 
+            var trends = await _mediator.Send(query);
             return SuccessResponse(trends);
         }
         catch (Exception ex)

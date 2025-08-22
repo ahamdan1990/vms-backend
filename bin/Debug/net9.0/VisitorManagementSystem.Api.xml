@@ -2180,6 +2180,42 @@
             Alternative time slots if current is unavailable
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.FrontendCapacityOverviewDto">
+            <summary>
+            DTO for frontend capacity overview selector 
+            Matches the expected format for selectOverviewSummary selector
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.FrontendCapacityOverviewDto.Id">
+            <summary>
+            Location ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.FrontendCapacityOverviewDto.Name">
+            <summary>
+            Location name
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.FrontendCapacityOverviewDto.MaxCapacity">
+            <summary>
+            Maximum capacity for the location
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.FrontendCapacityOverviewDto.CurrentOccupancy">
+            <summary>
+            Current occupancy count
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.FrontendCapacityOverviewDto.IsAtCapacity">
+            <summary>
+            Whether the location is at full capacity
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Capacity.FrontendCapacityOverviewDto.IsWarningLevel">
+            <summary>
+            Whether the location is at warning level (>= 80% capacity)
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Capacity.LocationCapacityOverviewDto">
             <summary>
             DTO for location capacity overview
@@ -5471,6 +5507,16 @@
         <member name="T:VisitorManagementSystem.Api.Application.Queries.Capacity.GetCapacityTrendsQuery">
             <summary>
             Query to get capacity trends
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Capacity.GetCapacityOverviewQueryHandler">
+            <summary>
+            Handler for capacity overview query
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Capacity.GetCapacityTrendsQueryHandler">
+            <summary>
+            Handler for capacity trends query
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Queries.Capacity.ValidateCapacityQuery">
@@ -9780,12 +9826,14 @@
             <param name="locationId">Location ID (optional)</param>
             <returns>Alternative time slots</returns>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.CapacityController.GetCapacityOverview(System.Nullable{System.DateTime},System.Int32[])">
+        <member name="M:VisitorManagementSystem.Api.Controllers.CapacityController.GetCapacityOverview(System.Nullable{System.DateTime},System.Int32[],System.Boolean,System.String)">
             <summary>
             Gets real-time capacity overview for multiple locations
             </summary>
             <param name="dateTime">Date and time to check</param>
             <param name="locationIds">Specific location IDs (optional)</param>
+            <param name="includeInactive">Include inactive locations</param>
+            <param name="locationType">Filter by location type</param>
             <returns>Capacity overview for all/specified locations</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Controllers.CapacityController.GetCapacityTrends(System.DateTime,System.DateTime,System.Nullable{System.Int32},System.String)">
