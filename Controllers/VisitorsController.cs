@@ -372,43 +372,4 @@ public class VisitorsController : BaseController
         var result = await _mediator.Send(query);
         return SuccessResponse(result);
     }
-
-    /// <summary>
-    /// Gets visitor's documents
-    /// </summary>
-    /// <param name="id">Visitor ID</param>
-    /// <returns>List of visitor documents</returns>
-    [HttpGet("{id:int}/documents")]
-    [Authorize(Policy = Permissions.VisitorDocument.Read)]
-    public async Task<IActionResult> GetVisitorDocuments(int id)
-    {
-        // Redirect to VisitorDocumentsController
-        return RedirectToAction("GetVisitorDocuments", "VisitorDocuments", new { visitorId = id });
-    }
-
-    /// <summary>
-    /// Gets visitor's notes
-    /// </summary>
-    /// <param name="id">Visitor ID</param>
-    /// <returns>List of visitor notes</returns>
-    [HttpGet("{id:int}/notes")]
-    [Authorize(Policy = Permissions.VisitorNote.Read)]
-    public async Task<IActionResult> GetVisitorNotes(int id)
-    {
-        // Redirect to VisitorNotesController
-        return RedirectToAction("GetVisitorNotes", "VisitorNotes", new { visitorId = id });
-    }
-
-    /// <summary>
-    /// Gets visitor's emergency contacts
-    /// </summary>
-    /// <param name="id">Visitor ID</param>
-    /// <returns>List of emergency contacts</returns>
-    [HttpGet("{id:int}/emergency-contacts")]
-    [Authorize(Policy = Permissions.EmergencyContact.Read)]
-    public async Task<IActionResult> GetEmergencyContacts(int id)
-    {
-        // Redirect to EmergencyContactsController
-        return RedirectToAction("GetEmergencyContacts", "EmergencyContacts", new { visitorId = id });
-    }
 }

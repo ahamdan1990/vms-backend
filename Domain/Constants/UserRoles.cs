@@ -326,6 +326,28 @@ public static class UserRoles
             Permissions.Visitor.ViewPersonalInfo,
             Permissions.Visitor.ManagePhotos,
             
+            Permissions.VisitorDocument.Create,
+            Permissions.VisitorDocument.Read,
+            Permissions.VisitorDocument.Update,
+            Permissions.VisitorDocument.Delete,
+            Permissions.VisitorDocument.Download,
+            Permissions.VisitorDocument.Upload,
+            Permissions.VisitorDocument.ViewSensitive,
+
+            Permissions.VisitorNote.Create,
+            Permissions.VisitorNote.Read,
+            Permissions.VisitorNote.Update,
+            Permissions.VisitorNote.Delete,
+            Permissions.VisitorNote.ViewConfidential,
+            Permissions.VisitorNote.ViewFlagged,
+
+            // Emergency contacts
+            Permissions.EmergencyContact.Create,
+            Permissions.EmergencyContact.Read,
+            Permissions.EmergencyContact.Update,
+            Permissions.EmergencyContact.Delete,
+            Permissions.EmergencyContact.ViewPersonalInfo,
+
             // Bulk import
             Permissions.BulkImport.Create,
             Permissions.BulkImport.Process,

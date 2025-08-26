@@ -26,6 +26,8 @@ public class VisitorMappingProfile : Profile
             .ForMember(dest => dest.PhoneCountryCode, opt => opt.MapFrom(src => src.PhoneNumber != null ? src.PhoneNumber.CountryCode : null))
             .ForMember(dest => dest.PhoneType, opt => opt.MapFrom(src => src.PhoneNumber != null ? src.PhoneNumber.PhoneType : null))
             .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
+            .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
+            .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
             .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src => src.CreatedByUser != null ? src.CreatedByUser.FullName : null))
             .ForMember(dest => dest.ModifiedByName, opt => opt.MapFrom(src => src.ModifiedByUser != null ? src.ModifiedByUser.FullName : null))
             .ForMember(dest => dest.BlacklistedByName, opt => opt.MapFrom(src => src.BlacklistedByUser != null ? src.BlacklistedByUser.FullName : null));
