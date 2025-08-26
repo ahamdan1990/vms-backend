@@ -1,7 +1,5 @@
-﻿// Update your PermissionHandler.cs - Replace the role claim lookup
-
-using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims; // ADD THIS IMPORT
+﻿using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using VisitorManagementSystem.Api.Domain.Constants;
 
 namespace VisitorManagementSystem.Api.Infrastructure.Security.Authorization;
