@@ -155,5 +155,72 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Repositories
                 .Where(i => i.VisitorId == visitorId && i.Status == status)
                 .ToListAsync(cancellationToken);
         }
+
+        // Methods moved from RepositoryExtensions
+        public async Task<IEnumerable<Invitation>> GetTodaysInvitationsForHostAsync(
+            int hostId, 
+            DateTime startDate, 
+            DateTime endDate,
+            CancellationToken cancellationToken = default)
+        {
+            return await ApplyIncludes(_dbSet)
+                .Where(inv => inv.HostId == hostId && 
+                           inv.ScheduledStartTime >= startDate && 
+                           inv.ScheduledStartTime < endDate &&
+                           inv.IsActive)
+                .OrderBy(inv => inv.ScheduledStartTime)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<Invitation?> GetTodaysInvitationForVisitorAsync(
+            int visitorId,
+            DateTime date,
+            CancellationToken cancellationToken = default)
+        {
+            var startDate = date.Date;
+            var endDate = startDate.AddDays(1);
+
+            return await ApplyIncludes(_dbSet)
+                .FirstOrDefaultAsync(
+                    inv => inv.VisitorId == visitorId &&
+                           inv.ScheduledStartTime >= startDate &&
+                           inv.ScheduledStartTime < endDate &&
+                           inv.IsActive,
+                    cancellationToken);
+        }
+
+        public async Task<int> GetPendingApprovalsCountAsync(
+            CancellationToken cancellationToken = default)
+        {
+            return await _dbSet.CountAsync(
+                inv => inv.Status == InvitationStatus.Submitted && inv.IsActive,
+                cancellationToken);
+        }
+
+        public async Task<int> GetTodaysInvitationsCountAsync(
+            DateTime date,
+            CancellationToken cancellationToken = default)
+        {
+            var startDate = date.Date;
+            var endDate = startDate.AddDays(1);
+
+            return await _dbSet.CountAsync(
+                inv => inv.ScheduledStartTime >= startDate &&
+                       inv.ScheduledStartTime < endDate &&
+                       inv.IsActive,
+                cancellationToken);
+        }
+
+        public async Task<IEnumerable<Invitation>> GetOverstayedInvitationsAsync(
+            DateTime threshold,
+            CancellationToken cancellationToken = default)
+        {
+            return await ApplyIncludes(_dbSet)
+                .Where(inv => inv.ScheduledEndTime < threshold &&
+                           inv.Status == InvitationStatus.Active &&
+                           inv.IsActive)
+                .OrderBy(inv => inv.ScheduledEndTime)
+                .ToListAsync(cancellationToken);
+        }
     }
 }

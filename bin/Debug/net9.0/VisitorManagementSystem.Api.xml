@@ -474,6 +474,11 @@
             Handler for create invitation command
             </summary>
         </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Commands.Invitations.CreateInvitationCommandHandler.SendInvitationNotificationsAsync(VisitorManagementSystem.Api.Domain.Entities.Invitation,VisitorManagementSystem.Api.Domain.Entities.User,VisitorManagementSystem.Api.Domain.Entities.Visitor,System.Boolean,System.Threading.CancellationToken)">
+            <summary>
+            Send notifications for invitation creation
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Commands.Invitations.DeleteInvitationCommand">
             <summary>
             Command for deleting an invitation (only if status is Cancelled)
@@ -7233,6 +7238,125 @@
             Two-factor authentication service implementation
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.BackgroundServices.FREventProcessorService">
+            <summary>
+            Background service that processes FR system webhook events and dispatches notifications
+            Simulates receiving FR system webhooks and triggering real-time alerts
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.BackgroundServices.FREventProcessorService.ProcessFREventsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Process queued FR events and dispatch notifications
+            In production, this would process real FR webhook events from a queue
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.BackgroundServices.FREventProcessorService.SimulateFREventsAsync(VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUnitOfWork,VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService,System.Threading.CancellationToken)">
+            <summary>
+            Simulate FR events for development/testing
+            Remove this in production and replace with actual FR webhook processing
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.BackgroundServices.FREventProcessorService.ProcessFRWebhookEvent(System.String,VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUnitOfWork,VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService,System.Threading.CancellationToken)">
+            <summary>
+            Process actual FR webhook event (production implementation)
+            </summary>
+            <param name="frEventData">FR system event data</param>
+            <param name="unitOfWork">Unit of work</param>
+            <param name="notificationService">Notification service</param>
+            <param name="cancellationToken">Cancellation token</param>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.BackgroundServices.FREventDto">
+            <summary>
+            DTO for FR system webhook events
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.BackgroundServices.NotificationDispatcherService">
+            <summary>
+            Background service that processes notification escalation rules and external delivery
+            Handles unacknowledged alerts, escalation logic, and email/SMS notifications
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.BackgroundServices.NotificationDispatcherService.ProcessNotificationEscalationAsync(System.Threading.CancellationToken)">
+            <summary>
+            Process escalation rules for unacknowledged alerts
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.BackgroundServices.NotificationDispatcherService.ProcessAlertEscalation(VisitorManagementSystem.Api.Domain.Entities.NotificationAlert,System.Collections.Generic.IEnumerable{VisitorManagementSystem.Api.Domain.Entities.AlertEscalation},VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUnitOfWork,VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService,System.Threading.CancellationToken)">
+            <summary>
+            Process escalation for a specific alert
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.BackgroundServices.NotificationDispatcherService.ExecuteEscalationAction(VisitorManagementSystem.Api.Domain.Entities.AlertEscalation,VisitorManagementSystem.Api.Domain.Entities.NotificationAlert,VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUnitOfWork,VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService,System.Threading.CancellationToken)">
+            <summary>
+            Execute the escalation action
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.BackgroundServices.NotificationDispatcherService.SendEscalationEmail(VisitorManagementSystem.Api.Domain.Entities.AlertEscalation,VisitorManagementSystem.Api.Domain.Entities.NotificationAlert,System.Threading.CancellationToken)">
+            <summary>
+            Send escalation email
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.BackgroundServices.NotificationDispatcherService.SendEscalationSMS(VisitorManagementSystem.Api.Domain.Entities.AlertEscalation,VisitorManagementSystem.Api.Domain.Entities.NotificationAlert,System.Threading.CancellationToken)">
+            <summary>
+            Send escalation SMS
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.BackgroundServices.NotificationDispatcherService.ProcessExternalNotificationQueueAsync(System.Threading.CancellationToken)">
+            <summary>
+            Process queue of notifications that need external delivery
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.BackgroundServices.NotificationDispatcherService.ProcessExternalNotification(VisitorManagementSystem.Api.Domain.Entities.NotificationAlert,VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUnitOfWork,System.Threading.CancellationToken)">
+            <summary>
+            Process external notification delivery
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.BackgroundServices.NotificationDispatcherService.CleanupExpiredAlertsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Clean up expired alerts
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.BackgroundServices.VisitorTrackingService">
+            <summary>
+            Background service that tracks visitor occupancy and updates real-time dashboards
+            Monitors capacity limits, visitor overstays, and provides live occupancy data
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.BackgroundServices.VisitorTrackingService.UpdateOccupancyTrackingAsync(System.Threading.CancellationToken)">
+            <summary>
+            Update occupancy logs and real-time tracking
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.BackgroundServices.VisitorTrackingService.UpdateLocationOccupancy(VisitorManagementSystem.Api.Domain.Entities.Location,VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUnitOfWork,System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            Update occupancy for a specific location
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.BackgroundServices.VisitorTrackingService.CheckCapacityLimitsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Check capacity limits and send alerts if exceeded
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.BackgroundServices.VisitorTrackingService.CheckVisitorOverstaysAsync(System.Threading.CancellationToken)">
+            <summary>
+            Check for visitor overstays and send alerts
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.BackgroundServices.VisitorTrackingService.UpdateDashboardMetricsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Update real-time dashboard metrics for all connected clients
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.BackgroundServices.VisitorTrackingService.CalculateDashboardMetrics(VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUnitOfWork,System.Threading.CancellationToken)">
+            <summary>
+            Calculate current dashboard metrics
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.BackgroundServices.DashboardMetrics">
+            <summary>
+            Dashboard metrics data structure
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Services.Capacity.CapacityService">
             <summary>
             Service for managing facility capacity and occupancy
@@ -7849,6 +7973,16 @@
             <param name="cancellationToken">Cancellation token</param>
             <returns>True if connection successful</returns>
         </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailService.SendAlertEmailAsync(System.String,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Sends an alert email for system notifications
+            </summary>
+            <param name="to">Recipient email</param>
+            <param name="subject">Email subject</param>
+            <param name="body">Email body</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Task</returns>
+        </member>
         <member name="M:VisitorManagementSystem.Api.Application.Services.Email.IEmailService.ValidateConnectionAsync">
             <summary>
             Validates the email connection and configuration (synchronous wrapper)
@@ -8040,6 +8174,106 @@
         <member name="M:VisitorManagementSystem.Api.Application.Services.DocumentUploadResult.Failure(System.String)">
             <summary>
             Creates a failed result
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService">
+            <summary>
+            Service interface for real-time notifications via SignalR
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService.NotifyUserAsync(System.Int32,System.String,System.String,VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType,VisitorManagementSystem.Api.Domain.Enums.AlertPriority,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Send notification to specific user
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService.NotifyRoleAsync(System.String,System.String,System.String,VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType,VisitorManagementSystem.Api.Domain.Enums.AlertPriority,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Send notification to all users with specific role
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService.NotifyOperatorsAsync(System.Nullable{System.Int32},System.String,System.String,VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType,VisitorManagementSystem.Api.Domain.Enums.AlertPriority,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Send notification to operators at specific location
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService.NotifyHostOfVisitorArrivalAsync(System.Int32,System.Int32,System.String,System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            Send visitor arrival notification to host
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService.NotifyVipArrivalAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Send VIP arrival alert to security and operators
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService.NotifyBlacklistDetectionAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Send blacklist detection alert to security
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService.NotifyUnknownFaceDetectionAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Send unknown face detection alert to operators
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService.NotifyInvitationApprovalAsync(System.Int32,System.Int32,System.Boolean,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Send invitation approval notification
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService.NotifySystemAlertAsync(System.String,System.String,VisitorManagementSystem.Api.Domain.Enums.AlertPriority,System.Threading.CancellationToken)">
+            <summary>
+            Send system alert to administrators
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService.NotifyFRSystemOfflineAsync(System.Threading.CancellationToken)">
+            <summary>
+            Send FR system offline alert
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService.NotifyCapacityAlertAsync(System.String,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Send capacity limit alert
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService.NotifyEmergencyAlertAsync(System.String,System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Send emergency alert to all connected clients
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService.NotifyVisitorCheckInAsync(System.Int32,System.Int32,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Send visitor check-in notification to host
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService.NotifyVisitorCheckOutAsync(System.Int32,System.Int32,System.String,System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            Send visitor check-out notification to host
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService.SendBulkNotificationAsync(VisitorManagementSystem.Api.Domain.Entities.NotificationAlert,System.Threading.CancellationToken)">
+            <summary>
+            Send bulk notification with custom targeting
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService.UpdateOperatorQueueAsync(System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Update operator queue status for all operators
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.INotificationService.UpdateSystemHealthAsync(System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Update system health status for administrators
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.Notifications.NotificationService">
+            <summary>
+            Service for sending real-time notifications via SignalR hubs
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.Notifications.NotificationService.CreateNotificationPayload(VisitorManagementSystem.Api.Domain.Entities.NotificationAlert,System.Object)">
+            <summary>
+            Creates a standardized notification payload
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Services.Pdf.IPdfService">
@@ -11259,6 +11493,96 @@
             <param name="toState">Target state</param>
             <returns>Invalid transition message</returns>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation">
+            <summary>
+            Defines escalation rules for unacknowledged alerts
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation.RuleName">
+            <summary>
+            Rule name/description
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation.AlertType">
+            <summary>
+            Alert type this rule applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation.AlertPriority">
+            <summary>
+            Alert priority this rule applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation.TargetRole">
+            <summary>
+            Target role this rule applies to (null = all)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation.LocationId">
+            <summary>
+            Location this rule applies to (null = all)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation.EscalationDelayMinutes">
+            <summary>
+            Minutes to wait before escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation.Action">
+            <summary>
+            Escalation action to take
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation.EscalationTargetRole">
+            <summary>
+            Target role for escalation (when Action = EscalateToRole)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation.EscalationTargetUserId">
+            <summary>
+            Target user for escalation (when Action = EscalateToUser)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation.EscalationEmails">
+            <summary>
+            Email addresses for escalation (when Action = SendEmail)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation.EscalationPhones">
+            <summary>
+            Phone numbers for SMS (when Action = SendSMS)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation.MaxAttempts">
+            <summary>
+            Maximum number of escalation attempts
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation.IsEnabled">
+            <summary>
+            Whether this rule is currently active
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation.RulePriority">
+            <summary>
+            Rule priority (lower number = higher priority)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation.Configuration">
+            <summary>
+            Additional escalation configuration (JSON)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation.Location">
+            <summary>
+            Navigation properties
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.AlertEscalation.MatchesAlert(VisitorManagementSystem.Api.Domain.Entities.NotificationAlert)">
+            <summary>
+            Check if rule matches the alert
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Entities.AuditableEntity">
             <summary>
             Base entity class that provides audit trail functionality
@@ -12002,6 +12326,17 @@
             </summary>
             <param name="approvedBy">User approving the invitation</param>
             <param name="comments">Approval comments</param>
+            <summary>
+            Approves the invitation
+            </summary>
+            <param name="approvedBy">User approving the invitation</param>
+            <param name="comments">Optional approval comments</param>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.Invitation.CanBeApproved">
+            <summary>
+            Checks if the invitation can be approved
+            </summary>
+            <returns>True if the invitation can be approved, false otherwise</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Domain.Entities.Invitation.Reject(System.Int32,System.String)">
             <summary>
@@ -12460,6 +12795,116 @@
             Navigation property for related invitations
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert">
+            <summary>
+            Represents a system-generated notification alert
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.Title">
+            <summary>
+            Alert title/subject
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.Message">
+            <summary>
+            Alert message content
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.Type">
+            <summary>
+            Alert type (determines routing and priority)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.Priority">
+            <summary>
+            Alert priority level
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.TargetRole">
+            <summary>
+            Target user role for this alert (null = all roles)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.TargetUserId">
+            <summary>
+            Specific target user ID (null = role-based routing)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.TargetLocationId">
+            <summary>
+            Target location/group for operators
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.RelatedEntityType">
+            <summary>
+            Related entity type (Visitor, Invitation, etc.)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.RelatedEntityId">
+            <summary>
+            Related entity ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.PayloadData">
+            <summary>
+            Alert payload data (JSON)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.IsAcknowledged">
+            <summary>
+            Whether alert has been read/acknowledged
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.AcknowledgedBy">
+            <summary>
+            Who acknowledged the alert
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.AcknowledgedOn">
+            <summary>
+            When alert was acknowledged
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.ExpiresOn">
+            <summary>
+            Alert expiry time (auto-dismiss)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.SentExternally">
+            <summary>
+            Whether alert has been sent via external channels (email/SMS)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.SentExternallyOn">
+            <summary>
+            External send timestamp
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.TargetUser">
+            <summary>
+            Navigation properties
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.CreateFRAlert(System.String,System.String,VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType,VisitorManagementSystem.Api.Domain.Enums.AlertPriority,System.String,System.Nullable{System.Int32},System.Nullable{System.Int32},System.String,System.Nullable{System.Int32},System.String,System.Nullable{System.Int32})">
+            <summary>
+            Factory method to create FR-related alerts
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.Acknowledge(System.Int32)">
+            <summary>
+            Acknowledge the alert
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.MarkSentExternally">
+            <summary>
+            Mark as sent externally
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.NotificationAlert.IsExpired">
+            <summary>
+            Check if alert is expired
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Entities.OccupancyLog">
             <summary>
             Tracks real-time facility occupancy for capacity management
@@ -12563,6 +13008,91 @@
             Validates the occupancy log data
             </summary>
             <returns>List of validation errors</returns>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Entities.OperatorSession">
+            <summary>
+            Tracks active operator/receptionist sessions for targeted notifications
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OperatorSession.UserId">
+            <summary>
+            User ID of the operator
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OperatorSession.ConnectionId">
+            <summary>
+            SignalR connection ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OperatorSession.LocationId">
+            <summary>
+            Location/group this operator is responsible for
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OperatorSession.Status">
+            <summary>
+            Operator's current status
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OperatorSession.LastActivity">
+            <summary>
+            Last activity timestamp
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OperatorSession.SessionStart">
+            <summary>
+            Session start time
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OperatorSession.SessionEnd">
+            <summary>
+            Session end time (null if active)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OperatorSession.IpAddress">
+            <summary>
+            Client IP address
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OperatorSession.UserAgent">
+            <summary>
+            User agent information
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OperatorSession.Metadata">
+            <summary>
+            Additional session metadata (JSON)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OperatorSession.User">
+            <summary>
+            Navigation properties
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.OperatorSession.UpdateActivity">
+            <summary>
+            Update last activity timestamp
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.OperatorSession.SetStatus(VisitorManagementSystem.Api.Domain.Enums.OperatorStatus)">
+            <summary>
+            Set operator status
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Entities.OperatorSession.EndSession">
+            <summary>
+            End the session
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OperatorSession.IsActive">
+            <summary>
+            Check if session is active
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.OperatorSession.SessionDuration">
+            <summary>
+            Calculate session duration
+            </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Entities.RefreshToken">
             <summary>
@@ -14044,6 +14574,191 @@
             Completed - visit finished
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType">
+            <summary>
+            Types of notification alerts in the system
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType.VisitorArrival">
+            <summary>
+            Visitor arrival detected by FR system
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType.VipArrival">
+            <summary>
+            VIP visitor detected
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType.UnknownFace">
+            <summary>
+            Unknown face detected at entrance
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType.BlacklistAlert">
+            <summary>
+            Blacklisted person detected
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType.VisitorCheckedIn">
+            <summary>
+            Visitor check-in completed
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType.VisitorCheckedOut">
+            <summary>
+            Visitor check-out completed
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType.InvitationPendingApproval">
+            <summary>
+            New invitation requires approval
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType.InvitationApproved">
+            <summary>
+            Invitation was approved
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType.InvitationRejected">
+            <summary>
+            Invitation was rejected
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType.SystemAlert">
+            <summary>
+            System error or warning
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType.FRSystemOffline">
+            <summary>
+            FR system connectivity issue
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType.CapacityAlert">
+            <summary>
+            Capacity limit reached or exceeded
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType.EmergencyAlert">
+            <summary>
+            Emergency evacuation or lockdown
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType.ManualOverride">
+            <summary>
+            Manual override performed
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType.VisitorOverstay">
+            <summary>
+            Visitor overstay alert
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType.BadgePrintingError">
+            <summary>
+            Badge printing issue
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType.Custom">
+            <summary>
+            Custom user-defined alert
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Enums.AlertPriority">
+            <summary>
+            Alert priority levels
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.AlertPriority.Low">
+            <summary>
+            Low priority - informational
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.AlertPriority.Medium">
+            <summary>
+            Medium priority - standard alerts
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.AlertPriority.High">
+            <summary>
+            High priority - requires attention
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.AlertPriority.Critical">
+            <summary>
+            Critical priority - immediate action required
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.AlertPriority.Emergency">
+            <summary>
+            Emergency priority - security/safety issue
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Enums.OperatorStatus">
+            <summary>
+            Operator session status
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.OperatorStatus.Offline">
+            <summary>
+            Operator is offline/disconnected
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.OperatorStatus.Online">
+            <summary>
+            Operator is online and available
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.OperatorStatus.Busy">
+            <summary>
+            Operator is busy processing visitors
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.OperatorStatus.Away">
+            <summary>
+            Operator is on break/away
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.OperatorStatus.NeedAssistance">
+            <summary>
+            Operator requires assistance
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Enums.EscalationAction">
+            <summary>
+            Actions to take when escalating alerts
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.EscalationAction.EscalateToRole">
+            <summary>
+            Escalate to a specific role/group
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.EscalationAction.EscalateToUser">
+            <summary>
+            Escalate to a specific user
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.EscalationAction.SendEmail">
+            <summary>
+            Send email notification
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.EscalationAction.SendSMS">
+            <summary>
+            Send SMS notification
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.EscalationAction.CreateHighPriorityAlert">
+            <summary>
+            Create a high priority alert
+            </summary>
+        </member>
+        <member name="F:VisitorManagementSystem.Api.Domain.Enums.EscalationAction.LogCriticalEvent">
+            <summary>
+            Log as critical event
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Enums.PermissionType">
             <summary>
             Represents the different types of permissions that can be granted to users
@@ -14649,6 +15364,17 @@
             <param name="cancellationToken">Cancellation token</param>
             <returns>List of all entities</returns>
         </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IGenericRepository`1.GetAllAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.Func{System.Linq.IQueryable{`0},System.Linq.IOrderedQueryable{`0}},System.String,System.Nullable{System.Int32},System.Threading.CancellationToken)">
+            <summary>
+            Gets entities with optional filtering, ordering, including, and limiting
+            </summary>
+            <param name="predicate">Optional predicate for filtering</param>
+            <param name="orderBy">Optional ordering function</param>
+            <param name="include">Optional include string for navigation properties</param>
+            <param name="take">Optional limit for number of results</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of entities</returns>
+        </member>
         <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IGenericRepository`1.GetAsync(VisitorManagementSystem.Api.Domain.Specifications.BaseSpecification{`0},System.Threading.CancellationToken)">
             <summary>
             Gets entities by specification
@@ -14761,6 +15487,15 @@
             Gets first entity or default
             </summary>
             <param name="predicate">Predicate expression</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>First entity or null</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IGenericRepository`1.GetFirstOrDefaultAsync(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}},System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets first entity or default with includes
+            </summary>
+            <param name="predicate">Predicate expression</param>
+            <param name="include">Include string for navigation properties</param>
             <param name="cancellationToken">Cancellation token</param>
             <returns>First entity or null</returns>
         </member>
@@ -15085,6 +15820,48 @@
             <param name="cancellationToken">Cancellation token</param>
             <returns>Invitation if found</returns>
         </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IInvitationRepository.GetTodaysInvitationsForHostAsync(System.Int32,System.DateTime,System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            Get today's invitations for a specific host
+            </summary>
+            <param name="hostId">Host ID</param>
+            <param name="startDate">Start date</param>
+            <param name="endDate">End date</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of invitations</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IInvitationRepository.GetTodaysInvitationForVisitorAsync(System.Int32,System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            Get today's invitation for a specific visitor
+            </summary>
+            <param name="visitorId">Visitor ID</param>
+            <param name="date">Date to check</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Invitation if found</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IInvitationRepository.GetPendingApprovalsCountAsync(System.Threading.CancellationToken)">
+            <summary>
+            Get pending approvals count
+            </summary>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Count of pending approvals</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IInvitationRepository.GetTodaysInvitationsCountAsync(System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            Get today's invitations count
+            </summary>
+            <param name="date">Date to check</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Count of today's invitations</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IInvitationRepository.GetOverstayedInvitationsAsync(System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            Get overstayed invitations (past scheduled end time)
+            </summary>
+            <param name="threshold">Threshold date/time</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of overstayed invitations</returns>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.InvitationStatistics">
             <summary>
             Invitation statistics
@@ -15132,6 +15909,128 @@
             <param name="parentId">Parent location ID</param>
             <param name="cancellationToken">Cancellation token</param>
             <returns>List of child locations</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.ILocationRepository.GetActiveLocationsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Get active locations
+            </summary>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of active locations</returns>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.INotificationAlertRepository">
+            <summary>
+            Repository interface for notification alerts
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.INotificationAlertRepository.GetUnacknowledgedAlertsForUserAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Get unacknowledged alerts for a specific user
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.INotificationAlertRepository.GetUnacknowledgedAlertsForRoleAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Get unacknowledged alerts for a specific role
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.INotificationAlertRepository.GetUnacknowledgedAlertsForLocationAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Get unacknowledged alerts for a specific location
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.INotificationAlertRepository.GetAlertsByTypeAndPriorityAsync(VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType,VisitorManagementSystem.Api.Domain.Enums.AlertPriority,System.Nullable{System.DateTime},System.Threading.CancellationToken)">
+            <summary>
+            Get alerts by type and priority
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.INotificationAlertRepository.GetRecentAlertsForUserAsync(System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Get recent alerts for a user (last N days)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.INotificationAlertRepository.AcknowledgeAlertAsync(System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Mark alert as acknowledged
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.INotificationAlertRepository.GetEscalationCandidatesAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Get escalation candidates (unacknowledged alerts older than X minutes)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.INotificationAlertRepository.GetExpiredAlertsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Get expired alerts that need cleanup
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.INotificationAlertRepository.GetAlertStatisticsAsync(System.DateTime,System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            Get alert statistics for a date range
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IOperatorSessionRepository">
+            <summary>
+            Repository interface for operator sessions
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IOperatorSessionRepository.GetActiveSessionsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Get active operator sessions
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IOperatorSessionRepository.GetActiveSessionsForLocationAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Get active sessions for a specific location
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IOperatorSessionRepository.GetSessionByConnectionIdAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Get session by connection ID
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IOperatorSessionRepository.EndSessionByConnectionIdAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            End session by connection ID
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IOperatorSessionRepository.GetActiveSessionForUserAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Get active session for user
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IOperatorSessionRepository.UpdateSessionActivityAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Update session activity
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IOperatorSessionRepository.GetSessionStatisticsAsync(System.Threading.CancellationToken)">
+            <summary>
+            Get session statistics
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IAlertEscalationRepository">
+            <summary>
+            Repository interface for alert escalation rules
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IAlertEscalationRepository.GetApplicableRulesAsync(VisitorManagementSystem.Api.Domain.Entities.NotificationAlert,System.Threading.CancellationToken)">
+            <summary>
+            Get applicable escalation rules for an alert
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IAlertEscalationRepository.GetActiveRulesByPriorityAsync(System.Threading.CancellationToken)">
+            <summary>
+            Get active escalation rules by priority
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IAlertEscalationRepository.GetRulesByAlertTypeAsync(VisitorManagementSystem.Api.Domain.Enums.NotificationAlertType,System.Threading.CancellationToken)">
+            <summary>
+            Get rules by alert type
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IAlertEscalationRepository.TestRuleMatchAsync(System.Int32,VisitorManagementSystem.Api.Domain.Entities.NotificationAlert,System.Threading.CancellationToken)">
+            <summary>
+            Test escalation rule against an alert
+            </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IRefreshTokenRepository">
             <summary>
@@ -15518,6 +16417,21 @@
         <member name="P:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUnitOfWork.Invitations">
             <summary>
             Invitation repository
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUnitOfWork.NotificationAlerts">
+            <summary>
+            Notification alert repository
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUnitOfWork.OperatorSessions">
+            <summary>
+            Operator session repository
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUnitOfWork.AlertEscalations">
+            <summary>
+            Alert escalation repository
             </summary>
         </member>
         <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUnitOfWork.Repository``1">
@@ -16009,6 +16923,14 @@
             </summary>
             <param name="user">User to delete</param>
         </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IUserRepository.GetUsersByRoleAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Gets users by role name (string-based)
+            </summary>
+            <param name="role">Role name (Staff, Administrator, Operator)</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of users with the specified role</returns>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.UserStatistics">
             <summary>
             User statistics data transfer object
@@ -16191,6 +17113,14 @@
             <param name="excludeId">ID to exclude from check</param>
             <param name="cancellationToken">Cancellation token</param>
             <returns>True if visitor exists with the government ID</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IVisitorRepository.GetByFRPersonIdAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Get visitor by FR person ID
+            </summary>
+            <param name="frPersonId">FR person ID</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Visitor if found</returns>
         </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Interfaces.Repositories.IVisitPurposeRepository">
             <summary>
@@ -16383,61 +17313,6 @@
         <member name="P:VisitorManagementSystem.Api.Domain.Interfaces.Services.FileMetadata.Extension">
             <summary>
             File extension
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Domain.Interfaces.Services.INotificationService">
-            <summary>
-            Interface for notification operations
-            </summary>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Services.INotificationService.SendNotificationAsync(System.String,System.Threading.CancellationToken)">
-            <summary>
-            Sends a notification message
-            </summary>
-            <param name="message">Notification message</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Task</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Services.INotificationService.SendNotificationAsync(System.Int32,System.String,System.Threading.CancellationToken)">
-            <summary>
-            Sends a notification to specific user
-            </summary>
-            <param name="userId">User ID</param>
-            <param name="message">Notification message</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Task</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Services.INotificationService.SendNotificationAsync(System.Collections.Generic.IEnumerable{System.Int32},System.String,System.Threading.CancellationToken)">
-            <summary>
-            Sends a notification to multiple users
-            </summary>
-            <param name="userIds">User IDs</param>
-            <param name="message">Notification message</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Task</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Services.INotificationService.SendTemplatedNotificationAsync(System.Int32,System.String,System.Object,System.Threading.CancellationToken)">
-            <summary>
-            Sends a templated notification
-            </summary>
-            <param name="userId">User ID</param>
-            <param name="templateName">Template name</param>
-            <param name="templateData">Template data</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Task</returns>
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Domain.Interfaces.Services.INotificationService.SendSystemNotificationAsync(System.String,VisitorManagementSystem.Api.Domain.Interfaces.Services.NotificationType,System.Threading.CancellationToken)">
-            <summary>
-            Sends a system-wide notification
-            </summary>
-            <param name="message">Notification message</param>
-            <param name="notificationType">Type of notification</param>
-            <param name="cancellationToken">Cancellation token</param>
-            <returns>Task</returns>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Domain.Interfaces.Services.NotificationType">
-            <summary>
-            Notification types
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Domain.Interfaces.Services.ISMSService">
@@ -17466,6 +18341,195 @@
             Configures ASP.NET Core Identity
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Hubs.AdminHub">
+            <summary>
+            SignalR hub for system administrators
+            Handles system alerts, configuration changes, and administrative notifications
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.AdminHub.JoinAsAdmin">
+            <summary>
+            Client joins to receive administrative notifications
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.AdminHub.GetSystemHealth">
+            <summary>
+            Request system health dashboard
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.AdminHub.BulkApproveInvitations(System.Collections.Generic.List{System.Int32},System.String)">
+            <summary>
+            Approve multiple invitations (bulk approval)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.AdminHub.BroadcastMaintenanceNotification(System.String,System.Nullable{System.DateTime})">
+            <summary>
+            Broadcast system maintenance notification
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.AdminHub.GetSystemMetrics">
+            <summary>
+            Get real-time system metrics
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.AdminHub.GetActiveOperatorCount">
+            <summary>
+            Helper method to get active operator count
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.AdminHub.GetTotalActiveConnections">
+            <summary>
+            Helper method to get total active connections across all hubs
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Hubs.BaseHub">
+            <summary>
+            Base hub providing common functionality for all SignalR hubs
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.BaseHub.GetCurrentUserId">
+            <summary>
+            Gets the current user ID from the connection context
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.BaseHub.GetCurrentUserEmail">
+            <summary>
+            Gets the current user's email from the connection context
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.BaseHub.GetCurrentUserRole">
+            <summary>
+            Gets the current user's role from the connection context
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.BaseHub.GetCurrentUserPermissions">
+            <summary>
+            Gets all user permissions from the connection context
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.BaseHub.HasPermission(System.String)">
+            <summary>
+            Checks if current user has a specific permission
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.BaseHub.GetClientIpAddress">
+            <summary>
+            Gets the client IP address
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.BaseHub.GetUserAgent">
+            <summary>
+            Gets the user agent string
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.BaseHub.OnConnectedAsync">
+            <summary>
+            Standard connection handling with logging and authentication validation
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.BaseHub.OnDisconnectedAsync(System.Exception)">
+            <summary>
+            Standard disconnection handling with cleanup
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.BaseHub.JoinGroupSafe(System.String,System.String)">
+            <summary>
+            Join a SignalR group (with permission check)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.BaseHub.LeaveGroupSafe(System.String)">
+            <summary>
+            Leave a SignalR group
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Hubs.HostHub">
+            <summary>
+            SignalR hub for host/employee notifications about their visitors
+            Handles visitor arrivals, invitation status updates, and host-specific alerts
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.HostHub.JoinAsHost">
+            <summary>
+            Client joins to receive notifications as a host
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.HostHub.AcknowledgeNotification(System.Int32)">
+            <summary>
+            Acknowledge a visitor arrival or notification
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.HostHub.GetTodaysVisitors">
+            <summary>
+            Request current day's visitor schedule for the host
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.HostHub.GetNotificationHistory(System.Int32)">
+            <summary>
+            Request notification history for the host
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.HostHub.UpdateAvailability(System.Boolean,System.String)">
+            <summary>
+            Update host availability status
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Hubs.OperatorHub">
+            <summary>
+            SignalR hub for operator/receptionist real-time notifications
+            Handles visitor arrivals, check-ins, alerts, and queue management
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.OperatorHub.JoinAsOperator(System.Nullable{System.Int32})">
+            <summary>
+            Client joins as an active operator for a specific location
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.OperatorHub.UpdateStatus(VisitorManagementSystem.Api.Domain.Enums.OperatorStatus)">
+            <summary>
+            Update operator status (Online, Busy, Away)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.OperatorHub.AcknowledgeAlert(System.Int32)">
+            <summary>
+            Acknowledge an alert
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.OperatorHub.GetVisitorQueue">
+            <summary>
+            Request current visitor queue status
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Hubs.SecurityHub">
+            <summary>
+            SignalR hub for security staff notifications
+            Handles security alerts, blacklist detections, and emergency management
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.SecurityHub.JoinAsSecurity">
+            <summary>
+            Client joins to receive security notifications
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.SecurityHub.AcknowledgeSecurityAlert(System.Int32,System.String)">
+            <summary>
+            Acknowledge a security alert
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.SecurityHub.GetSecurityStatus">
+            <summary>
+            Request current security status dashboard
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.SecurityHub.InitiateEmergencyProcedure(System.String,System.String)">
+            <summary>
+            Initiate emergency procedure (lockdown, evacuation, etc.)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Hubs.SecurityHub.GetEmergencyRoster">
+            <summary>
+            Request current visitor occupancy for emergency roster
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext">
             <summary>
             Application database context
@@ -17597,6 +18661,21 @@
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Configurations.LocationConfiguration">
             <summary>
             Entity configuration for Location
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Configurations.Notifications.AlertEscalationConfiguration">
+            <summary>
+            Entity configuration for AlertEscalation
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Configurations.Notifications.NotificationAlertConfiguration">
+            <summary>
+            Entity configuration for NotificationAlert
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Configurations.Notifications.OperatorSessionConfiguration">
+            <summary>
+            Entity configuration for OperatorSession
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Configurations.OccupancyLogConfiguration">
@@ -17755,6 +18834,111 @@
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.LocationRepository">
             <summary>
             Repository implementation for location operations
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.AlertEscalationRepository">
+            <summary>
+            Repository implementation for alert escalation rules
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.AlertEscalationRepository.GetRulesByActionAsync(VisitorManagementSystem.Api.Domain.Enums.EscalationAction,System.Threading.CancellationToken)">
+            <summary>
+            Get rules by action type
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.AlertEscalationRepository.GetRulesForLocationAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Get rules for a specific location
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.AlertEscalationRepository.GetRulesForRoleAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Get rules targeting a specific role
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.AlertEscalationRepository.GetEmailEscalationRulesAsync(System.Threading.CancellationToken)">
+            <summary>
+            Get rules with email escalation
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.AlertEscalationRepository.GetSmsEscalationRulesAsync(System.Threading.CancellationToken)">
+            <summary>
+            Get rules with SMS escalation
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.AlertEscalationRepository.GetEscalationStatisticsAsync(System.DateTime,System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            Get escalation statistics
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.AlertEscalationRepository.CreateDefaultRulesAsync(System.Threading.CancellationToken)">
+            <summary>
+            Create default escalation rules
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.AlertEscalationRepository.TestRuleConfigurationAsync(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Test escalation rule configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.EscalationStatistics">
+            <summary>
+            Escalation statistics for reporting
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.RuleTestResult">
+            <summary>
+            Rule test result
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.NotificationAlertRepository">
+            <summary>
+            Repository implementation for notification alerts
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.NotificationAlertRepository.GetAlertsForExternalDeliveryAsync(System.Threading.CancellationToken)">
+            <summary>
+            Get alerts that need external delivery (email/SMS)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.NotificationAlertRepository.GetAlertSummaryAsync(System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            Get summary statistics for dashboard
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.AlertSummary">
+            <summary>
+            Alert summary for dashboard display
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.OperatorSessionRepository">
+            <summary>
+            Repository implementation for operator sessions
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.OperatorSessionRepository.GetSessionsForUserAsync(System.Int32,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Threading.CancellationToken)">
+            <summary>
+            Get sessions by user with date range
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.OperatorSessionRepository.GetInactiveSessionsAsync(System.TimeSpan,System.Threading.CancellationToken)">
+            <summary>
+            Get inactive sessions that need cleanup (older than threshold)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.OperatorSessionRepository.GetSessionDurationStatisticsAsync(System.DateTime,System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            Get session duration statistics
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.OperatorSessionRepository.CleanupOldSessionsAsync(System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            Clean up old completed sessions
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications.SessionStatistics">
+            <summary>
+            Session duration statistics
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.RefreshTokenRepository">
@@ -18717,6 +19901,18 @@
             <inheritdoc />
         </member>
         <member name="M:VisitorManagementSystem.Api.Migrations.AddCapacityManagement.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Migrations.AddAlertSignalRNoAction">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.AddAlertSignalRNoAction.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.AddAlertSignalRNoAction.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.AddAlertSignalRNoAction.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:GetUserByIdQueryHandler">

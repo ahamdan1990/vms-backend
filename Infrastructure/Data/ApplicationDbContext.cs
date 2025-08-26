@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Infrastructure.Data.Configurations;
+using VisitorManagementSystem.Api.Infrastructure.Data.Configurations.Notifications;
 using VisitorManagementSystem.Api.Domain.Interfaces.Services;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
@@ -46,6 +47,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<InvitationEvent> InvitationEvents { get; set; } = null!;
     public DbSet<InvitationTemplate> InvitationTemplates { get; set; } = null!;
 
+    // DbSets - Notification System
+    public DbSet<NotificationAlert> NotificationAlerts { get; set; } = null!;
+    public DbSet<OperatorSession> OperatorSessions { get; set; } = null!;
+    public DbSet<AlertEscalation> AlertEscalations { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -74,6 +80,11 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new InvitationApprovalConfiguration());
         modelBuilder.ApplyConfiguration(new InvitationEventConfiguration());
         modelBuilder.ApplyConfiguration(new InvitationTemplateConfiguration());
+
+        // Apply all configurations - Notification System
+        modelBuilder.ApplyConfiguration(new NotificationAlertConfiguration());
+        modelBuilder.ApplyConfiguration(new OperatorSessionConfiguration());
+        modelBuilder.ApplyConfiguration(new AlertEscalationConfiguration());
 
         // Global query filters for soft delete (standardized on IsDeleted pattern)
         modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);

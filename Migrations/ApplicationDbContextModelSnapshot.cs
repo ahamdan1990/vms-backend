@@ -22,6 +22,131 @@ namespace VisitorManagementSystem.Api.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.AlertEscalation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AlertPriority")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("AlertType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Configuration")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EscalationDelayMinutes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(5);
+
+                    b.Property<string>("EscalationEmails")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("EscalationPhones")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("EscalationTargetRole")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("EscalationTargetUserId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<int?>("LocationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxAttempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(3);
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("RuleName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("RulePriority")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(10);
+
+                    b.Property<string>("TargetRole")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlertPriority")
+                        .HasDatabaseName("IX_AlertEscalations_AlertPriority");
+
+                    b.HasIndex("AlertType")
+                        .HasDatabaseName("IX_AlertEscalations_AlertType");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("EscalationTargetUserId");
+
+                    b.HasIndex("IsEnabled")
+                        .HasDatabaseName("IX_AlertEscalations_IsEnabled");
+
+                    b.HasIndex("LocationId")
+                        .HasDatabaseName("IX_AlertEscalations_LocationId");
+
+                    b.HasIndex("ModifiedBy");
+
+                    b.HasIndex("RulePriority")
+                        .HasDatabaseName("IX_AlertEscalations_RulePriority");
+
+                    b.HasIndex("TargetRole")
+                        .HasDatabaseName("IX_AlertEscalations_TargetRole");
+
+                    b.HasIndex("AlertType", "AlertPriority", "IsEnabled")
+                        .HasDatabaseName("IX_AlertEscalations_Type_Priority_Enabled");
+
+                    b.ToTable("AlertEscalations", (string)null);
+                });
+
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.AuditLog", b =>
                 {
                     b.Property<int>("Id")
@@ -1119,6 +1244,128 @@ namespace VisitorManagementSystem.Api.Migrations
                     b.ToTable("Locations", (string)null);
                 });
 
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.NotificationAlert", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AcknowledgedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("AcknowledgedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpiresOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsAcknowledged")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PayloadData")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("RelatedEntityId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RelatedEntityType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<bool>("SentExternally")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("SentExternallyOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("TargetLocationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TargetRole")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("TargetUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AcknowledgedBy");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("ExpiresOn")
+                        .HasDatabaseName("IX_NotificationAlerts_ExpiresOn")
+                        .HasFilter("[ExpiresOn] IS NOT NULL");
+
+                    b.HasIndex("IsAcknowledged")
+                        .HasDatabaseName("IX_NotificationAlerts_IsAcknowledged");
+
+                    b.HasIndex("ModifiedBy");
+
+                    b.HasIndex("Priority")
+                        .HasDatabaseName("IX_NotificationAlerts_Priority");
+
+                    b.HasIndex("TargetLocationId");
+
+                    b.HasIndex("TargetRole")
+                        .HasDatabaseName("IX_NotificationAlerts_TargetRole");
+
+                    b.HasIndex("TargetUserId")
+                        .HasDatabaseName("IX_NotificationAlerts_TargetUserId");
+
+                    b.HasIndex("Type")
+                        .HasDatabaseName("IX_NotificationAlerts_Type");
+
+                    b.HasIndex("CreatedOn", "IsAcknowledged")
+                        .HasDatabaseName("IX_NotificationAlerts_CreatedOn_IsAcknowledged");
+
+                    b.ToTable("NotificationAlerts", (string)null);
+                });
+
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.OccupancyLog", b =>
                 {
                     b.Property<int>("Id")
@@ -1223,6 +1470,100 @@ namespace VisitorManagementSystem.Api.Migrations
 
                             t.HasCheckConstraint("CK_OccupancyLogs_ReservedCount", "[ReservedCount] >= 0");
                         });
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.OperatorSession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ConnectionId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime>("LastActivity")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("LocationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Metadata")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("SessionEnd")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("SessionStart")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConnectionId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_OperatorSessions_ConnectionId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("LastActivity")
+                        .HasDatabaseName("IX_OperatorSessions_LastActivity");
+
+                    b.HasIndex("LocationId")
+                        .HasDatabaseName("IX_OperatorSessions_LocationId");
+
+                    b.HasIndex("ModifiedBy");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_OperatorSessions_Status");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_OperatorSessions_UserId");
+
+                    b.HasIndex("SessionEnd", "Status")
+                        .HasDatabaseName("IX_OperatorSessions_SessionEnd_Status");
+
+                    b.ToTable("OperatorSessions", (string)null);
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.RefreshToken", b =>
@@ -2406,6 +2747,37 @@ namespace VisitorManagementSystem.Api.Migrations
                     b.ToTable("VisitorNotes", (string)null);
                 });
 
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.AlertEscalation", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "EscalationTargetUser")
+                        .WithMany()
+                        .HasForeignKey("EscalationTargetUserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Location", "Location")
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("EscalationTargetUser");
+
+                    b.Navigation("Location");
+
+                    b.Navigation("ModifiedByUser");
+                });
+
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.AuditLog", b =>
                 {
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "User")
@@ -2875,6 +3247,44 @@ namespace VisitorManagementSystem.Api.Migrations
                     b.Navigation("ParentLocation");
                 });
 
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.NotificationAlert", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "AcknowledgedByUser")
+                        .WithMany()
+                        .HasForeignKey("AcknowledgedBy")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Location", "TargetLocation")
+                        .WithMany()
+                        .HasForeignKey("TargetLocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "TargetUser")
+                        .WithMany()
+                        .HasForeignKey("TargetUserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("AcknowledgedByUser");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("ModifiedByUser");
+
+                    b.Navigation("TargetLocation");
+
+                    b.Navigation("TargetUser");
+                });
+
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.OccupancyLog", b =>
                 {
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Location", "Location")
@@ -2890,6 +3300,38 @@ namespace VisitorManagementSystem.Api.Migrations
                     b.Navigation("Location");
 
                     b.Navigation("TimeSlot");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.OperatorSession", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Location", "Location")
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Location");
+
+                    b.Navigation("ModifiedByUser");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.RefreshToken", b =>

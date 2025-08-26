@@ -64,4 +64,16 @@ public class LocationRepository : BaseRepository<Location>, ILocationRepository
             .ThenBy(l => l.Name)
             .ToListAsync(cancellationToken);
     }
+
+    // Method moved from RepositoryExtensions
+    public async Task<IEnumerable<Location>> GetActiveLocationsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(l => l.ParentLocation)
+            .Include(l => l.ChildLocations.Where(c => c.IsActive))
+            .Where(loc => loc.IsActive)
+            .OrderBy(loc => loc.Name)
+            .ToListAsync(cancellationToken);
+    }
 }

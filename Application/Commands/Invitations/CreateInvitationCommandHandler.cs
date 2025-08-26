@@ -3,7 +3,9 @@ using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Invitations;
 using VisitorManagementSystem.Api.Application.Services.QrCode;
 using VisitorManagementSystem.Api.Application.Services.Capacity;
+using VisitorManagementSystem.Api.Application.Services.Notifications;
 using VisitorManagementSystem.Api.Application.DTOs.Capacity;
+using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -20,19 +22,22 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
     private readonly ILogger<CreateInvitationCommandHandler> _logger;
     private readonly IQrCodeService _qrCodeService;
     private readonly ICapacityService _capacityService;
+    private readonly INotificationService _notificationService;
     
     public CreateInvitationCommandHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
         ILogger<CreateInvitationCommandHandler> logger,
         IQrCodeService qrCodeService,
-        ICapacityService capacityService)
+        ICapacityService capacityService,
+        INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
         _qrCodeService = qrCodeService;
         _capacityService = capacityService;
+        _notificationService = notificationService;
     }
 
     public async Task<InvitationDto> Handle(CreateInvitationCommand request, CancellationToken cancellationToken)
@@ -198,6 +203,9 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
                 await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
+                // Send notifications after successful creation
+                await SendInvitationNotificationsAsync(invitation, host, visitor, request.SubmitForApproval, cancellationToken);
+
                 _logger.LogInformation("Invitation created successfully: {InvitationId} ({InvitationNumber}) for visitor {VisitorId} by {CreatedBy}",
                     invitation.Id, invitation.InvitationNumber, request.VisitorId, request.CreatedBy);
 
@@ -242,5 +250,46 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
         while (await _unitOfWork.Invitations.InvitationNumberExistsAsync(invitationNumber, cancellationToken: cancellationToken));
 
         return invitationNumber;
+    }
+
+    /// <summary>
+    /// Send notifications for invitation creation
+    /// </summary>
+    private async Task SendInvitationNotificationsAsync(Invitation invitation, User host, Visitor visitor, 
+        bool submittedForApproval, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (submittedForApproval)
+            {
+                // Notify administrators about pending approval
+                await _notificationService.NotifyRoleAsync(
+                    UserRoles.Administrator,
+                    "New Invitation Pending Approval",
+                    $"Invitation for {visitor.FullName} from {visitor.Company} requires approval. Host: {host.FullName}",
+                    NotificationAlertType.InvitationPendingApproval,
+                    AlertPriority.Medium,
+                    new { InvitationId = invitation.Id, InvitationNumber = invitation.InvitationNumber },
+                    cancellationToken);
+
+                _logger.LogInformation("Approval notification sent for invitation {InvitationId}", invitation.Id);
+            }
+
+            // Send confirmation to host
+            await _notificationService.NotifyUserAsync(
+                invitation.HostId,
+                "Invitation Created",
+                $"Your invitation for {visitor.FullName} has been created successfully. " +
+                $"Scheduled: {invitation.ScheduledStartTime:MMM dd, yyyy HH:mm}",
+                NotificationAlertType.InvitationApproved,
+                AlertPriority.Low,
+                new { InvitationId = invitation.Id, InvitationNumber = invitation.InvitationNumber },
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending invitation notifications for {InvitationId}", invitation.Id);
+            // Don't throw - notification failure shouldn't break invitation creation
+        }
     }
 }

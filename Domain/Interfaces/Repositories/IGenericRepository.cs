@@ -36,6 +36,22 @@ public interface IGenericRepository<TEntity> where TEntity : BaseEntity
     Task<List<TEntity>> GetAllAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets entities with optional filtering, ordering, including, and limiting
+    /// </summary>
+    /// <param name="predicate">Optional predicate for filtering</param>
+    /// <param name="orderBy">Optional ordering function</param>
+    /// <param name="include">Optional include string for navigation properties</param>
+    /// <param name="take">Optional limit for number of results</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of entities</returns>
+    Task<List<TEntity>> GetAllAsync(
+        Expression<Func<TEntity, bool>>? predicate = null,
+        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
+        string? include = null,
+        int? take = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets entities by specification
     /// </summary>
     /// <param name="specification">Specification</param>
@@ -155,6 +171,15 @@ public interface IGenericRepository<TEntity> where TEntity : BaseEntity
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>First entity or null</returns>
     Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets first entity or default with includes
+    /// </summary>
+    /// <param name="predicate">Predicate expression</param>
+    /// <param name="include">Include string for navigation properties</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>First entity or null</returns>
+    Task<TEntity?> GetFirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, string? include = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets single entity or default

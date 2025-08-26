@@ -304,6 +304,7 @@ public static class UserRoles
             Permissions.Invitation.Approve,
             Permissions.Invitation.CancelOwn,
             Permissions.Invitation.ViewPending,
+            Permissions.Invitation.Delete,
 
 
             // All visitor management

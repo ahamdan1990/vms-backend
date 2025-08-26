@@ -50,6 +50,16 @@ public interface IEmailService
     Task<bool> TestConnectionAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Sends an alert email for system notifications
+    /// </summary>
+    /// <param name="to">Recipient email</param>
+    /// <param name="subject">Email subject</param>
+    /// <param name="body">Email body</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Task</returns>
+    Task SendAlertEmailAsync(string to, string subject, string body, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Validates the email connection and configuration (synchronous wrapper)
     /// </summary>
     /// <returns>True if connection is valid</returns>

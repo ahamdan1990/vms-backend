@@ -28,6 +28,9 @@ using VisitorManagementSystem.Api.Infrastructure.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using VisitorManagementSystem.Api.Infrastructure.Security.Authorization;
 using VisitorManagementSystem.Api.Infrastructure.Security.Encryption;
+using VisitorManagementSystem.Api.Application.Services.Notifications;
+using VisitorManagementSystem.Api.Application.Services.BackgroundServices;
+using VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications;
 using Microsoft.AspNetCore.DataProtection;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
@@ -146,7 +149,9 @@ public static class ServiceCollectionExtensions
         // Other services (will be implemented)
         services.AddScoped<ISMSService, StubSMSService>();
         services.AddScoped<IFileStorageService, StubFileStorageService>();
-        services.AddScoped<INotificationService, StubNotificationService>();
+        
+        // SignalR Notification service
+        services.AddScoped<INotificationService, NotificationService>();
 
         return services;
     }
@@ -161,6 +166,12 @@ public static class ServiceCollectionExtensions
 
         // Audit cleanup service  
         services.AddHostedService<AuditCleanupBackgroundService>();
+
+        // Notification & FR processing services
+
+        //services.AddHostedService<FREventProcessorService>();
+        services.AddHostedService<NotificationDispatcherService>();
+        services.AddHostedService<VisitorTrackingService>();
 
         return services;
     }
@@ -232,6 +243,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IVisitorDocumentRepository, VisitorDocumentRepository>();
         services.AddScoped<IVisitorNoteRepository, VisitorNoteRepository>();
         services.AddScoped<IVisitPurposeRepository, VisitPurposeRepository>();
+
+        // Notification repositories
+        services.AddScoped<INotificationAlertRepository, NotificationAlertRepository>();
+        services.AddScoped<IOperatorSessionRepository, OperatorSessionRepository>();
+        services.AddScoped<IAlertEscalationRepository, AlertEscalationRepository>();
 
         return services;
     }
@@ -634,45 +650,6 @@ public class StubFileStorageService : IFileStorageService
     }
 }
 
-public class StubNotificationService : INotificationService
-{
-    private readonly ILogger<StubNotificationService> _logger;
-
-    public StubNotificationService(ILogger<StubNotificationService> logger)
-    {
-        _logger = logger;
-    }
-
-    public Task SendNotificationAsync(string message, CancellationToken cancellationToken = default)
-    {
-        _logger.LogWarning("Notification service not implemented. Would send notification: {Message}", message);
-        return Task.CompletedTask;
-    }
-
-    public Task SendNotificationAsync(int userId, string message, CancellationToken cancellationToken = default)
-    {
-        _logger.LogWarning("Notification service not implemented. Would send notification to user {UserId}: {Message}", userId, message);
-        return Task.CompletedTask;
-    }
-
-    public Task SendNotificationAsync(IEnumerable<int> userIds, string message, CancellationToken cancellationToken = default)
-    {
-        _logger.LogWarning("Notification service not implemented. Would send notification to {UserCount} users: {Message}", userIds.Count(), message);
-        return Task.CompletedTask;
-    }
-
-    public Task SendTemplatedNotificationAsync(int userId, string templateName, object templateData, CancellationToken cancellationToken = default)
-    {
-        _logger.LogWarning("Notification service not implemented. Would send templated notification to user {UserId} using template {TemplateName}", userId, templateName);
-        return Task.CompletedTask;
-    }
-
-    public Task SendSystemNotificationAsync(string message, NotificationType notificationType = NotificationType.Info, CancellationToken cancellationToken = default)
-    {
-        _logger.LogWarning("Notification service not implemented. Would send system notification ({Type}): {Message}", notificationType, message);
-        return Task.CompletedTask;
-    }
-}
 
 // Background Services - Production Ready Implementations
 public class TokenCleanupBackgroundService : BackgroundService

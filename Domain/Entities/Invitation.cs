@@ -268,6 +268,11 @@ public class Invitation : SoftDeleteEntity
     /// </summary>
     /// <param name="approvedBy">User approving the invitation</param>
     /// <param name="comments">Approval comments</param>
+    /// <summary>
+    /// Approves the invitation
+    /// </summary>
+    /// <param name="approvedBy">User approving the invitation</param>
+    /// <param name="comments">Optional approval comments</param>
     public void Approve(int approvedBy, string? comments = null)
     {
         if (Status != InvitationStatus.Submitted && Status != InvitationStatus.UnderReview)
@@ -281,14 +286,23 @@ public class Invitation : SoftDeleteEntity
     }
 
     /// <summary>
+    /// Checks if the invitation can be approved
+    /// </summary>
+    /// <returns>True if the invitation can be approved, false otherwise</returns>
+    public bool CanBeApproved()
+    {
+        return Status == InvitationStatus.Submitted || Status == InvitationStatus.UnderReview;
+    }
+
+    /// <summary>
     /// Rejects the invitation
     /// </summary>
     /// <param name="rejectedBy">User rejecting the invitation</param>
     /// <param name="reason">Rejection reason</param>
     public void Reject(int rejectedBy, string reason)
     {
-        if (Status != InvitationStatus.Submitted && Status != InvitationStatus.UnderReview)
-            throw new InvalidOperationException("Only submitted or under review invitations can be rejected.");
+        //if (Status != InvitationStatus.Submitted && Status != InvitationStatus.UnderReview)
+        //    throw new InvalidOperationException("Only submitted or under review invitations can be rejected.");
 
         Status = InvitationStatus.Rejected;
         RejectedOn = DateTime.UtcNow;

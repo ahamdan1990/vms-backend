@@ -120,5 +120,16 @@ public interface IVisitorRepository : IGenericRepository<Visitor>
         string governmentId, 
         int? excludeId = null, 
         CancellationToken cancellationToken = default);
+
+    // Method moved from RepositoryExtensions
+    /// <summary>
+    /// Get visitor by FR person ID
+    /// </summary>
+    /// <param name="frPersonId">FR person ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Visitor if found</returns>
+    Task<Visitor?> GetByFRPersonIdAsync(
+        string frPersonId,
+        CancellationToken cancellationToken = default);
 }
 

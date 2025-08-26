@@ -19,6 +19,7 @@ using VisitorManagementSystem.Api.Infrastructure.Security.Authorization;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using System.Text.Json;
+using VisitorManagementSystem.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -198,6 +199,16 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.Get
 // Add AutoMapper
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
+// Add SignalR
+builder.Services.AddSignalR(options =>
+{
+    // Configure SignalR options
+    options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+    options.HandshakeTimeout = TimeSpan.FromSeconds(15);
+});
+
 // Add Health Checks
 builder.Services.ConfigureHealthChecks(builder.Configuration);
 
@@ -285,6 +296,12 @@ app.UseMiddleware<AuditLoggingMiddleware>();
 app.MapControllers()
     .RequireRateLimiting("login") // Apply login rate limiting to auth endpoints
     .WithOpenApi();
+
+// Map SignalR Hubs
+app.MapHub<OperatorHub>("/hubs/operator");
+app.MapHub<HostHub>("/hubs/host");
+app.MapHub<SecurityHub>("/hubs/security");
+app.MapHub<AdminHub>("/hubs/admin");
 
 app.MapHealthChecks("/health", new HealthCheckOptions
 {

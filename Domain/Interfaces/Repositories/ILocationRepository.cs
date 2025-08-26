@@ -44,4 +44,13 @@ public interface ILocationRepository : IGenericRepository<Location>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of child locations</returns>
     Task<List<Location>> GetChildLocationsAsync(int parentId, CancellationToken cancellationToken = default);
+
+    // Method moved from RepositoryExtensions
+    /// <summary>
+    /// Get active locations
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of active locations</returns>
+    Task<IEnumerable<Location>> GetActiveLocationsAsync(
+        CancellationToken cancellationToken = default);
 }

@@ -69,6 +69,21 @@ public interface IUnitOfWork : IDisposable
     IInvitationRepository Invitations { get; }
 
     /// <summary>
+    /// Notification alert repository
+    /// </summary>
+    INotificationAlertRepository NotificationAlerts { get; }
+
+    /// <summary>
+    /// Operator session repository
+    /// </summary>
+    IOperatorSessionRepository OperatorSessions { get; }
+
+    /// <summary>
+    /// Alert escalation repository
+    /// </summary>
+    IAlertEscalationRepository AlertEscalations { get; }
+
+    /// <summary>
     /// Gets a generic repository for any entity type
     /// </summary>
     /// <typeparam name="TEntity">Entity type</typeparam>

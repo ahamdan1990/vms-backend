@@ -98,7 +98,61 @@ public interface IInvitationRepository : IGenericRepository<Invitation>
     /// <returns>Invitation if found</returns>
     Task<Invitation?> GetByQrCodeAsync(string qrCode, CancellationToken cancellationToken = default);
     Task<List<Invitation>> GetByVisitorIdAndStatusAsync(int visitorId, InvitationStatus status, CancellationToken cancellationToken = default);
-    
+
+    // Methods moved from RepositoryExtensions
+    /// <summary>
+    /// Get today's invitations for a specific host
+    /// </summary>
+    /// <param name="hostId">Host ID</param>
+    /// <param name="startDate">Start date</param>
+    /// <param name="endDate">End date</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of invitations</returns>
+    Task<IEnumerable<Invitation>> GetTodaysInvitationsForHostAsync(
+        int hostId, 
+        DateTime startDate, 
+        DateTime endDate,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get today's invitation for a specific visitor
+    /// </summary>
+    /// <param name="visitorId">Visitor ID</param>
+    /// <param name="date">Date to check</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Invitation if found</returns>
+    Task<Invitation?> GetTodaysInvitationForVisitorAsync(
+        int visitorId,
+        DateTime date,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get pending approvals count
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Count of pending approvals</returns>
+    Task<int> GetPendingApprovalsCountAsync(
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get today's invitations count
+    /// </summary>
+    /// <param name="date">Date to check</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Count of today's invitations</returns>
+    Task<int> GetTodaysInvitationsCountAsync(
+        DateTime date,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get overstayed invitations (past scheduled end time)
+    /// </summary>
+    /// <param name="threshold">Threshold date/time</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of overstayed invitations</returns>
+    Task<IEnumerable<Invitation>> GetOverstayedInvitationsAsync(
+        DateTime threshold,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>

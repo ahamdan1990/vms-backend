@@ -73,6 +73,35 @@ public class BaseRepository<TEntity> : IGenericRepository<TEntity> where TEntity
         return await _dbSet.Where(e => e.IsActive).ToListAsync(cancellationToken);
     }
 
+    public virtual async Task<List<TEntity>> GetAllAsync(
+        Expression<Func<TEntity, bool>>? predicate = null,
+        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
+        string? include = null,
+        int? take = null,
+        CancellationToken cancellationToken = default)
+    {
+        IQueryable<TEntity> query = _dbSet.Where(e => e.IsActive);
+
+        if (predicate != null)
+            query = query.Where(predicate);
+
+        if (!string.IsNullOrEmpty(include))
+        {
+            foreach (var includeProperty in include.Split(',', StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty.Trim());
+            }
+        }
+
+        if (orderBy != null)
+            query = orderBy(query);
+
+        if (take.HasValue)
+            query = query.Take(take.Value);
+
+        return await query.ToListAsync(cancellationToken);
+    }
+
     public virtual async Task<List<TEntity>> GetAsync(BaseSpecification<TEntity> specification, CancellationToken cancellationToken = default)
     {
         return await ApplySpecification(specification).ToListAsync(cancellationToken);
@@ -165,6 +194,21 @@ public class BaseRepository<TEntity> : IGenericRepository<TEntity> where TEntity
     public virtual async Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
     {
         return await _dbSet.FirstOrDefaultAsync(predicate, cancellationToken);
+    }
+
+    public virtual async Task<TEntity?> GetFirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, string? include = null, CancellationToken cancellationToken = default)
+    {
+        IQueryable<TEntity> query = _dbSet;
+
+        if (!string.IsNullOrEmpty(include))
+        {
+            foreach (var includeProperty in include.Split(',', StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty.Trim());
+            }
+        }
+
+        return await query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
     public virtual async Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)

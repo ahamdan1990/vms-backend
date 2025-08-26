@@ -36,7 +36,8 @@ public class DeleteInvitationCommandHandler : IRequestHandler<DeleteInvitationCo
             }
 
             // Check if invitation status allows deletion
-            if (invitation.Status != InvitationStatus.Cancelled)
+            var allowedStatuses = new[] { InvitationStatus.Cancelled, InvitationStatus.Rejected };
+            if (!allowedStatuses.Contains(invitation.Status))
             {
                 _logger.LogWarning("Cannot delete invitation {Id} - status is {Status}, only Cancelled invitations can be deleted", 
                     request.Id, invitation.Status);

@@ -354,6 +354,19 @@ public class EmailService : IEmailService
         await Task.CompletedTask;
     }
 
+    public async Task SendAlertEmailAsync(string to, string subject, string body, CancellationToken cancellationToken = default)
+    {
+        var message = new EmailMessage
+        {
+            To = to,
+            Subject = subject,
+            Body = body,
+            IsHtml = false
+        };
+
+        await SendAsync(message, cancellationToken);
+    }
+
     public async Task<bool> ValidateConnectionAsync()
     {
         try

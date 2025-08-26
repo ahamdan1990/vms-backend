@@ -228,6 +228,17 @@ public interface IUserRepository : IGenericRepository<User>
     /// </summary>
     /// <param name="user">User to delete</param>
     new void Delete(User user);
+
+    // Method moved from RepositoryExtensions
+    /// <summary>
+    /// Gets users by role name (string-based)
+    /// </summary>
+    /// <param name="role">Role name (Staff, Administrator, Operator)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of users with the specified role</returns>
+    Task<IEnumerable<User>> GetUsersByRoleAsync(
+        string role,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>

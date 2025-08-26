@@ -30,6 +30,11 @@ public class UnitOfWork : IUnitOfWork
     public ILocationRepository Locations { get; private set; }
     public IInvitationRepository Invitations { get; private set; }
 
+    // Repository properties - Notification System
+    public INotificationAlertRepository NotificationAlerts { get; private set; }
+    public IOperatorSessionRepository OperatorSessions { get; private set; }
+    public IAlertEscalationRepository AlertEscalations { get; private set; }
+
     public UnitOfWork(ApplicationDbContext context,
                      IUserRepository userRepository,
                      IRefreshTokenRepository refreshTokenRepository,
@@ -41,7 +46,10 @@ public class UnitOfWork : IUnitOfWork
                      IEmergencyContactRepository emergencyContactRepository,
                      IVisitPurposeRepository visitPurposeRepository,
                      ILocationRepository locationRepository,
-                     IInvitationRepository invitationRepository)
+                     IInvitationRepository invitationRepository,
+                     INotificationAlertRepository notificationAlertRepository,
+                     IOperatorSessionRepository operatorSessionRepository,
+                     IAlertEscalationRepository alertEscalationRepository)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _repositories = new Dictionary<Type, object>();
@@ -61,6 +69,11 @@ public class UnitOfWork : IUnitOfWork
         VisitPurposes = visitPurposeRepository ?? throw new ArgumentNullException(nameof(visitPurposeRepository));
         Locations = locationRepository ?? throw new ArgumentNullException(nameof(locationRepository));
         Invitations = invitationRepository ?? throw new ArgumentNullException(nameof(invitationRepository));
+
+        // Initialize notification repositories
+        NotificationAlerts = notificationAlertRepository ?? throw new ArgumentNullException(nameof(notificationAlertRepository));
+        OperatorSessions = operatorSessionRepository ?? throw new ArgumentNullException(nameof(operatorSessionRepository));
+        AlertEscalations = alertEscalationRepository ?? throw new ArgumentNullException(nameof(alertEscalationRepository));
     }
 
     public IGenericRepository<TEntity> Repository<TEntity>() where TEntity : BaseEntity

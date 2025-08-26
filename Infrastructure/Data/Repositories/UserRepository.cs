@@ -302,4 +302,24 @@ public class UserRepository : BaseRepository<User>, IUserRepository
     {
         _dbSet.Remove(user);
     }
+
+    // Method moved from RepositoryExtensions
+    public async Task<IEnumerable<User>> GetUsersByRoleAsync(
+        string role,
+        CancellationToken cancellationToken = default)
+    {
+        // Convert string role to UserRole enum
+        var userRole = role switch
+        {
+            "Staff" => UserRole.Staff,
+            "Administrator" => UserRole.Administrator,
+            "Operator" => UserRole.Operator,
+            _ => throw new ArgumentException($"Invalid role: {role}")
+        };
+
+        return await _dbSet
+            .Where(u => u.Role == userRole && u.IsActive)
+            .OrderBy(u => u.FullName)
+            .ToListAsync(cancellationToken);
+    }
 }

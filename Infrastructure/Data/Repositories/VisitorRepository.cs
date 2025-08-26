@@ -231,4 +231,17 @@ public class VisitorRepository : BaseRepository<Visitor>, IVisitorRepository
             .Where(v => v.GovernmentId == governmentId && (excludeId == null || v.Id != excludeId))
             .AnyAsync(cancellationToken);
     }
+
+    // Method moved from RepositoryExtensions
+    public async Task<Visitor?> GetByFRPersonIdAsync(
+        string frPersonId,
+        CancellationToken cancellationToken = default)
+    {
+        // This assumes the ExternalId field is used to store FR person ID
+        return await _dbSet
+            .Include(v => v.EmergencyContacts)
+            .Include(v => v.Documents)
+            .Include(v => v.VisitorNotes)
+            .FirstOrDefaultAsync(v => v.ExternalId == frPersonId && v.IsActive, cancellationToken);
+    }
 }

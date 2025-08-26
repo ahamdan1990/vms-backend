@@ -1,6 +1,7 @@
 using AutoMapper;
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Invitations;
+using VisitorManagementSystem.Api.Application.Services.Notifications;
 using VisitorManagementSystem.Api.Application.Services.QrCode;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -16,17 +17,20 @@ public class ApproveInvitationCommandHandler : IRequestHandler<ApproveInvitation
     private readonly IMapper _mapper;
     private readonly IQrCodeService _qrCodeService;
     private readonly ILogger<ApproveInvitationCommandHandler> _logger;
+    private readonly INotificationService _notificationService;
 
     public ApproveInvitationCommandHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
         IQrCodeService qrCodeService,
-        ILogger<ApproveInvitationCommandHandler> logger)
+        ILogger<ApproveInvitationCommandHandler> logger,
+        INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _qrCodeService = qrCodeService;
         _logger = logger;
+        _notificationService = notificationService;
     }
 
     public async Task<InvitationDto> Handle(ApproveInvitationCommand request, CancellationToken cancellationToken)
@@ -84,6 +88,11 @@ public class ApproveInvitationCommandHandler : IRequestHandler<ApproveInvitation
 
                 _logger.LogInformation("Invitation approved successfully: {InvitationId} by {ApprovedBy}",
                     request.InvitationId, request.ApprovedBy);
+
+                // ?? NOTIFICATION: Notify host of approval
+                await _notificationService.NotifyInvitationApprovalAsync(
+                    invitation.Id, invitation.HostId, approved: true, request.Comments, cancellationToken);
+
 
                 // Return updated invitation DTO
                 var updatedInvitation = await _unitOfWork.Invitations.GetByIdAsync(invitation.Id, cancellationToken);
