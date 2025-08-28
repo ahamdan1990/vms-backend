@@ -849,6 +849,226 @@
             Handler for update location command
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Notifications.AcknowledgeNotificationCommand">
+            <summary>
+            Command to acknowledge a notification alert
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.AcknowledgeNotificationCommand.NotificationId">
+            <summary>
+            Notification ID to acknowledge
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.AcknowledgeNotificationCommand.Notes">
+            <summary>
+            Optional acknowledgment notes
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.AcknowledgeNotificationCommand.AcknowledgedBy">
+            <summary>
+            User acknowledging the notification
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Notifications.AcknowledgeNotificationCommandHandler">
+            <summary>
+            Handler for acknowledging notification alerts
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommandHandler">
+            <summary>
+            Handler for creating alert escalation rules
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Notifications.UpdateAlertEscalationCommandHandler">
+            <summary>
+            Handler for updating alert escalation rules
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Notifications.DeleteAlertEscalationCommandHandler">
+            <summary>
+            Handler for deleting alert escalation rules
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommand">
+            <summary>
+            Command to create a new alert escalation rule
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommand.RuleName">
+            <summary>
+            Rule name
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommand.AlertType">
+            <summary>
+            Alert type this rule applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommand.AlertPriority">
+            <summary>
+            Alert priority this rule applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommand.TargetRole">
+            <summary>
+            Target role this rule applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommand.LocationId">
+            <summary>
+            Location ID this rule applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommand.EscalationDelayMinutes">
+            <summary>
+            Minutes to wait before escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommand.Action">
+            <summary>
+            Escalation action to take
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommand.EscalationTargetRole">
+            <summary>
+            Target role for escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommand.EscalationTargetUserId">
+            <summary>
+            Target user ID for escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommand.EscalationEmails">
+            <summary>
+            Email addresses for escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommand.EscalationPhones">
+            <summary>
+            Phone numbers for SMS escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommand.MaxAttempts">
+            <summary>
+            Maximum escalation attempts
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommand.IsEnabled">
+            <summary>
+            Is rule enabled
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommand.RulePriority">
+            <summary>
+            Rule priority (execution order)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommand.Configuration">
+            <summary>
+            Additional configuration data
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.CreateAlertEscalationCommand.CreatedBy">
+            <summary>
+            User creating the rule
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Notifications.UpdateAlertEscalationCommand">
+            <summary>
+            Command to update an existing alert escalation rule
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.UpdateAlertEscalationCommand.Id">
+            <summary>
+            Escalation rule ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.UpdateAlertEscalationCommand.RuleName">
+            <summary>
+            Rule name
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.UpdateAlertEscalationCommand.TargetRole">
+            <summary>
+            Target role this rule applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.UpdateAlertEscalationCommand.LocationId">
+            <summary>
+            Location ID this rule applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.UpdateAlertEscalationCommand.EscalationDelayMinutes">
+            <summary>
+            Minutes to wait before escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.UpdateAlertEscalationCommand.Action">
+            <summary>
+            Escalation action to take
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.UpdateAlertEscalationCommand.EscalationTargetRole">
+            <summary>
+            Target role for escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.UpdateAlertEscalationCommand.EscalationTargetUserId">
+            <summary>
+            Target user ID for escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.UpdateAlertEscalationCommand.EscalationEmails">
+            <summary>
+            Email addresses for escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.UpdateAlertEscalationCommand.EscalationPhones">
+            <summary>
+            Phone numbers for SMS escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.UpdateAlertEscalationCommand.MaxAttempts">
+            <summary>
+            Maximum escalation attempts
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.UpdateAlertEscalationCommand.IsEnabled">
+            <summary>
+            Is rule enabled
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.UpdateAlertEscalationCommand.RulePriority">
+            <summary>
+            Rule priority (execution order)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.UpdateAlertEscalationCommand.Configuration">
+            <summary>
+            Additional configuration data
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.UpdateAlertEscalationCommand.ModifiedBy">
+            <summary>
+            User updating the rule
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Commands.Notifications.DeleteAlertEscalationCommand">
+            <summary>
+            Command to delete an alert escalation rule
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.DeleteAlertEscalationCommand.Id">
+            <summary>
+            Escalation rule ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Notifications.DeleteAlertEscalationCommand.DeletedBy">
+            <summary>
+            User deleting the rule
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Commands.TimeSlots.CreateTimeSlotCommandHandler">
             <summary>
             Handler for creating a time slot
@@ -3520,6 +3740,376 @@
             Child locations
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto">
+            <summary>
+            Data transfer object for alert escalation rules
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.Id">
+            <summary>
+            Escalation rule ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.RuleName">
+            <summary>
+            Rule name
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.AlertType">
+            <summary>
+            Alert type this rule applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.AlertPriority">
+            <summary>
+            Alert priority this rule applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.TargetRole">
+            <summary>
+            Target role this rule applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.LocationId">
+            <summary>
+            Location ID this rule applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.LocationName">
+            <summary>
+            Location name
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.EscalationDelayMinutes">
+            <summary>
+            Minutes to wait before escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.Action">
+            <summary>
+            Escalation action to take
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.EscalationTargetRole">
+            <summary>
+            Target role for escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.EscalationTargetUserId">
+            <summary>
+            Target user ID for escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.EscalationTargetUserName">
+            <summary>
+            Target user name for escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.EscalationEmails">
+            <summary>
+            Email addresses for escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.EscalationPhones">
+            <summary>
+            Phone numbers for SMS escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.MaxAttempts">
+            <summary>
+            Maximum escalation attempts
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.IsEnabled">
+            <summary>
+            Is rule enabled
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.RulePriority">
+            <summary>
+            Rule priority (execution order)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.Configuration">
+            <summary>
+            Additional configuration data
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.CreatedOn">
+            <summary>
+            Created date
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.ModifiedOn">
+            <summary>
+            Modified date
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AlertEscalationDto.IsActive">
+            <summary>
+            Is active
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto">
+            <summary>
+            Data transfer object for creating/updating alert escalation rules
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto.RuleName">
+            <summary>
+            Rule name
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto.AlertType">
+            <summary>
+            Alert type this rule applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto.AlertPriority">
+            <summary>
+            Alert priority this rule applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto.TargetRole">
+            <summary>
+            Target role this rule applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto.LocationId">
+            <summary>
+            Location ID this rule applies to
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto.EscalationDelayMinutes">
+            <summary>
+            Minutes to wait before escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto.Action">
+            <summary>
+            Escalation action to take
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto.EscalationTargetRole">
+            <summary>
+            Target role for escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto.EscalationTargetUserId">
+            <summary>
+            Target user ID for escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto.EscalationEmails">
+            <summary>
+            Email addresses for escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto.EscalationPhones">
+            <summary>
+            Phone numbers for SMS escalation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto.MaxAttempts">
+            <summary>
+            Maximum escalation attempts
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto.IsEnabled">
+            <summary>
+            Is rule enabled
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto.RulePriority">
+            <summary>
+            Rule priority (execution order)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto.Configuration">
+            <summary>
+            Additional configuration data
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Notifications.AcknowledgeNotificationDto">
+            <summary>
+            Data transfer object for acknowledging notifications
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AcknowledgeNotificationDto.NotificationId">
+            <summary>
+            Notification ID to acknowledge
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.AcknowledgeNotificationDto.Notes">
+            <summary>
+            Optional acknowledgment notes
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationStatsDto">
+            <summary>
+            Data transfer object for notification statistics
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationStatsDto.TotalUnacknowledged">
+            <summary>
+            Total unacknowledged notifications
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationStatsDto.CriticalUnacknowledged">
+            <summary>
+            Critical unacknowledged notifications
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationStatsDto.HighUnacknowledged">
+            <summary>
+            High priority unacknowledged notifications
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationStatsDto.Last24Hours">
+            <summary>
+            Notifications in last 24 hours
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationStatsDto.MostCommonType">
+            <summary>
+            Most common alert type
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationStatsDto.AlertTypeStats">
+            <summary>
+            Alert type statistics
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationStatsDto.PriorityStats">
+            <summary>
+            Priority statistics
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto">
+            <summary>
+            Data transfer object for notification alerts
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.Id">
+            <summary>
+            Alert ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.Title">
+            <summary>
+            Alert title
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.Message">
+            <summary>
+            Alert message
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.Type">
+            <summary>
+            Alert type
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.Priority">
+            <summary>
+            Alert priority
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.TargetRole">
+            <summary>
+            Target user role
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.TargetUserId">
+            <summary>
+            Target user ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.TargetLocationId">
+            <summary>
+            Target location ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.LocationName">
+            <summary>
+            Location name
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.IsAcknowledged">
+            <summary>
+            Is acknowledged
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.AcknowledgedBy">
+            <summary>
+            Acknowledged by user ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.AcknowledgedByName">
+            <summary>
+            Acknowledged by user name
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.AcknowledgedOn">
+            <summary>
+            Acknowledged on date
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.SentExternally">
+            <summary>
+            Sent externally
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.SentExternallyOn">
+            <summary>
+            Sent externally on date
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.RelatedEntityType">
+            <summary>
+            Related entity type
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.RelatedEntityId">
+            <summary>
+            Related entity ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.PayloadData">
+            <summary>
+            Payload data
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.ExpiresOn">
+            <summary>
+            Expiration date
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.CreatedOn">
+            <summary>
+            Created date
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.ModifiedOn">
+            <summary>
+            Modified date
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.IsActive">
+            <summary>
+            Is active
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.TimeSinceCreated">
+            <summary>
+            Time since created (for display purposes)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Notifications.NotificationAlertDto.IsExpired">
+            <summary>
+            Is expired
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.TimeSlots.CreateTimeSlotDto">
             <summary>
             DTO for creating a time slot
@@ -5897,6 +6487,126 @@
         <member name="T:VisitorManagementSystem.Api.Application.Queries.Locations.GetLocationsQueryHandler">
             <summary>
             Handler for get locations query
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Notifications.GetAlertEscalationsQuery">
+            <summary>
+            Query to get alert escalation rules
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetAlertEscalationsQuery.PageIndex">
+            <summary>
+            Page index (0-based)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetAlertEscalationsQuery.PageSize">
+            <summary>
+            Page size
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetAlertEscalationsQuery.AlertType">
+            <summary>
+            Filter by alert type
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetAlertEscalationsQuery.Priority">
+            <summary>
+            Filter by priority
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetAlertEscalationsQuery.IsEnabled">
+            <summary>
+            Filter by enabled status
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetAlertEscalationsQuery.SearchTerm">
+            <summary>
+            Search term for rule name
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Notifications.GetNotificationStatsQuery">
+            <summary>
+            Query to get notification statistics
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetNotificationStatsQuery.UserId">
+            <summary>
+            User ID to get stats for (null for system-wide stats - admin only)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetNotificationStatsQuery.FromDate">
+            <summary>
+            Date range start for statistics
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetNotificationStatsQuery.ToDate">
+            <summary>
+            Date range end for statistics
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Notifications.GetAlertEscalationsQueryHandler">
+            <summary>
+            Handler for getting alert escalation rules
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Notifications.GetNotificationStatsQueryHandler">
+            <summary>
+            Handler for getting notification statistics
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Notifications.GetNotificationsQuery">
+            <summary>
+            Query to get paginated notifications for a user
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetNotificationsQuery.UserId">
+            <summary>
+            User ID to get notifications for (null for all notifications - admin only)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetNotificationsQuery.PageIndex">
+            <summary>
+            Page index (0-based)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetNotificationsQuery.PageSize">
+            <summary>
+            Page size
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetNotificationsQuery.IsAcknowledged">
+            <summary>
+            Filter by acknowledged status
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetNotificationsQuery.AlertType">
+            <summary>
+            Filter by alert type
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetNotificationsQuery.Priority">
+            <summary>
+            Filter by priority
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetNotificationsQuery.FromDate">
+            <summary>
+            Filter by date range start
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetNotificationsQuery.ToDate">
+            <summary>
+            Filter by date range end
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Queries.Notifications.GetNotificationsQuery.IncludeExpired">
+            <summary>
+            Include expired notifications
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Queries.Notifications.GetNotificationsQueryHandler">
+            <summary>
+            Handler for getting paginated notifications
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.Queries.TimeSlots.GetAvailableTimeSlotsQueryHandler">
@@ -10462,6 +11172,71 @@
             <param name="id">Location ID</param>
             <param name="hardDelete">Whether to perform hard delete (default: false)</param>
             <returns>Deletion result</returns>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.NotificationsController">
+            <summary>
+            Notification management controller for handling alerts, acknowledgments, and escalation rules
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.NotificationsController.GetNotifications(System.Int32,System.Int32,System.Nullable{System.Boolean},System.String,System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Boolean)">
+            <summary>
+            Gets paginated notifications for the current user
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.NotificationsController.GetAllNotifications(System.Int32,System.Int32,System.Nullable{System.Int32},System.Nullable{System.Boolean},System.String,System.String,System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Boolean)">
+            <summary>
+            Gets all notifications for administrators
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.NotificationsController.AcknowledgeNotification(System.Int32,VisitorManagementSystem.Api.Application.DTOs.Notifications.AcknowledgeNotificationDto)">
+            <summary>
+            Acknowledges a notification
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.NotificationsController.GetNotificationStats(System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+            <summary>
+            Gets notification statistics for the current user
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.NotificationsController.GetSystemNotificationStats(System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+            <summary>
+            Gets system-wide notification statistics for administrators
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.NotificationsController.GetAlertEscalations(System.Int32,System.Int32,System.String,System.String,System.Nullable{System.Boolean},System.String)">
+            <summary>
+            Gets alert escalation rules for administrators
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.NotificationsController.CreateAlertEscalation(VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto)">
+            <summary>
+            Creates a new alert escalation rule
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.NotificationsController.UpdateAlertEscalation(System.Int32,VisitorManagementSystem.Api.Application.DTOs.Notifications.CreateUpdateAlertEscalationDto)">
+            <summary>
+            Updates an existing alert escalation rule
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.NotificationsController.DeleteAlertEscalation(System.Int32)">
+            <summary>
+            Deletes an alert escalation rule
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.NotificationsController.GetAlertTypes">
+            <summary>
+            Gets available notification alert types
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.NotificationsController.GetAlertPriorities">
+            <summary>
+            Gets available alert priorities
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.NotificationsController.GetEscalationActions">
+            <summary>
+            Gets available escalation actions
+            </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.PdfController">
             <summary>
@@ -18734,12 +19509,11 @@
             <param name="context">Database context</param>
             <returns>Task</returns>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.DbInitializer.SeedSystemConfigAsync(VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext,System.IServiceProvider)">
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.DbInitializer.SeedAlertEscalationsAsync(VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext)">
             <summary>
-            Seeds system configuration
+            Seeds alert escalation rules
             </summary>
             <param name="context">Database context</param>
-            <param name="serviceProvider">Service provider for dependency injection</param>
             <returns>Task</returns>
         </member>
         <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.DbInitializer.MigrateAsync(VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext)">
@@ -18953,6 +19727,42 @@
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Repositories.VisitPurposeRepository">
             <summary>
             Repository implementation for visit purpose operations
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.AlertEscalationSeeder">
+            <summary>
+            Seeder for alert escalation rules
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.AlertEscalationSeeder.GetSeedAlertEscalations">
+            <summary>
+            Gets seed alert escalation rules for initial database setup
+            </summary>
+            <returns>List of seed alert escalation rules</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.AlertEscalationSeeder.CreateEmergencyEscalations">
+            <summary>
+            Creates emergency alert escalations (5 minutes)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.AlertEscalationSeeder.CreateCriticalEscalations">
+            <summary>
+            Creates critical alert escalations (15 minutes)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.AlertEscalationSeeder.CreateHighPriorityEscalations">
+            <summary>
+            Creates high priority alert escalations (30 minutes)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.AlertEscalationSeeder.CreateMediumPriorityEscalations">
+            <summary>
+            Creates medium priority alert escalations (60 minutes)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.AlertEscalationSeeder.CreateLowPriorityEscalations">
+            <summary>
+            Creates low priority alert escalations (120 minutes)
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.ComprehensiveConfigurationSeeder">
@@ -19868,30 +20678,6 @@
             <inheritdoc />
         </member>
         <member name="M:VisitorManagementSystem.Api.Migrations.AddInitialMigration.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Migrations.AddCapacityManagement">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.AddCapacityManagement.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.AddCapacityManagement.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.AddCapacityManagement.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Migrations.AddAlertSignalRNoAction">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.AddAlertSignalRNoAction.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.AddAlertSignalRNoAction.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
-            <inheritdoc />
-        </member>
-        <member name="M:VisitorManagementSystem.Api.Migrations.AddAlertSignalRNoAction.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:GetUserByIdQueryHandler">

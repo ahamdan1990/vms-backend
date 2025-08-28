@@ -20,6 +20,7 @@ using VisitorManagementSystem.Api.Application.DTOs.Common;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using System.Text.Json;
 using VisitorManagementSystem.Api.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -198,7 +199,7 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.Get
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
-
+builder.Services.AddSingleton<PermissionHubFilter>();
 // Add SignalR
 builder.Services.AddSignalR(options =>
 {
@@ -207,6 +208,9 @@ builder.Services.AddSignalR(options =>
     options.KeepAliveInterval = TimeSpan.FromSeconds(15);
     options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
     options.HandshakeTimeout = TimeSpan.FromSeconds(15);
+}).AddHubOptions<OperatorHub>(o =>
+{
+    o.AddFilter<PermissionHubFilter>();
 });
 
 // Add Health Checks
@@ -288,6 +292,8 @@ app.UseMiddleware<RateLimitingMiddleware>();
 
 // Authentication & Authorization (removed duplicate custom middleware)
 app.UseAuthentication();
+app.UseMiddleware<PermissionClaimsMiddleware>();
+
 app.UseAuthorization();
 
 // Audit logging (after authentication so we have user context)

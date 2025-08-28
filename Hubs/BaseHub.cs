@@ -107,6 +107,7 @@ public abstract class BaseHub : Hub
     public override async Task OnConnectedAsync()
     {
         var userId = GetCurrentUserId();
+        var fingerprint = GetDeviceFingerprint();
         var userRole = GetCurrentUserRole();
         var ipAddress = GetClientIpAddress();
 
@@ -166,5 +167,11 @@ public abstract class BaseHub : Hub
     {
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
         Logger.LogDebug("User {UserId} left group {GroupName}", GetCurrentUserId(), groupName);
+    }
+
+    protected string? GetDeviceFingerprint()
+    {
+        var httpContext = Context.GetHttpContext();
+        return httpContext?.Request.Query["deviceFingerprint"].FirstOrDefault();
     }
 }

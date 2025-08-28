@@ -168,7 +168,15 @@ public class AuthenticationMiddleware
             claims.Add(new System.Security.Claims.Claim("security_stamp", validation.SecurityStamp));
 
         var identity = new System.Security.Claims.ClaimsIdentity(claims, "Cookie");
-        context.User = new System.Security.Claims.ClaimsPrincipal(identity);
+        var principal = new System.Security.Claims.ClaimsPrincipal(identity);
+
+        // 🔥 Log all claims so you can see if permissions are there
+        var logger = context.RequestServices.GetRequiredService<ILogger<AuthenticationMiddleware>>();
+        var claimDump = string.Join(", ", claims.Select(c => $"{c.Type}={c.Value}"));
+        logger.LogInformation("User {UserId} authenticated with claims: {Claims}",
+            validation.UserId ?? 0, claimDump);
+
+        context.User = principal;
     }
 
     private static bool ShouldSkipAuthentication(PathString path)

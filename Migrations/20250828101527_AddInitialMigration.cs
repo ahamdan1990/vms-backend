@@ -431,6 +431,226 @@ namespace VisitorManagementSystem.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AlertEscalations",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RuleName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    AlertType = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    AlertPriority = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TargetRole = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    LocationId = table.Column<int>(type: "int", nullable: true),
+                    EscalationDelayMinutes = table.Column<int>(type: "int", nullable: false, defaultValue: 5),
+                    Action = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EscalationTargetRole = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    EscalationTargetUserId = table.Column<int>(type: "int", nullable: true),
+                    EscalationEmails = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    EscalationPhones = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    MaxAttempts = table.Column<int>(type: "int", nullable: false, defaultValue: 3),
+                    IsEnabled = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    RulePriority = table.Column<int>(type: "int", nullable: false, defaultValue: 10),
+                    Configuration = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AlertEscalations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AlertEscalations_Locations_LocationId",
+                        column: x => x.LocationId,
+                        principalTable: "Locations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_AlertEscalations_Users_CreatedBy",
+                        column: x => x.CreatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_AlertEscalations_Users_EscalationTargetUserId",
+                        column: x => x.EscalationTargetUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_AlertEscalations_Users_ModifiedBy",
+                        column: x => x.ModifiedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "NotificationAlerts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Priority = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TargetRole = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    TargetUserId = table.Column<int>(type: "int", nullable: true),
+                    TargetLocationId = table.Column<int>(type: "int", nullable: true),
+                    RelatedEntityType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    RelatedEntityId = table.Column<int>(type: "int", nullable: true),
+                    PayloadData = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsAcknowledged = table.Column<bool>(type: "bit", nullable: false),
+                    AcknowledgedBy = table.Column<int>(type: "int", nullable: true),
+                    AcknowledgedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ExpiresOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    SentExternally = table.Column<bool>(type: "bit", nullable: false),
+                    SentExternallyOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NotificationAlerts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_NotificationAlerts_Locations_TargetLocationId",
+                        column: x => x.TargetLocationId,
+                        principalTable: "Locations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_NotificationAlerts_Users_AcknowledgedBy",
+                        column: x => x.AcknowledgedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_NotificationAlerts_Users_CreatedBy",
+                        column: x => x.CreatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_NotificationAlerts_Users_ModifiedBy",
+                        column: x => x.ModifiedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_NotificationAlerts_Users_TargetUserId",
+                        column: x => x.TargetUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OperatorSessions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    ConnectionId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    LocationId = table.Column<int>(type: "int", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    LastActivity = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    SessionStart = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    SessionEnd = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IpAddress = table.Column<string>(type: "nvarchar(45)", maxLength: 45, nullable: true),
+                    UserAgent = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Metadata = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    CreatedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OperatorSessions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OperatorSessions_Locations_LocationId",
+                        column: x => x.LocationId,
+                        principalTable: "Locations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_OperatorSessions_Users_CreatedBy",
+                        column: x => x.CreatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_OperatorSessions_Users_ModifiedBy",
+                        column: x => x.ModifiedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_OperatorSessions_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TimeSlots",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    StartTime = table.Column<TimeOnly>(type: "time", nullable: false),
+                    EndTime = table.Column<TimeOnly>(type: "time", nullable: false),
+                    MaxVisitors = table.Column<int>(type: "int", nullable: false, defaultValue: 50),
+                    ActiveDays = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValue: "1,2,3,4,5"),
+                    LocationId = table.Column<int>(type: "int", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
+                    BufferMinutes = table.Column<int>(type: "int", nullable: false, defaultValue: 15),
+                    AllowOverlapping = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    CreatedOn = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    ModifiedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    DeletedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TimeSlots", x => x.Id);
+                    table.CheckConstraint("CK_TimeSlots_BufferMinutes", "[BufferMinutes] >= 0");
+                    table.CheckConstraint("CK_TimeSlots_MaxVisitors", "[MaxVisitors] > 0");
+                    table.ForeignKey(
+                        name: "FK_TimeSlot_CreatedBy_User",
+                        column: x => x.CreatedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_TimeSlot_DeletedBy_User",
+                        column: x => x.DeletedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_TimeSlot_ModifiedBy_User",
+                        column: x => x.ModifiedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_TimeSlots_Locations_LocationId",
+                        column: x => x.LocationId,
+                        principalTable: "Locations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ConfigurationAudits",
                 columns: table => new
                 {
@@ -856,6 +1076,46 @@ namespace VisitorManagementSystem.Api.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "OccupancyLogs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    TimeSlotId = table.Column<int>(type: "int", nullable: true),
+                    LocationId = table.Column<int>(type: "int", nullable: true),
+                    CurrentCount = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    MaxCapacity = table.Column<int>(type: "int", nullable: false),
+                    ReservedCount = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    AvailableCapacity = table.Column<int>(type: "int", nullable: false, computedColumnSql: "[MaxCapacity] - [CurrentCount] - [ReservedCount]", stored: false),
+                    OccupancyPercentage = table.Column<decimal>(type: "decimal(18,2)", nullable: false, computedColumnSql: "CASE WHEN [MaxCapacity] > 0 THEN CAST(([CurrentCount] + [ReservedCount]) * 100.0 / [MaxCapacity] AS DECIMAL(5,2)) ELSE 0 END", stored: false),
+                    LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    CreatedOn = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    ModifiedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OccupancyLogs", x => x.Id);
+                    table.CheckConstraint("CK_OccupancyLogs_CurrentCount", "[CurrentCount] >= 0");
+                    table.CheckConstraint("CK_OccupancyLogs_MaxCapacity", "[MaxCapacity] > 0");
+                    table.CheckConstraint("CK_OccupancyLogs_ReservedCount", "[ReservedCount] >= 0");
+                    table.ForeignKey(
+                        name: "FK_OccupancyLogs_Locations_LocationId",
+                        column: x => x.LocationId,
+                        principalTable: "Locations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_OccupancyLogs_TimeSlots_TimeSlotId",
+                        column: x => x.TimeSlotId,
+                        principalTable: "TimeSlots",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "InvitationApprovals",
                 columns: table => new
                 {
@@ -955,6 +1215,56 @@ namespace VisitorManagementSystem.Api.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AlertEscalations_AlertPriority",
+                table: "AlertEscalations",
+                column: "AlertPriority");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AlertEscalations_AlertType",
+                table: "AlertEscalations",
+                column: "AlertType");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AlertEscalations_CreatedBy",
+                table: "AlertEscalations",
+                column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AlertEscalations_EscalationTargetUserId",
+                table: "AlertEscalations",
+                column: "EscalationTargetUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AlertEscalations_IsEnabled",
+                table: "AlertEscalations",
+                column: "IsEnabled");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AlertEscalations_LocationId",
+                table: "AlertEscalations",
+                column: "LocationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AlertEscalations_ModifiedBy",
+                table: "AlertEscalations",
+                column: "ModifiedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AlertEscalations_RulePriority",
+                table: "AlertEscalations",
+                column: "RulePriority");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AlertEscalations_TargetRole",
+                table: "AlertEscalations",
+                column: "TargetRole");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AlertEscalations_Type_Priority_Enabled",
+                table: "AlertEscalations",
+                columns: new[] { "AlertType", "AlertPriority", "IsEnabled" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AuditLog_CreatedOn",
@@ -1395,6 +1705,155 @@ namespace VisitorManagementSystem.Api.Migrations
                 column: "SecurityClearanceLevel");
 
             migrationBuilder.CreateIndex(
+                name: "IX_NotificationAlerts_AcknowledgedBy",
+                table: "NotificationAlerts",
+                column: "AcknowledgedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NotificationAlerts_CreatedBy",
+                table: "NotificationAlerts",
+                column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NotificationAlerts_CreatedOn_IsAcknowledged",
+                table: "NotificationAlerts",
+                columns: new[] { "CreatedOn", "IsAcknowledged" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NotificationAlerts_ExpiresOn",
+                table: "NotificationAlerts",
+                column: "ExpiresOn",
+                filter: "[ExpiresOn] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NotificationAlerts_IsAcknowledged",
+                table: "NotificationAlerts",
+                column: "IsAcknowledged");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NotificationAlerts_ModifiedBy",
+                table: "NotificationAlerts",
+                column: "ModifiedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NotificationAlerts_Priority",
+                table: "NotificationAlerts",
+                column: "Priority");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NotificationAlerts_TargetLocationId",
+                table: "NotificationAlerts",
+                column: "TargetLocationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NotificationAlerts_TargetRole",
+                table: "NotificationAlerts",
+                column: "TargetRole");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NotificationAlerts_TargetUserId",
+                table: "NotificationAlerts",
+                column: "TargetUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NotificationAlerts_Type",
+                table: "NotificationAlerts",
+                column: "Type");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OccupancyLog_CreatedOn",
+                table: "OccupancyLogs",
+                column: "CreatedOn");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OccupancyLog_IsActive",
+                table: "OccupancyLogs",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OccupancyLog_IsActive_CreatedOn",
+                table: "OccupancyLogs",
+                columns: new[] { "IsActive", "CreatedOn" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OccupancyLogs_Date",
+                table: "OccupancyLogs",
+                column: "Date");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OccupancyLogs_Date_Location",
+                table: "OccupancyLogs",
+                columns: new[] { "Date", "LocationId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OccupancyLogs_Date_TimeSlot",
+                table: "OccupancyLogs",
+                columns: new[] { "Date", "TimeSlotId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OccupancyLogs_LastUpdated",
+                table: "OccupancyLogs",
+                column: "LastUpdated");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OccupancyLogs_LocationId",
+                table: "OccupancyLogs",
+                column: "LocationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OccupancyLogs_TimeSlotId",
+                table: "OccupancyLogs",
+                column: "TimeSlotId");
+
+            migrationBuilder.CreateIndex(
+                name: "UX_OccupancyLogs_Date_TimeSlot_Location",
+                table: "OccupancyLogs",
+                columns: new[] { "Date", "TimeSlotId", "LocationId" },
+                unique: true,
+                filter: "[TimeSlotId] IS NOT NULL AND [LocationId] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OperatorSessions_ConnectionId",
+                table: "OperatorSessions",
+                column: "ConnectionId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OperatorSessions_CreatedBy",
+                table: "OperatorSessions",
+                column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OperatorSessions_LastActivity",
+                table: "OperatorSessions",
+                column: "LastActivity");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OperatorSessions_LocationId",
+                table: "OperatorSessions",
+                column: "LocationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OperatorSessions_ModifiedBy",
+                table: "OperatorSessions",
+                column: "ModifiedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OperatorSessions_SessionEnd_Status",
+                table: "OperatorSessions",
+                columns: new[] { "SessionEnd", "Status" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OperatorSessions_Status",
+                table: "OperatorSessions",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OperatorSessions_UserId",
+                table: "OperatorSessions",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_RefreshToken_CreatedOn",
                 table: "RefreshTokens",
                 column: "CreatedOn");
@@ -1508,6 +1967,56 @@ namespace VisitorManagementSystem.Api.Migrations
                 name: "IX_SystemConfigurations_RequiresRestart",
                 table: "SystemConfigurations",
                 column: "RequiresRestart");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TimeSlot_CreatedBy",
+                table: "TimeSlots",
+                column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TimeSlot_CreatedOn",
+                table: "TimeSlots",
+                column: "CreatedOn");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TimeSlot_DeletedBy",
+                table: "TimeSlots",
+                column: "DeletedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TimeSlot_IsActive",
+                table: "TimeSlots",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TimeSlot_IsActive_CreatedOn",
+                table: "TimeSlots",
+                columns: new[] { "IsActive", "CreatedOn" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TimeSlot_IsDeleted",
+                table: "TimeSlots",
+                column: "IsDeleted");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TimeSlot_IsDeleted_DeletedOn",
+                table: "TimeSlots",
+                columns: new[] { "IsDeleted", "DeletedOn" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TimeSlot_ModifiedBy",
+                table: "TimeSlots",
+                column: "ModifiedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TimeSlots_Location_Time",
+                table: "TimeSlots",
+                columns: new[] { "LocationId", "StartTime", "EndTime" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TimeSlots_Name",
+                table: "TimeSlots",
+                column: "Name");
 
             migrationBuilder.CreateIndex(
                 name: "IX_User_CreatedBy",
@@ -1824,6 +2333,9 @@ namespace VisitorManagementSystem.Api.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "AlertEscalations");
+
+            migrationBuilder.DropTable(
                 name: "AuditLogs");
 
             migrationBuilder.DropTable(
@@ -1842,6 +2354,15 @@ namespace VisitorManagementSystem.Api.Migrations
                 name: "InvitationTemplates");
 
             migrationBuilder.DropTable(
+                name: "NotificationAlerts");
+
+            migrationBuilder.DropTable(
+                name: "OccupancyLogs");
+
+            migrationBuilder.DropTable(
+                name: "OperatorSessions");
+
+            migrationBuilder.DropTable(
                 name: "RefreshTokens");
 
             migrationBuilder.DropTable(
@@ -1857,13 +2378,16 @@ namespace VisitorManagementSystem.Api.Migrations
                 name: "Invitations");
 
             migrationBuilder.DropTable(
-                name: "Locations");
+                name: "TimeSlots");
 
             migrationBuilder.DropTable(
                 name: "VisitPurposes");
 
             migrationBuilder.DropTable(
                 name: "Visitors");
+
+            migrationBuilder.DropTable(
+                name: "Locations");
 
             migrationBuilder.DropTable(
                 name: "Users");

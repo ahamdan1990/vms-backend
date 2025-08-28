@@ -55,6 +55,9 @@ public static class DbInitializer
             await SeedUsersAsync(context);
             await context.SaveChangesAsync(); // Save users first
             
+            await SeedAlertEscalationsAsync(context);
+            await context.SaveChangesAsync(); // Save alert escalations
+            
             await SeedSystemConfigAsync(context, serviceProvider);
             await context.SaveChangesAsync(); // Save configurations
         }
@@ -83,11 +86,24 @@ public static class DbInitializer
     }
 
     /// <summary>
-    /// Seeds system configuration
+    /// Seeds alert escalation rules
     /// </summary>
     /// <param name="context">Database context</param>
-    /// <param name="serviceProvider">Service provider for dependency injection</param>
     /// <returns>Task</returns>
+    private static async Task SeedAlertEscalationsAsync(ApplicationDbContext context)
+    {
+        if (await context.AlertEscalations.AnyAsync())
+        {
+            return; // Alert escalations already seeded
+        }
+
+        var escalations = AlertEscalationSeeder.GetSeedAlertEscalations();
+
+        foreach (var escalation in escalations)
+        {
+            await context.AlertEscalations.AddAsync(escalation);
+        }
+    }
     private static async Task SeedSystemConfigAsync(ApplicationDbContext context, IServiceProvider serviceProvider)
     {
         var logger = serviceProvider.GetService<ILogger<ApplicationDbContext>>();

@@ -363,6 +363,7 @@ public static class Permissions
     public static class Notification
     {
         public const string ReadOwn = "Notification.Read.Own";
+        public const string ReadAll = "Notification.Read.All";
         public const string SendHost = "Notification.Send.Host";
         public const string SendSystem = "Notification.Send.System";
         public const string Configure = "Notification.Configure";
