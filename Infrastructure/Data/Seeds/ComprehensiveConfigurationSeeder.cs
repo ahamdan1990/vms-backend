@@ -193,45 +193,61 @@ public static class ComprehensiveConfigurationSeeder
         var passwordSection = securitySection.GetSection("PasswordPolicy");
         configurations.AddRange(new[]
         {
-            CreateConfiguration("Security", "PasswordPolicy_RequireDigit", 
+            CreateConfiguration("Security", "PasswordPolicy_RequireDigit",
                 passwordSection["RequireDigit"] ?? "true",
                 "bool", "Require at least one digit in passwords", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "PasswordPolicy_RequireLowercase", 
+
+            CreateConfiguration("Security", "PasswordPolicy_RequireLowercase",
                 passwordSection["RequireLowercase"] ?? "true",
                 "bool", "Require at least one lowercase letter in passwords", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "PasswordPolicy_RequireUppercase", 
+
+            CreateConfiguration("Security", "PasswordPolicy_RequireUppercase",
                 passwordSection["RequireUppercase"] ?? "true",
                 "bool", "Require at least one uppercase letter in passwords", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "PasswordPolicy_RequireNonAlphanumeric", 
+
+            CreateConfiguration("Security", "PasswordPolicy_RequireNonAlphanumeric",
                 passwordSection["RequireNonAlphanumeric"] ?? "true",
                 "bool", "Require at least one special character in passwords", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "PasswordPolicy_RequiredLength", 
+
+            CreateConfiguration("Security", "PasswordPolicy_RequiredLength",
                 passwordSection["RequiredLength"] ?? "8",
                 "int", "Minimum password length", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "PasswordPolicy_RequiredUniqueChars", 
+
+            CreateConfiguration("Security", "PasswordPolicy_RequiredUniqueChars",
                 passwordSection["RequiredUniqueChars"] ?? "3",
                 "int", "Required unique characters in password", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "PasswordPolicy_MaxLength", 
+
+            CreateConfiguration("Security", "PasswordPolicy_MaxLength",
                 passwordSection["MaxLength"] ?? "128",
                 "int", "Maximum password length", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "PasswordPolicy_PasswordHistoryLimit", 
+
+            CreateConfiguration("Security", "PasswordPolicy_PasswordHistoryLimit",
                 passwordSection["PasswordHistoryLimit"] ?? "5",
                 "int", "Number of previous passwords to remember", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "PasswordPolicy_PasswordExpiryDays", 
+
+            CreateConfiguration("Security", "PasswordPolicy_PasswordExpiryDays",
                 passwordSection["PasswordExpiryDays"] ?? "90",
                 "int", "Password expiry in days", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "PasswordPolicy_PreventPasswordReuse", 
+
+            CreateConfiguration("Security", "PasswordPolicy_PreventPasswordReuse",
                 passwordSection["PreventPasswordReuse"] ?? "true",
-                "bool", "Prevent password reuse", false, false, false, now, systemUserId)
+                "bool", "Prevent password reuse", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Security", "PasswordPolicy_RequirePeriodicChange",
+                passwordSection["RequirePeriodicChange"] ?? "true",
+                "bool", "Require periodic password change", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Security", "PasswordPolicy_MinimumAge",
+                passwordSection["MinimumAge"] ?? "1",
+                "int", "Minimum age of password in days", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Security", "PasswordPolicy_MaximumAge",
+                passwordSection["MaximumAge"] ?? "90",
+                "int", "Maximum age of password in days", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Security", "PasswordPolicy_PasswordExpiryWarningDays",
+                passwordSection["PasswordExpiryWarningDays"] ?? "14",
+                "int", "Days before expiry to warn user", false, false, false, now, systemUserId),
         });
 
         // Lockout Configuration

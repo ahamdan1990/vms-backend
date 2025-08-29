@@ -21,7 +21,7 @@ public class PasswordService : IPasswordService
     private readonly IDynamicConfigurationService _dynamicConfig;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<PasswordService> _logger;
-    private readonly PasswordPolicy _passwordPolicy;
+    private PasswordPolicy _passwordPolicy;
 
     public PasswordService(
         IDynamicConfigurationService dynamicConfig,
@@ -88,6 +88,7 @@ public class PasswordService : IPasswordService
 
     public PasswordValidationResult ValidatePassword(string password, User? user = null)
     {
+        _passwordPolicy = GetPasswordPolicy();
         var result = new PasswordValidationResult();
         var errors = new List<string>();
         var warnings = new List<string>();
@@ -413,6 +414,7 @@ public class PasswordService : IPasswordService
     public async Task<PasswordChangeValidationResult> ValidatePasswordChangeAsync(User user, string currentPassword,
         string newPassword)
     {
+        _passwordPolicy = GetPasswordPolicy();
         var result = new PasswordChangeValidationResult();
 
         // Verify current password
@@ -421,7 +423,7 @@ public class PasswordService : IPasswordService
         {
             result.Errors.Add("Current password is incorrect");
         }
-
+        _logger.LogInformation("Password Minimum age is :" + _passwordPolicy.MinimumAge);
         // Check minimum age
         if (_passwordPolicy.MinimumAge > 0 && user.PasswordChangedDate.HasValue && !user.MustChangePassword)
         {
@@ -463,24 +465,26 @@ public class PasswordService : IPasswordService
         // In a production system, you might want to make this method async or cache the configuration
         try
         {
+            _logger.LogInformation("Fetching PasswordPolicy...");
+
             return new PasswordPolicy
             {
-                MinimumLength = _dynamicConfig.GetConfigurationAsync<int>("Password", "RequiredLength", 8).Result,
-                MaximumLength = _dynamicConfig.GetConfigurationAsync<int>("Password", "MaximumLength", 128).Result,
-                RequireDigit = _dynamicConfig.GetConfigurationAsync<bool>("Password", "RequireDigit", true).Result,
-                RequireLowercase = _dynamicConfig.GetConfigurationAsync<bool>("Password", "RequireLowercase", true).Result,
-                RequireUppercase = _dynamicConfig.GetConfigurationAsync<bool>("Password", "RequireUppercase", true).Result,
-                RequireNonAlphanumeric = _dynamicConfig.GetConfigurationAsync<bool>("Password", "RequireNonAlphanumeric", true).Result,
-                RequiredUniqueChars = _dynamicConfig.GetConfigurationAsync<int>("Password", "RequiredUniqueChars", 3).Result,
-                PasswordHistoryCount = _dynamicConfig.GetConfigurationAsync<int>("Password", "PasswordHistoryCount", 5).Result,
-                PasswordExpiryDays = _dynamicConfig.GetConfigurationAsync<int>("Password", "PasswordExpiryDays", 90).Result,
-                PasswordExpiryWarningDays = _dynamicConfig.GetConfigurationAsync<int>("Password", "PasswordExpiryWarningDays", 14).Result,
-                PreventPersonalInfo = _dynamicConfig.GetConfigurationAsync<bool>("Password", "PreventPersonalInfo", true).Result,
-                CheckCompromisedPasswords = _dynamicConfig.GetConfigurationAsync<bool>("Password", "CheckCompromisedPasswords", true).Result,
-                RequirePeriodicChange = _dynamicConfig.GetConfigurationAsync<bool>("Password", "RequirePeriodicChange", true).Result,
-                MinimumAge = _dynamicConfig.GetConfigurationAsync<int>("Password", "MinimumAge", 1).Result,
-                MaximumAge = _dynamicConfig.GetConfigurationAsync<int>("Password", "MaximumAge", 90).Result,
-                MinimumScoreRequired = _dynamicConfig.GetConfigurationAsync<int>("Password", "MinimumScoreRequired", 60).Result,
+                PasswordExpiryWarningDays = _dynamicConfig.GetConfigurationAsync<int>("Security", "PasswordPolicy_PasswordExpiryWarningDays", 14).Result,           
+                MinimumLength = _dynamicConfig.GetConfigurationAsync<int>("Security", "PasswordPolicy_RequiredLength", 8).Result,
+                MaximumLength = _dynamicConfig.GetConfigurationAsync<int>("Security", "PasswordPolicy_MaxLength", 128).Result,
+                RequireDigit = _dynamicConfig.GetConfigurationAsync<bool>("Security", "PasswordPolicy_RequireDigit", true).Result,
+                RequireLowercase = _dynamicConfig.GetConfigurationAsync<bool>("Security", "PasswordPolicy_RequireLowercase", true).Result,
+                RequireUppercase = _dynamicConfig.GetConfigurationAsync<bool>("Security", "PasswordPolicy_RequireUppercase", true).Result,
+                RequireNonAlphanumeric = _dynamicConfig.GetConfigurationAsync<bool>("Security", "PasswordPolicy_RequireNonAlphanumeric", true).Result,
+                RequiredUniqueChars = _dynamicConfig.GetConfigurationAsync<int>("Security", "PasswordPolicy_RequiredUniqueChars", 3).Result,
+                PasswordHistoryCount = _dynamicConfig.GetConfigurationAsync<int>("Security", "PasswordPolicy_PasswordHistoryLimit", 5).Result,
+                PasswordExpiryDays = _dynamicConfig.GetConfigurationAsync<int>("Security", "PasswordPolicy_PasswordExpiryDays", 90).Result,
+                PreventPersonalInfo = _dynamicConfig.GetConfigurationAsync<bool>("Security", "PasswordPolicy_PreventPasswordReuse", true).Result,
+                RequirePeriodicChange = _dynamicConfig.GetConfigurationAsync<bool>("Security", "PasswordPolicy_RequirePeriodicChange", true).Result,
+                MinimumAge = _dynamicConfig.GetConfigurationAsync<int>("Security", "PasswordPolicy_MinimumAge", 1).Result,
+                MaximumAge = _dynamicConfig.GetConfigurationAsync<int>("Security", "PasswordPolicy_MaximumAge", 90).Result,
+                MinimumScoreRequired = _dynamicConfig.GetConfigurationAsync<int>("Security", "PasswordPolicy_MinimumScoreRequired", 60).Result,
+                CheckCompromisedPasswords = _dynamicConfig.GetConfigurationAsync<bool>("Security", "PasswordPolicy_CheckCompromisedPasswords", true).Result,
                 ForbiddenPasswords = GetCommonPasswords(),
                 ForbiddenPatterns = new List<string>
                 {

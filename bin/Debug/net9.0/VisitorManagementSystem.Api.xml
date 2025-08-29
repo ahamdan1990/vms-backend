@@ -2775,6 +2775,26 @@
             DTO for cache invalidation result
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Configuration.CreateConfigurationRequest">
+            <summary>
+            Request DTO for creating configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Configuration.DeleteConfigurationRequest">
+            <summary>
+            Request DTO for deleting configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Configuration.UpdateConfigurationRequest">
+            <summary>
+            Request DTO for updating configuration
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.DTOs.Configuration.ValidateConfigurationRequest">
+            <summary>
+            Request DTO for validating configuration
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Invitations.CreateInvitationDto">
             <summary>
             DTO for creating a new invitation
@@ -10416,17 +10436,17 @@
             Gets a specific configuration value
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.UpdateConfiguration(System.String,System.String,VisitorManagementSystem.Api.Controllers.Admin.UpdateConfigurationRequest,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.UpdateConfiguration(System.String,System.String,VisitorManagementSystem.Api.Application.DTOs.Configuration.UpdateConfigurationRequest,System.Threading.CancellationToken)">
             <summary>
             Updates a configuration value
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.CreateConfiguration(VisitorManagementSystem.Api.Controllers.Admin.CreateConfigurationRequest,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.CreateConfiguration(VisitorManagementSystem.Api.Application.DTOs.Configuration.CreateConfigurationRequest,System.Threading.CancellationToken)">
             <summary>
             Creates a new configuration
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.DeleteConfiguration(System.String,System.String,VisitorManagementSystem.Api.Controllers.Admin.DeleteConfigurationRequest,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.DeleteConfiguration(System.String,System.String,VisitorManagementSystem.Api.Application.DTOs.Configuration.DeleteConfigurationRequest,System.Threading.CancellationToken)">
             <summary>
             Deletes a configuration
             </summary>
@@ -10441,7 +10461,7 @@
             Searches configurations
             </summary>
         </member>
-        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.ValidateConfiguration(System.String,System.String,VisitorManagementSystem.Api.Controllers.Admin.ValidateConfigurationRequest,System.Threading.CancellationToken)">
+        <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.ValidateConfiguration(System.String,System.String,VisitorManagementSystem.Api.Application.DTOs.Configuration.ValidateConfigurationRequest,System.Threading.CancellationToken)">
             <summary>
             Validates a configuration value without saving
             </summary>
@@ -10454,26 +10474,6 @@
         <member name="M:VisitorManagementSystem.Api.Controllers.Admin.ConfigurationController.GetCurrentUserId">
             <summary>
             Gets current user ID from claims
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Controllers.Admin.UpdateConfigurationRequest">
-            <summary>
-            Request DTO for updating configuration
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Controllers.Admin.CreateConfigurationRequest">
-            <summary>
-            Request DTO for creating configuration
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Controllers.Admin.DeleteConfigurationRequest">
-            <summary>
-            Request DTO for deleting configuration
-            </summary>
-        </member>
-        <member name="T:VisitorManagementSystem.Api.Controllers.Admin.ValidateConfigurationRequest">
-            <summary>
-            Request DTO for validating configuration
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.AuthController">
@@ -19516,6 +19516,12 @@
             <param name="context">Database context</param>
             <returns>Task</returns>
         </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.DbInitializer.SeedVisitPurposesAsync(VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext)">
+            <summary>
+            Seeds initial visit purposes
+            </summary>
+            <param name="context">Database context</param>
+        </member>
         <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.DbInitializer.MigrateAsync(VisitorManagementSystem.Api.Infrastructure.Data.ApplicationDbContext)">
             <summary>
             Creates a migration if needed
@@ -19921,6 +19927,16 @@
             </summary>
             <param name="users">List of users to validate</param>
             <returns>True if all users are valid</returns>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.VisitPurposeSeeder">
+            <summary>
+            Seeder for Visit Purposes
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Infrastructure.Data.Seeds.VisitPurposeSeeder.GetSeedVisitPurposes">
+            <summary>
+            Gets seed visit purposes for initial database setup
+            </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Infrastructure.Data.UnitOfWork">
             <summary>

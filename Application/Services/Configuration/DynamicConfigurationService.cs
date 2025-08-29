@@ -39,13 +39,16 @@ public class DynamicConfigurationService : IDynamicConfigurationService
 
             var config = await _unitOfWork.SystemConfigurations
                 .GetByCategoryAndKeyAsync(category, key, cancellationToken);
+
             if (config == null)
             {
+                _logger.LogWarning("Config not found: {Category}.{Key}, using default {DefaultValue}", category, key, defaultValue);
                 _cache.Set(cacheKey, defaultValue, CacheExpiry);
                 return defaultValue;
             }
 
             var value = ConvertValue<T>(config.Value, config.DataType);
+            _logger.LogInformation("Config value retrieved from DB: {Category}.{Key} = {Value}", category, key, value);
             _cache.Set(cacheKey, value, CacheExpiry);
             
             return value;

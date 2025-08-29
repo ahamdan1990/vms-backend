@@ -57,9 +57,13 @@ public static class DbInitializer
             
             await SeedAlertEscalationsAsync(context);
             await context.SaveChangesAsync(); // Save alert escalations
-            
+
+            await SeedVisitPurposesAsync(context);
+            await context.SaveChangesAsync(); // Save visit purposes
+
             await SeedSystemConfigAsync(context, serviceProvider);
             await context.SaveChangesAsync(); // Save configurations
+
         }
         catch (Exception ex)
         {
@@ -104,6 +108,26 @@ public static class DbInitializer
             await context.AlertEscalations.AddAsync(escalation);
         }
     }
+
+    /// <summary>
+    /// Seeds initial visit purposes
+    /// </summary>
+    /// <param name="context">Database context</param>
+    private static async Task SeedVisitPurposesAsync(ApplicationDbContext context)
+    {
+        if (await context.VisitPurposes.AnyAsync())
+        {
+            return; // Already seeded
+        }
+
+        var visitPurposes = VisitPurposeSeeder.GetSeedVisitPurposes();
+
+        foreach (var purpose in visitPurposes)
+        {
+            await context.VisitPurposes.AddAsync(purpose);
+        }
+    }
+
     private static async Task SeedSystemConfigAsync(ApplicationDbContext context, IServiceProvider serviceProvider)
     {
         var logger = serviceProvider.GetService<ILogger<ApplicationDbContext>>();

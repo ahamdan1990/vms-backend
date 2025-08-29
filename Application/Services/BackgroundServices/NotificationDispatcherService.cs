@@ -120,8 +120,8 @@ public class NotificationDispatcherService : BackgroundService
 
             // Find applicable escalation rules
             var applicableRules = escalationRules
-                .Where(rule => rule.MatchesAlert(alert) && minutesSinceCreated >= rule.EscalationDelayMinutes)
-                .Take(1); // Apply first matching rule only
+                .Where(rule => rule.MatchesAlert(alert) && minutesSinceCreated >= rule.EscalationDelayMinutes);
+               // .Take(1); // Apply first matching rule only
 
             foreach (var rule in applicableRules)
             {

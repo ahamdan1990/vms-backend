@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using VisitorManagementSystem.Api.Application.DTOs.Configuration;
 using VisitorManagementSystem.Api.Application.Services.Configuration;
 using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Domain.Entities;
@@ -338,52 +339,3 @@ public class ConfigurationController : ControllerBase
     }
 }
 
-#region Request/Response DTOs
-
-/// <summary>
-/// Request DTO for updating configuration
-/// </summary>
-public class UpdateConfigurationRequest
-{
-    public string Value { get; set; } = string.Empty;
-    public string? Reason { get; set; }
-}
-
-/// <summary>
-/// Request DTO for creating configuration
-/// </summary>
-public class CreateConfigurationRequest
-{
-    public string Category { get; set; } = string.Empty;
-    public string Key { get; set; } = string.Empty;
-    public string Value { get; set; } = string.Empty;
-    public string DataType { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public bool RequiresRestart { get; set; } = false;
-    public bool IsEncrypted { get; set; } = false;
-    public bool IsSensitive { get; set; } = false;
-    public bool IsReadOnly { get; set; } = false;
-    public string? DefaultValue { get; set; }
-    public string? ValidationRules { get; set; }
-    public string? Group { get; set; }
-    public string? Environment { get; set; }
-    public int DisplayOrder { get; set; } = 0;
-}
-
-/// <summary>
-/// Request DTO for deleting configuration
-/// </summary>
-public class DeleteConfigurationRequest
-{
-    public string? Reason { get; set; }
-}
-
-/// <summary>
-/// Request DTO for validating configuration
-/// </summary>
-public class ValidateConfigurationRequest
-{
-    public string Value { get; set; } = string.Empty;
-}
-
-#endregion
