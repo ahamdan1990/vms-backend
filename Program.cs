@@ -207,7 +207,7 @@ builder.Services.AddSignalR(options =>
     options.EnableDetailedErrors = builder.Environment.IsDevelopment();
     options.KeepAliveInterval = TimeSpan.FromSeconds(15);
     options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
-    options.HandshakeTimeout = TimeSpan.FromSeconds(15);
+    options.HandshakeTimeout = TimeSpan.FromSeconds(30);
 }).AddHubOptions<OperatorHub>(o =>
 {
     o.AddFilter<PermissionHubFilter>();

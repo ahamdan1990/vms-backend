@@ -107,12 +107,18 @@ public class VisitorTrackingService : BackgroundService
     {
         try
         {
-            // In production, this would query actual check-in sessions
-            // var currentOccupancy = await unitOfWork.CheckInSessions.GetActiveCountForLocationAsync(location.Id);
+            // ✅ REAL DATA: Get actual checked-in visitors for this location
+            var activeInvitations = await unitOfWork.Invitations.GetAsync(
+                invitation => invitation.LocationId == location.Id &&
+                             invitation.Status == Domain.Enums.InvitationStatus.Active &&
+                             invitation.CheckedInAt.HasValue &&
+                             !invitation.CheckedOutAt.HasValue,
+                cancellationToken: cancellationToken);
             
-            // For demo, use random occupancy
-            var random = new Random();
-            var currentOccupancy = random.Next(0, Math.Min(location.MaxCapacity, 50));
+            var currentOccupancy = activeInvitations.Count();
+            
+            _logger.LogDebug("Real occupancy for {LocationName}: {CurrentCount} active visitors (checked-in but not checked-out)",
+                location.Name, currentOccupancy);
 
             // Create or update occupancy log entry
             var existingLog = await unitOfWork.Repository<OccupancyLog>()
@@ -142,7 +148,7 @@ public class VisitorTrackingService : BackgroundService
                 await unitOfWork.Repository<OccupancyLog>().AddAsync(occupancyLog, cancellationToken);
             }
 
-            _logger.LogDebug("Updated occupancy for {LocationName}: {CurrentCount}/{MaxCapacity}",
+            _logger.LogDebug("Updated occupancy for {LocationName}: {CurrentCount}/{MaxCapacity} (real data from active invitations)",
                 location.Name, currentOccupancy, location.MaxCapacity);
         }
         catch (Exception ex)

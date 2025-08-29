@@ -10863,6 +10863,79 @@
             Custom message to include in email
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.DashboardController">
+            <summary>
+            Dashboard controller for aggregated metrics and real-time data
+            Provides unified dashboard data to reduce frontend API calls
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.DashboardController.GetDashboardMetrics(System.Threading.CancellationToken)">
+            <summary>
+            Get aggregated dashboard metrics
+            Combines visitor, invitation, and system data in a single response
+            </summary>
+            <returns>Comprehensive dashboard metrics</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.DashboardController.GetSystemAlertsCount(System.Threading.CancellationToken)">
+            <summary>
+            Get system alerts count (unacknowledged alerts from last 24 hours)
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.DashboardController.GetOverdueVisitorsCount(System.Threading.CancellationToken)">
+            <summary>
+            Get count of visitors who have overstayed their scheduled time
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Controllers.DashboardMetricsDto">
+            <summary>
+            Dashboard metrics data transfer object
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.DashboardMetricsDto.TodayVisitors">
+            <summary>
+            Number of visitors who visited today
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.DashboardMetricsDto.ActiveVisitors">
+            <summary>
+            Number of currently active visitors (checked in but not out)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.DashboardMetricsDto.PendingInvitations">
+            <summary>
+            Number of invitations pending approval
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.DashboardMetricsDto.SystemAlerts">
+            <summary>
+            Number of unacknowledged system alerts
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.DashboardMetricsDto.OverdueVisitors">
+            <summary>
+            Number of visitors who have overstayed their scheduled time
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.DashboardMetricsDto.LastUpdated">
+            <summary>
+            When these metrics were last updated
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.DashboardMetricsDto.TotalVisitors">
+            <summary>
+            Total number of visitors in system
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.DashboardMetricsDto.CompletedVisitsToday">
+            <summary>
+            Number of completed visits today
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Controllers.DashboardMetricsDto.AverageVisitDuration">
+            <summary>
+            Average visit duration in hours
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.EmergencyContactsController">
             <summary>
             Controller for emergency contact management operations
