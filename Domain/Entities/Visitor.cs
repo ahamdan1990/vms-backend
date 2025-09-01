@@ -159,6 +159,32 @@ public class Visitor : SoftDeleteEntity
     public string? ExternalId { get; set; }
 
     /// <summary>
+    /// Preferred location ID for visits
+    /// </summary>
+    public int? PreferredLocationId { get; set; }
+
+    /// <summary>
+    /// Default visit purpose ID
+    /// </summary>
+    public int? DefaultVisitPurposeId { get; set; }
+
+    /// <summary>
+    /// Visitor's preferred timezone
+    /// </summary>
+    [MaxLength(50)]
+    public string? TimeZone { get; set; } = "Asia/Beirut";
+
+    /// <summary>
+    /// Navigation property for preferred location
+    /// </summary>
+    public virtual Location? PreferredLocation { get; set; }
+
+    /// <summary>
+    /// Navigation property for default visit purpose
+    /// </summary>
+    public virtual VisitPurpose? DefaultVisitPurpose { get; set; }
+
+    /// <summary>
     /// Navigation property for the user who blacklisted this visitor
     /// </summary>
     public virtual User? BlacklistedByUser { get; set; }

@@ -28,6 +28,7 @@ public class VisitorMappingProfile : Profile
             .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
             .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
             .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
+            .ForMember(dest => dest.ProfilePhotoUrl, opt => opt.MapFrom(src => GetProfilePhotoUrl(src)))
             .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src => src.CreatedByUser != null ? src.CreatedByUser.FullName : null))
             .ForMember(dest => dest.ModifiedByName, opt => opt.MapFrom(src => src.ModifiedByUser != null ? src.ModifiedByUser.FullName : null))
             .ForMember(dest => dest.BlacklistedByName, opt => opt.MapFrom(src => src.BlacklistedByUser != null ? src.BlacklistedByUser.FullName : null));
@@ -77,5 +78,26 @@ public class VisitorMappingProfile : Profile
             counter++;
         }
         return string.Format("{0:n1} {1}", number, suffixes[counter]);
+    }
+
+    private static string? GetProfilePhotoUrl(Visitor visitor)
+    {
+        // First check if visitor has ProfilePhotoPath set
+        if (!string.IsNullOrEmpty(visitor.ProfilePhotoPath))
+        {
+            return $"/api/visitors/{visitor.Id}/photo";
+        }
+
+        // Then check for photo document
+        var photoDocument = visitor.Documents?.FirstOrDefault(d => 
+            d.DocumentType.Equals("Photo", StringComparison.OrdinalIgnoreCase) && 
+            !d.IsDeleted);
+
+        if (photoDocument != null)
+        {
+            return $"/api/visitors/{visitor.Id}/documents/{photoDocument.Id}/download";
+        }
+
+        return null;
     }
 }

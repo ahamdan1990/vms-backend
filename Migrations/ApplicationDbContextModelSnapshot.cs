@@ -2315,6 +2315,9 @@ namespace VisitorManagementSystem.Api.Migrations
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("DefaultVisitPurposeId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("DeletedBy")
                         .HasColumnType("int");
 
@@ -2397,6 +2400,9 @@ namespace VisitorManagementSystem.Api.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<int?>("PreferredLocationId")
+                        .HasColumnType("int");
+
                     b.Property<string>("ProfilePhotoPath")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -2408,6 +2414,10 @@ namespace VisitorManagementSystem.Api.Migrations
                         .HasColumnType("rowversion");
 
                     b.Property<string>("SecurityClearance")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TimeZone")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -2426,6 +2436,8 @@ namespace VisitorManagementSystem.Api.Migrations
 
                     b.HasIndex("CreatedOn")
                         .HasDatabaseName("IX_Visitor_CreatedOn");
+
+                    b.HasIndex("DefaultVisitPurposeId");
 
                     b.HasIndex("DeletedByUserId");
 
@@ -2449,6 +2461,8 @@ namespace VisitorManagementSystem.Api.Migrations
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("IX_Visitors_NormalizedEmail");
+
+                    b.HasIndex("PreferredLocationId");
 
                     b.HasIndex("IsActive", "CreatedOn")
                         .HasDatabaseName("IX_Visitor_IsActive_CreatedOn");
@@ -3609,6 +3623,10 @@ namespace VisitorManagementSystem.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK_Visitor_CreatedBy_User");
 
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.VisitPurpose", "DefaultVisitPurpose")
+                        .WithMany()
+                        .HasForeignKey("DefaultVisitPurposeId");
+
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "DeletedByUser")
                         .WithMany()
                         .HasForeignKey("DeletedByUserId");
@@ -3618,6 +3636,10 @@ namespace VisitorManagementSystem.Api.Migrations
                         .HasForeignKey("ModifiedBy")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK_Visitor_ModifiedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Location", "PreferredLocation")
+                        .WithMany()
+                        .HasForeignKey("PreferredLocationId");
 
                     b.OwnsOne("VisitorManagementSystem.Api.Domain.ValueObjects.Address", "Address", b1 =>
                         {
@@ -3762,6 +3784,8 @@ namespace VisitorManagementSystem.Api.Migrations
 
                     b.Navigation("CreatedByUser");
 
+                    b.Navigation("DefaultVisitPurpose");
+
                     b.Navigation("DeletedByUser");
 
                     b.Navigation("Email")
@@ -3770,6 +3794,8 @@ namespace VisitorManagementSystem.Api.Migrations
                     b.Navigation("ModifiedByUser");
 
                     b.Navigation("PhoneNumber");
+
+                    b.Navigation("PreferredLocation");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.VisitorDocument", b =>

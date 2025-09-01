@@ -123,7 +123,12 @@ public class VisitorsController : BaseController
             FirstName = createDto.FirstName,
             LastName = createDto.LastName,
             Email = createDto.Email,
+            
+            // Enhanced phone fields
             PhoneNumber = createDto.PhoneNumber,
+            PhoneCountryCode = createDto.PhoneCountryCode,
+            PhoneType = createDto.PhoneType,
+            
             Company = createDto.Company,
             JobTitle = createDto.JobTitle,
             Address = createDto.Address,
@@ -132,6 +137,12 @@ public class VisitorsController : BaseController
             GovernmentIdType = createDto.GovernmentIdType,
             Nationality = createDto.Nationality,
             Language = createDto.Language,
+            
+            // Visitor preferences
+            PreferredLocationId = createDto.PreferredLocationId,
+            DefaultVisitPurposeId = createDto.DefaultVisitPurposeId,
+            TimeZone = createDto.TimeZone,
+            
             DietaryRequirements = createDto.DietaryRequirements,
             AccessibilityRequirements = createDto.AccessibilityRequirements,
             SecurityClearance = createDto.SecurityClearance,
@@ -371,5 +382,38 @@ public class VisitorsController : BaseController
         var query = new GetVisitorStatsQuery { IncludeDeleted = includeDeleted };
         var result = await _mediator.Send(query);
         return SuccessResponse(result);
+    }
+
+    /// <summary>
+    /// Gets visitor profile photo
+    /// </summary>
+    /// <param name="id">Visitor ID</param>
+    /// <returns>Profile photo file or 404 if not found</returns>
+    [HttpGet("{id:int}/photo")]
+    [Authorize(Policy = Permissions.Visitor.Read)]
+    public async Task<IActionResult> GetVisitorPhoto(int id)
+    {
+        try
+        {
+            // Get visitor
+            var visitor = await _mediator.Send(new GetVisitorByIdQuery { Id = id });
+            if (visitor == null)
+            {
+                return NotFoundResponse("Visitor", id);
+            }
+
+            // Check if visitor has a profile photo path
+            if (!string.IsNullOrEmpty(visitor.ProfilePhotoUrl))
+            {
+                // For now, redirect to the document endpoint or return the URL
+                return Ok(new { photoUrl = visitor.ProfilePhotoUrl });
+            }
+
+            return NotFound(new { message = "No profile photo found for this visitor" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = $"Error retrieving profile photo: {ex.Message}" });
+        }
     }
 }

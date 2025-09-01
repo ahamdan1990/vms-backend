@@ -126,6 +126,22 @@ public class CreateVisitorDto
     public string? ExternalId { get; set; }
 
     /// <summary>
+    /// Preferred location ID for visits
+    /// </summary>
+    public int? PreferredLocationId { get; set; }
+
+    /// <summary>
+    /// Default visit purpose ID
+    /// </summary>
+    public int? DefaultVisitPurposeId { get; set; }
+
+    /// <summary>
+    /// Preferred timezone
+    /// </summary>
+    [MaxLength(50)]
+    public string? TimeZone { get; set; } = "Asia/Beirut";
+
+    /// <summary>
     /// Emergency contacts
     /// </summary>
     public List<CreateEmergencyContactDto> EmergencyContacts { get; set; } = new();

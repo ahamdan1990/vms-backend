@@ -60,6 +60,12 @@ public class CreateVisitorCommandHandler : IRequestHandler<CreateVisitorCommand,
                 GovernmentIdType = request.GovernmentIdType?.Trim(),
                 Nationality = request.Nationality?.Trim(),
                 Language = request.Language,
+                
+                // Visitor preferences
+                PreferredLocationId = request.PreferredLocationId,
+                DefaultVisitPurposeId = request.DefaultVisitPurposeId,
+                TimeZone = request.TimeZone ?? "Asia/Beirut",
+                
                 DietaryRequirements = request.DietaryRequirements?.Trim(),
                 AccessibilityRequirements = request.AccessibilityRequirements?.Trim(),
                 SecurityClearance = request.SecurityClearance?.Trim(),

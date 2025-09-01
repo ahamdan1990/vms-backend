@@ -32,6 +32,12 @@ public class CreateVisitorCommand : IRequest<VisitorDto>
     public bool IsVip { get; set; } = false;
     public string? Notes { get; set; }
     public string? ExternalId { get; set; }
+    
+    // Visitor preferences
+    public int? PreferredLocationId { get; set; }
+    public int? DefaultVisitPurposeId { get; set; }
+    public string? TimeZone { get; set; } = "Asia/Beirut";
+    
     public List<CreateEmergencyContactDto> EmergencyContacts { get; set; } = new();
     public int CreatedBy { get; set; }
 }

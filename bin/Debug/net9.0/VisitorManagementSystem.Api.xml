@@ -4717,6 +4717,21 @@
             External system ID
             </summary>
         </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.PreferredLocationId">
+            <summary>
+            Preferred location ID for visits
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.DefaultVisitPurposeId">
+            <summary>
+            Default visit purpose ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.TimeZone">
+            <summary>
+            Preferred timezone
+            </summary>
+        </member>
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.EmergencyContacts">
             <summary>
             Emergency contacts
@@ -14690,6 +14705,31 @@
             External system ID (for integration purposes)
             </summary>
         </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.Visitor.PreferredLocationId">
+            <summary>
+            Preferred location ID for visits
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.Visitor.DefaultVisitPurposeId">
+            <summary>
+            Default visit purpose ID
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.Visitor.TimeZone">
+            <summary>
+            Visitor's preferred timezone
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.Visitor.PreferredLocation">
+            <summary>
+            Navigation property for preferred location
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Domain.Entities.Visitor.DefaultVisitPurpose">
+            <summary>
+            Navigation property for default visit purpose
+            </summary>
+        </member>
         <member name="P:VisitorManagementSystem.Api.Domain.Entities.Visitor.BlacklistedByUser">
             <summary>
             Navigation property for the user who blacklisted this visitor
@@ -20767,6 +20807,18 @@
             <inheritdoc />
         </member>
         <member name="M:VisitorManagementSystem.Api.Migrations.AddInitialMigration.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Migrations.AddVisitorsFields">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.AddVisitorsFields.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.AddVisitorsFields.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Migrations.AddVisitorsFields.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
             <inheritdoc />
         </member>
         <member name="T:GetUserByIdQueryHandler">

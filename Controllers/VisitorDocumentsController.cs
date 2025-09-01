@@ -20,11 +20,16 @@ public class VisitorDocumentsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<VisitorDocumentsController> _logger;
+    private readonly IWebHostEnvironment _environment;
 
-    public VisitorDocumentsController(IMediator mediator, ILogger<VisitorDocumentsController> logger)
+    public VisitorDocumentsController(
+        IMediator mediator, 
+        ILogger<VisitorDocumentsController> logger,
+        IWebHostEnvironment environment)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _environment = environment ?? throw new ArgumentNullException(nameof(environment));
     }
 
     /// <summary>
@@ -170,17 +175,46 @@ public class VisitorDocumentsController : BaseController
     [Authorize(Policy = Permissions.VisitorDocument.Download)]
     public async Task<IActionResult> DownloadVisitorDocument(int visitorId, int id)
     {
-        // This would require file storage service integration
-        // For now, return the document info
-        var query = new GetVisitorDocumentByIdQuery { Id = id };
-        var result = await _mediator.Send(query);
-
-        if (result == null)
+        try
         {
-            return NotFoundResponse("Visitor document", id);
-        }
+            // Get document record
+            var query = new GetVisitorDocumentByIdQuery { Id = id };
+            var document = await _mediator.Send(query);
 
-        return SuccessResponse(result, "Document information retrieved. File download would require file storage integration.");
+            if (document == null)
+            {
+                return NotFoundResponse("Visitor document", id);
+            }
+
+            // Verify document belongs to the specified visitor
+            if (document.VisitorId != visitorId)
+            {
+                return BadRequest("Document does not belong to the specified visitor");
+            }
+
+            // Get physical file path
+            var webRootPath = _environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            var filePath = Path.Combine(webRootPath, document.FilePath.TrimStart('/'));
+
+            // Check if file exists
+            if (!System.IO.File.Exists(filePath))
+            {
+                _logger.LogWarning("Document file not found: {FilePath} for document ID: {DocumentId}", filePath, id);
+                return NotFound("Document file not found on server");
+            }
+
+            // Get file info
+            var fileInfo = new FileInfo(filePath);
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+
+            // Return file with proper headers
+            return File(fileBytes, document.ContentType, document.OriginalFileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error downloading visitor document {DocumentId} for visitor {VisitorId}", id, visitorId);
+            return BadRequest("Error downloading document");
+        }
     }
 
     /// <summary>
