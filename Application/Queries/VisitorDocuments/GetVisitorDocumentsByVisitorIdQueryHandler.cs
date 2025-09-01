@@ -1,6 +1,7 @@
 using AutoMapper;
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
+using VisitorManagementSystem.Api.Application.Services;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 namespace VisitorManagementSystem.Api.Application.Queries.VisitorDocuments;
@@ -13,15 +14,18 @@ public class GetVisitorDocumentsByVisitorIdQueryHandler : IRequestHandler<GetVis
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<GetVisitorDocumentsByVisitorIdQueryHandler> _logger;
+    private readonly IFileUploadService _fileUploadService;
 
     public GetVisitorDocumentsByVisitorIdQueryHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        ILogger<GetVisitorDocumentsByVisitorIdQueryHandler> logger)
+        ILogger<GetVisitorDocumentsByVisitorIdQueryHandler> logger,
+        IFileUploadService fileUploadService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
+        _fileUploadService = fileUploadService;
     }
 
     public async Task<List<VisitorDocumentDto>> Handle(GetVisitorDocumentsByVisitorIdQuery request, CancellationToken cancellationToken)
@@ -52,6 +56,16 @@ public class GetVisitorDocumentsByVisitorIdQueryHandler : IRequestHandler<GetVis
             }
 
             var documentDtos = _mapper.Map<List<VisitorDocumentDto>>(documents);
+            
+            // Generate download URLs for all documents (following same pattern as GetVisitorDocumentByIdQueryHandler)
+            for (int i = 0; i < documentDtos.Count; i++)
+            {
+                if (!string.IsNullOrEmpty(documents[i].FilePath))
+                {
+                    documentDtos[i].DownloadUrl = _fileUploadService.GetVisitorDocumentUrl(documents[i].FilePath);
+                }
+            }
+            
             return documentDtos;
         }
         catch (Exception ex)

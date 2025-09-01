@@ -194,7 +194,7 @@ public class VisitorDocumentsController : BaseController
 
             // Get physical file path
             var webRootPath = _environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            var filePath = Path.Combine(webRootPath, document.FilePath.TrimStart('/'));
+            var filePath = Path.Combine(webRootPath, document.DownloadUrl.TrimStart('/'));
 
             // Check if file exists
             if (!System.IO.File.Exists(filePath))

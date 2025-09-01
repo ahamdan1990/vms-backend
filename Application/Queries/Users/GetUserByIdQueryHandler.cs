@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Application.Queries.Users;
+using VisitorManagementSystem.Api.Application.Services;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Application.DTOs.Auth;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -12,13 +13,16 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDet
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<GetUserByIdQueryHandler> _logger;
+    private readonly IFileUploadService _fileUploadService;
 
     public GetUserByIdQueryHandler(
         IUnitOfWork unitOfWork,
-        ILogger<GetUserByIdQueryHandler> logger)
+        ILogger<GetUserByIdQueryHandler> logger,
+        IFileUploadService fileUploadService)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _fileUploadService = fileUploadService;
     }
 
     public async Task<UserDetailDto?> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
@@ -80,6 +84,12 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDet
                 ModifiedOn = user.ModifiedOn,
                 ModifiedBy = user.ModifiedBy
             };
+
+            // Generate full URL for profile photo if it exists (following same pattern as GetCurrentUserProfileQueryHandler)
+            if (!string.IsNullOrEmpty(user.ProfilePhotoPath))
+            {
+                userDetailDto.ProfilePhotoPath = _fileUploadService.GetProfilePhotoUrl(user.ProfilePhotoPath);
+            }
 
             // Include activity summary if requested
             if (request.IncludeActivity)

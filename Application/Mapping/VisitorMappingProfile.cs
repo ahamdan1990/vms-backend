@@ -44,6 +44,7 @@ public class VisitorMappingProfile : Profile
         CreateMap<VisitorDisplayInfo, VisitorListDto>();
 
         CreateMap<VisitorDocument, VisitorDocumentDto>()
+            .ForMember(destinationMember => destinationMember.DownloadUrl, opt => opt.MapFrom(src => src.FilePath.ToString()))
             .ForMember(dest => dest.FormattedFileSize, opt => opt.MapFrom(src => FormatFileSize(src.FileSize)))
             .ForMember(dest => dest.IsExpired, opt => opt.MapFrom(src => src.ExpirationDate.HasValue && src.ExpirationDate.Value < DateTime.UtcNow))
             .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src => src.CreatedByUser != null ? src.CreatedByUser.FullName : null))
@@ -82,10 +83,13 @@ public class VisitorMappingProfile : Profile
 
     private static string? GetProfilePhotoUrl(Visitor visitor)
     {
+        // Base URL should come from configuration, but for now use relative paths
+        // The frontend should prepend the correct backend URL
+        
         // First check if visitor has ProfilePhotoPath set
         if (!string.IsNullOrEmpty(visitor.ProfilePhotoPath))
         {
-            return $"/api/visitors/{visitor.Id}/photo";
+            return $"http://localhost:5000/api/visitors/{visitor.Id}/photo";
         }
 
         // Then check for photo document
@@ -95,7 +99,7 @@ public class VisitorMappingProfile : Profile
 
         if (photoDocument != null)
         {
-            return $"/api/visitors/{visitor.Id}/documents/{photoDocument.Id}/download";
+            return $"http://localhost:5000/api/visitors/{visitor.Id}/documents/{photoDocument.Id}/download";
         }
 
         return null;

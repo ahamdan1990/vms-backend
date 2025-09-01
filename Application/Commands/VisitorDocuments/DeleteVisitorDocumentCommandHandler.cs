@@ -1,5 +1,6 @@
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
+using VisitorManagementSystem.Api.Application.Services;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 namespace VisitorManagementSystem.Api.Application.Commands.VisitorDocuments;
@@ -11,13 +12,16 @@ public class DeleteVisitorDocumentCommandHandler : IRequestHandler<DeleteVisitor
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<DeleteVisitorDocumentCommandHandler> _logger;
+    private readonly IFileUploadService _fileUploadService;
 
     public DeleteVisitorDocumentCommandHandler(
         IUnitOfWork unitOfWork,
-        ILogger<DeleteVisitorDocumentCommandHandler> logger)
+        ILogger<DeleteVisitorDocumentCommandHandler> logger,
+        IFileUploadService fileUploadService)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _fileUploadService = fileUploadService;
     }
 
     public async Task<CommandResultDto<bool>> Handle(DeleteVisitorDocumentCommand request, CancellationToken cancellationToken)
@@ -33,9 +37,12 @@ public class DeleteVisitorDocumentCommandHandler : IRequestHandler<DeleteVisitor
                 throw new InvalidOperationException($"Visitor document with ID '{request.Id}' not found.");
             }
 
+            // Store file path for cleanup
+            var filePath = visitorDocument.FilePath;
+
             if (request.PermanentDelete)
             {
-                // Permanent delete
+                // Permanent delete - remove physical file
                 _unitOfWork.VisitorDocuments.Delete(visitorDocument);
                 _logger.LogInformation("Visitor document permanently deleted: {DocumentId} by {DeletedBy}",
                     request.Id, request.DeletedBy);
@@ -50,6 +57,22 @@ public class DeleteVisitorDocumentCommandHandler : IRequestHandler<DeleteVisitor
             }
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Clean up physical file for permanent deletes
+            if (request.PermanentDelete && !string.IsNullOrEmpty(filePath))
+            {
+                try
+                {
+                    await _fileUploadService.RemoveVisitorDocumentAsync(filePath);
+                    _logger.LogInformation("Physical file removed for permanently deleted document: {FilePath}", filePath);
+                }
+                catch (Exception fileEx)
+                {
+                    _logger.LogWarning(fileEx, "Failed to remove physical file for document {DocumentId}: {FilePath}", 
+                        request.Id, filePath);
+                    // Don't fail the entire operation if file cleanup fails
+                }
+            }
 
             return CommandResultDto<bool>.Success(true, "Visitor document deleted successfully.");
         }

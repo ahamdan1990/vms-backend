@@ -6729,11 +6729,6 @@
             Include deleted document
             </summary>
         </member>
-        <member name="T:VisitorManagementSystem.Api.Application.Queries.VisitorDocuments.GetVisitorDocumentByIdQueryHandler">
-            <summary>
-            Handler for get visitor document by ID query
-            </summary>
-        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Queries.VisitorDocuments.GetVisitorDocumentsByVisitorIdQuery">
             <summary>
             Query to get visitor documents by visitor ID
@@ -11766,6 +11761,13 @@
             </summary>
             <param name="includeDeleted">Include deleted visitors in statistics</param>
             <returns>Visitor statistics</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.VisitorsController.GetVisitorPhoto(System.Int32)">
+            <summary>
+            Gets visitor profile photo
+            </summary>
+            <param name="id">Visitor ID</param>
+            <returns>Profile photo file or 404 if not found</returns>
         </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.VisitPurposesController">
             <summary>

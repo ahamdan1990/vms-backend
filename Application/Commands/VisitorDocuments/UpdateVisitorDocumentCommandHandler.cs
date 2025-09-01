@@ -1,6 +1,7 @@
 using AutoMapper;
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
+using VisitorManagementSystem.Api.Application.Services;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 namespace VisitorManagementSystem.Api.Application.Commands.VisitorDocuments;
@@ -13,15 +14,18 @@ public class UpdateVisitorDocumentCommandHandler : IRequestHandler<UpdateVisitor
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<UpdateVisitorDocumentCommandHandler> _logger;
+    private readonly IFileUploadService _fileUploadService;
 
     public UpdateVisitorDocumentCommandHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        ILogger<UpdateVisitorDocumentCommandHandler> logger)
+        ILogger<UpdateVisitorDocumentCommandHandler> logger,
+        IFileUploadService fileUploadService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
+        _fileUploadService = fileUploadService;
     }
 
     public async Task<VisitorDocumentDto> Handle(UpdateVisitorDocumentCommand request, CancellationToken cancellationToken)
@@ -58,6 +62,13 @@ public class UpdateVisitorDocumentCommandHandler : IRequestHandler<UpdateVisitor
 
             // Map to DTO and return
             var visitorDocumentDto = _mapper.Map<VisitorDocumentDto>(visitorDocument);
+            
+            // Generate download URL for consistency with query handlers
+            if (!string.IsNullOrEmpty(visitorDocument.FilePath))
+            {
+                visitorDocumentDto.DownloadUrl = _fileUploadService.GetVisitorDocumentUrl(visitorDocument.FilePath);
+            }
+            
             return visitorDocumentDto;
         }
         catch (Exception ex)

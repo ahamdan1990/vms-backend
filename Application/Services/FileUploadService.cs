@@ -302,7 +302,7 @@ public class FileUploadService : IFileUploadService
         if (string.IsNullOrEmpty(filePath))
             return string.Empty;
 
-        var baseUrl = _configuration["BaseUrl"] ?? "https://localhost";
+        var baseUrl = _configuration["BaseUrl"] ?? "http://localhost:5000";
         return $"{baseUrl.TrimEnd('/')}/{filePath.TrimStart('/')}";
     }
 
