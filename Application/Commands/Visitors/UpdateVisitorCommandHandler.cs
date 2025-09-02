@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
+using VisitorManagementSystem.Api.Application.Services;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
 
@@ -14,15 +15,21 @@ public class UpdateVisitorCommandHandler : IRequestHandler<UpdateVisitorCommand,
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<UpdateVisitorCommandHandler> _logger;
+    private readonly IVisitorNotesBridgeService _visitorNotesBridgeService;
+    private readonly IMediator _mediator;
 
     public UpdateVisitorCommandHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        ILogger<UpdateVisitorCommandHandler> logger)
+        ILogger<UpdateVisitorCommandHandler> logger,
+        IVisitorNotesBridgeService visitorNotesBridgeService,
+        IMediator mediator)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
+        _visitorNotesBridgeService = visitorNotesBridgeService;
+        _mediator = mediator;
     }
 
     public async Task<VisitorDto> Handle(UpdateVisitorCommand request, CancellationToken cancellationToken)
@@ -60,6 +67,16 @@ public class UpdateVisitorCommandHandler : IRequestHandler<UpdateVisitorCommand,
                 _logger.LogWarning("Attempt to update visitor with existing government ID: {GovernmentId}", request.GovernmentId);
                 throw new InvalidOperationException($"A visitor with government ID '{request.GovernmentId}' already exists.");
             }
+
+            // Store previous state for notes comparison (create a simple copy of relevant fields)
+            var previousVisitor = new Domain.Entities.Visitor
+            {
+                Id = visitor.Id,
+                DietaryRequirements = visitor.DietaryRequirements,
+                AccessibilityRequirements = visitor.AccessibilityRequirements,
+                SecurityClearance = visitor.SecurityClearance,
+                Notes = visitor.Notes
+            };
 
             // Update visitor properties
             visitor.FirstName = request.FirstName.Trim();
@@ -122,6 +139,9 @@ public class UpdateVisitorCommandHandler : IRequestHandler<UpdateVisitorCommand,
 
             // Update audit information
             visitor.UpdateModifiedBy(request.ModifiedBy);
+
+            // Update visitor notes based on changes to special requirements
+            await _visitorNotesBridgeService.UpdateNotesFromRequirementsAsync(visitor, previousVisitor, request.ModifiedBy, cancellationToken);
 
             // Update in repository
             _unitOfWork.Visitors.Update(visitor);

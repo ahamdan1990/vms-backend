@@ -1,6 +1,9 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
 using VisitorManagementSystem.Api.Application.Commands.Visitors;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
@@ -19,10 +22,12 @@ namespace VisitorManagementSystem.Api.Controllers;
 public class VisitorsController : BaseController
 {
     private readonly IMediator _mediator;
+    private readonly ILogger<VisitorsController> _logger;
 
-    public VisitorsController(IMediator mediator)
+    public VisitorsController(IMediator mediator, ILogger<VisitorsController> logger)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
@@ -101,6 +106,21 @@ public class VisitorsController : BaseController
     [Authorize(Policy = Permissions.Visitor.Create)]
     public async Task<IActionResult> CreateVisitor([FromBody] CreateVisitorDto createDto)
     {
+        // Debug logging for invitation creation issue
+        _logger.LogDebug("CreateVisitor called with CreateInvitation: {CreateInvitation}", createDto.CreateInvitation);
+        _logger.LogDebug("InvitationSubject: {Subject}", createDto.InvitationSubject);
+        _logger.LogDebug("InvitationScheduledStartTime: {StartTime}", createDto.InvitationScheduledStartTime);
+
+        // Check for recent duplicate request (within last 5 seconds)
+        var cacheKey = $"visitor_create_{createDto.Email}_{GetCurrentUserId()}";
+        
+        // Check model validation state
+        if (!ModelState.IsValid)
+        {
+            _logger.LogWarning("Model validation failed. Errors: {Errors}", 
+                string.Join("; ", ModelState.SelectMany(kvp => kvp.Value?.Errors?.Select(e => $"{kvp.Key}: {e.ErrorMessage}") ?? new string[0])));
+        }
+
         // Validate phone number format
         if (!string.IsNullOrEmpty(createDto.PhoneNumber) &&
             !PhoneNumber.IsValidPhoneNumber(createDto.PhoneNumber))
@@ -150,8 +170,30 @@ public class VisitorsController : BaseController
             Notes = createDto.Notes,
             ExternalId = createDto.ExternalId,
             EmergencyContacts = createDto.EmergencyContacts,
+
+            // Invitation creation fields
+            CreateInvitation = createDto.CreateInvitation,
+            InvitationSubject = createDto.InvitationSubject,
+            InvitationMessage = createDto.InvitationMessage,
+            InvitationScheduledStartTime = createDto.InvitationScheduledStartTime,
+            InvitationScheduledEndTime = createDto.InvitationScheduledEndTime,
+            InvitationLocationId = createDto.InvitationLocationId,
+            InvitationVisitPurposeId = createDto.InvitationVisitPurposeId,
+            InvitationExpectedVisitorCount = createDto.InvitationExpectedVisitorCount,
+            InvitationSpecialInstructions = createDto.InvitationSpecialInstructions,
+            InvitationRequiresApproval = createDto.InvitationRequiresApproval,
+            InvitationRequiresEscort = createDto.InvitationRequiresEscort,
+            InvitationRequiresBadge = createDto.InvitationRequiresBadge,
+            InvitationNeedsParking = createDto.InvitationNeedsParking,
+            InvitationParkingInstructions = createDto.InvitationParkingInstructions,
+            InvitationSubmitForApproval = createDto.InvitationSubmitForApproval,
+
             CreatedBy = GetCurrentUserId() ?? throw new UnauthorizedAccessException("User must be authenticated")
         };
+
+        // Debug logging for command mapping
+        _logger.LogDebug("Command CreateInvitation after mapping: {CreateInvitation}", command.CreateInvitation);
+        _logger.LogDebug("Command InvitationSubject after mapping: {Subject}", command.InvitationSubject);
 
         var result = await _mediator.Send(command);
         return CreatedResponse(result, Url.Action(nameof(GetVisitor), new { id = result.Id }));
@@ -414,6 +456,53 @@ public class VisitorsController : BaseController
         catch (Exception ex)
         {
             return BadRequest(new { message = $"Error retrieving profile photo: {ex.Message}" });
+        }
+    }
+
+    /// <summary>
+    /// Debug endpoint to test model binding for invitation creation
+    /// </summary>
+    [HttpPost("debug-binding")]
+    [Authorize(Policy = Permissions.Visitor.Create)]
+    public async Task<IActionResult> DebugBinding([FromBody] object rawData)
+    {
+        try
+        {
+            // Read the raw request body
+            Request.Body.Seek(0, SeekOrigin.Begin);
+            using var reader = new StreamReader(Request.Body);
+            var rawBody = await reader.ReadToEndAsync();
+            _logger.LogInformation("Raw HTTP Body: {RawBody}", rawBody);
+            
+            var json = System.Text.Json.JsonSerializer.Serialize(rawData);
+            _logger.LogInformation("Raw JSON received: {Json}", json);
+            
+            // Try to deserialize to our DTO
+            var createDto = System.Text.Json.JsonSerializer.Deserialize<CreateVisitorDto>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+
+            _logger.LogInformation("Deserialized CreateInvitation: {CreateInvitation}", createDto?.CreateInvitation);
+            _logger.LogInformation("Deserialized InvitationSubject: {Subject}", createDto?.InvitationSubject);
+            
+            return Ok(new
+            {
+                RawHttpBody = rawBody,
+                RawJson = json,
+                CreateInvitation = createDto?.CreateInvitation,
+                InvitationSubject = createDto?.InvitationSubject,
+                InvitationScheduledStartTime = createDto?.InvitationScheduledStartTime,
+                InvitationScheduledEndTime = createDto?.InvitationScheduledEndTime,
+                ModelValidationErrors = ModelState.Where(x => x.Value?.Errors?.Count > 0)
+                    .ToDictionary(x => x.Key, x => x.Value?.Errors?.Select(e => e.ErrorMessage))
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Debug binding failed");
+            return BadRequest(new { error = ex.Message });
         }
     }
 }

@@ -1515,6 +1515,81 @@
             Command for creating a new visitor
             </summary>
         </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Visitors.CreateVisitorCommand.CreateInvitation">
+            <summary>
+            Whether to create an invitation immediately after creating the visitor
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Visitors.CreateVisitorCommand.InvitationSubject">
+            <summary>
+            Invitation subject/title (required if CreateInvitation is true)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Visitors.CreateVisitorCommand.InvitationMessage">
+            <summary>
+            Invitation message/description
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Visitors.CreateVisitorCommand.InvitationScheduledStartTime">
+            <summary>
+            Scheduled start date and time for the invitation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Visitors.CreateVisitorCommand.InvitationScheduledEndTime">
+            <summary>
+            Scheduled end date and time for the invitation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Visitors.CreateVisitorCommand.InvitationLocationId">
+            <summary>
+            Location ID for the invitation (will use PreferredLocationId if not specified)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Visitors.CreateVisitorCommand.InvitationVisitPurposeId">
+            <summary>
+            Visit purpose ID for the invitation (will use DefaultVisitPurposeId if not specified)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Visitors.CreateVisitorCommand.InvitationExpectedVisitorCount">
+            <summary>
+            Expected number of visitors for the invitation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Visitors.CreateVisitorCommand.InvitationSpecialInstructions">
+            <summary>
+            Special instructions for the invitation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Visitors.CreateVisitorCommand.InvitationRequiresApproval">
+            <summary>
+            Whether the invitation requires approval
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Visitors.CreateVisitorCommand.InvitationRequiresEscort">
+            <summary>
+            Whether the invitation requires escort
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Visitors.CreateVisitorCommand.InvitationRequiresBadge">
+            <summary>
+            Whether the invitation requires badge
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Visitors.CreateVisitorCommand.InvitationNeedsParking">
+            <summary>
+            Whether parking is needed for the invitation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Visitors.CreateVisitorCommand.InvitationParkingInstructions">
+            <summary>
+            Parking instructions for the invitation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.Commands.Visitors.CreateVisitorCommand.InvitationSubmitForApproval">
+            <summary>
+            Whether to submit the invitation for approval immediately
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Commands.Visitors.CreateVisitorCommandHandler">
             <summary>
             Handler for create visitor command
@@ -4735,6 +4810,86 @@
         <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.EmergencyContacts">
             <summary>
             Emergency contacts
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.CreateInvitation">
+            <summary>
+            Whether to create an invitation immediately after creating the visitor
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.InvitationSubject">
+            <summary>
+            Invitation subject/title (required if CreateInvitation is true)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.InvitationMessage">
+            <summary>
+            Invitation message/description
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.InvitationScheduledStartTime">
+            <summary>
+            Scheduled start date and time for the invitation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.InvitationScheduledEndTime">
+            <summary>
+            Scheduled end date and time for the invitation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.InvitationLocationId">
+            <summary>
+            Location ID for the invitation (will use PreferredLocationId if not specified)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.InvitationVisitPurposeId">
+            <summary>
+            Visit purpose ID for the invitation (will use DefaultVisitPurposeId if not specified)
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.InvitationExpectedVisitorCount">
+            <summary>
+            Expected number of visitors for the invitation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.InvitationSpecialInstructions">
+            <summary>
+            Special instructions for the invitation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.InvitationRequiresApproval">
+            <summary>
+            Whether the invitation requires approval
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.InvitationRequiresEscort">
+            <summary>
+            Whether the invitation requires escort
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.InvitationRequiresBadge">
+            <summary>
+            Whether the invitation requires badge
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.InvitationNeedsParking">
+            <summary>
+            Whether parking is needed for the invitation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.InvitationParkingInstructions">
+            <summary>
+            Parking instructions for the invitation
+            </summary>
+        </member>
+        <member name="P:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.InvitationSubmitForApproval">
+            <summary>
+            Whether to submit the invitation for approval immediately
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorDto.Validate(System.ComponentModel.DataAnnotations.ValidationContext)">
+            <summary>
+            Custom validation logic for invitation data
             </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Application.DTOs.Visitors.CreateVisitorNoteDto">
@@ -9752,6 +9907,27 @@
             User service implementation
             </summary>
         </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.IVisitorNotesBridgeService">
+            <summary>
+            Service for converting visitor special requirements into structured VisitorNote entries
+            This bridges the gap between form data and the advanced notes system
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.IVisitorNotesBridgeService.CreateNotesFromRequirementsAsync(VisitorManagementSystem.Api.Domain.Entities.Visitor,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Creates VisitorNote entries from visitor special requirements during creation
+            </summary>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Application.Services.IVisitorNotesBridgeService.UpdateNotesFromRequirementsAsync(VisitorManagementSystem.Api.Domain.Entities.Visitor,VisitorManagementSystem.Api.Domain.Entities.Visitor,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Updates VisitorNote entries when visitor special requirements change during update
+            </summary>
+        </member>
+        <member name="T:VisitorManagementSystem.Api.Application.Services.VisitorNotesBridgeService">
+            <summary>
+            Implementation of visitor notes bridge service
+            </summary>
+        </member>
         <member name="T:VisitorManagementSystem.Api.Application.Services.Visitors.IVisitorService">
             <summary>
             Service interface for visitor business logic
@@ -11768,6 +11944,11 @@
             </summary>
             <param name="id">Visitor ID</param>
             <returns>Profile photo file or 404 if not found</returns>
+        </member>
+        <member name="M:VisitorManagementSystem.Api.Controllers.VisitorsController.DebugBinding(System.Object)">
+            <summary>
+            Debug endpoint to test model binding for invitation creation
+            </summary>
         </member>
         <member name="T:VisitorManagementSystem.Api.Controllers.VisitPurposesController">
             <summary>

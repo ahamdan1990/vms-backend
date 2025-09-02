@@ -108,6 +108,9 @@ public static class ServiceCollectionExtensions
         // File upload service
         services.AddScoped<IFileUploadService, FileUploadService>();
 
+        // Visitor notes bridge service (converts form data to structured notes)
+        services.AddScoped<IVisitorNotesBridgeService, VisitorNotesBridgeService>();
+
         // Utility services
         services.AddSingleton<DateTimeProvider>();
         services.AddSingleton<GuidGenerator>();
@@ -211,10 +214,10 @@ public static class ServiceCollectionExtensions
         });
 
         // Distributed cache (Redis)
-        services.AddStackExchangeRedisCache(options =>
-        {
-            options.Configuration = Environment.GetEnvironmentVariable("REDIS_CONNECTION") ?? "localhost:6379";
-        });
+        //services.AddStackExchangeRedisCache(options =>
+        //{
+        //    options.Configuration = Environment.GetEnvironmentVariable("REDIS_CONNECTION") ?? "localhost:6379";
+        //});
         //services.AddDistributedMemoryCache();
         // Data protection
         services.AddDataProtection()

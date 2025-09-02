@@ -1,9 +1,12 @@
 ﻿using AutoMapper;
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
+using VisitorManagementSystem.Api.Application.Services;
+using VisitorManagementSystem.Api.Application.Commands.Invitations;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
+using VisitorManagementSystem.Api.Domain.Enums;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Visitors;
 
@@ -15,15 +18,21 @@ public class CreateVisitorCommandHandler : IRequestHandler<CreateVisitorCommand,
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<CreateVisitorCommandHandler> _logger;
+    private readonly IVisitorNotesBridgeService _visitorNotesBridgeService;
+    private readonly IMediator _mediator;
 
     public CreateVisitorCommandHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        ILogger<CreateVisitorCommandHandler> logger)
+        ILogger<CreateVisitorCommandHandler> logger,
+        IVisitorNotesBridgeService visitorNotesBridgeService,
+        IMediator mediator)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
+        _visitorNotesBridgeService = visitorNotesBridgeService;
+        _mediator = mediator;
     }
 
     public async Task<VisitorDto> Handle(CreateVisitorCommand request, CancellationToken cancellationToken)
@@ -161,10 +170,61 @@ public class CreateVisitorCommandHandler : IRequestHandler<CreateVisitorCommand,
                 await _unitOfWork.EmergencyContacts.AddAsync(contact, cancellationToken);
             }
 
+            // FIRST: Save visitor and emergency contacts to get the visitor ID
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-
+            
             _logger.LogInformation("Visitor created successfully: {VisitorId} ({Email}) by {CreatedBy}",
                 visitor.Id, visitor.Email.Value, request.CreatedBy);
+
+            // SECOND: Create visitor notes from special requirements (now visitor has an ID)
+            await _visitorNotesBridgeService.CreateNotesFromRequirementsAsync(visitor, request.CreatedBy, cancellationToken);
+
+            // THIRD: Create invitation if requested (now visitor has an ID)
+            if (request.CreateInvitation)
+            {
+                _logger.LogDebug("CreateInvitation flag: {CreateInvitation}", request.CreateInvitation);
+                _logger.LogDebug("Creating invitation for visitor: {Email} (ID: {VisitorId})", request.Email, visitor.Id);
+                
+                try
+                {
+                    var invitationCommand = new CreateInvitationCommand
+                    {
+                        VisitorId = visitor.Id,
+                        HostId = request.CreatedBy,
+                        VisitPurposeId = request.InvitationVisitPurposeId ?? request.DefaultVisitPurposeId,
+                        LocationId = request.InvitationLocationId ?? request.PreferredLocationId,
+                        Type = InvitationType.Single,
+                        Subject = request.InvitationSubject!,
+                        Message = request.InvitationMessage,
+                        ScheduledStartTime = request.InvitationScheduledStartTime!.Value,
+                        ScheduledEndTime = request.InvitationScheduledEndTime!.Value,
+                        ExpectedVisitorCount = request.InvitationExpectedVisitorCount,
+                        SpecialInstructions = request.InvitationSpecialInstructions,
+                        RequiresApproval = request.InvitationRequiresApproval,
+                        RequiresEscort = request.InvitationRequiresEscort,
+                        RequiresBadge = request.InvitationRequiresBadge,
+                        NeedsParking = request.InvitationNeedsParking,
+                        ParkingInstructions = request.InvitationParkingInstructions,
+                        TemplateId = null,
+                        SubmitForApproval = request.InvitationSubmitForApproval,
+                        CreatedBy = request.CreatedBy
+                    };
+
+                    var invitation = await _mediator.Send(invitationCommand, cancellationToken);
+                    _logger.LogInformation("Invitation created successfully: {InvitationId} for visitor {VisitorId}", 
+                        invitation.Id, visitor.Id);
+                }
+                catch (Exception invitationEx)
+                {
+                    // Log invitation creation error but don't fail the entire visitor creation
+                    _logger.LogError(invitationEx, "Failed to create invitation for visitor {Email}. Visitor creation will continue.", request.Email);
+                    // Note: We could optionally throw here if invitation creation is critical
+                    // For now, we allow visitor creation to succeed even if invitation fails
+                }
+            }
+
+            // FINAL: Save visitor notes and invitation (if created)
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             // Map to DTO and return
             var visitorDto = _mapper.Map<VisitorDto>(visitor);
