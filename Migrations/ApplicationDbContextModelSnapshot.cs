@@ -347,6 +347,211 @@ namespace VisitorManagementSystem.Api.Migrations
                     b.ToTable("AuditLogs", (string)null);
                 });
 
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Camera", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CameraType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConfigurationJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ConnectionString")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("EnableFacialRecognition")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<int>("FailureCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("FirmwareVersion")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("LastErrorMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("LastHealthCheck")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastOnlineTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("LocationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Manufacturer")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Metadata")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Model")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Password")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Priority")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(5);
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SerialNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("Username")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CameraType")
+                        .HasDatabaseName("IX_Cameras_CameraType");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("IX_Camera_CreatedBy");
+
+                    b.HasIndex("CreatedOn")
+                        .HasDatabaseName("IX_Camera_CreatedOn");
+
+                    b.HasIndex("DeletedBy")
+                        .HasDatabaseName("IX_Camera_DeletedBy");
+
+                    b.HasIndex("EnableFacialRecognition")
+                        .HasDatabaseName("IX_Cameras_EnableFacialRecognition");
+
+                    b.HasIndex("FailureCount")
+                        .HasDatabaseName("IX_Cameras_FailureCount");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_Cameras_IsActive");
+
+                    b.HasIndex("IsDeleted")
+                        .HasDatabaseName("IX_Cameras_IsDeleted");
+
+                    b.HasIndex("LastHealthCheck")
+                        .HasDatabaseName("IX_Cameras_LastHealthCheck");
+
+                    b.HasIndex("LastOnlineTime")
+                        .HasDatabaseName("IX_Cameras_LastOnlineTime");
+
+                    b.HasIndex("LocationId")
+                        .HasDatabaseName("IX_Cameras_LocationId");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("IX_Camera_ModifiedBy");
+
+                    b.HasIndex("Name")
+                        .HasDatabaseName("IX_Cameras_Name");
+
+                    b.HasIndex("Priority")
+                        .HasDatabaseName("IX_Cameras_Priority");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_Cameras_Status");
+
+                    b.HasIndex("IsActive", "CreatedOn")
+                        .HasDatabaseName("IX_Camera_IsActive_CreatedOn");
+
+                    b.HasIndex("IsDeleted", "DeletedOn")
+                        .HasDatabaseName("IX_Camera_IsDeleted_DeletedOn");
+
+                    b.HasIndex("LocationId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Cameras_LocationId_Name_Unique")
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("CameraType", "IsActive", "IsDeleted")
+                        .HasDatabaseName("IX_Cameras_CameraType_IsActive_IsDeleted");
+
+                    b.HasIndex("EnableFacialRecognition", "IsActive", "IsDeleted")
+                        .HasDatabaseName("IX_Cameras_EnableFacialRecognition_IsActive_IsDeleted");
+
+                    b.HasIndex("IsActive", "IsDeleted", "Status")
+                        .HasDatabaseName("IX_Cameras_IsActive_IsDeleted_Status");
+
+                    b.HasIndex("IsActive", "IsDeleted", "LastHealthCheck", "Priority")
+                        .HasDatabaseName("IX_Cameras_HealthMonitoring");
+
+                    b.HasIndex("IsActive", "IsDeleted", "Status", "Priority")
+                        .HasDatabaseName("IX_Cameras_Operational");
+
+                    b.ToTable("Cameras", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Cameras_FailureCount", "[FailureCount] >= 0");
+
+                            t.HasCheckConstraint("CK_Cameras_Priority", "[Priority] >= 1 AND [Priority] <= 10");
+                        });
+                });
+
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit", b =>
                 {
                     b.Property<int>("Id")
@@ -2800,6 +3005,40 @@ namespace VisitorManagementSystem.Api.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Camera", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Camera_CreatedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "DeletedByUser")
+                        .WithMany()
+                        .HasForeignKey("DeletedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Camera_DeletedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Location", "Location")
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Camera_ModifiedBy_User");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("DeletedByUser");
+
+                    b.Navigation("Location");
+
+                    b.Navigation("ModifiedByUser");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit", b =>

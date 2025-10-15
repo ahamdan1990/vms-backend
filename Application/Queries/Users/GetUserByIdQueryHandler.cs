@@ -1,10 +1,10 @@
 ﻿using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Application.Queries.Users;
-using VisitorManagementSystem.Api.Application.Services;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Application.DTOs.Auth;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
+using VisitorManagementSystem.Api.Application.Services.FileUploadService;
 
 /// <summary>
 /// Handler for GetUserByIdQuery

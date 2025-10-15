@@ -36,6 +36,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<EmergencyContact> EmergencyContacts { get; set; } = null!;
     public DbSet<VisitPurpose> VisitPurposes { get; set; } = null!;
     public DbSet<Location> Locations { get; set; } = null!;
+    public DbSet<Camera> Cameras { get; set; } = null!;
 
     // DbSets - Capacity Management
     public DbSet<TimeSlot> TimeSlots { get; set; } = null!;
@@ -70,6 +71,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new EmergencyContactConfiguration());
         modelBuilder.ApplyConfiguration(new VisitPurposeConfiguration());
         modelBuilder.ApplyConfiguration(new LocationConfiguration());
+        modelBuilder.ApplyConfiguration(new CameraConfiguration());
 
         // Apply all configurations - Capacity Management
         modelBuilder.ApplyConfiguration(new TimeSlotConfiguration());
@@ -97,6 +99,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<EmergencyContact>().HasQueryFilter(c => !c.IsDeleted);
         modelBuilder.Entity<VisitPurpose>().HasQueryFilter(p => !p.IsDeleted);
         modelBuilder.Entity<Location>().HasQueryFilter(l => !l.IsDeleted);
+        modelBuilder.Entity<Camera>().HasQueryFilter(c => !c.IsDeleted);
 
         // Capacity management soft delete filters
         modelBuilder.Entity<TimeSlot>().HasQueryFilter(ts => !ts.IsDeleted);

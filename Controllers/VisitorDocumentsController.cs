@@ -5,7 +5,7 @@ using VisitorManagementSystem.Api.Application.Commands.VisitorDocuments;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
 using VisitorManagementSystem.Api.Application.Queries.VisitorDocuments;
 using VisitorManagementSystem.Api.Application.Queries.Visitors;
-using VisitorManagementSystem.Api.Application.Services;
+using VisitorManagementSystem.Api.Application.Services.FileUploadService;
 using VisitorManagementSystem.Api.Domain.Constants;
 
 namespace VisitorManagementSystem.Api.Controllers;

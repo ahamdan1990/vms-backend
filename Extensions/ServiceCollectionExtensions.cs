@@ -15,7 +15,6 @@ using VisitorManagementSystem.Api.Application.Services.Xlsx;
 using VisitorManagementSystem.Api.Application.Services.Users;
 using VisitorManagementSystem.Api.Application.Services.Visitors;
 using VisitorManagementSystem.Api.Application.Services.Capacity;
-using VisitorManagementSystem.Api.Application.Services;
 using VisitorManagementSystem.Api.Configuration;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -35,6 +34,7 @@ using Microsoft.AspNetCore.DataProtection;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.RateLimiting;
+using VisitorManagementSystem.Api.Application.Services.FileUploadService;
 
 namespace VisitorManagementSystem.Api.Extensions;
 
@@ -246,6 +246,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IVisitorDocumentRepository, VisitorDocumentRepository>();
         services.AddScoped<IVisitorNoteRepository, VisitorNoteRepository>();
         services.AddScoped<IVisitPurposeRepository, VisitPurposeRepository>();
+
+        // Camera repositories
+        services.AddScoped<ICameraRepository, CameraRepository>();
 
         // Notification repositories
         services.AddScoped<INotificationAlertRepository, NotificationAlertRepository>();

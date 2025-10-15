@@ -2,7 +2,7 @@ using AutoMapper;
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
 using VisitorManagementSystem.Api.Application.Queries.VisitorDocuments;
-using VisitorManagementSystem.Api.Application.Services;
+using VisitorManagementSystem.Api.Application.Services.FileUploadService;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 public class GetVisitorDocumentByIdQueryHandler : IRequestHandler<GetVisitorDocumentByIdQuery, VisitorDocumentDto?>

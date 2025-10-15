@@ -103,6 +103,38 @@ public static class Permissions
     }
 
     /// <summary>
+    /// Camera management permissions
+    /// </summary>
+    public static class Camera
+    {
+        public const string Create = "Camera.Create";
+        public const string Read = "Camera.Read";
+        public const string ReadAll = "Camera.Read.All";
+        public const string Update = "Camera.Update";
+        public const string Delete = "Camera.Delete";
+        public const string TestConnection = "Camera.TestConnection";
+        public const string ManageStreaming = "Camera.ManageStreaming";
+        public const string StartStream = "Camera.StartStream";
+        public const string StopStream = "Camera.StopStream";
+        public const string ViewStream = "Camera.ViewStream";
+        public const string ManageFacialRecognition = "Camera.ManageFacialRecognition";
+        public const string ViewFrames = "Camera.ViewFrames";
+        public const string CaptureFrame = "Camera.CaptureFrame";
+        public const string Configure = "Camera.Configure";
+        public const string ViewConfiguration = "Camera.ViewConfiguration";
+        public const string ManageCredentials = "Camera.ManageCredentials";
+        public const string ViewStatus = "Camera.ViewStatus";
+        public const string HealthCheck = "Camera.HealthCheck";
+        public const string ViewStatistics = "Camera.ViewStatistics";
+        public const string BulkOperations = "Camera.BulkOperations";
+        public const string Export = "Camera.Export";
+        public const string ViewHistory = "Camera.ViewHistory";
+        public const string Maintenance = "Camera.Maintenance";
+        public const string ViewSensitiveData = "Camera.ViewSensitiveData";
+        public const string AdministerAll = "Camera.AdministerAll";
+    }
+
+    /// <summary>
     /// Emergency contact permissions
     /// </summary>
     public static class EmergencyContact

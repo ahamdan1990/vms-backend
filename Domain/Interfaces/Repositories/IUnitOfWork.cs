@@ -64,6 +64,11 @@ public interface IUnitOfWork : IDisposable
     ILocationRepository Locations { get; }
 
     /// <summary>
+    /// Camera repository
+    /// </summary>
+    ICameraRepository Cameras { get; }
+
+    /// <summary>
     /// Invitation repository
     /// </summary>
     IInvitationRepository Invitations { get; }

@@ -1,5 +1,5 @@
 using MediatR;
-using VisitorManagementSystem.Api.Application.Services;
+using VisitorManagementSystem.Api.Application.Services.FileUploadService;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Users;
 

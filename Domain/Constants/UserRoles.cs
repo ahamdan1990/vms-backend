@@ -325,7 +325,7 @@ public static class UserRoles
             Permissions.Visitor.Export,
             Permissions.Visitor.ViewPersonalInfo,
             Permissions.Visitor.ManagePhotos,
-            
+
             Permissions.VisitorDocument.Create,
             Permissions.VisitorDocument.Read,
             Permissions.VisitorDocument.Update,
@@ -510,8 +510,33 @@ public static class UserRoles
             Permissions.Configuration.Import,
             Permissions.Configuration.InvalidateCache,
             Permissions.Configuration.ViewSensitive,
-            Permissions.Configuration.ResetToDefaults
+            Permissions.Configuration.ResetToDefaults,
 
+            Permissions.Camera.Read,
+            Permissions.Camera.ReadAll,
+            Permissions.Camera.Update,
+            Permissions.Camera.Delete,
+            Permissions.Camera.TestConnection,
+            Permissions.Camera.ManageStreaming,
+            Permissions.Camera.StartStream,
+            Permissions.Camera.StopStream,
+            Permissions.Camera.ViewStream,
+            Permissions.Camera.ManageFacialRecognition,
+            Permissions.Camera.ViewFrames,
+            Permissions.Camera.CaptureFrame,
+            Permissions.Camera.Configure,
+            Permissions.Camera.ManageCredentials,
+            Permissions.Camera.ViewConfiguration,
+            Permissions.Camera.ViewStatus,
+            Permissions.Camera.HealthCheck,
+            Permissions.Camera.ViewStatistics,
+            Permissions.Camera.BulkOperations,
+            Permissions.Camera.Export,
+            Permissions.Camera.Create,
+            Permissions.Camera.ViewHistory,
+            Permissions.Camera.Maintenance,
+            Permissions.Camera.ViewSensitiveData,
+            Permissions.Camera.AdministerAll,
 });
 
         return permissions.Distinct().ToList();
