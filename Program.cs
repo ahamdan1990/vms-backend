@@ -221,32 +221,56 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        // ✅ FIXED: Environment-based CORS configuration
+        // Environment-based CORS configuration supporting LAN access
         var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-            ?? new[] { "http://localhost:3000", "https://localhost:3000" }; // Fallback for development
+            ?? new[] { "http://localhost:3000", "https://localhost:3000" };
 
         var allowedMethods = builder.Configuration.GetSection("Cors:AllowedMethods").Get<string[]>()
-            ?? new[] { "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"};
+            ?? new[] { "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH" };
 
         var allowedHeaders = builder.Configuration.GetSection("Cors:AllowedHeaders").Get<string[]>()
-            ?? new[] { "Content-Type", "Authorization", "X-Request-ID", "X-VMS-Client", "X-VMS-Version"};
+            ?? new[] { "Content-Type", "Authorization", "X-Request-ID", "X-VMS-Client", "X-VMS-Version" };
 
-        policy.WithOrigins(allowedOrigins)
-              .WithMethods(allowedMethods)
-              .AllowAnyHeader()
-              .AllowCredentials()
-              .SetPreflightMaxAge(TimeSpan.FromSeconds(86400)); // 24 hours cache for preflight
-    });
-});
+        // For development, allow any origin from 192.168.0.* subnet
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.SetIsOriginAllowed(origin =>
+            {
+                if (string.IsNullOrEmpty(origin))
+                    return false;
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowSpecificOrigins", policy =>
-    {
-        policy.WithOrigins("http://localhost:3000", "http://192.168.0.59:3000") // React dev / LAN
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+                // Allow configured origins
+                if (allowedOrigins.Contains(origin))
+                    return true;
+
+                // Allow any origin from local network (192.168.0.*)
+                if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                {
+                    var host = uri.Host;
+                    // Allow localhost and 192.168.0.* subnet
+                    return host == "localhost" ||
+                           host == "127.0.0.1" ||
+                           host.StartsWith("192.168.0.") ||
+                           host.StartsWith("192.168.1.") ||  // Common subnet
+                           host.StartsWith("10.0.0.");       // Another common subnet
+                }
+
+                return false;
+            })
+            .WithMethods(allowedMethods)
+            .AllowAnyHeader()
+            .AllowCredentials()
+            .SetPreflightMaxAge(TimeSpan.FromSeconds(86400)); // 24 hours cache for preflight
+        }
+        else
+        {
+            // Production: Strict origin checking
+            policy.WithOrigins(allowedOrigins)
+                  .WithMethods(allowedMethods)
+                  .AllowAnyHeader()
+                  .AllowCredentials()
+                  .SetPreflightMaxAge(TimeSpan.FromSeconds(86400));
+        }
     });
 });
 

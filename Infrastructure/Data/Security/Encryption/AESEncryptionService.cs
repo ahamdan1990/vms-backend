@@ -39,7 +39,10 @@ public class AESEncryptionService : IEncryptionService
         try
         {
             using var aes = Aes.Create();
-            aes.Key = DeriveKeyFromPassword(key, aes.KeySize / 8);
+
+            // Use new secure key derivation with unique salt
+            var (derivedKey, salt) = DeriveKeyFromPasswordWithSalt(key, aes.KeySize / 8);
+            aes.Key = derivedKey;
             aes.GenerateIV();
 
             using var encryptor = aes.CreateEncryptor();
@@ -52,10 +55,13 @@ public class AESEncryptionService : IEncryptionService
 
             var iv = aes.IV;
             var encryptedContent = msEncrypt.ToArray();
-            var result = new byte[iv.Length + encryptedContent.Length];
 
-            Buffer.BlockCopy(iv, 0, result, 0, iv.Length);
-            Buffer.BlockCopy(encryptedContent, 0, result, iv.Length, encryptedContent.Length);
+            // Format: [salt(32 bytes)][iv(16 bytes)][encrypted data]
+            var result = new byte[salt.Length + iv.Length + encryptedContent.Length];
+
+            Buffer.BlockCopy(salt, 0, result, 0, salt.Length);
+            Buffer.BlockCopy(iv, 0, result, salt.Length, iv.Length);
+            Buffer.BlockCopy(encryptedContent, 0, result, salt.Length + iv.Length, encryptedContent.Length);
 
             return Convert.ToBase64String(result);
         }
@@ -80,13 +86,62 @@ public class AESEncryptionService : IEncryptionService
 
             using var aes = Aes.Create();
             var ivLength = aes.BlockSize / 8;
-            var iv = new byte[ivLength];
-            var cipher = new byte[fullCipher.Length - ivLength];
+            const int saltLength = 32; // 256-bit salt used in new format
 
-            Buffer.BlockCopy(fullCipher, 0, iv, 0, ivLength);
-            Buffer.BlockCopy(fullCipher, ivLength, cipher, 0, cipher.Length);
+            byte[] derivedKey;
+            byte[] iv;
+            byte[] cipher;
 
-            aes.Key = DeriveKeyFromPassword(key, aes.KeySize / 8);
+            // Detect format: new format has salt(32) + iv(16) + data, old format has iv(16) + data
+            if (fullCipher.Length > saltLength + ivLength)
+            {
+                // Try new format first (salt + iv + encrypted data)
+                try
+                {
+                    var salt = new byte[saltLength];
+                    iv = new byte[ivLength];
+                    cipher = new byte[fullCipher.Length - saltLength - ivLength];
+
+                    Buffer.BlockCopy(fullCipher, 0, salt, 0, saltLength);
+                    Buffer.BlockCopy(fullCipher, saltLength, iv, 0, ivLength);
+                    Buffer.BlockCopy(fullCipher, saltLength + ivLength, cipher, 0, cipher.Length);
+
+                    // Derive key using the extracted salt and new iteration count
+                    var (key_derived, _) = DeriveKeyFromPasswordWithSalt(key, aes.KeySize / 8, salt);
+                    derivedKey = key_derived;
+                }
+                catch
+                {
+                    // Fall back to old format
+                    _logger.LogWarning("Failed to decrypt with new format, falling back to legacy format");
+                    iv = new byte[ivLength];
+                    cipher = new byte[fullCipher.Length - ivLength];
+
+                    Buffer.BlockCopy(fullCipher, 0, iv, 0, ivLength);
+                    Buffer.BlockCopy(fullCipher, ivLength, cipher, 0, cipher.Length);
+
+#pragma warning disable CS0618 // Suppress obsolete warning for backward compatibility
+                    derivedKey = DeriveKeyFromPassword(key, aes.KeySize / 8);
+#pragma warning restore CS0618
+                }
+            }
+            else
+            {
+                // Old format (no salt prefix)
+                iv = new byte[ivLength];
+                cipher = new byte[fullCipher.Length - ivLength];
+
+                Buffer.BlockCopy(fullCipher, 0, iv, 0, ivLength);
+                Buffer.BlockCopy(fullCipher, ivLength, cipher, 0, cipher.Length);
+
+#pragma warning disable CS0618 // Suppress obsolete warning for backward compatibility
+                derivedKey = DeriveKeyFromPassword(key, aes.KeySize / 8);
+#pragma warning restore CS0618
+
+                _logger.LogWarning("Decrypting data using legacy encryption format. Consider re-encrypting with new format.");
+            }
+
+            aes.Key = derivedKey;
             aes.IV = iv;
 
             using var decryptor = aes.CreateDecryptor();
@@ -146,8 +201,40 @@ public class AESEncryptionService : IEncryptionService
         return string.Equals(computedHash, hash, StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// Derives a cryptographic key from a password using PBKDF2 with a unique salt
+    /// </summary>
+    /// <param name="password">Password to derive key from</param>
+    /// <param name="keyLength">Desired key length in bytes</param>
+    /// <param name="salt">Unique salt for this derivation (if null, generates new salt)</param>
+    /// <returns>Tuple containing derived key bytes and the salt used</returns>
+    private static (byte[] key, byte[] salt) DeriveKeyFromPasswordWithSalt(string password, int keyLength, byte[]? salt = null)
+    {
+        // Generate a cryptographically secure random salt if not provided
+        if (salt == null)
+        {
+            salt = new byte[32]; // 256-bit salt
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(salt);
+        }
+
+        // Use OWASP 2023 recommended iteration count for PBKDF2-SHA256 (600,000+)
+        const int iterations = 600000;
+
+        using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA256);
+        var key = pbkdf2.GetBytes(keyLength);
+
+        return (key, salt);
+    }
+
+    /// <summary>
+    /// Legacy method - kept for backward compatibility but should not be used for new encryption
+    /// </summary>
+    [Obsolete("This method uses a fixed salt and is insecure. Use the new encryption methods instead.")]
     private static byte[] DeriveKeyFromPassword(string password, int keyLength)
     {
+        // Kept for decrypting existing data encrypted with old method
+        // WARNING: This is insecure - uses hardcoded salt
         using var pbkdf2 = new Rfc2898DeriveBytes(password, Encoding.UTF8.GetBytes("VMS_SALT_2024"), 10000, HashAlgorithmName.SHA256);
         return pbkdf2.GetBytes(keyLength);
     }

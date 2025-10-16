@@ -265,7 +265,10 @@ public class ApplicationDbContext : DbContext
     {
         // Get current user ID from HTTP context or other user context service
         var httpContextAccessor = _serviceProvider.GetService<IHttpContextAccessor>();
-        var userIdClaim = httpContextAccessor?.HttpContext?.User?.FindFirst("sub")?.Value;
+
+        // FIXED: Use ClaimTypes.NameIdentifier instead of "sub" to match JWT configuration in Program.cs
+        // Program.cs sets: NameClaimType = ClaimTypes.NameIdentifier
+        var userIdClaim = httpContextAccessor?.HttpContext?.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
         if (int.TryParse(userIdClaim, out var userId))
         {
@@ -386,10 +389,20 @@ public class ApplicationDbContext : DbContext
     }
 
     /// <summary>
-    /// Resets all database data (USE WITH CAUTION)
+    /// Resets all database data - ONLY ALLOWED IN DEVELOPMENT ENVIRONMENT
     /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when attempting to reset database in non-development environment</exception>
     public async Task ResetDatabaseAsync()
     {
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
+        if (environment != "Development")
+        {
+            throw new InvalidOperationException(
+                "Database reset is not allowed in non-development environments. " +
+                "This operation would result in permanent data loss and is blocked for security.");
+        }
+
         await Database.EnsureDeletedAsync();
         await Database.EnsureCreatedAsync();
     }

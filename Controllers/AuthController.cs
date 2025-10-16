@@ -59,7 +59,8 @@ public class AuthController : BaseController
 
             if (result.IsSuccess)
             {
-                _authService.SetAuthenticationCookies(Response, result, false);
+                // Use HTTPS detection to set secure cookie flag
+                _authService.SetAuthenticationCookies(Response, result, Request.IsHttps);
 
                 var loginResponse = new LoginResponseDto
                 {
@@ -111,7 +112,8 @@ public class AuthController : BaseController
 
             if (result.IsSuccess)
             {
-                _authService.SetAuthenticationCookies(Response, result, false);
+                // Use HTTPS detection to set secure cookie flag
+                _authService.SetAuthenticationCookies(Response, result, Request.IsHttps);
 
                 var loginResponse = new LoginResponseDto
                 {
@@ -123,7 +125,7 @@ public class AuthController : BaseController
                 return SuccessResponse(loginResponse, "Token refreshed successfully");
             }
 
-            _authService.ClearAuthenticationCookies(Response, false);
+            _authService.ClearAuthenticationCookies(Response, Request.IsHttps);
             return BadRequestResponse(result.Errors, result.ErrorMessage);
         }
         catch (Exception ex)
@@ -157,7 +159,7 @@ public class AuthController : BaseController
             };
 
             var result = await _mediator.Send(command);
-            _authService.ClearAuthenticationCookies(Response, false);
+            _authService.ClearAuthenticationCookies(Response, Request.IsHttps);
 
             if (result.IsSuccess)
             {
@@ -172,7 +174,7 @@ public class AuthController : BaseController
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during logout");
-            _authService.ClearAuthenticationCookies(Response, false);
+            _authService.ClearAuthenticationCookies(Response, Request.IsHttps);
             return ServerErrorResponse("Logout completed with errors");
         }
     }
@@ -209,7 +211,7 @@ public class AuthController : BaseController
             if (result.IsSuccess)
             {
                 if (result.RequiresReauthentication)
-                    _authService.ClearAuthenticationCookies(Response, false);
+                    _authService.ClearAuthenticationCookies(Response, Request.IsHttps);
 
                 _logger.LogInformation("Password changed successfully for user: {UserId}", userId.Value);
 
@@ -439,12 +441,21 @@ public class AuthController : BaseController
     }
 
     /// <summary>
-    /// Debug endpoint to view user claims
+    /// Debug endpoint to view user claims - ONLY AVAILABLE IN DEVELOPMENT
     /// </summary>
     [HttpGet("debug-claims")]
     [Authorize]
     public IActionResult DebugClaims()
     {
+        // Security: Only allow debug endpoints in development environment
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        if (environment != "Development")
+        {
+            _logger.LogWarning("Attempted access to debug endpoint in {Environment} environment from IP: {IP}",
+                environment, GetClientIpAddress());
+            return NotFoundResponse("Endpoint not available");
+        }
+
         var claims = User.Claims.Select(c => new { Type = c.Type, Value = c.Value }).ToList();
         var userId = GetCurrentUserId();
 
@@ -454,10 +465,11 @@ public class AuthController : BaseController
             UserId = userId,
             Claims = claims,
             Identity = User.Identity?.Name,
-            AuthenticationType = User.Identity?.AuthenticationType
+            AuthenticationType = User.Identity?.AuthenticationType,
+            Environment = environment
         };
 
-        return SuccessResponse(debugInfo, "Debug info");
+        return SuccessResponse(debugInfo, "Debug info (Development only)");
     }
 
     #region Private Methods
