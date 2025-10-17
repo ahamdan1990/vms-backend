@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Configuration;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
 using VisitorManagementSystem.Api.Application.DTOs.Locations;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
@@ -28,7 +29,7 @@ public class VisitorMappingProfile : Profile
             .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
             .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
             .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
-            .ForMember(dest => dest.ProfilePhotoUrl, opt => opt.MapFrom(src => GetProfilePhotoUrl(src)))
+            .ForMember(dest => dest.ProfilePhotoUrl, opt => opt.MapFrom<VisitorProfilePhotoUrlResolver>())
             .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src => src.CreatedByUser != null ? src.CreatedByUser.FullName : null))
             .ForMember(dest => dest.ModifiedByName, opt => opt.MapFrom(src => src.ModifiedByUser != null ? src.ModifiedByUser.FullName : null))
             .ForMember(dest => dest.BlacklistedByName, opt => opt.MapFrom(src => src.BlacklistedByUser != null ? src.BlacklistedByUser.FullName : null));
@@ -80,26 +81,38 @@ public class VisitorMappingProfile : Profile
         }
         return string.Format("{0:n1} {1}", number, suffixes[counter]);
     }
+}
 
-    private static string? GetProfilePhotoUrl(Visitor visitor)
+/// <summary>
+/// AutoMapper value resolver for visitor profile photo URLs with configuration injection
+/// </summary>
+public class VisitorProfilePhotoUrlResolver : IValueResolver<Visitor, VisitorDto, string?>
+{
+    private readonly IConfiguration _configuration;
+
+    public VisitorProfilePhotoUrlResolver(IConfiguration configuration)
     {
-        // Base URL should come from configuration, but for now use relative paths
-        // The frontend should prepend the correct backend URL
-        
+        _configuration = configuration;
+    }
+
+    public string? Resolve(Visitor source, VisitorDto destination, string? destMember, ResolutionContext context)
+    {
+        var baseUrl = _configuration["BaseUrl"] ?? "https://192.168.0.24:7000";
+
         // First check if visitor has ProfilePhotoPath set
-        if (!string.IsNullOrEmpty(visitor.ProfilePhotoPath))
+        if (!string.IsNullOrEmpty(source.ProfilePhotoPath))
         {
-            return $"http://localhost:5000/api/visitors/{visitor.Id}/photo";
+            return $"{baseUrl.TrimEnd('/')}/api/visitors/{source.Id}/photo";
         }
 
         // Then check for photo document
-        var photoDocument = visitor.Documents?.FirstOrDefault(d => 
-            d.DocumentType.Equals("Photo", StringComparison.OrdinalIgnoreCase) && 
+        var photoDocument = source.Documents?.FirstOrDefault(d =>
+            d.DocumentType.Equals("Photo", StringComparison.OrdinalIgnoreCase) &&
             !d.IsDeleted);
 
         if (photoDocument != null)
         {
-            return $"http://localhost:5000/api/visitors/{visitor.Id}/documents/{photoDocument.Id}/download";
+            return $"{baseUrl.TrimEnd('/')}/api/visitors/{source.Id}/documents/{photoDocument.Id}/download";
         }
 
         return null;
