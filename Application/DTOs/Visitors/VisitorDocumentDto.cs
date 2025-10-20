@@ -91,9 +91,14 @@ public class VisitorDocumentDto
     public string AccessLevel { get; set; } = "Standard";
 
     /// <summary>
-    /// Download URL
+    /// Download URL (full absolute URL for frontend)
     /// </summary>
     public string? DownloadUrl { get; set; }
+
+    /// <summary>
+    /// File path (relative path for backend file access)
+    /// </summary>
+    public string? FilePath { get; set; }
 
     /// <summary>
     /// Creation date

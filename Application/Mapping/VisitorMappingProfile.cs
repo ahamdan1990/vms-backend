@@ -45,7 +45,8 @@ public class VisitorMappingProfile : Profile
         CreateMap<VisitorDisplayInfo, VisitorListDto>();
 
         CreateMap<VisitorDocument, VisitorDocumentDto>()
-            .ForMember(destinationMember => destinationMember.DownloadUrl, opt => opt.MapFrom(src => src.FilePath.ToString()))
+            .ForMember(dest => dest.FilePath, opt => opt.MapFrom(src => src.FilePath))
+            .ForMember(dest => dest.DownloadUrl, opt => opt.Ignore()) // Will be set by query handler with full URL
             .ForMember(dest => dest.FormattedFileSize, opt => opt.MapFrom(src => FormatFileSize(src.FileSize)))
             .ForMember(dest => dest.IsExpired, opt => opt.MapFrom(src => src.ExpirationDate.HasValue && src.ExpirationDate.Value < DateTime.UtcNow))
             .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src => src.CreatedByUser != null ? src.CreatedByUser.FullName : null))

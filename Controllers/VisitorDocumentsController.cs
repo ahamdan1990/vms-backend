@@ -166,6 +166,64 @@ public class VisitorDocumentsController : BaseController
     }
 
     /// <summary>
+    /// Previews a visitor document (inline display)
+    /// </summary>
+    /// <param name="visitorId">Visitor ID</param>
+    /// <param name="id">Document ID</param>
+    /// <returns>File stream with inline disposition</returns>
+    [HttpGet("{id:int}/preview")]
+    [Authorize(Policy = Permissions.VisitorDocument.Read)]
+    public async Task<IActionResult> PreviewVisitorDocument(int visitorId, int id)
+    {
+        try
+        {
+            // Get document DTO
+            var documentDto = await _mediator.Send(new GetVisitorDocumentByIdQuery { Id = id });
+
+            if (documentDto == null)
+            {
+                _logger.LogWarning("Document not found: {DocumentId}", id);
+                return NotFoundResponse("Visitor document", id);
+            }
+
+            // Verify document belongs to the specified visitor
+            if (documentDto.VisitorId != visitorId)
+            {
+                _logger.LogWarning("Document {DocumentId} does not belong to visitor {VisitorId}", id, visitorId);
+                return BadRequest("Document does not belong to the specified visitor");
+            }
+
+            // Use FilePath from DTO which contains the relative path like "uploads/visitor-documents/1/file.pdf"
+            // Remove any leading slashes and replace forward slashes with the OS-specific separator
+            var relativePath = (documentDto.FilePath ?? string.Empty).TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+
+            var webRootPath = _environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            var filePath = Path.Combine(webRootPath, relativePath);
+
+            _logger.LogDebug("📄 Document Preview - ID: {DocumentId}, RelativePath: {RelativePath}, FileExists: {FileExists}",
+                id, relativePath, System.IO.File.Exists(filePath));
+
+            // Check if file exists
+            if (!System.IO.File.Exists(filePath))
+            {
+                _logger.LogWarning("Document file not found: {FilePath} for document ID: {DocumentId}", filePath, id);
+                return NotFound($"Document file not found on server. Expected path: {relativePath}");
+            }
+
+            // Get file stream
+            var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+            // Return file with inline disposition for preview
+            return File(fileStream, documentDto.ContentType, enableRangeProcessing: true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error previewing visitor document {DocumentId} for visitor {VisitorId}", id, visitorId);
+            return BadRequest($"Error previewing document: {ex.Message}");
+        }
+    }
+
+    /// <summary>
     /// Downloads a visitor document
     /// </summary>
     /// <param name="visitorId">Visitor ID</param>
@@ -177,43 +235,49 @@ public class VisitorDocumentsController : BaseController
     {
         try
         {
-            // Get document record
-            var query = new GetVisitorDocumentByIdQuery { Id = id };
-            var document = await _mediator.Send(query);
+            // Get document DTO
+            var documentDto = await _mediator.Send(new GetVisitorDocumentByIdQuery { Id = id });
 
-            if (document == null)
+            if (documentDto == null)
             {
+                _logger.LogWarning("Document not found: {DocumentId}", id);
                 return NotFoundResponse("Visitor document", id);
             }
 
             // Verify document belongs to the specified visitor
-            if (document.VisitorId != visitorId)
+            if (documentDto.VisitorId != visitorId)
             {
+                _logger.LogWarning("Document {DocumentId} does not belong to visitor {VisitorId}", id, visitorId);
                 return BadRequest("Document does not belong to the specified visitor");
             }
 
-            // Get physical file path
+            // Use FilePath from DTO which contains the relative path like "uploads/visitor-documents/1/file.pdf"
+            // Remove any leading slashes and replace forward slashes with the OS-specific separator
+            var relativePath = (documentDto.FilePath ?? string.Empty).TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+
             var webRootPath = _environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            var filePath = Path.Combine(webRootPath, document.DownloadUrl.TrimStart('/'));
+            var filePath = Path.Combine(webRootPath, relativePath);
+
+            _logger.LogDebug("📄 Document Download - ID: {DocumentId}, RelativePath: {RelativePath}, FileExists: {FileExists}",
+                id, relativePath, System.IO.File.Exists(filePath));
 
             // Check if file exists
             if (!System.IO.File.Exists(filePath))
             {
                 _logger.LogWarning("Document file not found: {FilePath} for document ID: {DocumentId}", filePath, id);
-                return NotFound("Document file not found on server");
+                return NotFound($"Document file not found on server. Expected path: {relativePath}");
             }
 
-            // Get file info
-            var fileInfo = new FileInfo(filePath);
+            // Get file bytes
             var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
 
-            // Return file with proper headers
-            return File(fileBytes, document.ContentType, document.OriginalFileName);
+            // Return file with attachment disposition for download
+            return File(fileBytes, documentDto.ContentType, documentDto.OriginalFileName);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error downloading visitor document {DocumentId} for visitor {VisitorId}", id, visitorId);
-            return BadRequest("Error downloading document");
+            return BadRequest($"Error downloading document: {ex.Message}");
         }
     }
 

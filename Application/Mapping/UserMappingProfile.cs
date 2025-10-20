@@ -1,6 +1,7 @@
 ﻿// Create: Application/Mapping/UserMappingProfile.cs
 
 using AutoMapper;
+using Microsoft.Extensions.Configuration;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Application.Commands.Users;
 using VisitorManagementSystem.Api.Domain.Entities;
@@ -31,7 +32,7 @@ public class UserMappingProfile : Profile
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
             .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
             .ForMember(dest => dest.IsLockedOut, opt => opt.MapFrom(src => src.LockoutEnd.HasValue && src.LockoutEnd > DateTime.UtcNow))
-            .ForMember(dest => dest.ProfilePhotoUrl, opt => opt.MapFrom(src => src.ProfilePhotoPath))
+            .ForMember(dest => dest.ProfilePhotoUrl, opt => opt.MapFrom<UserProfilePhotoUrlResolver>())
             // Enhanced address mappings
             .ForMember(dest => dest.AddressType, opt => opt.MapFrom(src => src.Address != null ? src.Address.AddressType : null))
             .ForMember(dest => dest.Street1, opt => opt.MapFrom(src => src.Address != null ? src.Address.Street1 : null))
@@ -79,7 +80,7 @@ public class UserMappingProfile : Profile
             .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber != null ? src.PhoneNumber.Value : null))
             .ForMember(dest => dest.PhoneCountryCode, opt => opt.MapFrom(src => src.PhoneNumber != null ? src.PhoneNumber.CountryCode : null))
             .ForMember(dest => dest.PhoneType, opt => opt.MapFrom(src => src.PhoneNumber != null ? src.PhoneNumber.PhoneType : null))
-            .ForMember(dest => dest.ProfilePhotoUrl, opt => opt.MapFrom(src => src.ProfilePhotoPath))
+            .ForMember(dest => dest.ProfilePhotoUrl, opt => opt.MapFrom<UserProfilePhotoUrlResolver>())
             // Address mappings
             .ForMember(dest => dest.AddressType, opt => opt.MapFrom(src => src.Address != null ? src.Address.AddressType : null))
             .ForMember(dest => dest.Street1, opt => opt.MapFrom(src => src.Address != null ? src.Address.Street1 : null))
@@ -110,5 +111,29 @@ public class UserMappingProfile : Profile
         // UpdateUserProfileDto -> UpdateUserProfileCommand
         CreateMap<UpdateUserProfileDto, UpdateUserProfileCommand>()
             .ForMember(dest => dest.UserId, opt => opt.Ignore()); // Set manually
+    }
+}
+
+/// <summary>
+/// AutoMapper value resolver for user profile photo URLs with configuration injection
+/// </summary>
+public class UserProfilePhotoUrlResolver : IValueResolver<User, object, string?>
+{
+    private readonly IConfiguration _configuration;
+
+    public UserProfilePhotoUrlResolver(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
+
+    public string? Resolve(User source, object destination, string? destMember, ResolutionContext context)
+    {
+        if (string.IsNullOrEmpty(source.ProfilePhotoPath))
+        {
+            return null;
+        }
+
+        var baseUrl = _configuration["BaseUrl"] ?? "https://192.168.0.24:7000";
+        return $"{baseUrl.TrimEnd('/')}/{source.ProfilePhotoPath.Replace('\\', '/')}";
     }
 }

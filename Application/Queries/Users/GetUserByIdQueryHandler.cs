@@ -1,10 +1,10 @@
-﻿using MediatR;
+﻿using AutoMapper;
+using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Application.Queries.Users;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Application.DTOs.Auth;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
-using VisitorManagementSystem.Api.Application.Services.FileUploadService;
 
 /// <summary>
 /// Handler for GetUserByIdQuery
@@ -12,17 +12,17 @@ using VisitorManagementSystem.Api.Application.Services.FileUploadService;
 public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDetailDto?>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
     private readonly ILogger<GetUserByIdQueryHandler> _logger;
-    private readonly IFileUploadService _fileUploadService;
 
     public GetUserByIdQueryHandler(
         IUnitOfWork unitOfWork,
-        ILogger<GetUserByIdQueryHandler> logger,
-        IFileUploadService fileUploadService)
+        IMapper mapper,
+        ILogger<GetUserByIdQueryHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _mapper = mapper;
         _logger = logger;
-        _fileUploadService = fileUploadService;
     }
 
     public async Task<UserDetailDto?> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
@@ -38,58 +38,8 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDet
                 return null;
             }
 
-            var userDetailDto = new UserDetailDto
-            {
-                Id = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                FullName = user.FullName,
-                Email = user.Email.Value,
-                
-                // Enhanced phone fields
-                PhoneNumber = user.PhoneNumber?.Value,
-                PhoneCountryCode = user.PhoneNumber?.CountryCode,
-                PhoneType = user.PhoneNumber?.PhoneType,
-                
-                Role = user.Role.ToString(),
-                Status = user.Status.ToString(),
-                Department = user.Department,
-                JobTitle = user.JobTitle,
-                EmployeeId = user.EmployeeId,
-                ProfilePhotoPath = user.ProfilePhotoPath,
-                TimeZone = user.TimeZone,
-                Language = user.Language,
-                Theme = user.Theme,
-                
-                // Enhanced address fields
-                AddressType = user.Address?.AddressType,
-                Street1 = user.Address?.Street1,
-                Street2 = user.Address?.Street2,
-                City = user.Address?.City,
-                State = user.Address?.State,
-                PostalCode = user.Address?.PostalCode,
-                Country = user.Address?.Country,
-                Latitude = user.Address?.Latitude,
-                Longitude = user.Address?.Longitude,
-                
-                LastLoginDate = user.LastLoginDate,
-                CreatedOn = user.CreatedOn,
-                IsActive = user.Status == UserStatus.Active,
-                IsLockedOut = user.IsCurrentlyLockedOut(),
-                FailedLoginAttempts = user.FailedLoginAttempts,
-                MustChangePassword = user.MustChangePassword,
-                PasswordChangedDate = user.PasswordChangedDate,
-                LockoutEnd = user.LockoutEnd,
-                CreatedBy = user.CreatedBy,
-                ModifiedOn = user.ModifiedOn,
-                ModifiedBy = user.ModifiedBy
-            };
-
-            // Generate full URL for profile photo if it exists (following same pattern as GetCurrentUserProfileQueryHandler)
-            if (!string.IsNullOrEmpty(user.ProfilePhotoPath))
-            {
-                userDetailDto.ProfilePhotoPath = _fileUploadService.GetProfilePhotoUrl(user.ProfilePhotoPath);
-            }
+            // Use AutoMapper to map entity to DTO (includes ProfilePhotoUrl via UserProfilePhotoUrlResolver)
+            var userDetailDto = _mapper.Map<UserDetailDto>(user);
 
             // Include activity summary if requested
             if (request.IncludeActivity)

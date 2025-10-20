@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Auth;
 using VisitorManagementSystem.Api.Application.Services.Auth;
+using VisitorManagementSystem.Api.Application.Services.FileUploadService;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 namespace VisitorManagementSystem.Api.Application.Queries.Auth
@@ -13,15 +14,18 @@ namespace VisitorManagementSystem.Api.Application.Queries.Auth
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPermissionService _permissionService;
+        private readonly IFileUploadService _fileUploadService;
         private readonly ILogger<GetCurrentUserQueryHandler> _logger;
 
         public GetCurrentUserQueryHandler(
             IUnitOfWork unitOfWork,
             IPermissionService permissionService,
+            IFileUploadService fileUploadService,
             ILogger<GetCurrentUserQueryHandler> logger)
         {
             _unitOfWork = unitOfWork;
             _permissionService = permissionService;
+            _fileUploadService = fileUploadService;
             _logger = logger;
         }
 
@@ -59,7 +63,7 @@ namespace VisitorManagementSystem.Api.Application.Queries.Auth
                     Department = user.Department,
                     JobTitle = user.JobTitle,
                     EmployeeId = user.EmployeeId,
-                    ProfilePhotoUrl = user.ProfilePhotoPath, // Add profile photo URL
+                    ProfilePhotoUrl = _fileUploadService.GetProfilePhotoUrl(user.ProfilePhotoPath),
                     TimeZone = user.TimeZone,
                     Language = user.Language,
                     Theme = user.Theme,
