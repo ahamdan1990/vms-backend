@@ -209,18 +209,27 @@ public class OperatorHub : BaseHub
         {
             try
             {
+                // Use a new cancellation token instead of Context.ConnectionAborted
+                // Context.ConnectionAborted is already canceled when disconnecting
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
                 // End operator session
                 var session = await UnitOfWork.Repository<OperatorSession>()
                     .GetFirstOrDefaultAsync(
                         s => s.UserId == userId && s.ConnectionId == Context.ConnectionId,
-                        cancellationToken: Context.ConnectionAborted);
+                        cancellationToken: cts.Token);
 
                 if (session != null)
                 {
                     session.EndSession();
                     UnitOfWork.Repository<OperatorSession>().Update(session);
-                    await UnitOfWork.SaveChangesAsync(Context.ConnectionAborted);
+                    await UnitOfWork.SaveChangesAsync(cts.Token);
                 }
+            }
+            catch (TaskCanceledException)
+            {
+                // Ignore task canceled exceptions on disconnect - connection already closed
+                Logger.LogDebug("Operator session cleanup canceled for user {UserId}", userId);
             }
             catch (Exception ex)
             {

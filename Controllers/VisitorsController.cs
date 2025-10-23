@@ -209,6 +209,11 @@ public class VisitorsController : BaseController
     [Authorize(Policy = Permissions.Visitor.Update)]
     public async Task<IActionResult> UpdateVisitor(int id, [FromBody] UpdateVisitorDto updateDto)
     {
+        if (updateDto == null)
+        {
+            return BadRequestResponse("Visitor data is required");
+        }
+
         // Validate phone number format
         if (!string.IsNullOrEmpty(updateDto.PhoneNumber) &&
             !PhoneNumber.IsValidPhoneNumber(updateDto.PhoneNumber))

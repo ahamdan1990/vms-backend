@@ -157,30 +157,36 @@ public static class UserRoles
             Permissions.Invitation.ReadOwn,
             Permissions.Invitation.UpdateOwn,
             Permissions.Invitation.CancelOwn,
-            
+            Permissions.Invitation.Read,
+            Permissions.Invitation.ViewHistory,
+
             // Basic dashboard and profile
             Permissions.Dashboard.ViewBasic,
+            Permissions.Dashboard.ViewMetrics,
             Permissions.Profile.UpdateOwn,
             Permissions.Profile.ViewOwn,
             Permissions.Profile.ChangePassword,
             Permissions.Profile.ManagePreferences,
-            
+
             // Template downloads
             Permissions.Template.DownloadSingle,
-            
+
             // Calendar access
             Permissions.Calendar.ViewOwn,
             Permissions.Calendar.ViewAvailability,
-            
+
             // Own notifications
             Permissions.Notification.ReadOwn,
-            
+
             // Basic reporting
             Permissions.Report.GenerateOwn,
             Permissions.Report.ViewHistory,
-            
+
             // View own activity
-            Permissions.Profile.ViewActivity
+            Permissions.Profile.ViewActivity,
+
+            // Visitor statistics (needed for dashboard)
+            Permissions.Visitor.ViewStatistics
         };
     }
 
@@ -197,8 +203,10 @@ public static class UserRoles
 
             // Today's visitors
             Permissions.Visitor.ReadToday,
+            Permissions.Visitor.Read,
             Permissions.Visitor.Search,
-            
+            Permissions.Visitor.ViewStatistics,
+
             // Check-in operations
             Permissions.CheckIn.Process,
             Permissions.CheckIn.ProcessOut,
@@ -209,53 +217,69 @@ public static class UserRoles
             Permissions.CheckIn.QRScan,
             Permissions.CheckIn.PhotoCapture,
             Permissions.CheckIn.ManualVerification,
-            
+
             // Walk-in management
             Permissions.WalkIn.Register,
             Permissions.WalkIn.CheckIn,
             Permissions.WalkIn.ViewList,
             Permissions.WalkIn.QuickRegister,
             Permissions.WalkIn.FRSync,
-            
+
             // Badge operations
             Permissions.Badge.Print,
             Permissions.Badge.ViewQueue,
             Permissions.Badge.ReprintLost,
-            
+
             // Alert handling
             Permissions.Alert.Receive,
             Permissions.Alert.Acknowledge,
             Permissions.Alert.ViewFRAlerts,
             Permissions.Alert.ViewVIPAlerts,
             Permissions.Alert.ViewBlacklistAlerts,
-            
+
             // Manual operations
             Permissions.Manual.Override,
             Permissions.Manual.Verification,
             Permissions.Manual.Entry,
             Permissions.Manual.CreateOverrideLog,
-            
+
             // Emergency operations
             Permissions.Emergency.Export,
             Permissions.Emergency.GenerateRoster,
             Permissions.Emergency.ViewRoster,
             Permissions.Emergency.PrintRoster,
-            
+
             // Host notifications
             Permissions.Notification.SendHost,
-            
+            Permissions.Notification.ReadOwn,
+
             // Operations dashboard
             Permissions.Dashboard.ViewOperations,
             Permissions.Dashboard.ViewRealTime,
-            
+            Permissions.Dashboard.ViewMetrics,
+
             // QR Code operations
             Permissions.QRCode.Scan,
             Permissions.QRCode.Validate,
-            
+
             // Profile management
             Permissions.Profile.UpdateOwn,
             Permissions.Profile.ViewOwn,
-            Permissions.Profile.ChangePassword
+            Permissions.Profile.ChangePassword,
+
+            // Invitations
+            Permissions.Invitation.ReadOwn,
+            Permissions.Invitation.Read,
+            Permissions.Invitation.ViewHistory,
+
+            // System config read (for locations and visit purposes - needed for invitation management)
+            Permissions.SystemConfig.Read,
+
+            // Dashboard access (for capacity overview on analytics dashboard)
+            Permissions.Dashboard.ViewBasic,
+
+            // Limited audit access (for recent activity on dashboard)
+            Permissions.Audit.ReadAll
         };
     }
 

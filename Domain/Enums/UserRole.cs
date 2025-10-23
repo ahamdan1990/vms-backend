@@ -214,6 +214,8 @@ public static class UserRoleExtensions
             UserRole.Operator => new List<string>
             {
                 "Visitor.Read.Today",
+                "Visitor.Read",
+                "Visitor.ViewStatistics",
                 "CheckIn.Process",
                 "CheckOut.Process",
                 "WalkIn.Register",
@@ -225,12 +227,19 @@ public static class UserRoleExtensions
                 "Alert.Acknowledge",
                 "Manual.Override",
                 "Dashboard.View.Operations",
+                "Dashboard.ViewMetrics",
                 "QRCode.Scan",
                 "Manual.Verification",
                 "Emergency.Roster.Generate",
                 "Notification.Send.Host",
                 "Override.Log.Create",
-                "WalkIn.FRSync"
+                "WalkIn.FRSync",
+                "Invitation.Read.Own",
+                "Invitation.Read",
+                "Invitation.ViewHistory",
+                "SystemConfig.Read",
+                "Dashboard.View.Basic",
+                "Audit.Read.All"
             },
             UserRole.Administrator => new List<string>
             {
@@ -248,6 +257,8 @@ public static class UserRoleExtensions
                 
                 // All Operator permissions
                 "Visitor.Read.Today",
+                "Visitor.Read",
+                "Visitor.ViewStatistics",
                 "CheckIn.Process",
                 "CheckOut.Process",
                 "WalkIn.Register",
@@ -259,12 +270,16 @@ public static class UserRoleExtensions
                 "Alert.Acknowledge",
                 "Manual.Override",
                 "Dashboard.View.Operations",
+                "Dashboard.ViewMetrics",
                 "QRCode.Scan",
                 "Manual.Verification",
                 "Emergency.Roster.Generate",
                 "Notification.Send.Host",
                 "Override.Log.Create",
                 "WalkIn.FRSync",
+                "Invitation.Read.Own",
+                "Invitation.Read",
+                "Invitation.ViewHistory",
                 
                 // Additional Administrator permissions
                 "Invitation.Create.All",
