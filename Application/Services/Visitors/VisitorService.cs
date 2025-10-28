@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -13,15 +15,26 @@ public class VisitorService : IVisitorService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<VisitorService> _logger;
+    private readonly IWebHostEnvironment _environment;
+    private readonly IConfiguration _configuration;
+
+    private readonly string[] _allowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff" };
+    private readonly long _maxFileSize = 5 * 1024 * 1024; // 5MB
+    private readonly int _maxWidth = 800;
+    private readonly int _maxHeight = 800;
 
     public VisitorService(
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        ILogger<VisitorService> logger)
+        ILogger<VisitorService> logger,
+        IWebHostEnvironment environment,
+        IConfiguration configuration)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
+        _environment = environment;
+        _configuration = configuration;
     }
 
     public async Task<ValidationResult> ValidateVisitorForCreationAsync(CreateVisitorDto createDto)
@@ -301,6 +314,89 @@ public class VisitorService : IVisitorService
         }
     }
 
+    public async Task<string> UploadVisitorPhotoAsync(int visitorId, IFormFile file, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Validate file
+            if (file == null || file.Length == 0)
+            {
+                throw new ArgumentException("No file provided");
+            }
+
+            // Check file size
+            if (file.Length > _maxFileSize)
+            {
+                throw new ArgumentException($"File size exceeds maximum allowed size of {_maxFileSize / (1024 * 1024)}MB");
+            }
+
+            // Check file extension
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!_allowedExtensions.Contains(extension))
+            {
+                throw new ArgumentException($"Invalid file type. Allowed types: {string.Join(", ", _allowedExtensions)}");
+            }
+
+            // Get visitor
+            var visitor = await _unitOfWork.Visitors.GetByIdAsync(visitorId);
+            if (visitor == null)
+            {
+                throw new InvalidOperationException($"Visitor with ID {visitorId} not found");
+            }
+
+            // Remove existing photo if exists
+            if (!string.IsNullOrEmpty(visitor.ProfilePhotoPath))
+            {
+                await RemoveExistingPhoto(visitor.ProfilePhotoPath);
+            }
+
+            // Generate unique filename
+            var fileName = $"visitor_{visitorId}_{Guid.NewGuid()}{extension}";
+
+            // Create upload directory if it doesn't exist
+            var uploadDir = Path.Combine(_environment.WebRootPath, "uploads", "visitors", visitorId.ToString());
+            Directory.CreateDirectory(uploadDir);
+
+            var filePath = Path.Combine(uploadDir, fileName);
+            var relativePath = $"uploads/visitors/{visitorId}/{fileName}";
+
+            // Process and save image
+            using var image = await Image.LoadAsync(file.OpenReadStream(), cancellationToken);
+
+            // Resize if too large
+            if (image.Width > _maxWidth || image.Height > _maxHeight)
+            {
+                image.Mutate(x => x.Resize(new ResizeOptions
+                {
+                    Size = new Size(_maxWidth, _maxHeight),
+                    Mode = ResizeMode.Max,
+                    Sampler = KnownResamplers.Lanczos3
+                }));
+            }
+
+            await image.SaveAsync(filePath, cancellationToken);
+
+            // Update visitor profile photo path
+            visitor.ProfilePhotoPath = relativePath;
+            visitor.UpdateModifiedOn();
+
+            _unitOfWork.Visitors.Update(visitor);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Profile photo uploaded successfully for visitor {VisitorId}: {FilePath}",
+                visitorId, relativePath);
+
+            // Return full URL
+            var baseUrl = _configuration["BaseUrl"] ?? "https://192.168.0.24:7000";
+            return $"{baseUrl.TrimEnd('/')}/{relativePath.Replace('\\', '/')}";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading profile photo for visitor {VisitorId}", visitorId);
+            throw;
+        }
+    }
+
     public async Task<VisitorDto> UpdateProfilePhotoAsync(int visitorId, string photoPath, int updatedBy)
     {
         try
@@ -317,7 +413,7 @@ public class VisitorService : IVisitorService
             _unitOfWork.Visitors.Update(visitor);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation("Profile photo updated for visitor: {VisitorId} by {UpdatedBy}", 
+            _logger.LogInformation("Profile photo updated for visitor: {VisitorId} by {UpdatedBy}",
                 visitorId, updatedBy);
 
             return _mapper.Map<VisitorDto>(visitor);
@@ -579,6 +675,24 @@ public class VisitorService : IVisitorService
     }
 
     #region Private Helper Methods
+
+    private async Task RemoveExistingPhoto(string photoPath)
+    {
+        try
+        {
+            var fullPath = Path.Combine(_environment.WebRootPath, photoPath.Replace('/', Path.DirectorySeparatorChar));
+            if (File.Exists(fullPath))
+            {
+                await Task.Run(() => File.Delete(fullPath));
+                _logger.LogInformation("Removed existing photo: {PhotoPath}", photoPath);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to remove existing photo: {PhotoPath}", photoPath);
+            // Don't throw - continue with upload even if old photo can't be deleted
+        }
+    }
 
     private List<string> ValidateEmergencyContacts(List<CreateEmergencyContactDto> contacts)
     {

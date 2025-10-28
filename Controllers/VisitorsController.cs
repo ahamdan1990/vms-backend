@@ -9,6 +9,7 @@ using VisitorManagementSystem.Api.Application.DTOs.Common;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
 using VisitorManagementSystem.Api.Application.Queries.Visitors;
 using VisitorManagementSystem.Api.Domain.Constants;
+using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
 
 namespace VisitorManagementSystem.Api.Controllers;
@@ -23,11 +24,19 @@ public class VisitorsController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<VisitorsController> _logger;
+    private readonly IWebHostEnvironment _environment;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public VisitorsController(IMediator mediator, ILogger<VisitorsController> logger)
+    public VisitorsController(
+        IMediator mediator,
+        ILogger<VisitorsController> logger,
+        IWebHostEnvironment environment,
+        IUnitOfWork unitOfWork)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _environment = environment ?? throw new ArgumentNullException(nameof(environment));
+        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     }
 
     /// <summary>
@@ -442,25 +451,181 @@ public class VisitorsController : BaseController
     {
         try
         {
-            // Get visitor
+            // Get visitor from database
+            var visitorEntity = await _unitOfWork.Visitors.GetByIdAsync(id);
+            if (visitorEntity == null)
+            {
+                return NotFound(new { message = $"Visitor with ID {id} not found" });
+            }
+
+            // Check if visitor has a profile photo path
+            if (string.IsNullOrEmpty(visitorEntity.ProfilePhotoPath))
+            {
+                return NotFound(new { message = "No profile photo found for this visitor" });
+            }
+
+            // Construct file path
+            var relativePath = visitorEntity.ProfilePhotoPath.Replace('/', Path.DirectorySeparatorChar);
+            var webRootPath = _environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            var filePath = Path.Combine(webRootPath, relativePath);
+
+            _logger.LogDebug("Serving visitor photo: {FilePath}", filePath);
+
+            // Check if file exists
+            if (!System.IO.File.Exists(filePath))
+            {
+                _logger.LogWarning("Photo file not found: {FilePath} for visitor {VisitorId}", filePath, id);
+                return NotFound(new { message = "Photo file not found on server" });
+            }
+
+            // Determine content type based on file extension
+            var extension = Path.GetExtension(filePath).ToLowerInvariant();
+            var contentType = extension switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".bmp" => "image/bmp",
+                ".tiff" => "image/tiff",
+                _ => "application/octet-stream"
+            };
+
+            // Read file and return with proper headers
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+
+            // Override CORP header set by SecurityHeadersMiddleware to allow cross-origin
+            // Remove the restrictive header first, then add the permissive one
+            Response.Headers.Remove("Cross-Origin-Resource-Policy");
+            Response.Headers.Append("Cross-Origin-Resource-Policy", "cross-origin");
+
+            // Ensure CORS headers are set
+            if (!Response.Headers.ContainsKey("Access-Control-Allow-Origin"))
+            {
+                Response.Headers.Append("Access-Control-Allow-Origin", "*");
+            }
+
+            return File(fileBytes, contentType, enableRangeProcessing: true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving profile photo for visitor {VisitorId}", id);
+            return BadRequest(new { message = $"Error retrieving profile photo: {ex.Message}" });
+        }
+    }
+
+    /// <summary>
+    /// Uploads visitor profile photo
+    /// </summary>
+    /// <param name="id">Visitor ID</param>
+    /// <param name="file">Photo file</param>
+    /// <returns>Photo URL</returns>
+    [HttpPost("{id}/photo")]
+    [Authorize(Policy = Permissions.Visitor.Update)]
+    public async Task<IActionResult> UploadVisitorPhoto(int id, IFormFile file)
+    {
+        try
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequestResponse("No file provided");
+            }
+
+            var command = new UploadVisitorProfilePhotoCommand
+            {
+                VisitorId = id,
+                File = file
+            };
+
+            var photoUrl = await _mediator.Send(command);
+            return SuccessResponse(new { photoUrl });
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "Invalid photo upload for visitor {VisitorId}", id);
+            return BadRequestResponse(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading photo for visitor {VisitorId}", id);
+            return BadRequestResponse($"Error uploading photo: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Removes visitor profile photo
+    /// </summary>
+    /// <param name="id">Visitor ID</param>
+    /// <returns>Success result</returns>
+    [HttpDelete("{id}/photo")]
+    [Authorize(Policy = Permissions.Visitor.Update)]
+    public async Task<IActionResult> RemoveVisitorPhoto(int id)
+    {
+        try
+        {
+            // Get visitor to check if photo exists
             var visitor = await _mediator.Send(new GetVisitorByIdQuery { Id = id });
             if (visitor == null)
             {
                 return NotFoundResponse("Visitor", id);
             }
 
-            // Check if visitor has a profile photo path
-            if (!string.IsNullOrEmpty(visitor.ProfilePhotoUrl))
+            if (string.IsNullOrEmpty(visitor.ProfilePhotoUrl))
             {
-                // For now, redirect to the document endpoint or return the URL
-                return Ok(new { photoUrl = visitor.ProfilePhotoUrl });
+                return NotFoundResponse("Profile photo", 0);
             }
 
-            return NotFound(new { message = "No profile photo found for this visitor" });
+            // Use the existing UpdateVisitor command to set ProfilePhotoPath to null
+            var updateDto = new UpdateVisitorDto
+            {
+                FirstName = visitor.FirstName,
+                LastName = visitor.LastName,
+                Email = visitor.Email,
+                PhoneNumber = visitor.PhoneNumber,
+                Company = visitor.Company,
+                JobTitle = visitor.JobTitle,
+                DateOfBirth = visitor.DateOfBirth,
+                GovernmentId = visitor.GovernmentId,
+                GovernmentIdType = visitor.GovernmentIdType,
+                Nationality = visitor.Nationality,
+                Language = visitor.Language,
+                DietaryRequirements = visitor.DietaryRequirements,
+                AccessibilityRequirements = visitor.AccessibilityRequirements,
+                SecurityClearance = visitor.SecurityClearance,
+                Notes = visitor.Notes,
+                ExternalId = visitor.ExternalId,
+                Address = visitor.Address
+            };
+
+            var command = new UpdateVisitorCommand
+            {
+                Id = id,
+                FirstName = updateDto.FirstName,
+                LastName = updateDto.LastName,
+                Email = updateDto.Email,
+                PhoneNumber = updateDto.PhoneNumber,
+                Company = updateDto.Company,
+                JobTitle = updateDto.JobTitle,
+                Address = updateDto.Address,
+                DateOfBirth = updateDto.DateOfBirth,
+                GovernmentId = updateDto.GovernmentId,
+                GovernmentIdType = updateDto.GovernmentIdType,
+                Nationality = updateDto.Nationality,
+                Language = updateDto.Language,
+                DietaryRequirements = updateDto.DietaryRequirements,
+                AccessibilityRequirements = updateDto.AccessibilityRequirements,
+                SecurityClearance = updateDto.SecurityClearance,
+                Notes = updateDto.Notes,
+                ExternalId = updateDto.ExternalId,
+                ModifiedBy = GetCurrentUserId() ?? throw new UnauthorizedAccessException("User must be authenticated")
+            };
+
+            await _mediator.Send(command);
+            return SuccessResponse(new { message = "Profile photo removed successfully" });
         }
         catch (Exception ex)
         {
-            return BadRequest(new { message = $"Error retrieving profile photo: {ex.Message}" });
+            _logger.LogError(ex, "Error removing photo for visitor {VisitorId}", id);
+            return BadRequestResponse($"Error removing photo: {ex.Message}");
         }
     }
 
@@ -478,10 +643,10 @@ public class VisitorsController : BaseController
             using var reader = new StreamReader(Request.Body);
             var rawBody = await reader.ReadToEndAsync();
             _logger.LogInformation("Raw HTTP Body: {RawBody}", rawBody);
-            
+
             var json = System.Text.Json.JsonSerializer.Serialize(rawData);
             _logger.LogInformation("Raw JSON received: {Json}", json);
-            
+
             // Try to deserialize to our DTO
             var createDto = System.Text.Json.JsonSerializer.Deserialize<CreateVisitorDto>(json, new JsonSerializerOptions
             {
@@ -491,7 +656,7 @@ public class VisitorsController : BaseController
 
             _logger.LogInformation("Deserialized CreateInvitation: {CreateInvitation}", createDto?.CreateInvitation);
             _logger.LogInformation("Deserialized InvitationSubject: {Subject}", createDto?.InvitationSubject);
-            
+
             return Ok(new
             {
                 RawHttpBody = rawBody,

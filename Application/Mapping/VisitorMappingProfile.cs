@@ -39,7 +39,8 @@ public class VisitorMappingProfile : Profile
             .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber != null ? src.PhoneNumber.Value : null))
             .ForMember(dest => dest.PhoneCountryCode, opt => opt.MapFrom(src => src.PhoneNumber != null ? src.PhoneNumber.CountryCode : null))
             .ForMember(dest => dest.PhoneType, opt => opt.MapFrom(src => src.PhoneNumber != null ? src.PhoneNumber.PhoneType : null))
-            .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName));
+            .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
+            .ForMember(dest => dest.ProfilePhotoUrl, opt => opt.MapFrom<VisitorListProfilePhotoUrlResolver>());
 
         // Add mapping for VisitorDisplayInfo (used in VIP visitors and statistics)
         CreateMap<VisitorDisplayInfo, VisitorListDto>();
@@ -117,5 +118,34 @@ public class VisitorProfilePhotoUrlResolver : IValueResolver<Visitor, VisitorDto
         }
 
         return null;
+    }
+}
+
+
+public class VisitorListProfilePhotoUrlResolver : IValueResolver<Visitor, VisitorListDto, string?>
+{
+    private readonly IConfiguration _configuration;
+    
+    public VisitorListProfilePhotoUrlResolver(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
+    
+    public string? Resolve(Visitor source, VisitorListDto destination, string? destMember, ResolutionContext context)
+    {
+        var baseUrl = _configuration["BaseUrl"] ?? "https://192.168.0.24:7000";
+        
+        if (!string.IsNullOrEmpty(source.ProfilePhotoPath))
+        {
+            return $"{baseUrl.TrimEnd('/')}/api/visitors/{source.Id}/photo";
+        }
+        
+        var photoDocument = source.Documents?.FirstOrDefault(d =>
+            d.DocumentType.Equals("Photo", StringComparison.OrdinalIgnoreCase) &&
+            !d.IsDeleted);
+        
+        return photoDocument != null 
+            ? $"{baseUrl.TrimEnd('/')}/api/visitors/{source.Id}/documents/{photoDocument.Id}/download"
+            : null;
     }
 }

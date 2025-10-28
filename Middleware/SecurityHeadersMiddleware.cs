@@ -19,10 +19,15 @@ public class SecurityHeadersMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        // Add security headers
+        // Add security headers BEFORE the request
         AddSecurityHeaders(context);
 
+        // Execute the next middleware/endpoint
         await _next(context);
+
+        // Allow endpoints to override CORP header for file serving (like photos)
+        // This handles cases where endpoints need to serve cross-origin resources
+        // The endpoint can set the header and we won't override it
     }
 
     private void AddSecurityHeaders(HttpContext context)

@@ -48,6 +48,15 @@ public interface IVisitorService
     Task<List<VisitorDto>> FindPotentialDuplicatesAsync(Visitor visitor);
 
     /// <summary>
+    /// Uploads and saves a visitor's profile photo
+    /// </summary>
+    /// <param name="visitorId">Visitor ID</param>
+    /// <param name="file">Photo file to upload</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Photo URL</returns>
+    Task<string> UploadVisitorPhotoAsync(int visitorId, IFormFile file, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Updates visitor's profile photo
     /// </summary>
     /// <param name="visitorId">Visitor ID</param>

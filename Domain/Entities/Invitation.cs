@@ -275,7 +275,9 @@ public class Invitation : SoftDeleteEntity
     /// <param name="comments">Optional approval comments</param>
     public void Approve(int approvedBy, string? comments = null)
     {
-        if (Status != InvitationStatus.Submitted && Status != InvitationStatus.UnderReview)
+        if (Status != InvitationStatus.Submitted &&
+            Status != InvitationStatus.UnderReview &&
+            Status != InvitationStatus.Rejected)
             throw new InvalidOperationException("Only submitted or under review invitations can be approved.");
 
         Status = InvitationStatus.Approved;
@@ -291,7 +293,9 @@ public class Invitation : SoftDeleteEntity
     /// <returns>True if the invitation can be approved, false otherwise</returns>
     public bool CanBeApproved()
     {
-        return Status == InvitationStatus.Submitted || Status == InvitationStatus.UnderReview;
+        return Status == InvitationStatus.Submitted ||
+               Status == InvitationStatus.UnderReview ||
+               Status == InvitationStatus.Rejected;
     }
 
     /// <summary>
