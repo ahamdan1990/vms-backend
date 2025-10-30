@@ -89,6 +89,11 @@ public interface IUnitOfWork : IDisposable
     IAlertEscalationRepository AlertEscalations { get; }
 
     /// <summary>
+    /// Role permission repository
+    /// </summary>
+    IRolePermissionRepository RolePermissions { get; }
+
+    /// <summary>
     /// Gets a generic repository for any entity type
     /// </summary>
     /// <typeparam name="TEntity">Entity type</typeparam>

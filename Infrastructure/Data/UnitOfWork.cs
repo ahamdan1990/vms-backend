@@ -36,6 +36,9 @@ public class UnitOfWork : IUnitOfWork
     public IOperatorSessionRepository OperatorSessions { get; private set; }
     public IAlertEscalationRepository AlertEscalations { get; private set; }
 
+    // Repository properties - Permission System
+    public IRolePermissionRepository RolePermissions { get; private set; }
+
     public UnitOfWork(ApplicationDbContext context,
                      IUserRepository userRepository,
                      IRefreshTokenRepository refreshTokenRepository,
@@ -51,7 +54,8 @@ public class UnitOfWork : IUnitOfWork
                      IInvitationRepository invitationRepository,
                      INotificationAlertRepository notificationAlertRepository,
                      IOperatorSessionRepository operatorSessionRepository,
-                     IAlertEscalationRepository alertEscalationRepository)
+                     IAlertEscalationRepository alertEscalationRepository,
+                     IRolePermissionRepository rolePermissionRepository)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _repositories = new Dictionary<Type, object>();
@@ -77,6 +81,9 @@ public class UnitOfWork : IUnitOfWork
         NotificationAlerts = notificationAlertRepository ?? throw new ArgumentNullException(nameof(notificationAlertRepository));
         OperatorSessions = operatorSessionRepository ?? throw new ArgumentNullException(nameof(operatorSessionRepository));
         AlertEscalations = alertEscalationRepository ?? throw new ArgumentNullException(nameof(alertEscalationRepository));
+
+        // Initialize permission system repositories
+        RolePermissions = rolePermissionRepository ?? throw new ArgumentNullException(nameof(rolePermissionRepository));
     }
 
     public IGenericRepository<TEntity> Repository<TEntity>() where TEntity : BaseEntity

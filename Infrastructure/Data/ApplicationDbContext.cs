@@ -29,6 +29,12 @@ public class ApplicationDbContext : DbContext
     public DbSet<SystemConfiguration> SystemConfigurations { get; set; } = null!;
     public DbSet<ConfigurationAudit> ConfigurationAudits { get; set; } = null!;
 
+    // DbSets - Permission System (New)
+    public DbSet<Permission> Permissions { get; set; } = null!;
+    public DbSet<Role> Roles { get; set; } = null!;
+    public DbSet<RolePermission> RolePermissions { get; set; } = null!;
+    public DbSet<PermissionChangeAuditLog> PermissionChangeAuditLogs { get; set; } = null!;
+
     // DbSets - Visitor Domain
     public DbSet<Visitor> Visitors { get; set; } = null!;
     public DbSet<VisitorDocument> VisitorDocuments { get; set; } = null!;
@@ -63,6 +69,12 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
         modelBuilder.ApplyConfiguration(new SystemConfigurationConfiguration());
         modelBuilder.ApplyConfiguration(new ConfigurationAuditConfiguration());
+
+        // Apply all configurations - Permission System (New)
+        modelBuilder.ApplyConfiguration(new PermissionConfiguration());
+        modelBuilder.ApplyConfiguration(new RoleConfiguration());
+        modelBuilder.ApplyConfiguration(new RolePermissionConfiguration());
+        modelBuilder.ApplyConfiguration(new PermissionChangeAuditLogConfiguration());
 
         // Apply all configurations - Visitor Domain
         modelBuilder.ApplyConfiguration(new VisitorConfiguration());

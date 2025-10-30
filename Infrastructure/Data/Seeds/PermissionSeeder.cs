@@ -1,5 +1,7 @@
-﻿using VisitorManagementSystem.Api.Domain.Constants;
+﻿using Microsoft.EntityFrameworkCore;
+using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Domain.Enums;
+using VisitorManagementSystem.Api.Domain.Entities;
 
 namespace VisitorManagementSystem.Api.Infrastructure.Data.Seeds;
 
@@ -8,6 +10,132 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Seeds;
 /// </summary>
 public static class PermissionSeeder
 {
+    /// <summary>
+    /// Seeds all permissions to the database
+    /// </summary>
+    public static async Task SeedPermissionsToDbAsync(ApplicationDbContext context)
+    {
+        // Check if permissions already exist
+        if (await context.Permissions.AnyAsync())
+        {
+            Console.WriteLine("Permissions already seeded. Skipping...");
+            return;
+        }
+
+        Console.WriteLine("Seeding permissions to database...");
+
+        var permissionsByCategory = GetPermissionsByCategory();
+        var permissionsToAdd = new List<Permission>();
+        var displayOrder = 0;
+
+        foreach (var category in permissionsByCategory.OrderBy(c => c.Key))
+        {
+            foreach (var permissionName in category.Value)
+            {
+                var permission = new Permission
+                {
+                    Name = permissionName,
+                    Category = category.Key,
+                    Description = GetPermissionDescription(permissionName, category.Key),
+                    DisplayName = GetPermissionDisplayName(permissionName, category.Key),
+                    RiskLevel = GetPermissionRiskLevelFromString(permissionName),
+                    IsActive = true,
+                    IsSystemPermission = true,
+                    DisplayOrder = displayOrder++,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = null // System seed
+                };
+
+                permissionsToAdd.Add(permission);
+            }
+        }
+
+        await context.Permissions.AddRangeAsync(permissionsToAdd);
+        await context.SaveChangesAsync();
+
+        Console.WriteLine($"Successfully seeded {permissionsToAdd.Count} permissions across {permissionsByCategory.Count} categories.");
+    }
+
+    /// <summary>
+    /// Gets a human-readable display name for a permission
+    /// </summary>
+    private static string GetPermissionDisplayName(string permissionName, string category)
+    {
+        var parts = permissionName.Split('.');
+        if (parts.Length < 2) return permissionName;
+
+        var action = string.Join(" ", parts.Skip(1));
+        return $"{action} - {category}";
+    }
+
+    /// <summary>
+    /// Gets a descriptive explanation of what the permission allows
+    /// </summary>
+    private static string GetPermissionDescription(string permissionName, string category)
+    {
+        var parts = permissionName.Split('.');
+        if (parts.Length < 2) return permissionName;
+
+        var action = string.Join(" ", parts.Skip(1)).ToLower();
+        return $"Allows user to {action} {category.ToLower()} in the system";
+    }
+
+    /// <summary>
+    /// Determines the risk level of a permission based on its nature
+    /// </summary>
+    private static int GetPermissionRiskLevelFromString(string permissionName)
+    {
+        // Critical (5)
+        if (permissionName.Contains("User.Delete") ||
+            permissionName.Contains("SystemConfig.Update"))
+        {
+            return 5;
+        }
+
+        // Very High (4)
+        if (permissionName.Contains("User.Create") ||
+            permissionName.Contains("User.Update") ||
+            permissionName.Contains("User.Deactivate") ||
+            permissionName.Contains("User.ManagePermissions") ||
+            permissionName.Contains("User.ManageRoles") ||
+            permissionName.Contains("FRSystem.Configure") ||
+            permissionName.Contains("Watchlist.Delete") ||
+            permissionName.Contains("Integration.Configure"))
+        {
+            return 4;
+        }
+
+        // High (3)
+        if (permissionName.Contains("Blacklist") ||
+            permissionName.Contains("Override") ||
+            permissionName.Contains("BulkImport.Process") ||
+            permissionName.Contains("Audit.Read") ||
+            permissionName.Contains("CustomField.Delete") ||
+            permissionName.Contains("Manual.") ||
+            permissionName.Contains("SystemConfig.Read") ||
+            permissionName.Contains(".Delete.All") ||
+            permissionName.Contains(".Export"))
+        {
+            return 3;
+        }
+
+        // Medium (2)
+        if (permissionName.Contains(".Update") ||
+            permissionName.Contains(".Approve") ||
+            permissionName.Contains(".Reject") ||
+            permissionName.Contains(".Deny") ||
+            permissionName.Contains(".Cancel.All") ||
+            permissionName.Contains(".Create.All") ||
+            permissionName.Contains("Bulk"))
+        {
+            return 2;
+        }
+
+        // Low (1)
+        return 1;
+    }
+
+
     /// <summary>
     /// Gets all available permissions in the system
     /// </summary>

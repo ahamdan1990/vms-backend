@@ -46,7 +46,21 @@ public class PermissionService : IPermissionService
                 return new List<string>();
             }
 
-            var permissions = GetRolePermissions(user.Role);
+            // Use new database-driven permission system
+            List<string> permissions;
+            if (user.RoleId.HasValue)
+            {
+                // Query database for role permissions
+                permissions = await GetRolePermissionsFromDatabaseAsync(user.RoleId.Value, cancellationToken);
+                _logger.LogDebug("Retrieved {Count} permissions from database for user {UserId} with RoleId {RoleId}",
+                    permissions.Count, userId, user.RoleId.Value);
+            }
+            else
+            {
+                // Fallback to old enum-based system for backward compatibility during migration
+                permissions = GetRolePermissions(user.Role);
+                _logger.LogWarning("User {UserId} has no RoleId, falling back to enum-based permissions", userId);
+            }
 
             _cache.Set(cacheKey, permissions, _cacheExpiry);
 
@@ -83,6 +97,69 @@ public class PermissionService : IPermissionService
     public List<string> GetRolePermissions(UserRole role)
     {
         return UserRoles.GetDefaultPermissions(UserRoles.GetRoleName(role));
+    }
+
+    /// <summary>
+    /// Gets permissions for a role from the database
+    /// </summary>
+    /// <param name="roleId">Role ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of permission strings</returns>
+    private async Task<List<string>> GetRolePermissionsFromDatabaseAsync(int roleId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var cacheKey = $"role_permissions_{roleId}";
+
+            if (_cache.TryGetValue(cacheKey, out List<string>? cachedPermissions))
+            {
+                return cachedPermissions ?? new List<string>();
+            }
+
+            // Query RolePermissions with eager loading of Permission entity
+            var rolePermissions = await _unitOfWork.RolePermissions
+                .GetRolePermissionsWithDetailsAsync(roleId, cancellationToken);
+
+            var permissions = rolePermissions
+                .Where(rp => rp.Permission.IsActive) // Only active permissions
+                .Select(rp => rp.Permission.Name)
+                .OrderBy(p => p)
+                .ToList();
+
+            // Cache for 15 minutes
+            _cache.Set(cacheKey, permissions, _cacheExpiry);
+
+            _logger.LogDebug("Retrieved {Count} permissions from database for role {RoleId}", permissions.Count, roleId);
+            return permissions;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving permissions from database for role {RoleId}", roleId);
+            // Return empty list on error to fail closed (no permissions)
+            return new List<string>();
+        }
+    }
+
+    /// <summary>
+    /// Invalidates permission cache for a user
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    public void InvalidateUserPermissionCache(int userId)
+    {
+        var cacheKey = $"user_permissions_{userId}";
+        _cache.Remove(cacheKey);
+        _logger.LogDebug("Invalidated permission cache for user {UserId}", userId);
+    }
+
+    /// <summary>
+    /// Invalidates permission cache for a role
+    /// </summary>
+    /// <param name="roleId">Role ID</param>
+    public void InvalidateRolePermissionCache(int roleId)
+    {
+        var cacheKey = $"role_permissions_{roleId}";
+        _cache.Remove(cacheKey);
+        _logger.LogDebug("Invalidated permission cache for role {RoleId}", roleId);
     }
 
     public async Task<bool> HasPermissionAsync(int userId, string permission, CancellationToken cancellationToken = default)

@@ -54,10 +54,16 @@ public class User : SoftDeleteEntity
     public PhoneNumber? PhoneNumber { get; set; }
 
     /// <summary>
-    /// User's role in the system
+    /// User's role in the system (DEPRECATED - use RoleId instead)
     /// </summary>
     [Required]
     public UserRole Role { get; set; }
+
+    /// <summary>
+    /// Foreign key to Role table (new database-driven role system)
+    /// Nullable during migration, will be required after data migration
+    /// </summary>
+    public int? RoleId { get; set; }
 
     /// <summary>
     /// User's current status
@@ -152,6 +158,11 @@ public class User : SoftDeleteEntity
     /// Navigation property for audit logs where this user is the creator
     /// </summary>
     public virtual ICollection<AuditLog> CreatedAuditLogs { get; set; } = new List<AuditLog>();
+
+    /// <summary>
+    /// Navigation property to the user's role (new database-driven system)
+    /// </summary>
+    public virtual Role? RoleEntity { get; set; }
 
     /// <summary>
     /// Gets the user's full name

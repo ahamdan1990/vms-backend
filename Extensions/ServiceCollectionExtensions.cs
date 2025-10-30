@@ -255,6 +255,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IOperatorSessionRepository, OperatorSessionRepository>();
         services.AddScoped<IAlertEscalationRepository, AlertEscalationRepository>();
 
+        // Permission system repositories
+        services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
+
         return services;
     }
 

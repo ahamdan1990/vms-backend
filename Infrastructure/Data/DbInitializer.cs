@@ -25,27 +25,35 @@ public static class DbInitializer
             // Ensure database is created
             await context.Database.EnsureCreatedAsync();
 
+            var logger = serviceProvider.GetService<ILogger<ApplicationDbContext>>();
+
+            // ALWAYS seed permission system first (idempotent - checks for existing data)
+            logger?.LogInformation("Initializing permission system...");
+            await DatabaseSeeder.SeedAllAsync(context, false);
+
+            // Print seeding statistics
+            await DatabaseSeeder.PrintSeedingStatisticsAsync(context);
+
             // Check if database is already seeded
             if (await context.Users.AnyAsync())
             {
                 // Check if system configurations are seeded
                 if (!await context.SystemConfigurations.AnyAsync())
                 {
-                    var logger = serviceProvider.GetService<ILogger<ApplicationDbContext>>();
                     logger?.LogInformation("Users exist but system configurations missing. Migrating ALL configurations...");
-                    
+
                     // Find or create a system admin user for seeding
                     var adminUser = await context.Users
                         .Where(u => u.Role == Domain.Enums.UserRole.Administrator)
                         .FirstOrDefaultAsync();
-                    
+
                     if (adminUser == null)
                     {
                         logger?.LogWarning("No admin user found. Creating system admin for configuration seeding...");
                         await SeedUsersAsync(context);
                         await context.SaveChangesAsync();
                     }
-                    
+
                     await ComprehensiveConfigurationSeeder.SeedAllConfigurationsAsync(context, serviceProvider);
                 }
                 return; // Database has already been seeded
@@ -54,7 +62,7 @@ public static class DbInitializer
             // Seed data in order of dependencies
             await SeedUsersAsync(context);
             await context.SaveChangesAsync(); // Save users first
-            
+
             await SeedAlertEscalationsAsync(context);
             await context.SaveChangesAsync(); // Save alert escalations
 
