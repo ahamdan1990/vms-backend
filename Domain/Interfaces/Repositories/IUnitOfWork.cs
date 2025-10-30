@@ -94,6 +94,16 @@ public interface IUnitOfWork : IDisposable
     IRolePermissionRepository RolePermissions { get; }
 
     /// <summary>
+    /// Role repository
+    /// </summary>
+    IRoleRepository Roles { get; }
+
+    /// <summary>
+    /// Permission repository
+    /// </summary>
+    IPermissionRepository Permissions { get; }
+
+    /// <summary>
     /// Gets a generic repository for any entity type
     /// </summary>
     /// <typeparam name="TEntity">Entity type</typeparam>

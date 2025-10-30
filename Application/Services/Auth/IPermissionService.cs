@@ -208,6 +208,18 @@ public interface IPermissionService
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if access is allowed from IP</returns>
     Task<bool> ValidateIpBasedAccessAsync(int userId, string ipAddress, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Invalidates permission cache for a user
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    void InvalidateUserPermissionCache(int userId);
+
+    /// <summary>
+    /// Invalidates permission cache for a role
+    /// </summary>
+    /// <param name="roleId">Role ID</param>
+    void InvalidateRolePermissionCache(int roleId);
 }
 
 /// <summary>

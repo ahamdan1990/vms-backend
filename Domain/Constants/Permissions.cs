@@ -513,6 +513,31 @@ public static class Permissions
     }
 
     /// <summary>
+    /// Role management permissions
+    /// </summary>
+    public static class Role
+    {
+        public const string Create = "Role.Create";
+        public const string Read = "Role.Read";
+        public const string ReadAll = "Role.ReadAll";
+        public const string Update = "Role.Update";
+        public const string Delete = "Role.Delete";
+        public const string ManagePermissions = "Role.ManagePermissions";
+        public const string ViewUsers = "Role.ViewUsers";
+    }
+
+    /// <summary>
+    /// Permission management permissions
+    /// </summary>
+    public static class Permission
+    {
+        public const string Read = "Permission.Read";
+        public const string ReadAll = "Permission.ReadAll";
+        public const string Grant = "Permission.Grant";
+        public const string Revoke = "Permission.Revoke";
+    }
+
+    /// <summary>
     /// Gets all permissions as a flat list
     /// </summary>
     /// <returns>List of all permission strings</returns>

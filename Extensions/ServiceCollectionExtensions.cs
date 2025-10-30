@@ -257,6 +257,8 @@ public static class ServiceCollectionExtensions
 
         // Permission system repositories
         services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
+        services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<IPermissionRepository, PermissionRepository>();
 
         return services;
     }
