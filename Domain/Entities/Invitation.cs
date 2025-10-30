@@ -337,6 +337,28 @@ public class Invitation : SoftDeleteEntity
         if (Status != InvitationStatus.Approved)
             throw new InvalidOperationException("Only approved invitations can be checked in.");
 
+        // Validate check-in timing
+        var now = DateTime.UtcNow;
+
+        // Allow check-in starting 2 hours before scheduled start time
+        var earliestCheckInTime = ScheduledStartTime.AddHours(-2);
+        if (now < earliestCheckInTime)
+        {
+            var localScheduledTime = ScheduledStartTime.ToLocalTime();
+            throw new InvalidOperationException(
+                $"Check-in too early. This invitation is scheduled for {localScheduledTime:MM/dd/yyyy 'at' h:mm tt}. " +
+                $"Check-in is allowed starting 2 hours before the scheduled time.");
+        }
+
+        // Prevent check-in if invitation has expired (24 hours after scheduled end time)
+        var latestCheckInTime = ScheduledEndTime.AddHours(24);
+        if (now > latestCheckInTime)
+        {
+            var localScheduledTime = ScheduledEndTime.ToLocalTime();
+            throw new InvalidOperationException(
+                $"This invitation has expired. It was scheduled to end on {localScheduledTime:MM/dd/yyyy 'at' h:mm tt}.");
+        }
+
         Status = InvitationStatus.Active;
         CheckedInAt = DateTime.UtcNow;
         UpdateModifiedBy(checkedInBy);

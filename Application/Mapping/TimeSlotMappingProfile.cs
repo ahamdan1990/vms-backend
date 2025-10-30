@@ -14,7 +14,9 @@ public class TimeSlotMappingProfile : Profile
         // Entity to DTO mappings
         CreateMap<TimeSlot, TimeSlotDto>()
             .ForMember(dest => dest.LocationName, opt => opt.MapFrom(src => src.Location != null ? src.Location.Name : null))
-            .ForMember(dest => dest.MaxVisitors, opt => opt.MapFrom(src => src.Location != null ? src.Location.MaxCapacity : 0))
+            // IMPORTANT: Map MaxVisitors from TimeSlot entity, NOT from Location.MaxCapacity
+            // The time slot's MaxVisitors property is the correct capacity limit for this slot
+            .ForMember(dest => dest.MaxVisitors, opt => opt.MapFrom(src => src.MaxVisitors))
             .ForMember(dest => dest.DurationMinutes, opt => opt.MapFrom(src => src.DurationMinutes))
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedOn))
             .ForMember(dest => dest.ModifiedAt, opt => opt.MapFrom(src => src.ModifiedOn));

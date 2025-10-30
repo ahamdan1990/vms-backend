@@ -82,8 +82,16 @@ namespace VisitorManagementSystem.Api.Application.Commands.Invitations
                     throw;
                 }
             }
+            catch (InvalidOperationException ex)
+            {
+                // Business rule violations (too early, expired, not approved, etc.) - log as Info, not Error
+                _logger.LogInformation("Check-in validation failed for invitation {InvitationReference}: {Message}",
+                    request.InvitationReference, ex.Message);
+                throw;
+            }
             catch (Exception ex)
             {
+                // Actual errors (database, network, etc.) - log as Error
                 _logger.LogError(ex, "Error checking-in invitation with reference: {InvitationReference}", request.InvitationReference);
                 throw;
             }

@@ -76,6 +76,12 @@ public class CapacityValidationResponseDto
     public bool IsWarningLevel { get; set; }
 
     /// <summary>
+    /// Indicates if the requested time is current or past (vs future)
+    /// Used by frontend to display appropriate labels (e.g., "Current Visitors" vs "Scheduled Visitors")
+    /// </summary>
+    public bool IsCurrentTime { get; set; }
+
+    /// <summary>
     /// Validation messages
     /// </summary>
     public List<string> Messages { get; set; } = new();

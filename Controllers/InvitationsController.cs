@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using System.ComponentModel.DataAnnotations;
 using VisitorManagementSystem.Api.Application.Commands.Invitations;
 using VisitorManagementSystem.Api.Application.DTOs.Invitations;
@@ -8,6 +9,7 @@ using VisitorManagementSystem.Api.Application.Queries.Invitations;
 using VisitorManagementSystem.Api.Application.Services.QrCode;
 using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Domain.Enums;
+using VisitorManagementSystem.Api.Hubs;
 
 namespace VisitorManagementSystem.Api.Controllers;
 
@@ -22,12 +24,24 @@ public class InvitationsController : BaseController
     private readonly IMediator _mediator;
     private readonly IQrCodeService _qrCodeService;
     private readonly ILogger<InvitationsController> _logger;
+    private readonly IHubContext<HostHub> _hostHubContext;
+    private readonly IHubContext<OperatorHub> _operatorHubContext;
+    private readonly IHubContext<AdminHub> _adminHubContext;
 
-    public InvitationsController(IMediator mediator, IQrCodeService qrCodeService, ILogger<InvitationsController> logger)
+    public InvitationsController(
+        IMediator mediator,
+        IQrCodeService qrCodeService,
+        ILogger<InvitationsController> logger,
+        IHubContext<HostHub> hostHubContext,
+        IHubContext<OperatorHub> operatorHubContext,
+        IHubContext<AdminHub> adminHubContext)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _qrCodeService = qrCodeService ?? throw new ArgumentNullException(nameof(qrCodeService));
         _logger = logger;
+        _hostHubContext = hostHubContext;
+        _operatorHubContext = operatorHubContext;
+        _adminHubContext = adminHubContext;
     }
 
     /// <summary>
@@ -125,6 +139,40 @@ public class InvitationsController : BaseController
         if (result == null)
         {
             return NotFoundResponse("Invitation", id);
+        }
+
+        return SuccessResponse(result);
+    }
+
+    /// <summary>
+    /// Gets an invitation by reference (ID, invitation number, or QR code)
+    /// </summary>
+    /// <param name="reference">Invitation reference</param>
+    /// <param name="includeDeleted">Include deleted invitation</param>
+    /// <param name="includeEvents">Include events timeline</param>
+    /// <param name="includeApprovals">Include approvals workflow</param>
+    /// <returns>Invitation details</returns>
+    [HttpGet("by-reference/{reference}")]
+    [Authorize(Policy = Permissions.Invitation.ReadOwn)]
+    public async Task<IActionResult> GetInvitationByReference(
+        string reference,
+        [FromQuery] bool includeDeleted = false,
+        [FromQuery] bool includeEvents = false,
+        [FromQuery] bool includeApprovals = false)
+    {
+        var query = new GetInvitationByReferenceQuery
+        {
+            Reference = reference,
+            IncludeDeleted = includeDeleted,
+            IncludeEvents = includeEvents,
+            IncludeApprovals = includeApprovals
+        };
+
+        var result = await _mediator.Send(query);
+
+        if (result == null)
+        {
+            return NotFoundResponse("Invitation", reference);
         }
 
         return SuccessResponse(result);
@@ -438,6 +486,45 @@ public class InvitationsController : BaseController
         };
 
         var result = await _mediator.Send(command);
+
+        // Broadcast check-in event to SignalR clients
+        try
+        {
+            var eventData = new
+            {
+                invitationId = result.Id,
+                visitorName = result.Visitor?.FullName ?? "Unknown Visitor",
+                hostName = result.Host?.FullName ?? "Unknown Host",
+                locationName = result.Location?.Name ?? "Unknown Location",
+                checkedInAt = result.CheckedInAt,
+                timestamp = DateTime.UtcNow
+            };
+
+            // Notify host
+            if (result.HostId > 0)
+            {
+                await _hostHubContext.Clients.Group($"Host_{result.HostId}").SendAsync("VisitorCheckIn", eventData);
+            }
+
+            // Notify operators
+            await _operatorHubContext.Clients.Group("Operators").SendAsync("VisitorCheckIn", eventData);
+
+            // Broadcast dashboard metrics update
+            await _adminHubContext.Clients.All.SendAsync("DashboardMetricsUpdated", new
+            {
+                expectedVisitors = result.Id, // Placeholder - should calculate real stats
+                checkedIn = 1, // Placeholder
+                timestamp = DateTime.UtcNow
+            });
+
+            _logger.LogDebug("SignalR check-in event broadcasted for invitation {InvitationId}", result.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to broadcast check-in event via SignalR for invitation {InvitationId}", result.Id);
+            // Don't fail the request if SignalR broadcast fails
+        }
+
         return SuccessResponse(result);
     }
 
@@ -459,6 +546,44 @@ public class InvitationsController : BaseController
         };
 
         var result = await _mediator.Send(command);
+
+        // Broadcast check-out event to SignalR clients
+        try
+        {
+            var eventData = new
+            {
+                invitationId = result.Id,
+                visitorName = result.Visitor?.FullName ?? "Unknown Visitor",
+                hostName = result.Host?.FullName ?? "Unknown Host",
+                locationName = result.Location?.Name ?? "Unknown Location",
+                checkedOutAt = result.CheckedOutAt,
+                timestamp = DateTime.UtcNow
+            };
+
+            // Notify host
+            if (result.HostId > 0)
+            {
+                await _hostHubContext.Clients.Group($"Host_{result.HostId}").SendAsync("VisitorCheckOut", eventData);
+            }
+
+            // Notify operators
+            await _operatorHubContext.Clients.Group("Operators").SendAsync("VisitorCheckOut", eventData);
+
+            // Broadcast dashboard metrics update
+            await _adminHubContext.Clients.All.SendAsync("DashboardMetricsUpdated", new
+            {
+                pendingCheckOut = -1, // Decrement
+                timestamp = DateTime.UtcNow
+            });
+
+            _logger.LogDebug("SignalR check-out event broadcasted for invitation {InvitationId}", result.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to broadcast check-out event via SignalR for invitation {InvitationId}", result.Id);
+            // Don't fail the request if SignalR broadcast fails
+        }
+
         return SuccessResponse(result);
     }
 

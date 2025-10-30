@@ -211,18 +211,22 @@ public class CapacityController : BaseController
             };
 
             var overview = await _mediator.Send(query);
-            
+
             // Transform to frontend-compatible format
             var frontendOverview = overview.Select(loc => new FrontendCapacityOverviewDto
             {
                 Id = loc.LocationId,
+                LocationId = loc.LocationId,
                 Name = loc.LocationName,
+                LocationName = loc.LocationName,
                 MaxCapacity = loc.MaxCapacity,
                 CurrentOccupancy = loc.CurrentOccupancy,
+                AvailableSlots = loc.AvailableSlots,
+                OccupancyPercentage = loc.OccupancyPercentage,
                 IsAtCapacity = loc.IsAtCapacity,
                 IsWarningLevel = loc.IsWarningLevel
             }).ToList();
-            
+
             return SuccessResponse(frontendOverview);
         }
         catch (Exception ex)

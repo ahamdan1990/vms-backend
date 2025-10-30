@@ -45,10 +45,21 @@ public class ExceptionHandlingMiddleware
         var userAgent = context.Request.Headers["User-Agent"].FirstOrDefault();
         var ipAddress = GetClientIpAddress(context);
 
-        // Log the exception with context
-        _logger.LogError(exception,
-            "Unhandled exception occurred. CorrelationId: {CorrelationId}, Path: {Path}, Method: {Method}, IP: {IpAddress}, UserAgent: {UserAgent}",
-            correlationId, requestPath, requestMethod, ipAddress, userAgent);
+        // Log the exception with context - use appropriate log level
+        if (exception is InvalidOperationException)
+        {
+            // Business rule violations - log as Warning without stack trace (it's expected behavior)
+            _logger.LogWarning(
+                "Business rule validation failed. CorrelationId: {CorrelationId}, Path: {Path}, Method: {Method}, IP: {IpAddress}, Message: {Message}",
+                correlationId, requestPath, requestMethod, ipAddress, exception.Message);
+        }
+        else
+        {
+            // Actual errors - log as Error with full stack trace
+            _logger.LogError(exception,
+                "Unhandled exception occurred. CorrelationId: {CorrelationId}, Path: {Path}, Method: {Method}, IP: {IpAddress}, UserAgent: {UserAgent}",
+                correlationId, requestPath, requestMethod, ipAddress, userAgent);
+        }
 
         // Determine response based on exception type
         var response = CreateErrorResponse(exception, correlationId);

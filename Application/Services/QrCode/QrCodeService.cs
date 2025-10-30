@@ -20,7 +20,8 @@ public class QrCodeService : IQrCodeService
     private readonly IWebHostEnvironment _environment;
 
     // QR code data format patterns
-    private static readonly Regex InvitationQrPattern = new(@"^INV:([A-Z0-9]+):VIS:(\d+):HOST:(\d+)$", RegexOptions.Compiled);
+    // Updated to include hyphens in invitation number pattern
+    private static readonly Regex InvitationQrPattern = new(@"^INV:([A-Z0-9\-]+):VIS:(\d+):HOST:(\d+)$", RegexOptions.Compiled);
     private static readonly Regex VisitorCheckInPattern = new(@"^CHK:VIS:(\d+):INV:(\d+):TS:(\d+)$", RegexOptions.Compiled);
 
     public QrCodeService(IOptions<EmailConfiguration> emailConfig, ILogger<QrCodeService> logger, IWebHostEnvironment environment)

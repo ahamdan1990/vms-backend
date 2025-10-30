@@ -34,6 +34,10 @@ public class CapacityService : ICapacityService
 
             var response = new CapacityValidationResponseDto();
 
+            // Determine if requested time is current/past or future
+            var isCurrentOrPast = request.DateTime <= DateTime.UtcNow.AddMinutes(5);
+            response.IsCurrentTime = isCurrentOrPast;
+
             // Get max capacity for the requested date/time/location
             var maxCapacity = await GetMaxCapacityAsync(request.DateTime, request.LocationId, cancellationToken);
             response.MaxCapacity = maxCapacity;
@@ -89,17 +93,40 @@ public class CapacityService : ICapacityService
     /// Gets current occupancy for a specific date/time/location
     /// </summary>
     public async Task<int> GetCurrentOccupancyAsync(
-        DateTime dateTime, 
-        int? locationId = null, 
+        DateTime dateTime,
+        int? locationId = null,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            // Count approved invitations for the given date/time/location
+            // Count visitors who are currently checked in (checked in but not checked out)
+            // For real-time queries (current moment), only count actually checked-in visitors
+            // For future/scheduled times, count approved invitations (for capacity planning)
+
+            var isCurrentOrPast = dateTime <= DateTime.UtcNow.AddMinutes(5); // 5 min buffer for near-future
+
             var query = _unitOfWork.Invitations.GetQueryable()
-                .Where(i => !i.IsDeleted &&
-                           i.Status == InvitationStatus.Approved &&
-                           i.ScheduledStartTime.Date == dateTime.Date);
+                .Where(i => !i.IsDeleted);
+
+            if (isCurrentOrPast)
+            {
+                // For current/past: Count only visitors who are checked in but not checked out
+                query = query.Where(i => i.CheckedInAt != null && i.CheckedOutAt == null);
+
+                // For current occupancy, we consider anyone checked in today who hasn't checked out
+                query = query.Where(i => i.CheckedInAt.Value.Date <= dateTime.Date);
+            }
+            else
+            {
+                // For future: Count approved invitations for capacity planning
+                query = query.Where(i => i.Status == InvitationStatus.Approved &&
+                                       i.ScheduledStartTime.Date == dateTime.Date);
+
+                // Filter by time overlap
+                query = query.Where(i =>
+                    i.ScheduledStartTime <= dateTime &&
+                    i.ScheduledEndTime >= dateTime);
+            }
 
             // Apply location filter if specified
             if (locationId.HasValue)
@@ -107,16 +134,11 @@ public class CapacityService : ICapacityService
                 query = query.Where(i => i.LocationId == locationId.Value);
             }
 
-            // Filter by time overlap
-            query = query.Where(i => 
-                i.ScheduledStartTime <= dateTime && 
-                i.ScheduledEndTime >= dateTime);
-
             var invitations = await query.ToListAsync(cancellationToken);
             var totalVisitors = invitations.Sum(i => i.ExpectedVisitorCount);
 
-            _logger.LogDebug("Current occupancy: {TotalVisitors} visitors from {InvitationCount} invitations at {DateTime}",
-                totalVisitors, invitations.Count, dateTime);
+            _logger.LogDebug("Current occupancy ({Mode}): {TotalVisitors} visitors from {InvitationCount} invitations at {DateTime}",
+                isCurrentOrPast ? "Actual" : "Planned", totalVisitors, invitations.Count, dateTime);
 
             return totalVisitors;
         }
@@ -145,18 +167,29 @@ public class CapacityService : ICapacityService
             if (timeSlot != null)
             {
                 capacity = timeSlot.MaxVisitors;
-                _logger.LogDebug("Found time slot capacity: {Capacity} for slot {TimeSlotName}", 
+                _logger.LogDebug("Found time slot capacity: {Capacity} for slot {TimeSlotName}",
                     capacity, timeSlot.Name);
             }
 
-            // If no time slot found or location-specific, check location capacity
+            // Check location capacity
             if (locationId.HasValue)
             {
                 var location = await _unitOfWork.Locations.GetByIdAsync(locationId.Value, cancellationToken);
                 if (location != null)
                 {
-                    // Use smaller of time slot or location capacity
-                capacity = location.MaxCapacity;
+                    // If we have both time slot and location capacity, use the smaller (more restrictive) value
+                    if (capacity > 0)
+                    {
+                        capacity = Math.Min(capacity, location.MaxCapacity);
+                        _logger.LogDebug("Using minimum of time slot ({TimeSlotCapacity}) and location ({LocationCapacity}): {FinalCapacity}",
+                            timeSlot?.MaxVisitors, location.MaxCapacity, capacity);
+                    }
+                    else
+                    {
+                        // No time slot found, use location capacity
+                        capacity = location.MaxCapacity;
+                        _logger.LogDebug("No time slot found, using location capacity: {Capacity}", capacity);
+                    }
                 }
             }
 

@@ -240,30 +240,61 @@ public class VisitorTrackingService : BackgroundService
 
             foreach (var invitation in potentialOverstays)
             {
-                // Check if we already sent an overstay alert
+                // Only send alerts for visitors who have actually checked in
+                if (!invitation.CheckedInAt.HasValue)
+                {
+                    continue; // Skip invitations that haven't checked in yet
+                }
+
+                // Calculate expected end time based on actual check-in
+                // If visitor checked in late, adjust the expected end time accordingly
+                DateTime expectedEndTime;
+
+                if (invitation.CheckedInAt.Value > invitation.ScheduledStartTime)
+                {
+                    // Late check-in: calculate end time based on scheduled duration from actual check-in
+                    var scheduledDuration = invitation.ScheduledEndTime - invitation.ScheduledStartTime;
+                    expectedEndTime = invitation.CheckedInAt.Value.Add(scheduledDuration);
+                }
+                else
+                {
+                    // On-time or early check-in: use scheduled end time
+                    expectedEndTime = invitation.ScheduledEndTime;
+                }
+
+                // Check if visitor has overstayed beyond the expected end time
+                var overstayMinutes = (now - expectedEndTime).TotalMinutes;
+
+                // Only alert if they've actually overstayed (positive minutes)
+                if (overstayMinutes <= 0)
+                {
+                    continue; // Not overstayed yet
+                }
+
+                // Check if we already sent an overstay alert recently (within last hour)
                 var existingAlert = await unitOfWork.Repository<NotificationAlert>()
                     .GetFirstOrDefaultAsync(
                         a => a.RelatedEntityType == "Invitation" &&
                              a.RelatedEntityId == invitation.Id &&
                              a.Type == Domain.Enums.NotificationAlertType.VisitorOverstay &&
-                             a.CreatedOn >= DateTime.UtcNow.AddHours(-2),
+                             a.CreatedOn >= DateTime.UtcNow.AddHours(-1), // Changed from -2 to -1 to reduce spam
                         cancellationToken: cancellationToken);
 
                 if (existingAlert == null)
                 {
-                    var overstayMinutes = (now - invitation.ScheduledEndTime).TotalMinutes;
-                    
+                    var endTimeDisplay = expectedEndTime.ToLocalTime();
+
                     await notificationService.NotifyUserAsync(
                         invitation.HostId,
                         "Visitor Overstay Alert",
-                        $"Your visitor {invitation.Visitor?.FullName} has overstayed by {overstayMinutes:F0} minutes (scheduled end: {invitation.ScheduledEndTime:HH:mm})",
+                        $"Your visitor {invitation.Visitor?.FullName} has overstayed by {overstayMinutes:F0} minutes (expected end: {endTimeDisplay:HH:mm})",
                         Domain.Enums.NotificationAlertType.VisitorOverstay,
                         Domain.Enums.AlertPriority.Medium,
-                        new { InvitationId = invitation.Id, OverstayMinutes = overstayMinutes },
+                        new { InvitationId = invitation.Id, OverstayMinutes = overstayMinutes, ExpectedEndTime = expectedEndTime },
                         cancellationToken);
 
-                    _logger.LogInformation("Overstay alert sent for visitor {VisitorName} (Host: {HostId}, Overstay: {Minutes}min)",
-                        invitation.Visitor?.FullName, invitation.HostId, overstayMinutes);
+                    _logger.LogInformation("Overstay alert sent for visitor {VisitorName} (Host: {HostId}, Overstay: {Minutes}min, Expected end: {ExpectedEnd})",
+                        invitation.Visitor?.FullName, invitation.HostId, overstayMinutes, endTimeDisplay);
                 }
             }
         }
