@@ -85,6 +85,9 @@ public static class ServiceCollectionExtensions
     /// </summary>
     private static IServiceCollection RegisterServices(this IServiceCollection services)
     {
+        // HTTP Context Accessor (required for accessing HttpContext in command handlers)
+        services.AddHttpContextAccessor();
+
         // Auth services
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtService, JwtService>();

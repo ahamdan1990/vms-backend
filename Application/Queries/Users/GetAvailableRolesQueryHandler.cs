@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
-using VisitorManagementSystem.Api.Controllers; // For RoleDto
+using VisitorManagementSystem.Api.Controllers; // For UserRoleDto
 using VisitorManagementSystem.Api.Domain.Enums;
 
 namespace VisitorManagementSystem.Api.Application.Queries.Users;
@@ -8,7 +8,7 @@ namespace VisitorManagementSystem.Api.Application.Queries.Users;
 /// <summary>
 /// Handler for GetAvailableRolesQuery
 /// </summary>
-public class GetAvailableRolesQueryHandler : IRequestHandler<GetAvailableRolesQuery, List<RoleDto>>
+public class GetAvailableRolesQueryHandler : IRequestHandler<GetAvailableRolesQuery, List<UserRoleDto>>
 {
     private readonly ILogger<GetAvailableRolesQueryHandler> _logger;
 
@@ -17,17 +17,17 @@ public class GetAvailableRolesQueryHandler : IRequestHandler<GetAvailableRolesQu
         _logger = logger;
     }
 
-    public async Task<List<RoleDto>> Handle(GetAvailableRolesQuery request, CancellationToken cancellationToken)
+    public async Task<List<UserRoleDto>> Handle(GetAvailableRolesQuery request, CancellationToken cancellationToken)
     {
         try
         {
             _logger.LogDebug("Processing GetAvailableRolesQuery for UserId: {UserId}", request.UserId);
 
-            var roles = new List<RoleDto>();
+            var roles = new List<UserRoleDto>();
 
             foreach (UserRole role in Enum.GetValues<UserRole>())
             {
-                roles.Add(new RoleDto
+                roles.Add(new UserRoleDto
                 {
                     Name = role.ToString(),
                     DisplayName = role.ToString(),

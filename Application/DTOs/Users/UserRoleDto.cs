@@ -3,7 +3,7 @@
     /// <summary>
     /// Role DTO
     /// </summary>
-    public class RoleDto
+    public class UserRoleDto
     {
         public string Name { get; set; } = string.Empty;
         public string DisplayName { get; set; } = string.Empty;

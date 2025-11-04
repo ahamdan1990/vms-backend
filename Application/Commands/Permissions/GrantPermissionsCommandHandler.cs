@@ -55,7 +55,10 @@ public class GrantPermissionsCommandHandler : IRequestHandler<GrantPermissionsCo
             // Invalidate permission cache for this role
             _permissionService.InvalidateRolePermissionCache(request.RoleId);
 
-            _logger.LogInformation("Granted {Count} permissions to role {RoleName} (ID: {RoleId}) by user {UserId}",
+            // CRITICAL: Invalidate cache for ALL users with this role to ensure immediate updates
+            await InvalidateUserCachesForRoleAsync(request.RoleId, cancellationToken);
+
+            _logger.LogInformation("Granted {Count} permissions to role {RoleName} (ID: {RoleId}) by user {UserId}. Invalidated caches for all users with this role.",
                 grantedCount, role.Name, request.RoleId, grantedBy);
 
             return grantedCount;
@@ -64,6 +67,32 @@ public class GrantPermissionsCommandHandler : IRequestHandler<GrantPermissionsCo
         {
             _logger.LogError(ex, "Error granting permissions to role {RoleId}", request.RoleId);
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Invalidates permission caches for all users who have the specified role
+    /// This ensures permission changes are reflected immediately
+    /// </summary>
+    private async Task InvalidateUserCachesForRoleAsync(int roleId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Get all users with this role
+            var usersWithRole = await _unitOfWork.Users.GetByRoleIdAsync(roleId, cancellationToken);
+
+            foreach (var user in usersWithRole)
+            {
+                _permissionService.InvalidateUserPermissionCache(user.Id);
+            }
+
+            _logger.LogInformation("Invalidated permission caches for {Count} users with role ID {RoleId}",
+                usersWithRole.Count, roleId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error invalidating user caches for role {RoleId}", roleId);
+            // Don't throw - cache invalidation failure shouldn't fail the whole operation
         }
     }
 }

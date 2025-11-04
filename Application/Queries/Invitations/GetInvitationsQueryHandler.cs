@@ -6,6 +6,8 @@ using VisitorManagementSystem.Api.Application.DTOs.Invitations;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
+using VisitorManagementSystem.Api.Domain.Enums;
+using System.Security.Claims;
 
 namespace VisitorManagementSystem.Api.Application.Queries.Invitations;
 
@@ -17,15 +19,18 @@ public class GetInvitationsQueryHandler : IRequestHandler<GetInvitationsQuery, P
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<GetInvitationsQueryHandler> _logger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public GetInvitationsQueryHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        ILogger<GetInvitationsQueryHandler> logger)
+        ILogger<GetInvitationsQueryHandler> logger,
+        IHttpContextAccessor httpContextAccessor)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<PagedResultDto<InvitationDto>> Handle(GetInvitationsQuery request, CancellationToken cancellationToken)
@@ -80,6 +85,9 @@ public class GetInvitationsQueryHandler : IRequestHandler<GetInvitationsQuery, P
 
             // Apply additional filters in memory (for complex combinations)
             var filteredInvitations = ApplyAdditionalFilters(allInvitations, request);
+
+            // Apply role-based filtering (Operator sees only approved invitations)
+            filteredInvitations = ApplyRoleBasedFiltering(filteredInvitations);
 
             // Apply search
             if (!string.IsNullOrWhiteSpace(request.SearchTerm))
@@ -163,6 +171,32 @@ public class GetInvitationsQueryHandler : IRequestHandler<GetInvitationsQuery, P
         }
 
         return filtered.ToList();
+    }
+
+    private List<Invitation> ApplyRoleBasedFiltering(List<Invitation> invitations)
+    {
+        try
+        {
+            // Get current user's role from claims
+            var userRoleClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Role)?.Value;
+
+            _logger.LogDebug("Applying role-based filtering for role: {Role}", userRoleClaim);
+
+            // If user has Operator role, filter to only show Approved invitations
+            if (userRoleClaim == "Operator")
+            {
+                _logger.LogInformation("Filtering invitations for Operator role - showing only Approved invitations");
+                return invitations.Where(i => i.Status == InvitationStatus.Approved).ToList();
+            }
+
+            // For all other roles, return all invitations (no additional filtering)
+            return invitations;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error applying role-based filtering, returning unfiltered results");
+            return invitations;
+        }
     }
 
     private List<Invitation> ApplySearchInMemory(List<Invitation> invitations, string searchTerm)

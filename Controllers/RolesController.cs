@@ -173,7 +173,7 @@ public class RolesController : BaseController
     /// <param name="grantPermissionsDto">Permissions to grant</param>
     /// <returns>Number of permissions granted</returns>
     [HttpPost("{id}/permissions/grant")]
-    [Authorize(Policy = Permissions.Role.Update)]
+    [Authorize(Policy = Permissions.Role.ManagePermissions)]
     [ProducesResponseType(typeof(ApiResponseDto<int>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
@@ -217,7 +217,7 @@ public class RolesController : BaseController
     /// <param name="revokePermissionsDto">Permissions to revoke</param>
     /// <returns>Number of permissions revoked</returns>
     [HttpPost("{id}/permissions/revoke")]
-    [Authorize(Policy = Permissions.Role.Update)]
+    [Authorize(Policy = Permissions.Role.ManagePermissions)]
     [ProducesResponseType(typeof(ApiResponseDto<int>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]

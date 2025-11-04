@@ -31,7 +31,14 @@ public class PolicyProvider : IAuthorizationPolicyProvider
 
     public Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)
     {
-        // Handle permission-based policies
+        // CRITICAL FIX: Check if the policy name IS a valid permission string (e.g., "Permission.ReadAll", "Role.Create")
+        // This handles cases where the permission constant itself contains the category prefix
+        if (Permissions.IsValidPermission(policyName))
+        {
+            return CreatePermissionPolicy(policyName);
+        }
+
+        // Handle permission-based policies (e.g., "Permission.User.Create" → "User.Create")
         if (policyName.StartsWith("Permission."))
         {
             var permission = policyName["Permission.".Length..];

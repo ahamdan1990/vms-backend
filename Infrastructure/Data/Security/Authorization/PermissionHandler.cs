@@ -56,27 +56,28 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
                 return Task.CompletedTask;
             }
 
-            // FIXED: Get user's role using ClaimTypes.Role instead of "role"
-            var userRole = context.User.FindFirst(ClaimTypes.Role)?.Value;
-            if (string.IsNullOrEmpty(userRole))
-            {
-                _logger.LogWarning("User has no role claim for permission check: {Permission}", requirement.Permission);
-                context.Fail();
-                return Task.CompletedTask;
-            }
+            // CRITICAL FIX: Check for permission CLAIMS instead of hardcoded role permissions
+            // The PermissionClaimsMiddleware adds all user permissions from the database as claims
+            var permissionClaims = context.User.Claims
+                .Where(c => c.Type == "permission")
+                .Select(c => c.Value)
+                .ToList();
 
-            // Get permissions for the user's role
-            var rolePermissions = UserRoles.GetDefaultPermissions(userRole);
+            // Get user's role for logging
+            var userRole = context.User.FindFirst(ClaimTypes.Role)?.Value ?? "Unknown";
+            var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Unknown";
 
-            // Check if user has the required permission
-            if (rolePermissions.Contains(requirement.Permission))
+            // Check if user has the required permission claim
+            if (permissionClaims.Contains(requirement.Permission))
             {
-                _logger.LogDebug("Permission granted: {Permission} for role: {Role}", requirement.Permission, userRole);
+                _logger.LogDebug("✅ Permission granted: {Permission} for user {UserId} with role {Role}",
+                    requirement.Permission, userId, userRole);
                 context.Succeed(requirement);
             }
             else
             {
-                _logger.LogWarning("Permission denied: {Permission} for role: {Role}", requirement.Permission, userRole);
+                _logger.LogWarning("❌ Permission denied: {Permission} for user {UserId} with role {Role}. User has {Count} permissions.",
+                    requirement.Permission, userId, userRole, permissionClaims.Count);
                 context.Fail();
             }
         }
@@ -114,29 +115,28 @@ public class MultiplePermissionsHandler : AuthorizationHandler<MultiplePermissio
                 return Task.CompletedTask;
             }
 
-            // FIXED: Use ClaimTypes.Role
-            var userRole = context.User.FindFirst(ClaimTypes.Role)?.Value;
-            if (string.IsNullOrEmpty(userRole))
-            {
-                context.Fail();
-                return Task.CompletedTask;
-            }
+            // CRITICAL FIX: Check permission CLAIMS instead of hardcoded role permissions
+            var permissionClaims = context.User.Claims
+                .Where(c => c.Type == "permission")
+                .Select(c => c.Value)
+                .ToList();
 
-            var rolePermissions = UserRoles.GetDefaultPermissions(userRole);
+            var userRole = context.User.FindFirst(ClaimTypes.Role)?.Value ?? "Unknown";
+            var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Unknown";
 
             // Check if user has ALL required permissions
-            var hasAllPermissions = requirement.Permissions.All(permission => rolePermissions.Contains(permission));
+            var hasAllPermissions = requirement.Permissions.All(permission => permissionClaims.Contains(permission));
 
             if (hasAllPermissions)
             {
-                _logger.LogDebug("All permissions granted for role: {Role}", userRole);
+                _logger.LogDebug("✅ All permissions granted for user {UserId} with role {Role}", userId, userRole);
                 context.Succeed(requirement);
             }
             else
             {
-                var missingPermissions = requirement.Permissions.Where(p => !rolePermissions.Contains(p));
-                _logger.LogWarning("Missing permissions: {Permissions} for role: {Role}",
-                    string.Join(", ", missingPermissions), userRole);
+                var missingPermissions = requirement.Permissions.Where(p => !permissionClaims.Contains(p));
+                _logger.LogWarning("❌ Missing permissions: {Permissions} for user {UserId} with role {Role}",
+                    string.Join(", ", missingPermissions), userId, userRole);
                 context.Fail();
             }
         }
@@ -172,28 +172,27 @@ public class AnyPermissionHandler : AuthorizationHandler<AnyPermissionRequiremen
                 return Task.CompletedTask;
             }
 
-            // FIXED: Use ClaimTypes.Role
-            var userRole = context.User.FindFirst(ClaimTypes.Role)?.Value;
-            if (string.IsNullOrEmpty(userRole))
-            {
-                context.Fail();
-                return Task.CompletedTask;
-            }
+            // CRITICAL FIX: Check permission CLAIMS instead of hardcoded role permissions
+            var permissionClaims = context.User.Claims
+                .Where(c => c.Type == "permission")
+                .Select(c => c.Value)
+                .ToList();
 
-            var rolePermissions = UserRoles.GetDefaultPermissions(userRole);
+            var userRole = context.User.FindFirst(ClaimTypes.Role)?.Value ?? "Unknown";
+            var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Unknown";
 
             // Check if user has ANY of the required permissions
-            var hasAnyPermission = requirement.Permissions.Any(permission => rolePermissions.Contains(permission));
+            var hasAnyPermission = requirement.Permissions.Any(permission => permissionClaims.Contains(permission));
 
             if (hasAnyPermission)
             {
-                _logger.LogDebug("At least one permission granted for role: {Role}", userRole);
+                _logger.LogDebug("✅ At least one permission granted for user {UserId} with role {Role}", userId, userRole);
                 context.Succeed(requirement);
             }
             else
             {
-                _logger.LogWarning("No matching permissions for role: {Role}, Required: {Permissions}",
-                    userRole, string.Join(", ", requirement.Permissions));
+                _logger.LogWarning("❌ No matching permissions for user {UserId} with role {Role}, Required: {Permissions}",
+                    userId, userRole, string.Join(", ", requirement.Permissions));
                 context.Fail();
             }
         }

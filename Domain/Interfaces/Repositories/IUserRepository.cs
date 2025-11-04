@@ -28,12 +28,20 @@ public interface IUserRepository : IGenericRepository<User>
     Task<User?> GetByEmployeeIdAsync(string employeeId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets users by role
+    /// Gets users by role (enum-based - legacy)
     /// </summary>
     /// <param name="role">User role</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of users with the specified role</returns>
     Task<List<User>> GetByRoleAsync(UserRole role, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets users by role ID (dynamic role system)
+    /// </summary>
+    /// <param name="roleId">Role ID from Roles table</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of users with the specified role</returns>
+    Task<List<User>> GetByRoleIdAsync(int roleId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets users by status

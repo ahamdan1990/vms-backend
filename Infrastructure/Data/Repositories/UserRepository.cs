@@ -35,6 +35,13 @@ public class UserRepository : BaseRepository<User>, IUserRepository
         return await GetAsync(specification, cancellationToken);
     }
 
+    public async Task<List<User>> GetByRoleIdAsync(int roleId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Users
+            .Where(u => u.RoleId == roleId && u.IsActive)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<List<User>> GetByStatusAsync(UserStatus status, CancellationToken cancellationToken = default)
     {
         var specification = new UsersByStatusSpecification(status);

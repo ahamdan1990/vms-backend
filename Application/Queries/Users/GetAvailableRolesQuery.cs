@@ -8,7 +8,7 @@ namespace VisitorManagementSystem.Api.Application.Queries.Users;
 /// <summary>
 /// Query for getting available user roles
 /// </summary>
-public class GetAvailableRolesQuery : IRequest<List<RoleDto>>
+public class GetAvailableRolesQuery : IRequest<List<UserRoleDto>>
 {
     public int UserId { get; set; } // Add missing UserId property
     public bool IncludeDescriptions { get; set; } = false;

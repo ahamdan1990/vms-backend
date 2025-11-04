@@ -713,7 +713,7 @@ public class UsersController : BaseController
     /// </summary>
     [HttpGet("roles")]
     [Authorize(Policy = Permissions.User.ReadAll)]
-    [ProducesResponseType(typeof(ApiResponseDto<List<RoleDto>>), 200)]
+    [ProducesResponseType(typeof(ApiResponseDto<List<UserRoleDto>>), 200)]
     public async Task<IActionResult> GetAvailableRoles()
     {
         try

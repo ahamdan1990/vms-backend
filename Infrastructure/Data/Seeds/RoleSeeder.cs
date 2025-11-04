@@ -54,13 +54,27 @@ public static class RoleSeeder
             },
             new Role
             {
+                Name = "Operator",
+                DisplayName = "Operator",
+                Description = "Operations staff who can view approved invitations, handle check-in/check-out operations, and manage visitor flow. Can only see approved invitations.",
+                HierarchyLevel = 3,
+                IsSystemRole = true,
+                IsActive = true,
+                DisplayOrder = 3,
+                Color = "#F59E0B", // Amber
+                Icon = "ClipboardDocumentCheckIcon",
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = null // System seed
+            },
+            new Role
+            {
                 Name = "Administrator",
                 DisplayName = "Administrator",
                 Description = "Full system access with all permissions. Can manage users, roles, permissions, system configuration, and handle blacklist requests.",
                 HierarchyLevel = 4,
                 IsSystemRole = true,
                 IsActive = true,
-                DisplayOrder = 3,
+                DisplayOrder = 4,
                 Color = "#EF4444", // Red
                 Icon = "ShieldCheckIcon",
                 CreatedAt = DateTime.UtcNow,
@@ -83,6 +97,7 @@ public static class RoleSeeder
         {
             1 => "Staff",
             2 => "Receptionist",
+            3 => "Operator",
             4 => "Administrator",
             _ => "Staff"
         };

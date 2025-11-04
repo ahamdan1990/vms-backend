@@ -15,23 +15,43 @@ public static class PermissionSeeder
     /// </summary>
     public static async Task SeedPermissionsToDbAsync(ApplicationDbContext context)
     {
-        // Check if permissions already exist
-        if (await context.Permissions.AnyAsync())
+        Console.WriteLine("Checking for missing permissions...");
+
+        var permissionsByCategory = GetPermissionsByCategory();
+        var allPermissionsFromCode = permissionsByCategory.SelectMany(c => c.Value).ToList();
+
+        // Get existing permissions from database
+        var existingPermissions = await context.Permissions
+            .Select(p => p.Name)
+            .ToListAsync();
+
+        // Find permissions that exist in code but not in database
+        var missingPermissions = allPermissionsFromCode
+            .Where(p => !existingPermissions.Contains(p))
+            .ToList();
+
+        if (!missingPermissions.Any())
         {
-            Console.WriteLine("Permissions already seeded. Skipping...");
+            Console.WriteLine("All permissions already seeded. No new permissions to add.");
             return;
         }
 
-        Console.WriteLine("Seeding permissions to database...");
+        Console.WriteLine($"Found {missingPermissions.Count} new permissions to seed...");
 
-        var permissionsByCategory = GetPermissionsByCategory();
         var permissionsToAdd = new List<Permission>();
-        var displayOrder = 0;
+        var maxDisplayOrder = await context.Permissions.AnyAsync()
+            ? await context.Permissions.MaxAsync(p => p.DisplayOrder)
+            : 0;
+        var displayOrder = maxDisplayOrder + 1;
 
         foreach (var category in permissionsByCategory.OrderBy(c => c.Key))
         {
             foreach (var permissionName in category.Value)
             {
+                // Only add if it's a missing permission
+                if (!missingPermissions.Contains(permissionName))
+                    continue;
+
                 var permission = new Permission
                 {
                     Name = permissionName,
@@ -53,7 +73,7 @@ public static class PermissionSeeder
         await context.Permissions.AddRangeAsync(permissionsToAdd);
         await context.SaveChangesAsync();
 
-        Console.WriteLine($"Successfully seeded {permissionsToAdd.Count} permissions across {permissionsByCategory.Count} categories.");
+        Console.WriteLine($"Successfully seeded {permissionsToAdd.Count} new permissions.");
     }
 
     /// <summary>
