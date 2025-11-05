@@ -139,7 +139,7 @@ public class Address : IEquatable<Address>
         if (string.IsNullOrWhiteSpace(PostalCode))
             return;
 
-        var normalizedCountry = Country.ToUpperInvariant();
+        var normalizedCountry = Country!.ToUpperInvariant();
 
         switch (normalizedCountry)
         {
@@ -163,7 +163,7 @@ public class Address : IEquatable<Address>
     {
         // US ZIP: 12345 or 12345-6789
         var usZipRegex = @"^\d{5}(-\d{4})?$";
-        if (!System.Text.RegularExpressions.Regex.IsMatch(PostalCode, usZipRegex))
+        if (!System.Text.RegularExpressions.Regex.IsMatch(PostalCode!, usZipRegex))
             throw new ArgumentException($"Invalid US ZIP code format: {PostalCode}");
     }
 
@@ -174,7 +174,7 @@ public class Address : IEquatable<Address>
     {
         // Canadian: A1A 1A1
         var canadianRegex = @"^[A-Z]\d[A-Z] \d[A-Z]\d$";
-        if (!System.Text.RegularExpressions.Regex.IsMatch(PostalCode, canadianRegex))
+        if (!System.Text.RegularExpressions.Regex.IsMatch(PostalCode!, canadianRegex))
             throw new ArgumentException($"Invalid Canadian postal code format: {PostalCode}");
     }
 
@@ -185,7 +185,7 @@ public class Address : IEquatable<Address>
     {
         // UK postcode: SW1A 1AA, M1 1AA, B33 8TH, etc.
         var ukRegex = @"^[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2}$";
-        if (!System.Text.RegularExpressions.Regex.IsMatch(PostalCode, ukRegex))
+        if (!System.Text.RegularExpressions.Regex.IsMatch(PostalCode!, ukRegex))
             throw new ArgumentException($"Invalid UK postal code format: {PostalCode}");
     }
 
@@ -222,7 +222,7 @@ public class Address : IEquatable<Address>
     /// <returns>Mailing label formatted address</returns>
     public string GetMailingFormat()
     {
-        var lines = new List<string> { Street1 };
+        var lines = new List<string> { Street1! };
 
         if (!string.IsNullOrWhiteSpace(Street2))
         {
@@ -230,7 +230,7 @@ public class Address : IEquatable<Address>
         }
 
         lines.Add($"{City}, {State} {PostalCode}");
-        lines.Add(Country.ToUpperInvariant());
+        lines.Add(Country!.ToUpperInvariant());
 
         return string.Join(Environment.NewLine, lines);
     }
@@ -241,17 +241,17 @@ public class Address : IEquatable<Address>
     /// <returns>Single line address</returns>
     public string GetSingleLine()
     {
-        var parts = new List<string> { Street1 };
+        var parts = new List<string> { Street1! };
 
         if (!string.IsNullOrWhiteSpace(Street2))
         {
             parts.Add(Street2);
         }
 
-        parts.Add(City);
-        parts.Add(State);
-        parts.Add(PostalCode);
-        parts.Add(Country);
+        parts.Add(City!);
+        parts.Add(State!);
+        parts.Add(PostalCode!);
+        parts.Add(Country!);
 
         return string.Join(", ", parts.Where(p => !string.IsNullOrWhiteSpace(p)));
     }
@@ -367,7 +367,7 @@ public class Address : IEquatable<Address>
     /// <returns>Country code</returns>
     public string GetCountryCode()
     {
-        return Country.ToUpperInvariant() switch
+        return Country!.ToUpperInvariant() switch
         {
             "UNITED STATES" or "USA" => "US",
             "CANADA" or "CAN" => "CA",
@@ -380,7 +380,7 @@ public class Address : IEquatable<Address>
             "CHINA" => "CN",
             "INDIA" => "IN",
             "AUSTRALIA" => "AU",
-            _ => Country.Length <= 3 ? Country.ToUpperInvariant() : Country
+            _ => Country!.Length <= 3 ? Country.ToUpperInvariant() : Country
         };
     }
 
@@ -407,12 +407,12 @@ public class Address : IEquatable<Address>
     public override int GetHashCode()
     {
         return HashCode.Combine(
-            StringComparer.OrdinalIgnoreCase.GetHashCode(Street1),
+            StringComparer.OrdinalIgnoreCase.GetHashCode(Street1!),
             StringComparer.OrdinalIgnoreCase.GetHashCode(Street2 ?? ""),
-            StringComparer.OrdinalIgnoreCase.GetHashCode(City),
-            StringComparer.OrdinalIgnoreCase.GetHashCode(State),
-            StringComparer.OrdinalIgnoreCase.GetHashCode(PostalCode),
-            StringComparer.OrdinalIgnoreCase.GetHashCode(Country));
+            StringComparer.OrdinalIgnoreCase.GetHashCode(City!),
+            StringComparer.OrdinalIgnoreCase.GetHashCode(State!),
+            StringComparer.OrdinalIgnoreCase.GetHashCode(PostalCode!),
+            StringComparer.OrdinalIgnoreCase.GetHashCode(Country!));
     }
 
     public static bool operator ==(Address? left, Address? right)

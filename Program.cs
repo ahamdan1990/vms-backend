@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using System.Text.Json;
 using VisitorManagementSystem.Api.Hubs;
 using Microsoft.AspNetCore.SignalR;
+using VisitorManagementSystem.Api.Infrastructure.Security.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -171,24 +172,47 @@ builder.Services.AddAuthentication(options =>
             return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(response));
         }
     };
-});
+})
+.AddScheme<ApiKeyAuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(
+    ApiKeyAuthenticationSchemeOptions.DefaultScheme, null);
+
+// use of Api Key above as below 
+// Uses JWT (default)
+// [Authorize]
+// public IActionResult GetVisitors() { }
+
+// // Uses API Key only
+// [Authorize(AuthenticationSchemes = ApiKeyAuthenticationSchemeOptions.DefaultScheme)]
+// public IActionResult ExternalApiEndpoint() { }
+
+// // Accepts either JWT or API Key
+// [Authorize(AuthenticationSchemes = $"{JwtBearerDefaults.AuthenticationScheme},{ApiKeyAuthenticationSchemeOptions.DefaultScheme}")]
+// public IActionResult FlexibleEndpoint() { }
+
 
 // Add Authorization
+// builder.Services.AddAuthorization(options =>
+// {
+//     // Register all permission constants as policies
+//     var allPermissions = Permissions.GetAllPermissions();
+
+//     foreach (var permission in allPermissions)
+//     {
+//         options.AddPolicy(permission, policy =>
+//         {
+//             policy.RequireAuthenticatedUser();
+//             policy.AddRequirements(new PermissionRequirement(permission));
+//         });
+//     }
+
+//     // Set default policy
+//     options.DefaultPolicy = new AuthorizationPolicyBuilder()
+//         .RequireAuthenticatedUser()
+//         .Build();
+// });
+
 builder.Services.AddAuthorization(options =>
 {
-    // Register all permission constants as policies
-    var allPermissions = Permissions.GetAllPermissions();
-
-    foreach (var permission in allPermissions)
-    {
-        options.AddPolicy(permission, policy =>
-        {
-            policy.RequireAuthenticatedUser();
-            policy.AddRequirements(new PermissionRequirement(permission));
-        });
-    }
-
-    // Set default policy
     options.DefaultPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build();

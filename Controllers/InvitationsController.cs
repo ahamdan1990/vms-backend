@@ -630,7 +630,7 @@ public class InvitationsController : BaseController
     /// <summary>
     /// Validates QR code data
     /// </summary>
-    /// <param name="qrData">QR code data to validate</param>
+    /// <param name="validateDto">QR code validation DTO</param>
     /// <returns>Validation result</returns>
     [HttpPost("qr-code/validate")]
     [Authorize(Policy = Permissions.Invitation.Read)]

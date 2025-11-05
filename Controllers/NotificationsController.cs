@@ -220,7 +220,7 @@ public class NotificationsController : BaseController
     /// Gets alert escalation rules for administrators
     /// </summary>
     [HttpGet("escalations")]
-    [Authorize(Policy = Permissions.Configuration.Read)]
+    [Authorize(Policy = Permissions.SystemConfig.Read)]
     [ProducesResponseType(typeof(ApiResponseDto<PagedResultDto<AlertEscalationDto>>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 403)]
     public async Task<IActionResult> GetAlertEscalations(
@@ -257,7 +257,7 @@ public class NotificationsController : BaseController
     /// Creates a new alert escalation rule
     /// </summary>
     [HttpPost("escalations")]
-    [Authorize(Policy = Permissions.Configuration.Create)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     [ProducesResponseType(typeof(ApiResponseDto<AlertEscalationDto>), 201)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 403)]
@@ -303,7 +303,7 @@ public class NotificationsController : BaseController
     /// Updates an existing alert escalation rule
     /// </summary>
     [HttpPut("escalations/{id}")]
-    [Authorize(Policy = Permissions.Configuration.Update)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     [ProducesResponseType(typeof(ApiResponseDto<AlertEscalationDto>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
@@ -353,7 +353,7 @@ public class NotificationsController : BaseController
     /// Deletes an alert escalation rule
     /// </summary>
     [HttpDelete("escalations/{id}")]
-    [Authorize(Policy = Permissions.Configuration.Delete)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     [ProducesResponseType(typeof(ApiResponseDto<bool>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 403)]
@@ -431,7 +431,7 @@ public class NotificationsController : BaseController
     /// Gets available escalation actions
     /// </summary>
     [HttpGet("escalation-actions")]
-    [Authorize(Policy = Permissions.Configuration.Read)]
+    [Authorize(Policy = Permissions.SystemConfig.Read)]
     [ProducesResponseType(typeof(ApiResponseDto<Dictionary<string, string>>), 200)]
     public IActionResult GetEscalationActions()
     {

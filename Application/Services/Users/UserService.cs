@@ -37,11 +37,11 @@ public class UserService : IUserService
             ModifiedOn = user.ModifiedOn ?? DateTime.UtcNow
         };
     }
-    public async Task<int> CreateUserAsync(CreateUserDto createUserDto, CancellationToken cancellationToken = default)
+    public Task<int> CreateUserAsync(CreateUserDto createUserDto, CancellationToken cancellationToken = default)
     {
         // TODO: Implement user creation
         _logger.LogInformation("Creating user with email {Email}", createUserDto.Email);
-        
+
         // Placeholder implementation
         throw new NotImplementedException("User creation not implemented");
     }

@@ -124,7 +124,10 @@ public static class ServiceCollectionExtensions
 
         // Authorization handlers
         services.AddScoped<IAuthorizationHandler, PermissionHandler>();
+        services.AddScoped<IAuthorizationHandler, MultiplePermissionsHandler>();
+        services.AddScoped<IAuthorizationHandler, AnyPermissionHandler>();
         services.AddScoped<IAuthorizationHandler, RoleHandler>();
+        services.AddScoped<IAuthorizationHandler, MultipleRolesHandler>();
         services.AddSingleton<IAuthorizationPolicyProvider, PolicyProvider>();
 
 

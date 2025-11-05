@@ -185,8 +185,8 @@ public class PolicyProvider : IAuthorizationPolicyProvider
             // Define composite policies
             switch (policyName)
             {
-                case "Composite.AdminOrOperator":
-                    policyBuilder.AddRequirements(new MultipleRolesRequirement(new[] { UserRole.Administrator, UserRole.Operator }));
+                case "Composite.AdminOrReceptionist":
+                    policyBuilder.AddRequirements(new MultipleRolesRequirement(new[] { UserRole.Administrator, UserRole.Receptionist }));
                     break;
 
                 case "Composite.InvitationManager":
@@ -248,7 +248,7 @@ public static class PolicyNames
     public const string ConfigureSystem = "Permission." + Permissions.SystemConfig.Update;
 
     // Composite policies
-    public const string AdminOrOperator = "Composite.AdminOrOperator";
+    public const string AdminOrOperator = "Composite.AdminOrReceptionist";
     public const string InvitationManager = "Composite.InvitationManager";
     public const string VisitorOperations = "Composite.VisitorOperations";
     public const string SystemManager = "Composite.SystemManager";

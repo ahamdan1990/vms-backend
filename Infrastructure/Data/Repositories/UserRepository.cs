@@ -167,7 +167,7 @@ public class UserRepository : BaseRepository<User>, IUserRepository
             PendingUsers = users.Count(u => u.Status == UserStatus.Pending),
             StaffUsers = users.Count(u => u.Role == UserRole.Staff),
             AdminUsers = users.Count(u => u.Role == UserRole.Administrator),
-            OperatorUsers = users.Count(u => u.Role == UserRole.Operator),
+            ReceptionistUsers = users.Count(u => u.Role == UserRole.Receptionist),
             UsersWithFailedLogins = users.Count(u => u.FailedLoginAttempts > 0),
             LastUserCreated = users.Any() ? users.Max(u => u.CreatedOn) : null,
             LastSuccessfulLogin = users.Where(u => u.LastLoginDate.HasValue).Any() ?
@@ -320,7 +320,7 @@ public class UserRepository : BaseRepository<User>, IUserRepository
         {
             "Staff" => UserRole.Staff,
             "Administrator" => UserRole.Administrator,
-            "Operator" => UserRole.Operator,
+            "Operator" => UserRole.Receptionist,
             _ => throw new ArgumentException($"Invalid role: {role}")
         };
 

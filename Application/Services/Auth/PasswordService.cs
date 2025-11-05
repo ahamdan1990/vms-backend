@@ -304,22 +304,22 @@ public class PasswordService : IPasswordService
         return validation.IsValid;
     }
 
-    public async Task<bool> IsPasswordCompromisedAsync(string password)
+    public Task<bool> IsPasswordCompromisedAsync(string password)
     {
         if (!_passwordPolicy.CheckCompromisedPasswords)
-            return false;
+            return Task.FromResult(false);
 
         try
         {
             // In a real implementation, you would check against a service like HaveIBeenPwned
             // For now, check against a local list of common passwords
             var commonPasswords = GetCommonPasswords();
-            return commonPasswords.Contains(password, StringComparer.OrdinalIgnoreCase);
+            return Task.FromResult(commonPasswords.Contains(password, StringComparer.OrdinalIgnoreCase));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error checking if password is compromised");
-            return false;
+            return Task.FromResult(false);
         }
     }
 

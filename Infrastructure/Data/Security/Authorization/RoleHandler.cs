@@ -71,7 +71,7 @@ public class RoleHandler : AuthorizationHandler<RoleRequirement>
         var roleHierarchy = new Dictionary<UserRole, int>
         {
             { UserRole.Staff, 1 },
-            { UserRole.Operator, 2 },
+            { UserRole.Receptionist, 2 },
             { UserRole.Administrator, 3 }
         };
 

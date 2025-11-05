@@ -71,7 +71,7 @@ public class VisitPurposesController : BaseController
     /// <param name="createDto">Visit purpose creation data</param>
     /// <returns>Created visit purpose</returns>
     [HttpPost]
-    [Authorize(Policy = Permissions.SystemConfig.Create)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     public async Task<IActionResult> CreateVisitPurpose([FromBody] CreateVisitPurposeDto createDto)
     {
         var command = new CreateVisitPurposeCommand
@@ -124,7 +124,7 @@ public class VisitPurposesController : BaseController
     /// <param name="hardDelete">Whether to perform hard delete (default: false)</param>
     /// <returns>Deletion result</returns>
     [HttpDelete("{id:int}")]
-    [Authorize(Policy = Permissions.SystemConfig.Delete)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     public async Task<IActionResult> DeleteVisitPurpose(int id, [FromQuery] bool hardDelete = false)
     {
         var command = new DeleteVisitPurposeCommand

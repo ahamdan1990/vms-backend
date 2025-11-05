@@ -24,7 +24,6 @@ public interface IGenericRepository<TEntity> where TEntity : BaseEntity
     /// </summary>
     /// <param name="id">Entity ID</param>
     /// <param name="includes">Include expressions</param>
-    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Entity if found, null otherwise</returns>
     Task<TEntity?> GetByIdAsync(int id, params Expression<Func<TEntity, object>>[] includes);
 

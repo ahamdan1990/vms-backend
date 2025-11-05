@@ -440,7 +440,7 @@ public class UserLockoutService : IUserLockoutService
         }
     }
 
-    public async Task<bool> BlockIpAddressAsync(string ipAddress, string reason, TimeSpan duration,
+    public Task<bool> BlockIpAddressAsync(string ipAddress, string reason, TimeSpan duration,
         CancellationToken cancellationToken = default)
     {
         try
@@ -459,12 +459,12 @@ public class UserLockoutService : IUserLockoutService
             _logger.LogWarning("IP address blocked: {IpAddress} for {Duration} due to: {Reason}",
                 ipAddress, duration, reason);
 
-            return true;
+            return Task.FromResult(true);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error blocking IP address: {IpAddress}", ipAddress);
-            return false;
+            return Task.FromResult(false);
         }
     }
 
@@ -498,8 +498,9 @@ public class UserLockoutService : IUserLockoutService
                 MaxFailedAttempts = _dynamicConfig.GetConfigurationAsync<int>("Lockout", "MaxFailedAttempts", 5).Result,
                 LockoutDuration = _dynamicConfig.GetConfigurationAsync<TimeSpan>("Lockout", "LockoutDuration", TimeSpan.FromMinutes(15)).Result,
                 EnableProgressiveLockout = _dynamicConfig.GetConfigurationAsync<bool>("Lockout", "EnableProgressiveLockout", true).Result,
-                LockoutProgression = _dynamicConfig.GetConfigurationAsync<List<TimeSpan>>("Lockout", "LockoutProgression", 
-                    new List<TimeSpan> { TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(15), TimeSpan.FromHours(1), TimeSpan.FromHours(24) }).Result,
+                LockoutProgression = _dynamicConfig.GetConfigurationAsync<List<TimeSpan>>("Lockout", "LockoutProgression",
+                    new List<TimeSpan> { TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(15), TimeSpan.FromHours(1), TimeSpan.FromHours(24) }).Result
+                    ?? new List<TimeSpan> { TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(15), TimeSpan.FromHours(1), TimeSpan.FromHours(24) },
                 FailedAttemptWindow = _dynamicConfig.GetConfigurationAsync<TimeSpan>("Lockout", "FailedAttemptWindow", TimeSpan.FromMinutes(15)).Result,
                 ResetAttemptsOnSuccess = _dynamicConfig.GetConfigurationAsync<bool>("Lockout", "ResetAttemptsOnSuccess", true).Result,
                 EnableIpBlocking = _dynamicConfig.GetConfigurationAsync<bool>("Lockout", "EnableIpBlocking", true).Result,
@@ -508,8 +509,8 @@ public class UserLockoutService : IUserLockoutService
                 NotifyOnLockout = _dynamicConfig.GetConfigurationAsync<bool>("Lockout", "NotifyOnLockout", true).Result,
                 NotifyAdminOnLockout = _dynamicConfig.GetConfigurationAsync<bool>("Lockout", "NotifyAdminOnLockout", true).Result,
                 EnableAnomalyDetection = _dynamicConfig.GetConfigurationAsync<bool>("Lockout", "EnableAnomalyDetection", true).Result,
-                TrustedIpRanges = _dynamicConfig.GetConfigurationAsync<List<string>>("Lockout", "TrustedIpRanges", new List<string>()).Result,
-                BlockedIpRanges = _dynamicConfig.GetConfigurationAsync<List<string>>("Lockout", "BlockedIpRanges", new List<string>()).Result
+                TrustedIpRanges = _dynamicConfig.GetConfigurationAsync<List<string>>("Lockout", "TrustedIpRanges", new List<string>()).Result ?? new List<string>(),
+                BlockedIpRanges = _dynamicConfig.GetConfigurationAsync<List<string>>("Lockout", "BlockedIpRanges", new List<string>()).Result ?? new List<string>()
             };
         }
         catch (Exception ex)
@@ -806,7 +807,8 @@ public class UserLockoutService : IUserLockoutService
         if (enableProgressive)
         {
             var progression = await _dynamicConfig.GetConfigurationAsync<List<TimeSpan>>("Lockout", "LockoutProgression",
-                new List<TimeSpan> { TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(15), TimeSpan.FromHours(1), TimeSpan.FromHours(24) }, cancellationToken);
+                new List<TimeSpan> { TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(15), TimeSpan.FromHours(1), TimeSpan.FromHours(24) }, cancellationToken)
+                ?? new List<TimeSpan> { TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(15), TimeSpan.FromHours(1), TimeSpan.FromHours(24) };
 
             var maxAttempts = await _dynamicConfig.GetConfigurationAsync<int>("Lockout", "MaxFailedAttempts", 5, cancellationToken);
             var index = Math.Min(failedAttempts - maxAttempts, progression.Count - 1);
@@ -850,32 +852,32 @@ public class UserLockoutService : IUserLockoutService
         }
     }
 
-    private async Task<int> GetRecentFailedAttemptsForIpAsync(string ipAddress, TimeSpan timeWindow)
+    private Task<int> GetRecentFailedAttemptsForIpAsync(string ipAddress, TimeSpan timeWindow)
     {
         try
         {
             // For production implementation, this could query a dedicated audit log table
             // For now, we'll use a simplified cache-based approach
             var cacheKey = $"ip_failed_attempts_{ipAddress}";
-            
-            if (_cache.TryGetValue(cacheKey, out List<DateTime> attemptTimes))
+
+            if (_cache.TryGetValue(cacheKey, out List<DateTime>? attemptTimes) && attemptTimes != null)
             {
                 // Remove attempts outside the time window
                 var cutoffTime = DateTime.UtcNow.Subtract(timeWindow);
                 attemptTimes = attemptTimes.Where(t => t > cutoffTime).ToList();
-                
+
                 // Update cache with cleaned list
                 _cache.Set(cacheKey, attemptTimes, timeWindow);
-                
-                return attemptTimes.Count;
+
+                return Task.FromResult(attemptTimes.Count);
             }
 
-            return 0;
+            return Task.FromResult(0);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving recent failed attempts for IP {IpAddress}", ipAddress);
-            return 0;
+            return Task.FromResult(0);
         }
     }
 
@@ -891,7 +893,7 @@ public class UserLockoutService : IUserLockoutService
             var timeWindow = TimeSpan.FromMinutes(15);
             
             List<DateTime> attemptTimes;
-            if (_cache.TryGetValue(cacheKey, out List<DateTime> existingTimes))
+            if (_cache.TryGetValue(cacheKey, out List<DateTime>? existingTimes))
             {
                 attemptTimes = existingTimes ?? new List<DateTime>();
             }

@@ -267,11 +267,6 @@ public class Invitation : SoftDeleteEntity
     /// Approves the invitation
     /// </summary>
     /// <param name="approvedBy">User approving the invitation</param>
-    /// <param name="comments">Approval comments</param>
-    /// <summary>
-    /// Approves the invitation
-    /// </summary>
-    /// <param name="approvedBy">User approving the invitation</param>
     /// <param name="comments">Optional approval comments</param>
     public void Approve(int approvedBy, string? comments = null)
     {

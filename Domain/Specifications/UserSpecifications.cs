@@ -72,7 +72,7 @@ public class LockedOutUsersSpecification : BaseSpecification<User>
     public LockedOutUsersSpecification()
     {
         Criteria = u => u.IsLockedOut && u.LockoutEnd.HasValue && u.LockoutEnd.Value > DateTime.UtcNow && !u.IsDeleted;
-        ApplyOrderByDescending(u => u.LockoutEnd);
+        ApplyOrderByDescending(u => (object?)u.LockoutEnd!);
     }
 }
 
@@ -89,7 +89,7 @@ public class UsersWithExpiredPasswordsSpecification : BaseSpecification<User>
                        u.IsActive &&
                        !u.IsDeleted &&
                        u.Status == UserStatus.Active;
-        ApplyOrderBy(u => u.PasswordChangedDate);
+        ApplyOrderBy(u => (object?)u.PasswordChangedDate!);
     }
 }
 
@@ -116,7 +116,7 @@ public class InactiveUsersForCleanupSpecification : BaseSpecification<User>
         Criteria = u => (!u.LastLoginDate.HasValue || u.LastLoginDate.Value < cutoffDate) &&
                        u.Status == UserStatus.Inactive &&
                        !u.IsDeleted;
-        ApplyOrderBy(u => u.LastLoginDate);
+        ApplyOrderBy(u => (object?)u.LastLoginDate!);
     }
 }
 
@@ -227,7 +227,7 @@ public class UsersWithRecentLoginSpecification : BaseSpecification<User>
                        u.LastLoginDate.Value >= cutoffDate &&
                        u.IsActive &&
                        !u.IsDeleted;
-        ApplyOrderByDescending(u => u.LastLoginDate);
+        ApplyOrderByDescending(u => (object?)u.LastLoginDate!);
     }
 }
 
@@ -295,9 +295,9 @@ public class PaginatedUsersSpecification : BaseSpecification<User>
                     break;
                 case "lastlogin":
                     if (sortDescending)
-                        ApplyOrderByDescending(u => u.LastLoginDate);
+                        ApplyOrderByDescending(u => (object?)u.LastLoginDate!);
                     else
-                        ApplyOrderBy(u => u.LastLoginDate);
+                        ApplyOrderBy(u => (object?)u.LastLoginDate!);
                     break;
                 default:
                     ApplyOrderBy(u => u.LastName);
@@ -326,7 +326,7 @@ public class UsersRequiringSecurityAttentionSpecification : BaseSpecification<Us
                         u.Status == UserStatus.Suspended ||
                         u.MustChangePassword) &&
                        !u.IsDeleted;
-        ApplyOrderByDescending(u => u.ModifiedOn);
+        ApplyOrderByDescending(u => (object?)u.ModifiedOn!);
     }
 }
 

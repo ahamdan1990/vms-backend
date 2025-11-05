@@ -46,9 +46,9 @@ public static class UserSeeder
         // Default Operator User
         var operatorUser = CreateUser(
             firstName: "Jane",
-            lastName: "Operator",
+            lastName: "Receptionist",
             email: "operator@vms.com",
-            role: UserRole.Operator,
+            role: UserRole.Receptionist,
             department: "Security",
             jobTitle: "Security Officer",
             employeeId: "SEC001"

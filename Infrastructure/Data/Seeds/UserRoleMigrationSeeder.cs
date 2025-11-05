@@ -43,7 +43,7 @@ public static class UserRoleMigrationSeeder
             var newRoleId = user.Role switch
             {
                 UserRole.Staff => roles["Staff"],
-                UserRole.Operator => roles["Receptionist"], // Operator becomes Receptionist
+                UserRole.Receptionist => roles["Receptionist"], // Operator becomes Receptionist
                 UserRole.Administrator => roles["Administrator"],
                 _ => roles["Staff"] // Default to Staff if unknown
             };
@@ -56,7 +56,7 @@ public static class UserRoleMigrationSeeder
 
         Console.WriteLine($"Successfully migrated {migratedCount} users to new role system.");
         Console.WriteLine($"  - Staff: {usersToMigrate.Count(u => u.Role == UserRole.Staff)}");
-        Console.WriteLine($"  - Receptionist (formerly Operator): {usersToMigrate.Count(u => u.Role == UserRole.Operator)}");
+        Console.WriteLine($"  - Receptionist (formerly Operator): {usersToMigrate.Count(u => u.Role == UserRole.Receptionist)}");
         Console.WriteLine($"  - Administrator: {usersToMigrate.Count(u => u.Role == UserRole.Administrator)}");
     }
 

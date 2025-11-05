@@ -171,7 +171,7 @@ public class FileUploadService : IFileUploadService
         return $"{baseUrl.TrimEnd('/')}/{filePath.Replace('\\', '/')}";
     }
 
-    private async Task RemoveExistingPhoto(string relativePath)
+    private Task RemoveExistingPhoto(string relativePath)
     {
         try
         {
@@ -187,6 +187,7 @@ public class FileUploadService : IFileUploadService
             _logger.LogWarning(ex, "Failed to delete existing photo: {FilePath}", relativePath);
             // Don't throw - continue with upload even if old file can't be deleted
         }
+        return Task.CompletedTask;
     }
 
     public async Task<string> UploadVisitorDocumentAsync(int visitorId, IFormFile file, string documentType)

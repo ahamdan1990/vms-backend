@@ -52,7 +52,7 @@ public class GetAvailableRolesQueryHandler : IRequestHandler<GetAvailableRolesQu
         {
             UserRole.Administrator => "Full system access with all administrative privileges",
             UserRole.Staff => "Standard user with invitation management capabilities",
-            UserRole.Operator => "Front desk operations with check-in/out and walk-in management",
+            UserRole.Receptionist => "Front desk operations with check-in/out and walk-in management",
             _ => role.ToString()
         };
     }
@@ -63,7 +63,7 @@ public class GetAvailableRolesQueryHandler : IRequestHandler<GetAvailableRolesQu
         {
             UserRole.Administrator => 1,
             UserRole.Staff => 2,
-            UserRole.Operator => 3,
+            UserRole.Receptionist => 3,
             _ => 99
         };
     }

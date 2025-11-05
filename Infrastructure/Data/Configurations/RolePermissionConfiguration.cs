@@ -27,7 +27,7 @@ public class RolePermissionConfiguration : IEntityTypeConfiguration<RolePermissi
             .HasDefaultValueSql("GETUTCDATE()");
 
         builder.Property(rp => rp.GrantedBy)
-            .IsRequired();
+            .IsRequired(false); // Optional - system seeded permissions have no user
 
         // Indexes
         builder.HasIndex(rp => new { rp.RoleId, rp.PermissionId })
@@ -51,6 +51,7 @@ public class RolePermissionConfiguration : IEntityTypeConfiguration<RolePermissi
         builder.HasOne(rp => rp.GrantedByUser)
             .WithMany()
             .HasForeignKey(rp => rp.GrantedBy)
-            .OnDelete(DeleteBehavior.NoAction);
+            .OnDelete(DeleteBehavior.NoAction)
+            .IsRequired(false); // Make optional to avoid query filter issues
     }
 }

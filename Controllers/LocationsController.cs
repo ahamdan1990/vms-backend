@@ -147,7 +147,7 @@ public class LocationsController : BaseController
     /// <param name="hardDelete">Whether to perform hard delete (default: false)</param>
     /// <returns>Deletion result</returns>
     [HttpDelete("{id:int}")]
-    [Authorize(Policy = Permissions.SystemConfig.Delete)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     public async Task<IActionResult> DeleteLocation(int id, [FromQuery] bool hardDelete = false)
     {
         var command = new DeleteLocationCommand

@@ -183,7 +183,7 @@ public static class PermissionSeeder
         return new Dictionary<string, List<string>>
         {
             [UserRoles.Staff] = UserRoles.GetDefaultPermissions(UserRoles.Staff),
-            [UserRoles.Operator] = UserRoles.GetDefaultPermissions(UserRoles.Operator),
+            [UserRoles.Receptionist] = UserRoles.GetDefaultPermissions(UserRoles.Receptionist),
             [UserRoles.Administrator] = UserRoles.GetDefaultPermissions(UserRoles.Administrator)
         };
     }
@@ -224,7 +224,7 @@ public static class PermissionSeeder
             [Permissions.Invitation.UpdateAll] = new() { Permissions.Invitation.ReadAll },
             [Permissions.Invitation.UpdateOwn] = new() { Permissions.Invitation.ReadOwn },
             [Permissions.Visitor.Update] = new() { Permissions.Visitor.ReadAll },
-            [Permissions.Watchlist.Update] = new() { Permissions.Watchlist.ReadAll },
+            [Permissions.Watchlist.ManageBlacklist] = new() { Permissions.Watchlist.View },
             [Permissions.CustomField.Update] = new() { Permissions.CustomField.ReadAll },
             [Permissions.SystemConfig.Update] = new() { Permissions.SystemConfig.Read }
         };
@@ -242,12 +242,12 @@ public static class PermissionSeeder
             Permissions.User.DeleteAll,
             Permissions.SystemConfig.Update,
             Permissions.FRSystem.Configure,
-            Permissions.Watchlist.Delete,
+            Permissions.Watchlist.ManageBlacklist,
             Permissions.BulkImport.Process,
             Permissions.Audit.ReadAll,
-            Permissions.Integration.Configure,
+            // Permissions.Integration.Configure,
             Permissions.CustomField.Delete,
-            Permissions.Manual.Override
+            // Permissions.Manual.Override
         };
     }
 
@@ -359,10 +359,10 @@ public static class PermissionSeeder
                 Permissions.CheckIn.Process,
                 Permissions.CheckIn.ProcessOut,
                 Permissions.WalkIn.Register,
-                Permissions.Alert.Receive,
-                Permissions.Alert.Acknowledge,
+                Permissions.Notification.Receive,
+                Permissions.Notification.Acknowledge,
                 Permissions.Emergency.Export,
-                Permissions.Manual.Override,
+                // Permissions.Manual.Override,
                 Permissions.Badge.Print
             }
         };

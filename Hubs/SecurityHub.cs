@@ -30,9 +30,9 @@ public class SecurityHub : BaseHub
         }
 
         // Check security permissions
-        if (!HasPermission(Permissions.Alert.ViewFRAlerts) && 
-            !HasPermission(Permissions.Alert.ViewBlacklistAlerts) &&
-            !HasPermission(Permissions.Alert.ViewSystemAlerts))
+        if (!HasPermission(Permissions.Notification.Receive) && 
+            !HasPermission(Permissions.Notification.Receive) &&
+            !HasPermission(Permissions.Notification.Receive))
         {
             await Clients.Caller.SendAsync("Error", "Insufficient security permissions");
             return;
@@ -43,13 +43,13 @@ public class SecurityHub : BaseHub
             // Join security groups based on permissions
             await Groups.AddToGroupAsync(Context.ConnectionId, "Security");
             
-            if (HasPermission(Permissions.Alert.ViewFRAlerts))
+            if (HasPermission(Permissions.Notification.Receive))
                 await Groups.AddToGroupAsync(Context.ConnectionId, "SecurityFR");
                 
-            if (HasPermission(Permissions.Alert.ViewBlacklistAlerts))
+            if (HasPermission(Permissions.Notification.Receive))
                 await Groups.AddToGroupAsync(Context.ConnectionId, "SecurityBlacklist");
                 
-            if (HasPermission(Permissions.Alert.ViewVIPAlerts))
+            if (HasPermission(Permissions.Notification.Receive))
                 await Groups.AddToGroupAsync(Context.ConnectionId, "SecurityVIP");
                 
             if (HasPermission(Permissions.Emergency.ViewRoster))
@@ -115,7 +115,7 @@ public class SecurityHub : BaseHub
     public async Task GetSecurityStatus()
     {
         var userId = GetCurrentUserId();
-        if (!userId.HasValue || !HasPermission(Permissions.Alert.ViewSystemAlerts))
+        if (!userId.HasValue || !HasPermission(Permissions.Notification.Receive))
         {
             return;
         }

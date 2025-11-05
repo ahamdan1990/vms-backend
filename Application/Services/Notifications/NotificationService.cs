@@ -89,7 +89,7 @@ public class NotificationService : INotificationService
                         .SendAsync("RoleNotification", notificationPayload, cancellationToken);
                     break;
 
-                case UserRoles.Operator:
+                case UserRoles.Receptionist:
                     await _operatorHubContext.Clients.Group("Operators")
                         .SendAsync("RoleNotification", notificationPayload, cancellationToken);
                     break;
@@ -116,7 +116,7 @@ public class NotificationService : INotificationService
         try
         {
             var alert = NotificationAlert.CreateFRAlert(title, message, type, priority, 
-                targetRole: UserRoles.Operator, targetLocationId: locationId, 
+                targetRole: UserRoles.Receptionist, targetLocationId: locationId, 
                 payloadData: JsonSerializer.Serialize(data));
             
             await _unitOfWork.Repository<NotificationAlert>().AddAsync(alert, cancellationToken);
@@ -194,7 +194,7 @@ public class NotificationService : INotificationService
             var message = $"VIP visitor {visitorName} has arrived at {location}";
 
             var alert = NotificationAlert.CreateFRAlert(title, message, NotificationAlertType.VipArrival, 
-                AlertPriority.High, targetRole: UserRoles.Operator);
+                AlertPriority.High, targetRole: UserRoles.Receptionist);
 
             await _unitOfWork.Repository<NotificationAlert>().AddAsync(alert, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -412,7 +412,7 @@ public class NotificationService : INotificationService
             var message = $"Location '{locationName}' is at {currentOccupancy}/{maxCapacity} capacity ({(currentOccupancy * 100 / maxCapacity)}%)";
 
             var alert = NotificationAlert.CreateFRAlert(title, message, NotificationAlertType.CapacityAlert, 
-                AlertPriority.Medium, targetRole: UserRoles.Operator);
+                AlertPriority.Medium, targetRole: UserRoles.Receptionist);
 
             await _unitOfWork.Repository<NotificationAlert>().AddAsync(alert, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);

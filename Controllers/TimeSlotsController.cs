@@ -83,7 +83,7 @@ public class TimeSlotsController : BaseController
     /// <param name="createDto">Time slot creation data</param>
     /// <returns>Created time slot</returns>
     [HttpPost]
-    [Authorize(Policy = Permissions.SystemConfig.ManageCapacity)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     public async Task<IActionResult> CreateTimeSlot([FromBody] CreateTimeSlotDto createDto)
     {
         var command = new CreateTimeSlotCommand
@@ -110,7 +110,7 @@ public class TimeSlotsController : BaseController
     /// <param name="updateDto">Time slot update data</param>
     /// <returns>Updated time slot</returns>
     [HttpPut("{id:int}")]
-    [Authorize(Policy = Permissions.SystemConfig.ManageCapacity)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     public async Task<IActionResult> UpdateTimeSlot(int id, [FromBody] UpdateTimeSlotDto updateDto)
     {
         var command = new UpdateTimeSlotCommand
@@ -139,7 +139,7 @@ public class TimeSlotsController : BaseController
     /// <param name="hardDelete">Whether to perform hard delete</param>
     /// <returns>Success result</returns>
     [HttpDelete("{id:int}")]
-    [Authorize(Policy = Permissions.SystemConfig.ManageCapacity)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     public async Task<IActionResult> DeleteTimeSlot(int id, [FromQuery] bool hardDelete = false)
     {
         var command = new DeleteTimeSlotCommand

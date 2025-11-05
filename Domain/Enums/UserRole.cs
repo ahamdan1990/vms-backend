@@ -8,22 +8,22 @@ namespace VisitorManagementSystem.Api.Domain.Enums;
 public enum UserRole
 {
     /// <summary>
-    /// Staff member who can create and manage their own invitations
+    /// Staff member (Host) who can create and manage their own invitations
     /// </summary>
     [Description("Staff")]
     Staff = 1,
 
     /// <summary>
+    /// Receptionist who handles check-in/check-out operations and visitor flow
+    /// </summary>
+    [Description("Receptionist")]
+    Receptionist = 2,
+
+    /// <summary>
     /// Administrator with full system access
     /// </summary>
     [Description("Administrator")]
-    Administrator = 2,
-
-    /// <summary>
-    /// Operator who manages check-ins and walk-ins
-    /// </summary>
-    [Description("Operator")]
-    Operator = 3
+    Administrator = 3
 }
 
 /// <summary>
@@ -54,7 +54,7 @@ public static class UserRoleExtensions
         return role switch
         {
             UserRole.Staff => 1,
-            UserRole.Operator => 2,
+            UserRole.Receptionist => 2,
             UserRole.Administrator => 3,
             _ => 0
         };
@@ -97,7 +97,7 @@ public static class UserRoleExtensions
     /// <returns>True if can perform check-ins</returns>
     public static bool CanPerformCheckIns(this UserRole role)
     {
-        return role == UserRole.Operator || role == UserRole.Administrator;
+        return role == UserRole.Receptionist || role == UserRole.Administrator;
     }
 
     /// <summary>
@@ -211,143 +211,74 @@ public static class UserRoleExtensions
                 "Notification.Read.Own",
                 "Report.Generate.Own"
             },
-            UserRole.Operator => new List<string>
+            UserRole.Receptionist => new List<string>
             {
-                "Visitor.Read.Today",
-                "Visitor.Read",
-                "Visitor.ViewStatistics",
+                // Check-in/out operations
                 "CheckIn.Process",
                 "CheckOut.Process",
+                "CheckIn.QRScan",
+                "CheckIn.ManualVerification",
+                "CheckIn.Override",
+
+                // Walk-in registration
                 "WalkIn.Register",
+                "WalkIn.QuickRegister",
                 "WalkIn.CheckIn",
+
+                // Badge printing
                 "Badge.Print",
-                "Host.Notify",
-                "Emergency.Export",
-                "Alert.Receive",
-                "Alert.Acknowledge",
-                "Manual.Override",
-                "Dashboard.View.Operations",
-                "Dashboard.ViewMetrics",
-                "QRCode.Scan",
-                "Manual.Verification",
-                "Emergency.Roster.Generate",
-                "Notification.Send.Host",
-                "Override.Log.Create",
-                "WalkIn.FRSync",
-                "Invitation.Read.Own",
-                "Invitation.Read",
+                "Badge.ReprintLost",
+
+                // View invitations (read-only, including pending)
+                "Invitation.Read.All",
+                "Invitation.View.Pending",
                 "Invitation.ViewHistory",
-                "SystemConfig.Read",
+
+                // View visitors
+                "Visitor.Read.All",
+                "Visitor.Read.Today",
+                "Visitor.ViewHistory",
+
+                // QR Code
+                "QRCode.Scan",
+                "QRCode.Validate",
+
+                // Notifications
+                "Notification.Read.Own",
+                "Notification.Read.All",
+                "Notification.Receive",
+                "Notification.Acknowledge",
+
+                // Dashboard
                 "Dashboard.View.Basic",
-                "Audit.Read.All"
+                "Dashboard.View.Operations",
+
+                // Emergency
+                "Emergency.Export",
+                "Emergency.ViewRoster",
+
+                // Profile
+                "Profile.View.Own",
+                "Profile.Update.Own"
             },
             UserRole.Administrator => new List<string>
             {
-                // All Staff permissions
-                "Invitation.Create.Own",
-                "Invitation.Read.Own",
-                "Invitation.Update.Own",
-                "Invitation.Cancel.Own",
-                "Template.Download.Single",
-                "Calendar.View.Own",
-                "Dashboard.View.Basic",
-                "Profile.Update.Own",
-                "Notification.Read.Own",
-                "Report.Generate.Own",
-                
-                // All Operator permissions
-                "Visitor.Read.Today",
-                "Visitor.Read",
-                "Visitor.ViewStatistics",
-                "CheckIn.Process",
-                "CheckOut.Process",
-                "WalkIn.Register",
-                "WalkIn.CheckIn",
-                "Badge.Print",
-                "Host.Notify",
-                "Emergency.Export",
-                "Alert.Receive",
-                "Alert.Acknowledge",
-                "Manual.Override",
-                "Dashboard.View.Operations",
-                "Dashboard.ViewMetrics",
-                "QRCode.Scan",
-                "Manual.Verification",
-                "Emergency.Roster.Generate",
-                "Notification.Send.Host",
-                "Override.Log.Create",
-                "WalkIn.FRSync",
-                "Invitation.Read.Own",
-                "Invitation.Read",
-                "Invitation.ViewHistory",
-                
-                // Additional Administrator permissions
-                "Invitation.Create.All",
-                "Invitation.Read.All",
-                "Invitation.Update.All",
-                "Invitation.Approve.All",
-                "Invitation.Deny.All",
-                "Invitation.Cancel.All",
-                "BulkImport.Create",
-                "BulkImport.Process",
-                "BulkImport.Validate",
-                "BulkImport.Cancel",
+                // NOTE: Administrator gets ALL permissions dynamically assigned via RolePermissionSeeder
+                // This hardcoded list is deprecated and should not be used
+                // Keeping minimal set for backwards compatibility only
+                "User.ReadAll",
                 "User.Create",
-                "User.Read.All",
-                "User.Update.All",
-                "User.Delete.All",
-                "User.Activate",
-                "User.Deactivate",
-                "CustomField.Create",
-                "CustomField.Read.All",
-                "CustomField.Update.All",
-                "CustomField.Delete.All",
-                "Watchlist.Create",
-                "Watchlist.Read.All",
-                "Watchlist.Update.All",
-                "Watchlist.Delete.All",
-                "Watchlist.Assign",
-                "FRSystem.Configure",
-                "FRSystem.Sync",
-                "FRSystem.Monitor",
+                "User.Update",
+                "User.Delete",
+                "User.ManageRoles",
+                "Invitation.Approve",
+                "Visitor.Blacklist",
+                "Visitor.MarkAsVip",
+                "Watchlist.ManageBlacklist",
+                "Watchlist.ManageVIP",
                 "SystemConfig.Read",
                 "SystemConfig.Update",
-                
-                // Configuration Management permissions
-                "Configuration.Read",
-                "Configuration.ReadAll",
-                "Configuration.Update",
-                "Configuration.UpdateAll",
-                "Configuration.Create",
-                "Configuration.Delete",
-                "Configuration.ViewHistory",
-                "Configuration.ViewAudit",
-                "Configuration.ManageEncrypted",
-                "Configuration.ManageSecurity",
-                "Configuration.ManageJWT",
-                "Configuration.ManagePassword",
-                "Configuration.ManageLockout",
-                "Configuration.ManageRateLimit",
-                "Configuration.ManageLogging",
-                "Configuration.Export",
-                "Configuration.Import",
-                "Configuration.InvalidateCache",
-                "Configuration.ViewSensitive",
-                "Configuration.ResetToDefaults",
-                
-                "Report.Generate.All",
-                "Report.Schedule",
-                "Report.Export",
-                "Audit.Read.All",
-                "Audit.Export",
-                "Template.Create",
-                "Template.Update",
-                "Template.Delete",
-                "Integration.Configure",
-                "Sync.Monitor",
-                "Sync.Reconcile",
-                "Offline.Monitor",
-                "Offline.Process",
+                "Audit.ReadAll",
                 "Dashboard.View.Admin"
             },
             _ => new List<string>()
@@ -364,7 +295,7 @@ public static class UserRoleExtensions
         return role switch
         {
             UserRole.Staff => 1,
-            UserRole.Operator => 2,
+            UserRole.Receptionist => 2,
             UserRole.Administrator => 3,
             _ => 0
         };

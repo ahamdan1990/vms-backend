@@ -31,7 +31,7 @@ public class ConfigurationController : ControllerBase
     /// Gets all configurations grouped by category
     /// </summary>
     [HttpGet]
-    [Authorize(Policy = Permissions.Configuration.ReadAll)]
+    [Authorize(Policy = Permissions.SystemConfig.Read)]
     public async Task<IActionResult> GetAllConfigurations(CancellationToken cancellationToken)
     {
         try
@@ -50,7 +50,7 @@ public class ConfigurationController : ControllerBase
     /// Gets all configurations for a specific category
     /// </summary>
     [HttpGet("{category}")]
-    [Authorize(Policy = Permissions.Configuration.Read)]
+    [Authorize(Policy = Permissions.SystemConfig.Read)]
     public async Task<IActionResult> GetCategoryConfiguration(string category, CancellationToken cancellationToken)
     {
         try
@@ -69,7 +69,7 @@ public class ConfigurationController : ControllerBase
     /// Gets a specific configuration value
     /// </summary>
     [HttpGet("{category}/{key}")]
-    [Authorize(Policy = Permissions.Configuration.Read)]
+    [Authorize(Policy = Permissions.SystemConfig.Read)]
     public async Task<IActionResult> GetConfiguration(string category, string key, CancellationToken cancellationToken)
     {
         try
@@ -110,7 +110,7 @@ public class ConfigurationController : ControllerBase
     /// Updates a configuration value
     /// </summary>
     [HttpPut("{category}/{key}")]
-    [Authorize(Policy = Permissions.Configuration.Update)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     public async Task<IActionResult> UpdateConfiguration(string category, string key, [FromBody] UpdateConfigurationRequest request, CancellationToken cancellationToken)
     {
         try
@@ -166,7 +166,7 @@ public class ConfigurationController : ControllerBase
     /// Creates a new configuration
     /// </summary>
     [HttpPost]
-    [Authorize(Policy = Permissions.Configuration.Create)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     public async Task<IActionResult> CreateConfiguration([FromBody] CreateConfigurationRequest request, CancellationToken cancellationToken)
     {
         try
@@ -217,7 +217,7 @@ public class ConfigurationController : ControllerBase
     /// Deletes a configuration
     /// </summary>
     [HttpDelete("{category}/{key}")]
-    [Authorize(Policy = Permissions.Configuration.Delete)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     public async Task<IActionResult> DeleteConfiguration(string category, string key, [FromBody] DeleteConfigurationRequest? request, CancellationToken cancellationToken)
     {
         try
@@ -250,7 +250,7 @@ public class ConfigurationController : ControllerBase
     /// Gets configuration history/audit trail
     /// </summary>
     [HttpGet("{category}/{key}/history")]
-    [Authorize(Policy = Permissions.Configuration.ViewHistory)]
+    [Authorize(Policy = Permissions.SystemConfig.Read)]
     public async Task<IActionResult> GetConfigurationHistory(string category, string key, CancellationToken cancellationToken, [FromQuery] int pageSize = 50)
     {
         try
@@ -269,7 +269,7 @@ public class ConfigurationController : ControllerBase
     /// Searches configurations
     /// </summary>
     [HttpGet("search")]
-    [Authorize(Policy = Permissions.Configuration.Read)]
+    [Authorize(Policy = Permissions.SystemConfig.Read)]
     public async Task<IActionResult> SearchConfigurations([FromQuery] string searchTerm, [FromQuery] string? category = null, CancellationToken cancellationToken = default)
     {
         try
@@ -293,7 +293,7 @@ public class ConfigurationController : ControllerBase
     /// Validates a configuration value without saving
     /// </summary>
     [HttpPost("{category}/{key}/validate")]
-    [Authorize(Policy = Permissions.Configuration.Read)]
+    [Authorize(Policy = Permissions.SystemConfig.Read)]
     public async Task<IActionResult> ValidateConfiguration(string category, string key, [FromBody] ValidateConfigurationRequest request, CancellationToken cancellationToken)
     {
         try
@@ -311,7 +311,7 @@ public class ConfigurationController : ControllerBase
     /// Invalidates configuration cache
     /// </summary>
     [HttpPost("cache/invalidate")]
-    [Authorize(Policy = Permissions.Configuration.InvalidateCache)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     public async Task<IActionResult> InvalidateCache([FromQuery] string? category = null)
     {
         try

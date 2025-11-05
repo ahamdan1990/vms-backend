@@ -73,11 +73,11 @@ public class EmailService : IEmailService
             config.TimeoutSeconds = GetConfigValue<int>(emailConfigs, "TimeoutSeconds", 30);
             config.MaxAttachmentSizeMB = GetConfigValue<int>(emailConfigs, "MaxAttachmentSizeMB", 25);
             config.EnableSending = GetConfigValue<bool>(emailConfigs, "EnableSending", true);
-            config.TestEmail = GetConfigValue<string>(emailConfigs, "TestEmail", null);
+            config.TestEmail = GetConfigValue<string?>(emailConfigs, "TestEmail", null);
             config.TemplateDirectory = GetConfigValue<string>(emailConfigs, "TemplateDirectory", "EmailTemplates");
-            config.CompanyLogoUrl = GetConfigValue<string>(emailConfigs, "CompanyLogoUrl", null);
-            config.CompanyWebsiteUrl = GetConfigValue<string>(emailConfigs, "CompanyWebsiteUrl", null);
-            config.SupportEmail = GetConfigValue<string>(emailConfigs, "SupportEmail", null);
+            config.CompanyLogoUrl = GetConfigValue<string?>(emailConfigs, "CompanyLogoUrl", null);
+            config.CompanyWebsiteUrl = GetConfigValue<string?>(emailConfigs, "CompanyWebsiteUrl", null);
+            config.SupportEmail = GetConfigValue<string?>(emailConfigs, "SupportEmail", null);
 
             return config;
         }

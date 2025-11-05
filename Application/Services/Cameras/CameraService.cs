@@ -183,7 +183,7 @@ public class CameraService : ICameraService
         }
     }
 
-    public async Task<bool> StopStreamAsync(int cameraId, bool graceful = true, CancellationToken cancellationToken = default)
+    public Task<bool> StopStreamAsync(int cameraId, bool graceful = true, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -192,24 +192,22 @@ public class CameraService : ICameraService
                 if (_activeStreams.TryGetValue(cameraId, out var streamInfo))
                 {
                     _activeStreams.Remove(cameraId);
-                    
+
                     _logger.LogInformation("Stopped stream for camera {CameraId}. Duration: {Duration:F1} seconds",
                         cameraId, streamInfo.DurationSeconds);
-                    
-                    return true;
+
+                    return Task.FromResult(true);
                 }
             }
 
             _logger.LogDebug("No active stream found for camera {CameraId}", cameraId);
-            return true; // Not an error - stream wasn't active
+            return Task.FromResult(true); // Not an error - stream wasn't active
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error stopping stream for camera {CameraId}", cameraId);
-            return false;
+            return Task.FromResult(false);
         }
-
-        await Task.CompletedTask; // Satisfy async signature
     }
 
     public async Task<bool> IsStreamingAsync(int cameraId, CancellationToken cancellationToken = default)

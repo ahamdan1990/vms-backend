@@ -51,7 +51,7 @@ public class CamerasController : BaseController
     /// <param name="sortDirection">Sort direction (asc/desc)</param>
     /// <returns>Paginated list of cameras</returns>
     [HttpGet]
-    [Authorize(Policy = Permissions.Camera.Read)]
+    [Authorize(Policy = Permissions.SystemConfig.Read)]
     [ProducesResponseType(typeof(ApiResponseDto<PagedResultDto<CameraListDto>>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 403)]
     public async Task<IActionResult> GetCameras(
@@ -106,7 +106,7 @@ public class CamerasController : BaseController
     /// <param name="includeSensitiveData">Include sensitive data (credentials)</param>
     /// <returns>Camera details</returns>
     [HttpGet("{id:int}")]
-    [Authorize(Policy = Permissions.Camera.Read)]
+    [Authorize(Policy = Permissions.SystemConfig.Read)]
     [ProducesResponseType(typeof(ApiResponseDto<CameraDto>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
     public async Task<IActionResult> GetCamera(int id, 
@@ -116,7 +116,7 @@ public class CamerasController : BaseController
         try
         {
             // Check sensitive data permission
-            if (includeSensitiveData && !HasPermission(Permissions.Camera.ViewSensitiveData))
+            if (includeSensitiveData && !HasPermission(Permissions.SystemConfig.Read))
             {
                 return ForbiddenResponse("Insufficient permissions to view sensitive camera data");
             }
@@ -150,7 +150,7 @@ public class CamerasController : BaseController
     /// <param name="createDto">Camera creation data</param>
     /// <returns>Created camera</returns>
     [HttpPost]
-    [Authorize(Policy = Permissions.Camera.Create)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     [ProducesResponseType(typeof(ApiResponseDto<CameraDto>), 201)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
     public async Task<IActionResult> CreateCamera([FromBody] CreateCameraDto createDto)
@@ -206,7 +206,7 @@ public class CamerasController : BaseController
     /// <param name="testConnection">Test connection after update</param>
     /// <returns>Updated camera</returns>
     [HttpPut("{id:int}")]
-    [Authorize(Policy = Permissions.Camera.Update)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     [ProducesResponseType(typeof(ApiResponseDto<CameraDto>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
@@ -268,7 +268,7 @@ public class CamerasController : BaseController
     /// <param name="deletionReason">Reason for deletion</param>
     /// <returns>Success result</returns>
     [HttpDelete("{id:int}")]
-    [Authorize(Policy = Permissions.Camera.Delete)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
@@ -304,7 +304,7 @@ public class CamerasController : BaseController
     /// <param name="searchDto">Search parameters</param>
     /// <returns>Paginated search results</returns>
     [HttpPost("search")]
-    [Authorize(Policy = Permissions.Camera.Read)]
+    [Authorize(Policy = Permissions.SystemConfig.Read)]
     [ProducesResponseType(typeof(ApiResponseDto<PagedResultDto<CameraListDto>>), 200)]
     public async Task<IActionResult> SearchCameras([FromBody] CameraSearchDto searchDto)
     {
@@ -332,7 +332,7 @@ public class CamerasController : BaseController
     /// <param name="updateStatus">Whether to update camera status in database</param>
     /// <returns>Connection test result</returns>
     [HttpPost("{id:int}/test-connection")]
-    [Authorize(Policy = Permissions.Camera.TestConnection)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
     public async Task<IActionResult> TestConnection(int id, [FromQuery] bool updateStatus = true)
@@ -369,15 +369,15 @@ public class CamerasController : BaseController
     /// <param name="testDto">Connection test parameters</param>
     /// <returns>Connection test result</returns>
     [HttpPost("test-connection")]
-    [Authorize(Policy = Permissions.Camera.TestConnection)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
-    public async Task<IActionResult> TestConnectionParameters([FromBody] CameraConnectionTestDto testDto)
+    public Task<IActionResult> TestConnectionParameters([FromBody] CameraConnectionTestDto testDto)
     {
         try
         {
             // TODO: Create TestCameraConnectionParametersCommand and Handler
             // For now, return a placeholder response following MediatR pattern
-            return SuccessResponse(new
+            return Task.FromResult<IActionResult>(SuccessResponse(new
             {
                 Success = true,
                 Status = "Connected",
@@ -385,12 +385,12 @@ public class CamerasController : BaseController
                 ResponseTimeMs = 150,
                 TestedAt = DateTime.UtcNow,
                 Details = "Connection test functionality will be implemented with dedicated worker services"
-            });
+            }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error testing camera connection parameters");
-            return ServerErrorResponse("An error occurred while testing camera connection");
+            return Task.FromResult<IActionResult>(ServerErrorResponse("An error occurred while testing camera connection"));
         }
     }
 
@@ -400,7 +400,7 @@ public class CamerasController : BaseController
     /// <param name="id">Camera ID</param>
     /// <returns>Stream start result</returns>
     [HttpPost("{id:int}/start-stream")]
-    [Authorize(Policy = Permissions.Camera.StartStream)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
     public async Task<IActionResult> StartStream(int id)
@@ -437,7 +437,7 @@ public class CamerasController : BaseController
     /// <param name="graceful">Whether to stop gracefully</param>
     /// <returns>Stream stop result</returns>
     [HttpPost("{id:int}/stop-stream")]
-    [Authorize(Policy = Permissions.Camera.StopStream)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
     public async Task<IActionResult> StopStream(int id, [FromQuery] bool graceful = true)
@@ -474,7 +474,7 @@ public class CamerasController : BaseController
     /// <param name="id">Camera ID</param>
     /// <returns>Stream information</returns>
     [HttpGet("{id:int}/stream-info")]
-    [Authorize(Policy = Permissions.Camera.ViewStream)]
+    [Authorize(Policy = Permissions.SystemConfig.Read)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
     public async Task<IActionResult> GetStreamInfo(int id)
@@ -509,7 +509,7 @@ public class CamerasController : BaseController
     /// <param name="id">Camera ID</param>
     /// <returns>Health check result</returns>
     [HttpPost("{id:int}/health-check")]
-    [Authorize(Policy = Permissions.Camera.HealthCheck)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
     public async Task<IActionResult> PerformHealthCheck(int id)
@@ -553,7 +553,7 @@ public class CamerasController : BaseController
     /// <param name="id">Camera ID</param>
     /// <returns>Frame capture result</returns>
     [HttpPost("{id:int}/capture-frame")]
-    [Authorize(Policy = Permissions.Camera.CaptureFrame)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
     public async Task<IActionResult> CaptureFrame(int id)
@@ -593,7 +593,7 @@ public class CamerasController : BaseController
     /// </summary>
     /// <returns>Health check results for all cameras</returns>
     [HttpPost("health-check-all")]
-    [Authorize(Policy = Permissions.Camera.HealthCheck)]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
     public async Task<IActionResult> PerformHealthCheckAll()
     {

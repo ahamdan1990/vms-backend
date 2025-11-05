@@ -67,7 +67,8 @@ public class PermissionChangeAuditLogConfiguration : IEntityTypeConfiguration<Pe
         builder.HasOne(p => p.User)
             .WithMany()
             .HasForeignKey(p => p.UserId)
-            .OnDelete(DeleteBehavior.NoAction);
+            .OnDelete(DeleteBehavior.NoAction)
+            .IsRequired(false); // Make optional to avoid query filter issues
 
         builder.HasOne(p => p.Permission)
             .WithMany()
@@ -77,6 +78,7 @@ public class PermissionChangeAuditLogConfiguration : IEntityTypeConfiguration<Pe
         builder.HasOne(p => p.ChangedByUser)
             .WithMany()
             .HasForeignKey(p => p.ChangedBy)
-            .OnDelete(DeleteBehavior.NoAction);
+            .OnDelete(DeleteBehavior.NoAction)
+            .IsRequired(false); // Make optional to avoid query filter issues
     }
 }

@@ -159,6 +159,7 @@ public interface IAuthService
     /// Clears authentication cookies from response
     /// </summary>
     /// <param name="response">HTTP response</param>
+    /// <param name="isSecure">Whether to use secure cookies</param>
     void ClearAuthenticationCookies(HttpResponse response, bool isSecure = false);
 
     /// <summary>

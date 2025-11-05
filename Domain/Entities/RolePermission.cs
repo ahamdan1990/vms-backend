@@ -32,8 +32,7 @@ public class RolePermission
     /// <summary>
     /// User who granted this permission to the role
     /// </summary>
-    [Required]
-    public int GrantedBy { get; set; }
+    public int? GrantedBy { get; set; }
 
     // Navigation properties
 
@@ -48,7 +47,7 @@ public class RolePermission
     public Permission Permission { get; set; } = null!;
 
     /// <summary>
-    /// User who granted this permission
+    /// User who granted this permission (nullable to avoid query filter issues)
     /// </summary>
-    public User GrantedByUser { get; set; } = null!;
+    public User? GrantedByUser { get; set; }
 }

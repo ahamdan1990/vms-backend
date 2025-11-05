@@ -174,7 +174,7 @@ public class DeleteCameraCommandHandler : IRequestHandler<DeleteCameraCommand, A
     /// <summary>
     /// Performs cleanup operations before camera deletion
     /// </summary>
-    private async Task PreDeletionCleanup(Domain.Entities.Camera camera, CancellationToken cancellationToken)
+    private Task PreDeletionCleanup(Domain.Entities.Camera camera, CancellationToken cancellationToken)
     {
         try
         {
@@ -183,7 +183,7 @@ public class DeleteCameraCommandHandler : IRequestHandler<DeleteCameraCommand, A
             // await _cameraService.StopStreamAsync(camera.Id, graceful: true);
 
             // TODO: Implement facial recognition task cancellation when camera service is available
-            // For now, skip task cancellation (disabled for migrations)  
+            // For now, skip task cancellation (disabled for migrations)
             // await _cameraService.CancelFacialRecognitionTasksAsync(camera.Id);
 
             // TODO: Implement cache clearing when camera service is available
@@ -197,16 +197,17 @@ public class DeleteCameraCommandHandler : IRequestHandler<DeleteCameraCommand, A
             _logger.LogWarning(ex, "Non-critical error during pre-deletion cleanup for camera {CameraId}", camera.Id);
             // Continue with deletion even if cleanup partially fails
         }
+        return Task.CompletedTask;
     }
 
     /// <summary>
     /// Performs soft deletion with audit trail preservation
     /// </summary>
-    private async Task PerformSoftDeletion(Domain.Entities.Camera camera, DeleteCameraCommand request, CancellationToken cancellationToken)
+    private Task PerformSoftDeletion(Domain.Entities.Camera camera, DeleteCameraCommand request, CancellationToken cancellationToken)
     {
         // Update camera status to reflect deletion
         camera.UpdateStatus(Domain.Enums.CameraStatus.Inactive, "Camera deleted", request.DeletedBy);
-        
+
         // Perform soft delete with audit information
         camera.SoftDelete(request.DeletedBy);
 
@@ -224,6 +225,7 @@ public class DeleteCameraCommandHandler : IRequestHandler<DeleteCameraCommand, A
         }
 
         _logger.LogDebug("Soft deletion applied to camera {CameraId}", camera.Id);
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -248,7 +250,7 @@ public class DeleteCameraCommandHandler : IRequestHandler<DeleteCameraCommand, A
     /// <summary>
     /// Performs cleanup operations after successful deletion
     /// </summary>
-    private async Task PostDeletionCleanup(Domain.Entities.Camera camera, bool wasPermanent, CancellationToken cancellationToken)
+    private Task PostDeletionCleanup(Domain.Entities.Camera camera, bool wasPermanent, CancellationToken cancellationToken)
     {
         try
         {
@@ -271,6 +273,7 @@ public class DeleteCameraCommandHandler : IRequestHandler<DeleteCameraCommand, A
             _logger.LogWarning(ex, "Non-critical error during post-deletion cleanup for camera {CameraId}", camera.Id);
             // Don't fail the operation for cleanup errors
         }
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -299,18 +302,18 @@ public class DeleteCameraCommandHandler : IRequestHandler<DeleteCameraCommand, A
     /// <summary>
     /// Checks for configuration references that might be affected by deletion
     /// </summary>
-    private async Task<bool> CheckConfigurationReferences(int cameraId, CancellationToken cancellationToken)
+    private Task<bool> CheckConfigurationReferences(int cameraId, CancellationToken cancellationToken)
     {
         try
         {
             // Check system configurations that might reference this camera
             // This would be implemented based on actual system design
-            return false; // Placeholder implementation
+            return Task.FromResult(false); // Placeholder implementation
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Error checking configuration references for camera {CameraId}", cameraId);
-            return true; // Err on the side of caution
+            return Task.FromResult(true); // Err on the side of caution
         }
     }
 

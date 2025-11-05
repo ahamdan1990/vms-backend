@@ -13,7 +13,11 @@ public class CameraConfiguration : SoftDeleteEntityConfiguration<Camera>
 {
     protected override void ConfigureSoftDeleteEntity(EntityTypeBuilder<Camera> builder)
     {
-        builder.ToTable("Cameras");
+        builder.ToTable("Cameras", t =>
+        {
+            t.HasCheckConstraint("CK_Cameras_Priority", "[Priority] >= 1 AND [Priority] <= 10");
+            t.HasCheckConstraint("CK_Cameras_FailureCount", "[FailureCount] >= 0");
+        });
 
         // Basic properties
         builder.Property(c => c.Name)
@@ -147,10 +151,6 @@ public class CameraConfiguration : SoftDeleteEntityConfiguration<Camera>
         // Index for operational cameras query
         builder.HasIndex(c => new { c.IsActive, c.IsDeleted, c.Status, c.Priority })
             .HasDatabaseName("IX_Cameras_Operational");
-
-        // Check constraints for data integrity
-        builder.HasCheckConstraint("CK_Cameras_Priority", "[Priority] >= 1 AND [Priority] <= 10");
-        builder.HasCheckConstraint("CK_Cameras_FailureCount", "[FailureCount] >= 0");
 
         // Configure value conversions for enums to ensure consistency
         builder.Property(c => c.CameraType)

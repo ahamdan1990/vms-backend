@@ -28,7 +28,7 @@ public static class RoleSeeder
             {
                 Name = "Staff",
                 DisplayName = "Staff (Host)",
-                Description = "Staff members who can create and manage their own invitations. They see only visitors they invited and mutual visitors.",
+                Description = "Staff members who can create and manage their own invitations. They see only visitors they invited and mutual visitors. They receive notifications regarding their own invitations (approval, arrival, delays).",
                 HierarchyLevel = 1,
                 IsSystemRole = true,
                 IsActive = true,
@@ -42,7 +42,7 @@ public static class RoleSeeder
             {
                 Name = "Receptionist",
                 DisplayName = "Receptionist",
-                Description = "Reception staff who handle check-in/check-out operations, create walk-ins, and manage visitor flow. Can view all invitations but cannot modify them.",
+                Description = "Reception staff who handle check-in/check-out operations, create walk-ins, and manage visitor flow. Can view all approved invitations (including pending) but cannot modify them. Receive real-time notifications regarding arrivals, delays, and no-shows.",
                 HierarchyLevel = 2,
                 IsSystemRole = true,
                 IsActive = true,
@@ -54,27 +54,13 @@ public static class RoleSeeder
             },
             new Role
             {
-                Name = "Operator",
-                DisplayName = "Operator",
-                Description = "Operations staff who can view approved invitations, handle check-in/check-out operations, and manage visitor flow. Can only see approved invitations.",
+                Name = "Administrator",
+                DisplayName = "Administrator",
+                Description = "Full system access with all permissions. Can manage users, roles, permissions, system configuration, approve invitations, and handle blacklist management.",
                 HierarchyLevel = 3,
                 IsSystemRole = true,
                 IsActive = true,
                 DisplayOrder = 3,
-                Color = "#F59E0B", // Amber
-                Icon = "ClipboardDocumentCheckIcon",
-                CreatedAt = DateTime.UtcNow,
-                CreatedBy = null // System seed
-            },
-            new Role
-            {
-                Name = "Administrator",
-                DisplayName = "Administrator",
-                Description = "Full system access with all permissions. Can manage users, roles, permissions, system configuration, and handle blacklist requests.",
-                HierarchyLevel = 4,
-                IsSystemRole = true,
-                IsActive = true,
-                DisplayOrder = 4,
                 Color = "#EF4444", // Red
                 Icon = "ShieldCheckIcon",
                 CreatedAt = DateTime.UtcNow,
@@ -97,8 +83,7 @@ public static class RoleSeeder
         {
             1 => "Staff",
             2 => "Receptionist",
-            3 => "Operator",
-            4 => "Administrator",
+            3 => "Administrator",
             _ => "Staff"
         };
     }
@@ -108,9 +93,9 @@ public static class RoleSeeder
     /// </summary>
     public static bool CanModifyRole(int modifierLevel, int targetLevel)
     {
-        // Only administrators (level 4) can modify any role
+        // Only administrators (level 3) can modify any role
         // Receptionists (level 2) cannot modify any roles
         // Staff (level 1) cannot modify any roles
-        return modifierLevel >= 4 && modifierLevel > targetLevel;
+        return modifierLevel >= 3 && modifierLevel > targetLevel;
     }
 }

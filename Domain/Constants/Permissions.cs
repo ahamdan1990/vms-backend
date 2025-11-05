@@ -102,37 +102,7 @@ public static class Permissions
         public const string ViewFlagged = "VisitorNote.ViewFlagged";
     }
 
-    /// <summary>
-    /// Camera management permissions
-    /// </summary>
-    public static class Camera
-    {
-        public const string Create = "Camera.Create";
-        public const string Read = "Camera.Read";
-        public const string ReadAll = "Camera.Read.All";
-        public const string Update = "Camera.Update";
-        public const string Delete = "Camera.Delete";
-        public const string TestConnection = "Camera.TestConnection";
-        public const string ManageStreaming = "Camera.ManageStreaming";
-        public const string StartStream = "Camera.StartStream";
-        public const string StopStream = "Camera.StopStream";
-        public const string ViewStream = "Camera.ViewStream";
-        public const string ManageFacialRecognition = "Camera.ManageFacialRecognition";
-        public const string ViewFrames = "Camera.ViewFrames";
-        public const string CaptureFrame = "Camera.CaptureFrame";
-        public const string Configure = "Camera.Configure";
-        public const string ViewConfiguration = "Camera.ViewConfiguration";
-        public const string ManageCredentials = "Camera.ManageCredentials";
-        public const string ViewStatus = "Camera.ViewStatus";
-        public const string HealthCheck = "Camera.HealthCheck";
-        public const string ViewStatistics = "Camera.ViewStatistics";
-        public const string BulkOperations = "Camera.BulkOperations";
-        public const string Export = "Camera.Export";
-        public const string ViewHistory = "Camera.ViewHistory";
-        public const string Maintenance = "Camera.Maintenance";
-        public const string ViewSensitiveData = "Camera.ViewSensitiveData";
-        public const string AdministerAll = "Camera.AdministerAll";
-    }
+    // REMOVED: Camera permissions - Camera management handled by external FR application
 
     /// <summary>
     /// Emergency contact permissions
@@ -197,21 +167,14 @@ public static class Permissions
     }
 
     /// <summary>
-    /// Watchlist management permissions
+    /// Watchlist management permissions (simplified)
     /// </summary>
     public static class Watchlist
     {
-        public const string Create = "Watchlist.Create";
-        public const string ReadAll = "Watchlist.Read.All";
-        public const string Update = "Watchlist.Update";
-        public const string Delete = "Watchlist.Delete";
-        public const string Assign = "Watchlist.Assign";
-        public const string Unassign = "Watchlist.Unassign";
-        public const string ViewAssignments = "Watchlist.ViewAssignments";
-        public const string SyncWithFR = "Watchlist.SyncWithFR";
-        public const string ManageVIP = "Watchlist.ManageVIP";
-        public const string ManageBlacklist = "Watchlist.ManageBlacklist";
-        public const string ViewSyncStatus = "Watchlist.ViewSyncStatus";
+        public const string View = "Watchlist.View";                 // View blacklist and VIP lists
+        public const string ManageBlacklist = "Watchlist.ManageBlacklist"; // Add/remove from blacklist
+        public const string ManageVIP = "Watchlist.ManageVIP";        // Add/remove VIP status
+        // Note: FR sync permissions removed until FR integration implemented
     }
 
     /// <summary>
@@ -247,84 +210,30 @@ public static class Permissions
         public const string ConfigureWebhooks = "FRSystem.ConfigureWebhooks";
     }
 
-    /// <summary>
-    /// Alert management permissions
-    /// </summary>
-    public static class Alert
-    {
-        public const string Receive = "Alert.Receive";
-        public const string Acknowledge = "Alert.Acknowledge";
-        public const string ViewHistory = "Alert.ViewHistory";
-        public const string Configure = "Alert.Configure";
-        public const string Escalate = "Alert.Escalate";
-        public const string Dismiss = "Alert.Dismiss";
-        public const string ViewFRAlerts = "Alert.ViewFRAlerts";
-        public const string ViewVIPAlerts = "Alert.ViewVIPAlerts";
-        public const string ViewBlacklistAlerts = "Alert.ViewBlacklistAlerts";
-        public const string ViewSystemAlerts = "Alert.ViewSystemAlerts";
-    }
+    // REMOVED: Alert permissions - Merged into Notification class below
 
     /// <summary>
-    /// System configuration permissions
+    /// System configuration permissions (simplified)
     /// </summary>
     public static class SystemConfig
     {
-        public const string Create = "SystemConfig.Create";
         public const string Read = "SystemConfig.Read";
         public const string Update = "SystemConfig.Update";
-        public const string Delete = "SystemConfig.Delete";
-        public const string ViewAll = "SystemConfig.ViewAll";
-        public const string ManageIntegrations = "SystemConfig.ManageIntegrations";
-        public const string ManageNotifications = "SystemConfig.ManageNotifications";
-        public const string ManageSecurity = "SystemConfig.ManageSecurity";
-        public const string ManageCapacity = "SystemConfig.ManageCapacity";
-        public const string ViewLogs = "SystemConfig.ViewLogs";
-        public const string Backup = "SystemConfig.Backup";
-        public const string Restore = "SystemConfig.Restore";
+        // Note: Backup/Restore removed until properly implemented with safety checks
     }
 
-    /// <summary>
-    /// Dynamic configuration management permissions
-    /// </summary>
-    public static class Configuration
-    {
-        public const string Read = "Configuration.Read";
-        public const string ReadAll = "Configuration.Read.All";
-        public const string Update = "Configuration.Update";
-        public const string UpdateAll = "Configuration.Update.All";
-        public const string Create = "Configuration.Create";
-        public const string Delete = "Configuration.Delete";
-        public const string ViewHistory = "Configuration.ViewHistory";
-        public const string ViewAudit = "Configuration.ViewAudit";
-        public const string ManageEncrypted = "Configuration.ManageEncrypted";
-        public const string ManageSecurity = "Configuration.ManageSecurity";
-        public const string ManageJWT = "Configuration.ManageJWT";
-        public const string ManagePassword = "Configuration.ManagePassword";
-        public const string ManageLockout = "Configuration.ManageLockout";
-        public const string ManageRateLimit = "Configuration.ManageRateLimit";
-        public const string ManageLogging = "Configuration.ManageLogging";
-        public const string Export = "Configuration.Export";
-        public const string Import = "Configuration.Import";
-        public const string InvalidateCache = "Configuration.InvalidateCache";
-        public const string ViewSensitive = "Configuration.ViewSensitive";
-        public const string ResetToDefaults = "Configuration.ResetToDefaults";
-    }
+    // REMOVED: Configuration permissions - Merged into SystemConfig (over-engineered for current needs)
 
     /// <summary>
-    /// Report management permissions
+    /// Report management permissions (simplified)
     /// </summary>
     public static class Report
     {
         public const string GenerateOwn = "Report.Generate.Own";
         public const string GenerateAll = "Report.Generate.All";
-        public const string Schedule = "Report.Schedule";
         public const string Export = "Report.Export";
         public const string ViewHistory = "Report.ViewHistory";
-        public const string CreateTemplates = "Report.CreateTemplates";
-        public const string ManageSubscriptions = "Report.ManageSubscriptions";
-        public const string ViewAnalytics = "Report.ViewAnalytics";
-        public const string ExportData = "Report.ExportData";
-        public const string ViewMetrics = "Report.ViewMetrics";
+        // Note: Schedule and Templates removed until report scheduling is implemented
     }
 
     /// <summary>
@@ -360,18 +269,13 @@ public static class Permissions
     }
 
     /// <summary>
-    /// Dashboard permissions
+    /// Dashboard permissions (simplified)
     /// </summary>
     public static class Dashboard
     {
-        public const string ViewBasic = "Dashboard.View.Basic";
-        public const string ViewOperations = "Dashboard.View.Operations";
-        public const string ViewAdmin = "Dashboard.View.Admin";
-        public const string ViewAnalytics = "Dashboard.View.Analytics";
-        public const string Customize = "Dashboard.Customize";
-        public const string Export = "Dashboard.Export";
-        public const string ViewRealTime = "Dashboard.ViewRealTime";
-        public const string ViewMetrics = "Dashboard.ViewMetrics";
+        public const string ViewBasic = "Dashboard.View.Basic";       // Staff - basic invitation stats
+        public const string ViewOperations = "Dashboard.View.Operations"; // Receptionist - check-in queue, today's visitors
+        public const string ViewAdmin = "Dashboard.View.Admin";       // Administrator - full system dashboard
     }
 
     /// <summary>
@@ -390,19 +294,19 @@ public static class Permissions
     }
 
     /// <summary>
-    /// Notification permissions
+    /// Notification and Alert permissions (consolidated)
     /// </summary>
     public static class Notification
     {
+        // Basic notification permissions
         public const string ReadOwn = "Notification.Read.Own";
         public const string ReadAll = "Notification.Read.All";
-        public const string SendHost = "Notification.Send.Host";
         public const string SendSystem = "Notification.Send.System";
-        public const string Configure = "Notification.Configure";
-        public const string ViewHistory = "Notification.ViewHistory";
-        public const string ManageTemplates = "Notification.ManageTemplates";
         public const string SendBulk = "Notification.SendBulk";
-        public const string ViewQueue = "Notification.ViewQueue";
+
+        // Alert permissions (merged from Alert class)
+        public const string Receive = "Notification.Receive"; // Receive alerts/notifications
+        public const string Acknowledge = "Notification.Acknowledge"; // Acknowledge alerts/notifications
     }
 
     /// <summary>
@@ -434,17 +338,13 @@ public static class Permissions
     }
 
     /// <summary>
-    /// Badge management permissions
+    /// Badge management permissions (simplified)
     /// </summary>
     public static class Badge
     {
-        public const string Print = "Badge.Print";
-        public const string Design = "Badge.Design";
-        public const string Configure = "Badge.Configure";
-        public const string ViewQueue = "Badge.ViewQueue";
-        public const string ReprintLost = "Badge.ReprintLost";
-        public const string ManageTemplates = "Badge.ManageTemplates";
-        public const string ViewHistory = "Badge.ViewHistory";
+        public const string Print = "Badge.Print";                    // Print visitor badge at check-in
+        public const string ReprintLost = "Badge.ReprintLost";        // Reprint lost/damaged badge
+        // Note: Template management removed until badge designer implemented
     }
 
     /// <summary>
@@ -459,58 +359,13 @@ public static class Permissions
         public const string Configure = "QRCode.Configure";
     }
 
-    /// <summary>
-    /// Manual operation permissions
-    /// </summary>
-    public static class Manual
-    {
-        public const string Override = "Manual.Override";
-        public const string Verification = "Manual.Verification";
-        public const string Entry = "Manual.Entry";
-        public const string CreateOverrideLog = "Manual.CreateOverrideLog";
-        public const string ViewOverrideLogs = "Manual.ViewOverrideLogs";
-        public const string ApproveOverride = "Manual.ApproveOverride";
-    }
+    // REMOVED: Manual permissions - Merged into CheckIn.Override and CheckIn.ManualVerification
 
-    /// <summary>
-    /// Integration permissions
-    /// </summary>
-    public static class Integration
-    {
-        public const string Configure = "Integration.Configure";
-        public const string Monitor = "Integration.Monitor";
-        public const string ViewLogs = "Integration.ViewLogs";
-        public const string TestConnection = "Integration.TestConnection";
-        public const string ManageKeys = "Integration.ManageKeys";
-        public const string ViewHealth = "Integration.ViewHealth";
-    }
+    // REMOVED: Integration permissions - Not implemented, defer to Phase 3
 
-    /// <summary>
-    /// Sync operation permissions
-    /// </summary>
-    public static class Sync
-    {
-        public const string Monitor = "Sync.Monitor";
-        public const string Reconcile = "Sync.Reconcile";
-        public const string ForceSync = "Sync.ForceSync";
-        public const string ViewQueue = "Sync.ViewQueue";
-        public const string ResolvConflicts = "Sync.ResolveConflicts";
-        public const string ViewHistory = "Sync.ViewHistory";
-        public const string Configure = "Sync.Configure";
-    }
+    // REMOVED: Sync permissions - No external integrations exist
 
-    /// <summary>
-    /// Offline operation permissions
-    /// </summary>
-    public static class Offline
-    {
-        public const string Monitor = "Offline.Monitor";
-        public const string Process = "Offline.Process";
-        public const string ViewQueue = "Offline.ViewQueue";
-        public const string RetryFailed = "Offline.RetryFailed";
-        public const string PurgeCompleted = "Offline.PurgeCompleted";
-        public const string ViewStatus = "Offline.ViewStatus";
-    }
+    // REMOVED: Offline permissions - Not needed for cloud-based system
 
     /// <summary>
     /// Role management permissions

@@ -278,7 +278,7 @@ public static class CryptoHelper
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(nonce);
 
-        using var aes = new AesGcm(keyBytes);
+        using var aes = new AesGcm(keyBytes, 16); // 16-byte (128-bit) tag
         aes.Encrypt(nonce, plainBytes, cipherBytes, tag);
 
         // Combine nonce + tag + cipher
@@ -317,7 +317,7 @@ public static class CryptoHelper
 
         var plainBytes = new byte[cipherBytes.Length];
 
-        using var aes = new AesGcm(keyBytes);
+        using var aes = new AesGcm(keyBytes, 16); // 16-byte (128-bit) tag
         aes.Decrypt(nonce, cipherBytes, tag, plainBytes);
 
         return Encoding.UTF8.GetString(plainBytes);

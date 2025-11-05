@@ -48,8 +48,8 @@ public class CreateVisitPurposeCommandHandler : IRequestHandler<CreateVisitPurpo
                 RequiresApproval = request.RequiresApproval,
                 IsActive = request.IsActive,
                 DisplayOrder = request.DisplayOrder,
-                ColorCode = request.ColorCode?.Trim(),
-                IconName = request.IconName?.Trim(),
+                ColorCode = request.ColorCode?.Trim() ?? "#0078d4",
+                IconName = request.IconName?.Trim() ?? "Info",
                 CreatedBy = request.CreatedBy,
                 CreatedOn = DateTime.UtcNow
             };

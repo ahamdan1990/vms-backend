@@ -558,29 +558,29 @@ public class PdfService : IPdfService
         }
     }
 
-    public async Task<PdfValidationResult> ValidatePdfStructureAsync(Stream pdfStream, CancellationToken cancellationToken = default)
+    public Task<PdfValidationResult> ValidatePdfStructureAsync(Stream pdfStream, CancellationToken cancellationToken = default)
     {
         try
         {
             using var pdfReader = new PdfReader(pdfStream);
             using var pdfDoc = new PdfDocument(pdfReader);
-            
+
             var form = PdfAcroForm.GetAcroForm(pdfDoc, false);
-            
+
             if (form == null)
             {
-                return PdfValidationResult.Success(false, new List<string>());
+                return Task.FromResult(PdfValidationResult.Success(false, new List<string>()));
             }
 
             // TODO: Fix PDF form field retrieval based on iText7 version
             // var fieldNames = form.GetFormFields()?.Keys?.ToList() ?? new List<string>();
             var fieldNames = new List<string>(); // Placeholder until proper PDF library method is implemented
-            return PdfValidationResult.Success(true, fieldNames);
+            return Task.FromResult(PdfValidationResult.Success(true, fieldNames));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to validate PDF structure");
-            return PdfValidationResult.Failure(new List<string> { ex.Message });
+            return Task.FromResult(PdfValidationResult.Failure(new List<string> { ex.Message }));
         }
     }
 

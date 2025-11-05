@@ -55,8 +55,8 @@ public class UpdateVisitPurposeCommandHandler : IRequestHandler<UpdateVisitPurpo
             visitPurpose.RequiresApproval = request.RequiresApproval;
             visitPurpose.IsActive = request.IsActive;
             visitPurpose.DisplayOrder = request.DisplayOrder;
-            visitPurpose.ColorCode = request.ColorCode?.Trim();
-            visitPurpose.IconName = request.IconName?.Trim();
+            visitPurpose.ColorCode = request.ColorCode?.Trim() ?? visitPurpose.ColorCode;
+            visitPurpose.IconName = request.IconName?.Trim() ?? visitPurpose.IconName;
             visitPurpose.ModifiedBy = request.UpdatedBy;
             visitPurpose.ModifiedOn = DateTime.UtcNow;
 

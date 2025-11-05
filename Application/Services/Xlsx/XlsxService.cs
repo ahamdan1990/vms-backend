@@ -1023,7 +1023,7 @@ public class XlsxService : IXlsxService
     /// <summary>
     /// Validates XLSX structure and required fields
     /// </summary>
-    public async Task<XlsxValidationResult> ValidateXlsxStructureAsync(Stream xlsxStream, CancellationToken cancellationToken = default)
+    public Task<XlsxValidationResult> ValidateXlsxStructureAsync(Stream xlsxStream, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -1068,15 +1068,15 @@ public class XlsxService : IXlsxService
 
             if (errors.Any())
             {
-                return XlsxValidationResult.Failure(errors);
+                return Task.FromResult(XlsxValidationResult.Failure(errors));
             }
 
-            return XlsxValidationResult.Success(dataRowCount, worksheetNames, visitorRowCount, hasMainWorksheet);
+            return Task.FromResult(XlsxValidationResult.Success(dataRowCount, worksheetNames, visitorRowCount, hasMainWorksheet));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to validate XLSX structure");
-            return XlsxValidationResult.Failure(new List<string> { $"Validation failed: {ex.Message}" });
+            return Task.FromResult(XlsxValidationResult.Failure(new List<string> { $"Validation failed: {ex.Message}" }));
         }
     }
 }

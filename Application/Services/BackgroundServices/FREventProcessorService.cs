@@ -220,11 +220,12 @@ public class FREventProcessorService : BackgroundService
         }
     }
 
-    private async Task ProcessFaceDetectedEvent(FREventDto frEvent, IUnitOfWork unitOfWork, 
+    private Task ProcessFaceDetectedEvent(FREventDto frEvent, IUnitOfWork unitOfWork,
         INotificationService notificationService, CancellationToken cancellationToken)
     {
         // Process face detection and try to identify
         _logger.LogDebug("Processing face detected event at {Location}", frEvent.CameraLocation);
+        return Task.CompletedTask;
     }
 
     private async Task ProcessFaceIdentifiedEvent(FREventDto frEvent, IUnitOfWork unitOfWork, 

@@ -39,7 +39,7 @@ public class DashboardController : BaseController
     /// </summary>
     /// <returns>Comprehensive dashboard metrics</returns>
     [HttpGet("metrics")]
-    [Authorize(Policy = Permissions.Dashboard.ViewMetrics)]
+    [Authorize(Policy = Permissions.Dashboard.ViewOperations)]
     public async Task<IActionResult> GetDashboardMetrics(CancellationToken cancellationToken)
     {
         try

@@ -24,41 +24,41 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
         _apiKeys = LoadApiKeys();
     }
 
-    protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
+    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         try
         {
             // Check for API key in header
             if (!Request.Headers.TryGetValue(Options.ApiKeyHeaderName, out var apiKeyValues))
             {
-                return AuthenticateResult.NoResult();
+                return Task.FromResult(AuthenticateResult.NoResult());
             }
 
             var apiKey = apiKeyValues.FirstOrDefault();
             if (string.IsNullOrEmpty(apiKey))
             {
-                return AuthenticateResult.Fail("Missing API key");
+                return Task.FromResult(AuthenticateResult.Fail("Missing API key"));
             }
 
             // Validate API key
             if (!_apiKeys.TryGetValue(apiKey, out var apiKeyInfo))
             {
                 _logger.LogWarning("Invalid API key attempted: {ApiKey}", apiKey.Substring(0, Math.Min(apiKey.Length, 8)) + "...");
-                return AuthenticateResult.Fail("Invalid API key");
+                return Task.FromResult(AuthenticateResult.Fail("Invalid API key"));
             }
 
             // Check if API key is active
             if (!apiKeyInfo.IsActive)
             {
                 _logger.LogWarning("Inactive API key attempted: {Name}", apiKeyInfo.Name);
-                return AuthenticateResult.Fail("API key is inactive");
+                return Task.FromResult(AuthenticateResult.Fail("API key is inactive"));
             }
 
             // Check expiration
             if (apiKeyInfo.ExpiryDate.HasValue && apiKeyInfo.ExpiryDate.Value < DateTime.UtcNow)
             {
                 _logger.LogWarning("Expired API key attempted: {Name}", apiKeyInfo.Name);
-                return AuthenticateResult.Fail("API key has expired");
+                return Task.FromResult(AuthenticateResult.Fail("API key has expired"));
             }
 
             // Check IP restrictions
@@ -68,7 +68,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
                 if (!string.IsNullOrEmpty(clientIp) && !apiKeyInfo.AllowedIPs.Contains(clientIp))
                 {
                     _logger.LogWarning("API key used from unauthorized IP: {IP}, Key: {Name}", clientIp, apiKeyInfo.Name);
-                    return AuthenticateResult.Fail("API key not authorized for this IP address");
+                    return Task.FromResult(AuthenticateResult.Fail("API key not authorized for this IP address"));
                 }
             }
 
@@ -97,15 +97,13 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
             apiKeyInfo.LastUsed = DateTime.UtcNow;
 
             var ticket = new AuthenticationTicket(principal, Scheme.Name);
-            return AuthenticateResult.Success(ticket);
+            return Task.FromResult(AuthenticateResult.Success(ticket));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred during API key authentication");
-            return AuthenticateResult.Fail("Authentication failed");
+            return Task.FromResult(AuthenticateResult.Fail("Authentication failed"));
         }
-
-        await Task.CompletedTask;
     }
 
     private string? GetClientIpAddress()

@@ -1,4 +1,4 @@
-﻿using VisitorManagementSystem.Api.Domain.Enums;
+using VisitorManagementSystem.Api.Domain.Enums;
 
 namespace VisitorManagementSystem.Api.Domain.Constants;
 
@@ -13,14 +13,14 @@ public static class UserRoles
     public const string Staff = "Staff";
 
     /// <summary>
+    /// Receptionist role name
+    /// </summary>
+    public const string Receptionist = "Receptionist";
+
+    /// <summary>
     /// Administrator role name
     /// </summary>
     public const string Administrator = "Administrator";
-
-    /// <summary>
-    /// Operator role name
-    /// </summary>
-    public const string Operator = "Operator";
 
     /// <summary>
     /// Super administrator role (system level)
@@ -46,8 +46,8 @@ public static class UserRoles
         return new List<string>
         {
             Staff,
+            Receptionist,
             Administrator,
-            Operator,
             SuperAdministrator,
             System,
             Guest
@@ -63,8 +63,8 @@ public static class UserRoles
         return new List<string>
         {
             Staff,
-            Administrator,
-            Operator
+            Receptionist,
+            Administrator
         };
     }
 
@@ -79,7 +79,7 @@ public static class UserRoles
         {
             Guest => 0,
             Staff => 1,
-            Operator => 2,
+            Receptionist => 2,
             Administrator => 3,
             SuperAdministrator => 4,
             System => 5,
@@ -114,9 +114,9 @@ public static class UserRoles
         if (managerRole == SuperAdministrator)
             return targetRole != System;
 
-        // Administrators can manage staff and operators
+        // Administrators can manage staff and receptionists
         if (managerRole == Administrator)
-            return targetRole == Staff || targetRole == Operator || targetRole == Guest;
+            return targetRole == Staff || targetRole == Receptionist || targetRole == Guest;
 
         // Other roles cannot manage roles
         return false;
@@ -132,7 +132,7 @@ public static class UserRoles
         return roleName switch
         {
             Staff => GetStaffPermissions(),
-            Operator => GetOperatorPermissions(),
+            Receptionist => GetReceptionistPermissions(),
             Administrator => GetAdministratorPermissions(),
             SuperAdministrator => GetSuperAdministratorPermissions(),
             System => GetSystemPermissions(),
@@ -149,8 +149,12 @@ public static class UserRoles
     {
         return new List<string>
         {
-            // View own activity
-            Permissions.User.ViewActivity,
+            // Profile management
+            Permissions.Profile.ViewOwn,
+            Permissions.Profile.UpdateOwn,
+            Permissions.Profile.ChangePassword,
+            Permissions.Profile.ManagePreferences,
+            Permissions.Profile.ViewActivity,
 
             // Own invitation management
             Permissions.Invitation.CreateOwn,
@@ -160,16 +164,11 @@ public static class UserRoles
             Permissions.Invitation.Read,
             Permissions.Invitation.ViewHistory,
 
-            // Basic dashboard and profile
-            Permissions.Dashboard.ViewBasic,
-            Permissions.Dashboard.ViewMetrics,
-            Permissions.Profile.UpdateOwn,
-            Permissions.Profile.ViewOwn,
-            Permissions.Profile.ChangePassword,
-            Permissions.Profile.ManagePreferences,
-
-            // Template downloads
-            Permissions.Template.DownloadSingle,
+            // Visitor management (own)
+            Permissions.Visitor.Create,
+            Permissions.Visitor.Read,
+            Permissions.Visitor.Update,
+            Permissions.Visitor.ViewStatistics,
 
             // Calendar access
             Permissions.Calendar.ViewOwn,
@@ -182,66 +181,88 @@ public static class UserRoles
             Permissions.Report.GenerateOwn,
             Permissions.Report.ViewHistory,
 
-            // View own activity
-            Permissions.Profile.ViewActivity,
+            // Basic dashboard
+            Permissions.Dashboard.ViewBasic,
 
-            // Visitor statistics (needed for dashboard)
-            Permissions.Visitor.ViewStatistics
+            // Template downloads
+            Permissions.Template.DownloadSingle,
+
+            // User activity
+            Permissions.User.ViewActivity
         };
     }
 
     /// <summary>
-    /// Gets operator permissions
+    /// Gets receptionist permissions
     /// </summary>
-    /// <returns>List of operator permissions</returns>
-    private static List<string> GetOperatorPermissions()
+    /// <returns>List of receptionist permissions</returns>
+    private static List<string> GetReceptionistPermissions()
     {
         return new List<string>
         {
-            // View own activity
-            Permissions.User.ViewActivity,
+            // Profile management
+            Permissions.Profile.ViewOwn,
+            Permissions.Profile.UpdateOwn,
+            Permissions.Profile.ChangePassword,
 
-            // Today's visitors
+            // Check-in/Check-out operations
+            Permissions.CheckIn.Process,
+            Permissions.CheckIn.ProcessOut,
+            Permissions.CheckIn.ViewQueue,
+            Permissions.CheckIn.ViewHistory,
+            Permissions.CheckIn.PrintBadge,
+            Permissions.CheckIn.QRScan,
+            Permissions.CheckIn.Override,
+            Permissions.CheckIn.ManualVerification,
+            Permissions.CheckIn.ManualEntry,
+            Permissions.CheckIn.PhotoCapture,
+
+            // Walk-in registration
+            Permissions.WalkIn.Register,
+            Permissions.WalkIn.QuickRegister,
+            Permissions.WalkIn.CheckIn,
+            Permissions.WalkIn.ViewList,
+            Permissions.WalkIn.ViewHistory,
+            Permissions.WalkIn.FRSync,
+
+            // View all invitations (read-only, including PENDING)
+            Permissions.Invitation.ReadAll,
+            Permissions.Invitation.ViewPending,
+            Permissions.Invitation.ViewHistory,
+            Permissions.Invitation.ReadOwn,
+            Permissions.Invitation.Read,
+
+            // View all visitors
+            Permissions.Visitor.ReadAll,
             Permissions.Visitor.ReadToday,
+            Permissions.Visitor.ViewHistory,
+            Permissions.Visitor.Create,
             Permissions.Visitor.Read,
             Permissions.Visitor.Search,
             Permissions.Visitor.ViewStatistics,
 
-            // Check-in operations
-            Permissions.CheckIn.Process,
-            Permissions.CheckIn.ProcessOut,
-            Permissions.CheckIn.Override,
-            Permissions.CheckIn.ViewQueue,
-            Permissions.CheckIn.ManualEntry,
-            Permissions.CheckIn.PrintBadge,
-            Permissions.CheckIn.QRScan,
-            Permissions.CheckIn.PhotoCapture,
-            Permissions.CheckIn.ManualVerification,
+            // QR Code operations
+            Permissions.QRCode.Scan,
+            Permissions.QRCode.Validate,
+            Permissions.QRCode.ViewHistory,
 
-            // Walk-in management
-            Permissions.WalkIn.Register,
-            Permissions.WalkIn.CheckIn,
-            Permissions.WalkIn.ViewList,
-            Permissions.WalkIn.QuickRegister,
-            Permissions.WalkIn.FRSync,
-
-            // Badge operations
+            // Badge printing
             Permissions.Badge.Print,
-            Permissions.Badge.ViewQueue,
             Permissions.Badge.ReprintLost,
 
-            // Alert handling
-            Permissions.Alert.Receive,
-            Permissions.Alert.Acknowledge,
-            Permissions.Alert.ViewFRAlerts,
-            Permissions.Alert.ViewVIPAlerts,
-            Permissions.Alert.ViewBlacklistAlerts,
+            // Notifications & Alerts (consolidated)
+            Permissions.Notification.ReadOwn,
+            Permissions.Notification.ReadAll,
+            Permissions.Notification.Receive,
+            Permissions.Notification.Acknowledge,
 
-            // Manual operations
-            Permissions.Manual.Override,
-            Permissions.Manual.Verification,
-            Permissions.Manual.Entry,
-            Permissions.Manual.CreateOverrideLog,
+            // Dashboard
+            Permissions.Dashboard.ViewBasic,
+            Permissions.Dashboard.ViewOperations,
+
+            // Calendar
+            Permissions.Calendar.ViewAll,
+            Permissions.Calendar.ViewAvailability,
 
             // Emergency operations
             Permissions.Emergency.Export,
@@ -249,321 +270,30 @@ public static class UserRoles
             Permissions.Emergency.ViewRoster,
             Permissions.Emergency.PrintRoster,
 
-            // Host notifications
-            Permissions.Notification.SendHost,
-            Permissions.Notification.ReadOwn,
+            // Reports
+            Permissions.Report.GenerateAll,
+            Permissions.Report.ViewHistory,
+            Permissions.Report.Export,
 
-            // Operations dashboard
-            Permissions.Dashboard.ViewOperations,
-            Permissions.Dashboard.ViewRealTime,
-            Permissions.Dashboard.ViewMetrics,
-
-            // QR Code operations
-            Permissions.QRCode.Scan,
-            Permissions.QRCode.Validate,
-
-            // Profile management
-            Permissions.Profile.UpdateOwn,
-            Permissions.Profile.ViewOwn,
-            Permissions.Profile.ChangePassword,
-
-            // Invitations
-            Permissions.Invitation.ReadOwn,
-            Permissions.Invitation.Read,
-            Permissions.Invitation.ViewHistory,
-
-            // System config read (for locations and visit purposes - needed for invitation management)
+            // System config read (for locations, visit purposes, time slots)
             Permissions.SystemConfig.Read,
 
-            // Dashboard access (for capacity overview on analytics dashboard)
-            Permissions.Dashboard.ViewBasic,
+            // User activity
+            Permissions.User.ViewActivity,
 
-            // Limited audit access (for recent activity on dashboard)
+            // Limited audit access
             Permissions.Audit.ReadAll
         };
     }
 
     /// <summary>
-    /// Gets administrator permissions
+    /// Gets administrator permissions (ALL permissions)
     /// </summary>
     /// <returns>List of administrator permissions</returns>
     private static List<string> GetAdministratorPermissions()
     {
-        var permissions = new List<string>();
-
-        // Include all staff and operator permissions
-        permissions.AddRange(GetStaffPermissions());
-        permissions.AddRange(GetOperatorPermissions());
-
-        // Add administrator-specific permissions
-        permissions.AddRange(new List<string>
-        {
-            // User management
-            Permissions.User.Create,
-            Permissions.User.ReadAll,
-            Permissions.User.UpdateAll,
-            Permissions.User.DeleteAll,
-            Permissions.User.Activate,
-            Permissions.User.Deactivate,
-            Permissions.User.ManageRoles,
-            Permissions.User.ManagePermissions,
-            Permissions.User.ViewActivity,
-            Permissions.User.ResetPassword,
-            
-            // All invitation management
-            Permissions.Invitation.CreateAll,
-            Permissions.Invitation.ReadAll,
-            Permissions.Invitation.UpdateAll,
-            Permissions.Invitation.ApproveAll,
-            Permissions.Invitation.DenyAll,
-            Permissions.Invitation.CancelAll,
-            Permissions.Invitation.BulkApprove,
-            Permissions.Invitation.ViewHistory,
-            Permissions.Invitation.Export,
-            Permissions.Invitation.CreateOwn,
-            Permissions.Invitation.Create,
-            Permissions.Invitation.ReadOwn,
-            Permissions.Invitation.Read,
-            Permissions.Invitation.UpdateOwn,
-            Permissions.Invitation.Approve,
-            Permissions.Invitation.CancelOwn,
-            Permissions.Invitation.ViewPending,
-            Permissions.Invitation.Delete,
-
-
-            // All visitor management
-            Permissions.Visitor.Read,
-            Permissions.Visitor.ReadToday,
-            Permissions.Visitor.Search,
-            Permissions.Visitor.Blacklist,
-            Permissions.Visitor.RemoveBlacklist,
-            Permissions.Visitor.MarkAsVip,
-            Permissions.Visitor.RemoveVipStatus,
-            Permissions.Visitor.Create,
-            Permissions.Visitor.ViewStatistics,
-            Permissions.Visitor.ReadAll,
-            Permissions.Visitor.Update,
-            Permissions.Visitor.Delete,
-            Permissions.Visitor.Archive,
-            Permissions.Visitor.ViewHistory,
-            Permissions.Visitor.Export,
-            Permissions.Visitor.ViewPersonalInfo,
-            Permissions.Visitor.ManagePhotos,
-
-            Permissions.VisitorDocument.Create,
-            Permissions.VisitorDocument.Read,
-            Permissions.VisitorDocument.Update,
-            Permissions.VisitorDocument.Delete,
-            Permissions.VisitorDocument.Download,
-            Permissions.VisitorDocument.Upload,
-            Permissions.VisitorDocument.ViewSensitive,
-
-            Permissions.VisitorNote.Create,
-            Permissions.VisitorNote.Read,
-            Permissions.VisitorNote.Update,
-            Permissions.VisitorNote.Delete,
-            Permissions.VisitorNote.ViewConfidential,
-            Permissions.VisitorNote.ViewFlagged,
-
-            // Emergency contacts
-            Permissions.EmergencyContact.Create,
-            Permissions.EmergencyContact.Read,
-            Permissions.EmergencyContact.Update,
-            Permissions.EmergencyContact.Delete,
-            Permissions.EmergencyContact.ViewPersonalInfo,
-
-            // Bulk import
-            Permissions.BulkImport.Create,
-            Permissions.BulkImport.Process,
-            Permissions.BulkImport.Validate,
-            Permissions.BulkImport.Cancel,
-            Permissions.BulkImport.ViewBatches,
-            Permissions.BulkImport.ViewErrors,
-            Permissions.BulkImport.CorrectErrors,
-            Permissions.BulkImport.ViewHistory,
-            Permissions.BulkImport.Export,
-            Permissions.BulkImport.RetryFailed,
-            
-            // Watchlist management
-            Permissions.Watchlist.Create,
-            Permissions.Watchlist.ReadAll,
-            Permissions.Watchlist.Update,
-            Permissions.Watchlist.Delete,
-            Permissions.Watchlist.Assign,
-            Permissions.Watchlist.Unassign,
-            Permissions.Watchlist.ViewAssignments,
-            Permissions.Watchlist.SyncWithFR,
-            Permissions.Watchlist.ManageVIP,
-            Permissions.Watchlist.ManageBlacklist,
-            Permissions.Watchlist.ViewSyncStatus,
-            
-            // Custom fields
-            Permissions.CustomField.Create,
-            Permissions.CustomField.ReadAll,
-            Permissions.CustomField.Update,
-            Permissions.CustomField.Delete,
-            Permissions.CustomField.Reorder,
-            Permissions.CustomField.Configure,
-            Permissions.CustomField.ViewUsage,
-            Permissions.CustomField.ManageValidation,
-            Permissions.CustomField.BuildForms,
-            
-            // FR System
-            Permissions.FRSystem.Configure,
-            Permissions.FRSystem.Sync,
-            Permissions.FRSystem.Monitor,
-            Permissions.FRSystem.ViewHealth,
-            Permissions.FRSystem.ManageProfiles,
-            Permissions.FRSystem.ProcessEvents,
-            Permissions.FRSystem.ViewSyncQueue,
-            Permissions.FRSystem.Reconcile,
-            Permissions.FRSystem.ViewLogs,
-            Permissions.FRSystem.ConfigureWebhooks,
-            
-            // System configuration
-            Permissions.SystemConfig.Read,
-            Permissions.SystemConfig.Update,
-            Permissions.SystemConfig.ViewAll,
-            Permissions.SystemConfig.ManageIntegrations,
-            Permissions.SystemConfig.ManageNotifications,
-            Permissions.SystemConfig.ManageSecurity,
-            Permissions.SystemConfig.ManageCapacity,
-            Permissions.SystemConfig.ViewLogs,
-            Permissions.SystemConfig.Backup,
-            Permissions.SystemConfig.Restore,
-            Permissions.SystemConfig.Create,
-            
-            // All reporting
-            Permissions.Report.GenerateAll,
-            Permissions.Report.Schedule,
-            Permissions.Report.Export,
-            Permissions.Report.CreateTemplates,
-            Permissions.Report.ManageSubscriptions,
-            Permissions.Report.ViewAnalytics,
-            Permissions.Report.ExportData,
-            Permissions.Report.ViewMetrics,
-            
-            // Audit access
-            Permissions.Audit.ReadAll,
-            Permissions.Audit.Export,
-            Permissions.Audit.ViewUserActivity,
-            Permissions.Audit.ViewSystemEvents,
-            Permissions.Audit.ViewSecurityEvents,
-            Permissions.Audit.Search,
-            Permissions.Audit.Review,
-            Permissions.Audit.Archive,
-            
-            // Template management
-            Permissions.Template.DownloadBulk,
-            Permissions.Template.Create,
-            Permissions.Template.Update,
-            Permissions.Template.Delete,
-            Permissions.Template.ViewAll,
-            Permissions.Template.Share,
-            Permissions.Template.Customize,
-            Permissions.Template.ManageBadge,
-            
-            // Admin dashboard
-            Permissions.Dashboard.ViewAdmin,
-            Permissions.Dashboard.ViewAnalytics,
-            Permissions.Dashboard.Customize,
-            Permissions.Dashboard.Export,
-            Permissions.Dashboard.ViewMetrics,
-            
-            // All profiles
-            Permissions.Profile.UpdateAll,
-            Permissions.Profile.ViewAll,
-            
-            // System notifications
-            Permissions.Notification.SendSystem,
-            Permissions.Notification.Configure,
-            Permissions.Notification.ViewHistory,
-            Permissions.Notification.ManageTemplates,
-            Permissions.Notification.SendBulk,
-            Permissions.Notification.ViewQueue,
-            
-            // All calendar access
-            Permissions.Calendar.ViewAll,
-            Permissions.Calendar.Manage,
-            Permissions.Calendar.Export,
-            Permissions.Calendar.BookSlots,
-            Permissions.Calendar.ViewConflicts,
-            
-            // Integration management
-            Permissions.Integration.Configure,
-            Permissions.Integration.Monitor,
-            Permissions.Integration.ViewLogs,
-            Permissions.Integration.TestConnection,
-            Permissions.Integration.ManageKeys,
-            Permissions.Integration.ViewHealth,
-            
-            // Sync operations
-            Permissions.Sync.Monitor,
-            Permissions.Sync.Reconcile,
-            Permissions.Sync.ForceSync,
-            Permissions.Sync.ViewQueue,
-            Permissions.Sync.ResolvConflicts,
-            Permissions.Sync.ViewHistory,
-            Permissions.Sync.Configure,
-            
-            // Offline operations
-            Permissions.Offline.Monitor,
-            Permissions.Offline.Process,
-            Permissions.Offline.ViewQueue,
-            Permissions.Offline.RetryFailed,
-            Permissions.Offline.PurgeCompleted,
-            Permissions.Offline.ViewStatus,
-
-            // Dynamic configuration management permissions
-            Permissions.Configuration.Read,
-            Permissions.Configuration.ReadAll,
-            Permissions.Configuration.Update,
-            Permissions.Configuration.UpdateAll,
-            Permissions.Configuration.Create,
-            Permissions.Configuration.Delete,
-            Permissions.Configuration.ViewHistory,
-            Permissions.Configuration.ViewAudit,
-            Permissions.Configuration.ManageEncrypted,
-            Permissions.Configuration.ManageSecurity,
-            Permissions.Configuration.ManageJWT,
-            Permissions.Configuration.ManagePassword,
-            Permissions.Configuration.ManageLockout,
-            Permissions.Configuration.ManageRateLimit,
-            Permissions.Configuration.ManageLogging,
-            Permissions.Configuration.Export,
-            Permissions.Configuration.Import,
-            Permissions.Configuration.InvalidateCache,
-            Permissions.Configuration.ViewSensitive,
-            Permissions.Configuration.ResetToDefaults,
-
-            Permissions.Camera.Read,
-            Permissions.Camera.ReadAll,
-            Permissions.Camera.Update,
-            Permissions.Camera.Delete,
-            Permissions.Camera.TestConnection,
-            Permissions.Camera.ManageStreaming,
-            Permissions.Camera.StartStream,
-            Permissions.Camera.StopStream,
-            Permissions.Camera.ViewStream,
-            Permissions.Camera.ManageFacialRecognition,
-            Permissions.Camera.ViewFrames,
-            Permissions.Camera.CaptureFrame,
-            Permissions.Camera.Configure,
-            Permissions.Camera.ManageCredentials,
-            Permissions.Camera.ViewConfiguration,
-            Permissions.Camera.ViewStatus,
-            Permissions.Camera.HealthCheck,
-            Permissions.Camera.ViewStatistics,
-            Permissions.Camera.BulkOperations,
-            Permissions.Camera.Export,
-            Permissions.Camera.Create,
-            Permissions.Camera.ViewHistory,
-            Permissions.Camera.Maintenance,
-            Permissions.Camera.ViewSensitiveData,
-            Permissions.Camera.AdministerAll,
-});
-
-        return permissions.Distinct().ToList();
+        // Administrator gets ALL permissions dynamically
+        return Permissions.GetAllPermissions();
     }
 
     /// <summary>
@@ -609,8 +339,8 @@ public static class UserRoles
         return userRole switch
         {
             UserRole.Staff => Staff,
+            UserRole.Receptionist => Receptionist,
             UserRole.Administrator => Administrator,
-            UserRole.Operator => Operator,
             _ => Guest
         };
     }
@@ -625,8 +355,8 @@ public static class UserRoles
         return roleName switch
         {
             Staff => UserRole.Staff,
+            Receptionist => UserRole.Receptionist,
             Administrator => UserRole.Administrator,
-            Operator => UserRole.Operator,
             _ => throw new ArgumentException($"Invalid role name: {roleName}")
         };
     }
@@ -641,8 +371,8 @@ public static class UserRoles
         return roleName switch
         {
             Staff => "Staff members who can create and manage their own invitations",
+            Receptionist => "Receptionists who handle check-in/check-out operations, walk-ins, and visitor flow management",
             Administrator => "Administrators with full system access and user management capabilities",
-            Operator => "Operators who manage visitor check-ins, walk-ins, and real-time operations",
             SuperAdministrator => "Super administrators with complete system control",
             System => "System role for internal operations and automated processes",
             Guest => "Guest users with very limited access",

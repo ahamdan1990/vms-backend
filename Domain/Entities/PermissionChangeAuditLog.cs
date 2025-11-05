@@ -38,8 +38,7 @@ public class PermissionChangeAuditLog
     /// <summary>
     /// User who made the change
     /// </summary>
-    [Required]
-    public int ChangedBy { get; set; }
+    public int? ChangedBy { get; set; }
 
     /// <summary>
     /// When the change was made
@@ -86,7 +85,7 @@ public class PermissionChangeAuditLog
     public Permission Permission { get; set; } = null!;
 
     /// <summary>
-    /// User who made the change
+    /// User who made the change (nullable to avoid query filter issues)
     /// </summary>
-    public User ChangedByUser { get; set; } = null!;
+    public User? ChangedByUser { get; set; }
 }

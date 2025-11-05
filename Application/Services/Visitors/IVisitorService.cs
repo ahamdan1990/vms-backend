@@ -28,6 +28,7 @@ public interface IVisitorService
     /// Checks if visitor can be deleted
     /// </summary>
     /// <param name="id">Visitor ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Validation result</returns>
     Task<ValidationResult> ValidateVisitorForDeletionAsync(int id, CancellationToken cancellationToken = default);
 

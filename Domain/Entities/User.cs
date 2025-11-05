@@ -292,9 +292,9 @@ public class User : SoftDeleteEntity
     /// Checks if the user is an operator
     /// </summary>
     /// <returns>True if the user is an operator</returns>
-    public bool IsOperator()
+    public bool IsReceptionist()
     {
-        return Role == UserRole.Operator;
+        return Role == UserRole.Receptionist;
     }
 
     /// <summary>

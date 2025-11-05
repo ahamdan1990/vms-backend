@@ -26,10 +26,9 @@ public static class RolePermissionSeeder
         // Get roles from database
         var staffRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Staff");
         var receptionistRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Receptionist");
-        var operatorRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Operator");
         var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Administrator");
 
-        if (staffRole == null || receptionistRole == null || operatorRole == null || adminRole == null)
+        if (staffRole == null || receptionistRole == null || adminRole == null)
         {
             throw new InvalidOperationException("System roles must be seeded before role permissions.");
         }
@@ -72,12 +71,13 @@ public static class RolePermissionSeeder
             Permissions.Report.ViewHistory
         };
 
-        // Receptionist Permissions - Check-in/out, walk-ins, view all invitations (read-only)
+        // Receptionist Permissions - Check-in/out, walk-ins, view all invitations (including pending)
         var receptionistPermissions = new[]
         {
             // Profile management
             Permissions.Profile.ViewOwn,
             Permissions.Profile.UpdateOwn,
+            Permissions.Profile.ChangePassword,
 
             // Check-in/Check-out operations
             Permissions.CheckIn.Process,
@@ -86,22 +86,26 @@ public static class RolePermissionSeeder
             Permissions.CheckIn.ViewHistory,
             Permissions.CheckIn.PrintBadge,
             Permissions.CheckIn.QRScan,
+            Permissions.CheckIn.Override,
+            Permissions.CheckIn.ManualVerification,
 
             // Walk-in registration
             Permissions.WalkIn.Register,
             Permissions.WalkIn.QuickRegister,
             Permissions.WalkIn.CheckIn,
             Permissions.WalkIn.ViewList,
+            Permissions.WalkIn.ViewHistory,
 
-            // View all invitations (read-only)
+            // View all invitations (read-only, including PENDING)
             Permissions.Invitation.ReadAll,
-            Permissions.Invitation.ViewPending,
+            Permissions.Invitation.ViewPending, // KEY DIFFERENCE: Can see pending invitations
             Permissions.Invitation.ViewHistory,
 
             // View all visitors (read-only)
             Permissions.Visitor.ReadAll,
             Permissions.Visitor.ReadToday,
             Permissions.Visitor.ViewHistory,
+            Permissions.Visitor.Create, // For walk-in creation
 
             // QR Code operations
             Permissions.QRCode.Scan,
@@ -111,20 +115,16 @@ public static class RolePermissionSeeder
             // Badge printing
             Permissions.Badge.Print,
             Permissions.Badge.ReprintLost,
-            Permissions.Badge.ViewQueue,
-            Permissions.Badge.ViewHistory,
 
-            // Notifications
+            // Notifications & Alerts (consolidated)
             Permissions.Notification.ReadOwn,
             Permissions.Notification.ReadAll,
-            Permissions.Alert.Receive,
-            Permissions.Alert.Acknowledge,
-            Permissions.Alert.ViewHistory,
+            Permissions.Notification.Receive,
+            Permissions.Notification.Acknowledge,
 
             // Dashboard
+            Permissions.Dashboard.ViewBasic,
             Permissions.Dashboard.ViewOperations,
-            Permissions.Dashboard.ViewRealTime,
-            Permissions.Dashboard.ViewMetrics,
 
             // Calendar
             Permissions.Calendar.ViewAll,
@@ -135,75 +135,7 @@ public static class RolePermissionSeeder
             Permissions.Emergency.ViewRoster,
             Permissions.Emergency.PrintRoster,
 
-            // Reports (view only)
-            Permissions.Report.GenerateAll,
-            Permissions.Report.ViewHistory,
-            Permissions.Report.Export
-        };
-
-        // Operator Permissions - Similar to Receptionist but only sees APPROVED invitations
-        var operatorPermissions = new[]
-        {
-            // Profile management
-            Permissions.Profile.ViewOwn,
-            Permissions.Profile.UpdateOwn,
-
-            // Check-in/Check-out operations
-            Permissions.CheckIn.Process,
-            Permissions.CheckIn.ProcessOut,
-            Permissions.CheckIn.ViewQueue,
-            Permissions.CheckIn.ViewHistory,
-            Permissions.CheckIn.PrintBadge,
-            Permissions.CheckIn.QRScan,
-
-            // Walk-in registration
-            Permissions.WalkIn.Register,
-            Permissions.WalkIn.QuickRegister,
-            Permissions.WalkIn.CheckIn,
-            Permissions.WalkIn.ViewList,
-
-            // View APPROVED invitations only (read-only)
-            Permissions.Invitation.ReadAll,
-            Permissions.Invitation.ViewHistory,
-
-            // View approved visitors
-            Permissions.Visitor.ReadAll,
-            Permissions.Visitor.ReadToday,
-            Permissions.Visitor.ViewHistory,
-
-            // QR Code operations
-            Permissions.QRCode.Scan,
-            Permissions.QRCode.Validate,
-            Permissions.QRCode.ViewHistory,
-
-            // Badge printing
-            Permissions.Badge.Print,
-            Permissions.Badge.ReprintLost,
-            Permissions.Badge.ViewQueue,
-            Permissions.Badge.ViewHistory,
-
-            // Notifications
-            Permissions.Notification.ReadOwn,
-            Permissions.Notification.ReadAll,
-            Permissions.Alert.Receive,
-            Permissions.Alert.Acknowledge,
-            Permissions.Alert.ViewHistory,
-
-            // Dashboard
-            Permissions.Dashboard.ViewOperations,
-            Permissions.Dashboard.ViewRealTime,
-            Permissions.Dashboard.ViewMetrics,
-
-            // Calendar
-            Permissions.Calendar.ViewAll,
-            Permissions.Calendar.ViewAvailability,
-
-            // Emergency export (for evacuation scenarios)
-            Permissions.Emergency.Export,
-            Permissions.Emergency.ViewRoster,
-            Permissions.Emergency.PrintRoster,
-
-            // Reports (view only)
+            // Reports
             Permissions.Report.GenerateAll,
             Permissions.Report.ViewHistory,
             Permissions.Report.Export
@@ -222,7 +154,7 @@ public static class RolePermissionSeeder
                     RoleId = staffRole.Id,
                     PermissionId = permissionId,
                     GrantedAt = DateTime.UtcNow,
-                    GrantedBy = adminRole.Id // System seeded by admin role
+                    GrantedBy = null // System seeded, no specific user
                 });
             }
             else
@@ -241,31 +173,12 @@ public static class RolePermissionSeeder
                     RoleId = receptionistRole.Id,
                     PermissionId = permissionId,
                     GrantedAt = DateTime.UtcNow,
-                    GrantedBy = adminRole.Id // System seeded by admin role
+                    GrantedBy = null // System seeded, no specific user
                 });
             }
             else
             {
                 Console.WriteLine($"Warning: Permission '{permissionName}' not found for Receptionist role.");
-            }
-        }
-
-        // Create role permission mappings for Operator
-        foreach (var permissionName in operatorPermissions)
-        {
-            if (allPermissions.TryGetValue(permissionName, out var permissionId))
-            {
-                rolePermissions.Add(new RolePermission
-                {
-                    RoleId = operatorRole.Id,
-                    PermissionId = permissionId,
-                    GrantedAt = DateTime.UtcNow,
-                    GrantedBy = adminRole.Id // System seeded by admin role
-                });
-            }
-            else
-            {
-                Console.WriteLine($"Warning: Permission '{permissionName}' not found for Operator role.");
             }
         }
 
@@ -279,7 +192,7 @@ public static class RolePermissionSeeder
                     RoleId = adminRole.Id,
                     PermissionId = permissionId,
                     GrantedAt = DateTime.UtcNow,
-                    GrantedBy = adminRole.Id // System seeded by admin role
+                    GrantedBy = null // System seeded, no specific user
                 });
             }
         }
@@ -290,8 +203,7 @@ public static class RolePermissionSeeder
         Console.WriteLine($"Successfully seeded {rolePermissions.Count} role-permission mappings.");
         Console.WriteLine($"  - Staff: {staffPermissions.Length} permissions");
         Console.WriteLine($"  - Receptionist: {receptionistPermissions.Length} permissions");
-        Console.WriteLine($"  - Operator: {operatorPermissions.Length} permissions");
-        Console.WriteLine($"  - Administrator: {adminPermissions.Length} permissions");
+        Console.WriteLine($"  - Administrator: {adminPermissions.Length} permissions (ALL)");
     }
 
     /// <summary>
@@ -303,7 +215,6 @@ public static class RolePermissionSeeder
         {
             "Staff" => GetStaffPermissions(),
             "Receptionist" => GetReceptionistPermissions(),
-            "Operator" => GetOperatorPermissions(),
             "Administrator" => Permissions.GetAllPermissions(),
             _ => new List<string>()
         };
@@ -343,87 +254,38 @@ public static class RolePermissionSeeder
         {
             Permissions.Profile.ViewOwn,
             Permissions.Profile.UpdateOwn,
+            Permissions.Profile.ChangePassword,
             Permissions.CheckIn.Process,
             Permissions.CheckIn.ProcessOut,
             Permissions.CheckIn.ViewQueue,
             Permissions.CheckIn.ViewHistory,
             Permissions.CheckIn.PrintBadge,
             Permissions.CheckIn.QRScan,
+            Permissions.CheckIn.Override,
+            Permissions.CheckIn.ManualVerification,
             Permissions.WalkIn.Register,
             Permissions.WalkIn.QuickRegister,
             Permissions.WalkIn.CheckIn,
             Permissions.WalkIn.ViewList,
+            Permissions.WalkIn.ViewHistory,
             Permissions.Invitation.ReadAll,
-            Permissions.Invitation.ViewPending,
+            Permissions.Invitation.ViewPending, // Key: Can see pending invitations
             Permissions.Invitation.ViewHistory,
             Permissions.Visitor.ReadAll,
             Permissions.Visitor.ReadToday,
             Permissions.Visitor.ViewHistory,
+            Permissions.Visitor.Create, // For walk-in creation
             Permissions.QRCode.Scan,
             Permissions.QRCode.Validate,
             Permissions.QRCode.ViewHistory,
             Permissions.Badge.Print,
             Permissions.Badge.ReprintLost,
-            Permissions.Badge.ViewQueue,
-            Permissions.Badge.ViewHistory,
             Permissions.Notification.ReadOwn,
             Permissions.Notification.ReadAll,
-            Permissions.Alert.Receive,
-            Permissions.Alert.Acknowledge,
-            Permissions.Alert.ViewHistory,
+            Permissions.Notification.Receive, // Alerts consolidated into Notification
+            Permissions.Notification.Acknowledge,
+            Permissions.Dashboard.ViewBasic,
             Permissions.Dashboard.ViewOperations,
-            Permissions.Dashboard.ViewRealTime,
-            Permissions.Dashboard.ViewMetrics,
-            Permissions.Calendar.ViewAll,
-            Permissions.Calendar.ViewAvailability,
-            Permissions.Emergency.Export,
-            Permissions.Emergency.ViewRoster,
-            Permissions.Emergency.PrintRoster,
-            Permissions.Report.GenerateAll,
-            Permissions.Report.ViewHistory,
-            Permissions.Report.Export
-        };
-    }
-
-    /// <summary>
-    /// Gets Operator role permissions
-    /// </summary>
-    private static List<string> GetOperatorPermissions()
-    {
-        return new List<string>
-        {
-            Permissions.Profile.ViewOwn,
-            Permissions.Profile.UpdateOwn,
-            Permissions.CheckIn.Process,
-            Permissions.CheckIn.ProcessOut,
-            Permissions.CheckIn.ViewQueue,
-            Permissions.CheckIn.ViewHistory,
-            Permissions.CheckIn.PrintBadge,
-            Permissions.CheckIn.QRScan,
-            Permissions.WalkIn.Register,
-            Permissions.WalkIn.QuickRegister,
-            Permissions.WalkIn.CheckIn,
-            Permissions.WalkIn.ViewList,
-            Permissions.Invitation.ReadAll,
-            Permissions.Invitation.ViewHistory,
-            Permissions.Visitor.ReadAll,
-            Permissions.Visitor.ReadToday,
-            Permissions.Visitor.ViewHistory,
-            Permissions.QRCode.Scan,
-            Permissions.QRCode.Validate,
-            Permissions.QRCode.ViewHistory,
-            Permissions.Badge.Print,
-            Permissions.Badge.ReprintLost,
-            Permissions.Badge.ViewQueue,
-            Permissions.Badge.ViewHistory,
-            Permissions.Notification.ReadOwn,
-            Permissions.Notification.ReadAll,
-            Permissions.Alert.Receive,
-            Permissions.Alert.Acknowledge,
-            Permissions.Alert.ViewHistory,
-            Permissions.Dashboard.ViewOperations,
-            Permissions.Dashboard.ViewRealTime,
-            Permissions.Dashboard.ViewMetrics,
             Permissions.Calendar.ViewAll,
             Permissions.Calendar.ViewAvailability,
             Permissions.Emergency.Export,

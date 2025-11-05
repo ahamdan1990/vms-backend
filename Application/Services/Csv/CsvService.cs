@@ -319,7 +319,7 @@ public class CsvService : ICsvService
     /// <summary>
     /// Parses a filled CSV invitation file
     /// </summary>
-    public async Task<ParsedInvitationData> ParseFilledInvitationAsync(Stream csvStream, CancellationToken cancellationToken = default)
+    public Task<ParsedInvitationData> ParseFilledInvitationAsync(Stream csvStream, CancellationToken cancellationToken = default)
     {
         var parsedData = new ParsedInvitationData();
 
@@ -333,7 +333,7 @@ public class CsvService : ICsvService
             if (!records.Any())
             {
                 parsedData.ValidationErrors.Add("CSV file is empty or has no valid records");
-                return parsedData;
+                return Task.FromResult(parsedData);
             }
 
             // Parse sections
@@ -344,13 +344,13 @@ public class CsvService : ICsvService
             // Validate required data
             ValidateParsedData(parsedData);
 
-            return parsedData;
+            return Task.FromResult(parsedData);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to parse CSV invitation file");
             parsedData.ValidationErrors.Add($"Failed to parse CSV file: {ex.Message}");
-            return parsedData;
+            return Task.FromResult(parsedData);
         }
     }
     /// <summary>
@@ -402,7 +402,7 @@ public class CsvService : ICsvService
     /// <summary>
     /// Validates CSV structure and required fields
     /// </summary>
-    public async Task<CsvValidationResult> ValidateCsvStructureAsync(Stream csvStream, CancellationToken cancellationToken = default)
+    public Task<CsvValidationResult> ValidateCsvStructureAsync(Stream csvStream, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -412,7 +412,7 @@ public class CsvService : ICsvService
             // Read headers
             if (!csvReader.Read() || !csvReader.ReadHeader())
             {
-                return CsvValidationResult.Failure(new List<string> { "CSV file has no headers" });
+                return Task.FromResult(CsvValidationResult.Failure(new List<string> { "CSV file has no headers" }));
             }
 
             var headers = csvReader.HeaderRecord?.ToList() ?? new List<string>();
@@ -429,7 +429,7 @@ public class CsvService : ICsvService
 
             if (errors.Any())
             {
-                return CsvValidationResult.Failure(errors);
+                return Task.FromResult(CsvValidationResult.Failure(errors));
             }
 
             // Count rows and visitor sections
@@ -440,19 +440,19 @@ public class CsvService : ICsvService
             {
                 rowCount++;
                 var section = csvReader.GetField("Section")?.Trim();
-                
+
                 if (!string.IsNullOrEmpty(section) && section.StartsWith("Visitor", StringComparison.OrdinalIgnoreCase))
                 {
                     visitorSectionCount++;
                 }
             }
 
-            return CsvValidationResult.Success(rowCount, headers, visitorSectionCount);
+            return Task.FromResult(CsvValidationResult.Success(rowCount, headers, visitorSectionCount));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to validate CSV structure");
-            return CsvValidationResult.Failure(new List<string> { $"Validation failed: {ex.Message}" });
+            return Task.FromResult(CsvValidationResult.Failure(new List<string> { $"Validation failed: {ex.Message}" }));
         }
     }
     /// <summary>

@@ -84,8 +84,8 @@ public class JwtService : IJwtService
             var expiry = issuedAt.AddMinutes(expiryInMinutes);
 
             var secretKey = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "SecretKey", "");
-            var issuer = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Issuer", "");
-            var audience = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Audience", "");
+            var issuer = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Issuer", "") ?? "";
+            var audience = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Audience", "") ?? "";
             var algorithm = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Algorithm", "HS256");
 
             if (string.IsNullOrEmpty(secretKey))
@@ -271,8 +271,8 @@ public class JwtService : IJwtService
             }
 
             var secretKey = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "SecretKey", "");
-            var issuer = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Issuer", "");
-            var audience = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Audience", "");
+            var issuer = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Issuer", "") ?? "";
+            var audience = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Audience", "") ?? "";
             var algorithm = await _dynamicConfig.GetConfigurationAsync<string>("JWT", "Algorithm", "HS256");
             var validateIssuerSigningKey = await _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateIssuerSigningKey", true);
             var validateIssuer = await _dynamicConfig.GetConfigurationAsync<bool>("JWT", "ValidateIssuer", true);

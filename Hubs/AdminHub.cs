@@ -31,7 +31,7 @@ public class AdminHub : BaseHub
 
         // Check admin permissions
         var userRole = GetCurrentUserRole();
-        if (userRole != UserRoles.Administrator && !HasPermission(Permissions.SystemConfig.ViewAll))
+        if (userRole != UserRoles.Administrator && !HasPermission(Permissions.SystemConfig.Read))
         {
             await Clients.Caller.SendAsync("Error", "Administrator permissions required");
             return;
@@ -42,7 +42,7 @@ public class AdminHub : BaseHub
             // Join admin groups based on permissions
             await Groups.AddToGroupAsync(Context.ConnectionId, "Administrators");
             
-            if (HasPermission(Permissions.SystemConfig.ViewAll))
+            if (HasPermission(Permissions.SystemConfig.Read))
                 await Groups.AddToGroupAsync(Context.ConnectionId, "SystemConfig");
                 
             if (HasPermission(Permissions.Invitation.ApproveAll))
@@ -80,7 +80,7 @@ public class AdminHub : BaseHub
     public async Task GetSystemHealth()
     {
         var userId = GetCurrentUserId();
-        if (!userId.HasValue || !HasPermission(Permissions.SystemConfig.ViewAll))
+        if (!userId.HasValue || !HasPermission(Permissions.SystemConfig.Read))
         {
             return;
         }
@@ -246,7 +246,7 @@ public class AdminHub : BaseHub
     public async Task GetSystemMetrics()
     {
         var userId = GetCurrentUserId();
-        if (!userId.HasValue || !HasPermission(Permissions.SystemConfig.ViewAll))
+        if (!userId.HasValue || !HasPermission(Permissions.SystemConfig.Read))
         {
             return;
         }

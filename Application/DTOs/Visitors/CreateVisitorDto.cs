@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
 using VisitorManagementSystem.Api.Domain.Enums;

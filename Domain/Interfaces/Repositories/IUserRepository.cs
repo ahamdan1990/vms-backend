@@ -262,7 +262,7 @@ public class UserStatistics
     public int PendingUsers { get; set; }
     public int StaffUsers { get; set; }
     public int AdminUsers { get; set; }
-    public int OperatorUsers { get; set; }
+    public int ReceptionistUsers { get; set; }
     public int UsersWithExpiredPasswords { get; set; }
     public int UsersRequiringPasswordChange { get; set; }
     public int UsersWithFailedLogins { get; set; }

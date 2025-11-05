@@ -8,7 +8,7 @@ namespace VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 /// </summary>
 public interface IInvitationRepository : IGenericRepository<Invitation>
 {
-    Task<Invitation?> GetByIdAsync(
+    new Task<Invitation?> GetByIdAsync(
        int id,
        CancellationToken cancellationToken = default);
 

@@ -68,11 +68,11 @@ public class GetAvailableTimeSlotsQueryHandler : IRequestHandler<GetAvailableTim
         return availableTimeSlots;
     }
 
-    private async Task<int> GetCurrentBookingsForTimeSlot(int timeSlotId, DateTime date)
+    private Task<int> GetCurrentBookingsForTimeSlot(int timeSlotId, DateTime date)
     {
         // This would calculate the current bookings for the time slot on the specified date
         // Implementation would depend on how invitations/bookings are linked to time slots
         // For now, returning 0 as a placeholder
-        return 0;
+        return Task.FromResult(0);
     }
 }

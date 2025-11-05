@@ -611,7 +611,7 @@ public class VisitorService : IVisitorService
         }
     }
 
-    public async Task<ValidationResult> ValidateBusinessRulesAsync(Visitor visitor, VisitorOperation operation)
+    public Task<ValidationResult> ValidateBusinessRulesAsync(Visitor visitor, VisitorOperation operation)
     {
         try
         {
@@ -665,12 +665,12 @@ public class VisitorService : IVisitorService
                 Warnings = warnings
             };
 
-            return result;
+            return Task.FromResult(result);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error validating business rules for visitor: {VisitorId}", visitor.Id);
-            return ValidationResult.Failure("Validation failed due to system error.");
+            return Task.FromResult(ValidationResult.Failure("Validation failed due to system error."));
         }
     }
 
