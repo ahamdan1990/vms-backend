@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using MediatR;
+using System.Security.Claims;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
 using VisitorManagementSystem.Api.Application.Services.Visitors;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
+using DomainPermissions = VisitorManagementSystem.Api.Domain.Constants.Permissions;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Visitors;
 
@@ -17,19 +19,22 @@ public class UpdateVisitorCommandHandler : IRequestHandler<UpdateVisitorCommand,
     private readonly ILogger<UpdateVisitorCommandHandler> _logger;
     private readonly IVisitorNotesBridgeService _visitorNotesBridgeService;
     private readonly IMediator _mediator;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public UpdateVisitorCommandHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
         ILogger<UpdateVisitorCommandHandler> logger,
         IVisitorNotesBridgeService visitorNotesBridgeService,
-        IMediator mediator)
+        IMediator mediator,
+        IHttpContextAccessor httpContextAccessor)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
         _visitorNotesBridgeService = visitorNotesBridgeService;
         _mediator = mediator;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<VisitorDto> Handle(UpdateVisitorCommand request, CancellationToken cancellationToken)
@@ -51,6 +56,28 @@ public class UpdateVisitorCommandHandler : IRequestHandler<UpdateVisitorCommand,
             {
                 _logger.LogWarning("Attempt to update deleted visitor: {Id}", request.Id);
                 throw new InvalidOperationException($"Cannot update deleted visitor.");
+            }
+
+            // SECURITY: Check update permissions
+            var userPermissions = GetCurrentUserPermissions();
+            bool hasReadAll = userPermissions.Contains(DomainPermissions.Visitor.ReadAll);
+            bool hasUpdate = userPermissions.Contains(DomainPermissions.Visitor.Update);
+
+            // If user has Update permission but NOT ReadAll, verify they have access to this specific visitor
+            // (ReadAll is used as a proxy for admin-level access since there's no UpdateAll permission)
+            if (hasUpdate && !hasReadAll)
+            {
+                var hasAccess = await _unitOfWork.VisitorAccess.HasAccessAsync(
+                    request.ModifiedBy,
+                    visitor.Id,
+                    cancellationToken);
+
+                if (!hasAccess)
+                {
+                    _logger.LogWarning("User {UserId} attempted to update visitor {VisitorId} without access permission",
+                        request.ModifiedBy, visitor.Id);
+                    throw new UnauthorizedAccessException("You do not have permission to update this visitor.");
+                }
             }
 
             // Validate email uniqueness (excluding current visitor)
@@ -159,5 +186,13 @@ public class UpdateVisitorCommandHandler : IRequestHandler<UpdateVisitorCommand,
             _logger.LogError(ex, "Error updating visitor with ID: {Id}", request.Id);
             throw;
         }
+    }
+
+    private List<string> GetCurrentUserPermissions()
+    {
+        return _httpContextAccessor.HttpContext?.User
+            .FindAll("permission")
+            .Select(c => c.Value)
+            .ToList() ?? new List<string>();
     }
 }

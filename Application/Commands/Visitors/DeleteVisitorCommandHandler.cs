@@ -1,9 +1,11 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using System.Security.Claims;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
+using DomainPermissions = VisitorManagementSystem.Api.Domain.Constants.Permissions;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Visitors;
 
@@ -14,13 +16,16 @@ public class DeleteVisitorCommandHandler : IRequestHandler<DeleteVisitorCommand,
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<DeleteVisitorCommandHandler> _logger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public DeleteVisitorCommandHandler(
         IUnitOfWork unitOfWork,
-        ILogger<DeleteVisitorCommandHandler> logger)
+        ILogger<DeleteVisitorCommandHandler> logger,
+        IHttpContextAccessor httpContextAccessor)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<bool> Handle(DeleteVisitorCommand request, CancellationToken cancellationToken)
@@ -36,6 +41,28 @@ public class DeleteVisitorCommandHandler : IRequestHandler<DeleteVisitorCommand,
             {
                 _logger.LogWarning("Visitor not found: {Id}", request.Id);
                 throw new InvalidOperationException($"Visitor with ID '{request.Id}' not found.");
+            }
+
+            // SECURITY: Check delete permissions
+            var userPermissions = GetCurrentUserPermissions();
+            bool hasReadAll = userPermissions.Contains(DomainPermissions.Visitor.ReadAll);
+            bool hasDelete = userPermissions.Contains(DomainPermissions.Visitor.Delete);
+
+            // If user has Delete permission but NOT ReadAll, verify they have access to this specific visitor
+            // (ReadAll is used as a proxy for admin-level access since there's no DeleteAll permission)
+            if (hasDelete && !hasReadAll)
+            {
+                var hasAccess = await _unitOfWork.VisitorAccess.HasAccessAsync(
+                    request.DeletedBy,
+                    visitor.Id,
+                    cancellationToken);
+
+                if (!hasAccess)
+                {
+                    _logger.LogWarning("User {UserId} attempted to delete visitor {VisitorId} without access permission",
+                        request.DeletedBy, visitor.Id);
+                    throw new UnauthorizedAccessException("You do not have permission to delete this visitor.");
+                }
             }
 
             // Get ALL invitations for this visitor to analyze them
@@ -110,5 +137,13 @@ public class DeleteVisitorCommandHandler : IRequestHandler<DeleteVisitorCommand,
             _logger.LogError(ex, "Error deleting visitor with ID: {Id}", request.Id);
             throw;
         }
+    }
+
+    private List<string> GetCurrentUserPermissions()
+    {
+        return _httpContextAccessor.HttpContext?.User
+            .FindAll("permission")
+            .Select(c => c.Value)
+            .ToList() ?? new List<string>();
     }
 }

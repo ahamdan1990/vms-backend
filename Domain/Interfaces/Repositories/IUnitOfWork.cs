@@ -39,6 +39,11 @@ public interface IUnitOfWork : IDisposable
     IVisitorRepository Visitors { get; }
 
     /// <summary>
+    /// Visitor access repository
+    /// </summary>
+    IVisitorAccessRepository VisitorAccess { get; }
+
+    /// <summary>
     /// Visitor document repository
     /// </summary>
     IVisitorDocumentRepository VisitorDocuments { get; }

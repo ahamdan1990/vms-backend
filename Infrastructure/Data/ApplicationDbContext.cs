@@ -37,6 +37,7 @@ public class ApplicationDbContext : DbContext
 
     // DbSets - Visitor Domain
     public DbSet<Visitor> Visitors { get; set; } = null!;
+    public DbSet<VisitorAccess> VisitorAccess { get; set; } = null!;
     public DbSet<VisitorDocument> VisitorDocuments { get; set; } = null!;
     public DbSet<VisitorNote> VisitorNotes { get; set; } = null!;
     public DbSet<EmergencyContact> EmergencyContacts { get; set; } = null!;
@@ -78,6 +79,7 @@ public class ApplicationDbContext : DbContext
 
         // Apply all configurations - Visitor Domain
         modelBuilder.ApplyConfiguration(new VisitorConfiguration());
+        modelBuilder.ApplyConfiguration(new VisitorAccessConfiguration());
         modelBuilder.ApplyConfiguration(new VisitorDocumentConfiguration());
         modelBuilder.ApplyConfiguration(new VisitorNoteConfiguration());
         modelBuilder.ApplyConfiguration(new EmergencyContactConfiguration());
@@ -106,6 +108,7 @@ public class ApplicationDbContext : DbContext
 
         // Visitor domain soft delete filters (standardized on IsDeleted pattern)
         modelBuilder.Entity<Visitor>().HasQueryFilter(v => !v.IsDeleted);
+        modelBuilder.Entity<VisitorAccess>().HasQueryFilter(va => !va.User.IsDeleted); // Filter by User soft-delete
         modelBuilder.Entity<VisitorDocument>().HasQueryFilter(d => !d.IsDeleted);
         modelBuilder.Entity<VisitorNote>().HasQueryFilter(n => !n.IsDeleted);
         modelBuilder.Entity<EmergencyContact>().HasQueryFilter(c => !c.IsDeleted);

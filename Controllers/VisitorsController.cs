@@ -54,7 +54,7 @@ public class VisitorsController : BaseController
     /// <param name="includeDeleted">Include deleted visitors</param>
     /// <returns>Paginated list of visitors</returns>
     [HttpGet]
-    [Authorize(Policy = Permissions.Visitor.Read)]
+    [Authorize(Policy = "Permissions.Any.Visitor.Read,Visitor.Read.Own,Visitor.Read.All")]
     public async Task<IActionResult> GetVisitors(
         [FromQuery] int pageIndex = 0,
         [FromQuery] int pageSize = 20,
@@ -92,7 +92,7 @@ public class VisitorsController : BaseController
     /// <param name="includeDeleted">Include deleted visitor</param>
     /// <returns>Visitor details</returns>
     [HttpGet("{id:int}")]
-    [Authorize(Policy = Permissions.Visitor.Read)]
+    [Authorize(Policy = "Permissions.Any.Visitor.Read,Visitor.Read.Own,Visitor.Read.All")]
     public async Task<IActionResult> GetVisitor(int id, [FromQuery] bool includeDeleted = false)
     {
         var query = new GetVisitorByIdQuery { Id = id, IncludeDeleted = includeDeleted };
@@ -291,7 +291,7 @@ public class VisitorsController : BaseController
     /// <param name="searchDto">Search parameters</param>
     /// <returns>Paginated search results</returns>
     [HttpPost("search")]
-    [Authorize(Policy = Permissions.Visitor.Read)]
+    [Authorize(Policy = "Permissions.Any.Visitor.Read,Visitor.Read.Own,Visitor.Read.All")]
     public async Task<IActionResult> SearchVisitors([FromBody] VisitorSearchDto searchDto)
     {
         var query = new SearchVisitorsQuery
@@ -404,7 +404,7 @@ public class VisitorsController : BaseController
     /// <param name="includeDeleted">Include deleted visitors</param>
     /// <returns>List of VIP visitors</returns>
     [HttpGet("vip")]
-    [Authorize(Policy = Permissions.Visitor.Read)]
+    [Authorize(Policy = "Permissions.Any.Visitor.Read,Visitor.Read.Own,Visitor.Read.All")]
     public async Task<IActionResult> GetVipVisitors([FromQuery] bool includeDeleted = false)
     {
         var query = new GetVipVisitorsQuery { IncludeDeleted = includeDeleted };
@@ -418,7 +418,7 @@ public class VisitorsController : BaseController
     /// <param name="includeDeleted">Include deleted visitors</param>
     /// <returns>List of blacklisted visitors</returns>
     [HttpGet("blacklisted")]
-    [Authorize(Policy = Permissions.Visitor.Read)]
+    [Authorize(Policy = "Permissions.Any.Visitor.Read,Visitor.Read.Own,Visitor.Read.All")]
     public async Task<IActionResult> GetBlacklistedVisitors([FromQuery] bool includeDeleted = false)
     {
         var query = new GetBlacklistedVisitorsQuery { IncludeDeleted = includeDeleted };
@@ -446,7 +446,7 @@ public class VisitorsController : BaseController
     /// <param name="id">Visitor ID</param>
     /// <returns>Profile photo file or 404 if not found</returns>
     [HttpGet("{id:int}/photo")]
-    [Authorize(Policy = Permissions.Visitor.Read)]
+    [Authorize(Policy = "Permissions.Any.Visitor.Read,Visitor.Read.Own,Visitor.Read.All")]
     public async Task<IActionResult> GetVisitorPhoto(int id)
     {
         try

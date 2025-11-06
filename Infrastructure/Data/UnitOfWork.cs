@@ -23,6 +23,7 @@ public class UnitOfWork : IUnitOfWork
 
     // Repository properties - Visitor Domain
     public IVisitorRepository Visitors { get; private set; }
+    public IVisitorAccessRepository VisitorAccess { get; private set; }
     public IVisitorDocumentRepository VisitorDocuments { get; private set; }
     public IVisitorNoteRepository VisitorNotes { get; private set; }
     public IEmergencyContactRepository EmergencyContacts { get; private set; }
@@ -47,6 +48,7 @@ public class UnitOfWork : IUnitOfWork
                      ISystemConfigurationRepository systemConfigurationRepository,
                      IConfigurationAuditRepository configurationAuditRepository,
                      IVisitorRepository visitorRepository,
+                     IVisitorAccessRepository visitorAccessRepository,
                      IVisitorDocumentRepository visitorDocumentRepository,
                      IVisitorNoteRepository visitorNoteRepository,
                      IEmergencyContactRepository emergencyContactRepository,
@@ -73,6 +75,7 @@ public class UnitOfWork : IUnitOfWork
 
         // Initialize visitor domain repositories
         Visitors = visitorRepository ?? throw new ArgumentNullException(nameof(visitorRepository));
+        VisitorAccess = visitorAccessRepository ?? throw new ArgumentNullException(nameof(visitorAccessRepository));
         VisitorDocuments = visitorDocumentRepository ?? throw new ArgumentNullException(nameof(visitorDocumentRepository));
         VisitorNotes = visitorNoteRepository ?? throw new ArgumentNullException(nameof(visitorNoteRepository));
         EmergencyContacts = emergencyContactRepository ?? throw new ArgumentNullException(nameof(emergencyContactRepository));

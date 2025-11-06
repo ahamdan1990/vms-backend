@@ -35,7 +35,7 @@ public class CapacityController : BaseController
     /// <param name="excludeInvitationId">Invitation ID to exclude (for updates)</param>
     /// <returns>Capacity validation result</returns>
     [HttpGet("validate")]
-    [Authorize(Policy = Permissions.Invitation.Create)]
+    [Authorize(Policy = Permissions.Invitation.Read)]
     public async Task<IActionResult> ValidateCapacity(
         [FromQuery] int? locationId = null,
         [FromQuery] int? timeSlotId = null,
@@ -156,7 +156,7 @@ public class CapacityController : BaseController
     /// <param name="locationId">Location ID (optional)</param>
     /// <returns>Alternative time slots</returns>
     [HttpGet("alternatives")]
-    [Authorize(Policy = Permissions.Invitation.Create)]
+    [Authorize(Policy = Permissions.Invitation.Read)]
     public async Task<IActionResult> GetAlternativeTimeSlots(
         [FromQuery, Required] DateTime originalDateTime,
         [FromQuery, Range(1, 1000)] int expectedVisitors = 1,

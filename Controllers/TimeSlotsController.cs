@@ -34,7 +34,7 @@ public class TimeSlotsController : BaseController
     /// <param name="sortDirection">Sort direction</param>
     /// <returns>List of time slots</returns>
     [HttpGet]
-    [Authorize(Policy = Permissions.Invitation.ReadOwn)]
+    [Authorize(Policy = Permissions.Invitation.Read)]
     public async Task<IActionResult> GetTimeSlots(
         [FromQuery] int? locationId = null,
         [FromQuery] bool activeOnly = true,
@@ -63,7 +63,7 @@ public class TimeSlotsController : BaseController
     /// <param name="id">Time slot ID</param>
     /// <returns>Time slot details</returns>
     [HttpGet("{id:int}")]
-    [Authorize(Policy = Permissions.Invitation.ReadOwn)]
+    [Authorize(Policy = Permissions.Invitation.Read)]
     public async Task<IActionResult> GetTimeSlot(int id)
     {
         var query = new GetTimeSlotByIdQuery { Id = id };
@@ -160,7 +160,7 @@ public class TimeSlotsController : BaseController
     /// <param name="locationId">Location ID</param>
     /// <returns>Available time slots</returns>
     [HttpGet("available")]
-    [Authorize(Policy = Permissions.Invitation.Create)]
+    [Authorize(Policy = Permissions.Invitation.Read)]
     public async Task<IActionResult> GetAvailableTimeSlots(
         [FromQuery] DateTime date,
         [FromQuery] int? locationId = null)

@@ -20,19 +20,22 @@ public class CreateVisitorCommandHandler : IRequestHandler<CreateVisitorCommand,
     private readonly ILogger<CreateVisitorCommandHandler> _logger;
     private readonly IVisitorNotesBridgeService _visitorNotesBridgeService;
     private readonly IMediator _mediator;
+    private readonly IVisitorDuplicateDetectionService _duplicateDetectionService;
 
     public CreateVisitorCommandHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
         ILogger<CreateVisitorCommandHandler> logger,
         IVisitorNotesBridgeService visitorNotesBridgeService,
-        IMediator mediator)
+        IMediator mediator,
+        IVisitorDuplicateDetectionService duplicateDetectionService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
         _visitorNotesBridgeService = visitorNotesBridgeService;
         _mediator = mediator;
+        _duplicateDetectionService = duplicateDetectionService;
     }
 
     public async Task<VisitorDto> Handle(CreateVisitorCommand request, CancellationToken cancellationToken)
@@ -41,20 +44,43 @@ public class CreateVisitorCommandHandler : IRequestHandler<CreateVisitorCommand,
         {
             _logger.LogDebug("Processing create visitor command for email: {Email}", request.Email);
 
-            // Validate email uniqueness
-            if (await _unitOfWork.Visitors.EmailExistsAsync(request.Email, cancellationToken: cancellationToken))
+            // STEP 1: Check for duplicate visitor
+            var phoneNumber = !string.IsNullOrEmpty(request.PhoneNumber) && !string.IsNullOrEmpty(request.PhoneCountryCode)
+                ? $"+{request.PhoneCountryCode}{request.PhoneNumber}"
+                : request.PhoneNumber;
+
+            var existingVisitor = await _duplicateDetectionService.FindDuplicateVisitorAsync(
+                request.Email,
+                phoneNumber,
+                request.FirstName,
+                request.LastName,
+                cancellationToken);
+
+            if (existingVisitor != null)
             {
-                _logger.LogWarning("Attempt to create visitor with existing email: {Email}", request.Email);
-                throw new InvalidOperationException($"A visitor with email '{request.Email}' already exists.");
+                // STEP 2: Duplicate found - grant access to current user
+                _logger.LogInformation("Duplicate visitor found: {VisitorId} ({Email}). Granting access to user {UserId}",
+                    existingVisitor.Id, existingVisitor.Email.Value, request.CreatedBy);
+
+                await _unitOfWork.VisitorAccess.GrantAccessAsync(
+                    userId: request.CreatedBy,
+                    visitorId: existingVisitor.Id,
+                    accessType: VisitorAccessType.SharedDuplicate,
+                    grantedBy: request.CreatedBy,
+                    cancellationToken);
+
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation("Access granted to user {UserId} for existing visitor {VisitorId}",
+                    request.CreatedBy, existingVisitor.Id);
+
+                // STEP 3: Return existing visitor
+                var existingVisitorDto = _mapper.Map<VisitorDto>(existingVisitor);
+                return existingVisitorDto;
             }
 
-            // Validate government ID uniqueness if provided
-            if (!string.IsNullOrEmpty(request.GovernmentId) &&
-                await _unitOfWork.Visitors.GovernmentIdExistsAsync(request.GovernmentId, cancellationToken: cancellationToken))
-            {
-                _logger.LogWarning("Attempt to create visitor with existing government ID: {GovernmentId}", request.GovernmentId);
-                throw new InvalidOperationException($"A visitor with government ID '{request.GovernmentId}' already exists.");
-            }
+            // STEP 4: No duplicate - create new visitor
+            _logger.LogDebug("No duplicate visitor found. Creating new visitor for email: {Email}", request.Email);
 
             // Create visitor entity
             var visitor = new Visitor
@@ -172,9 +198,22 @@ public class CreateVisitorCommandHandler : IRequestHandler<CreateVisitorCommand,
 
             // FIRST: Save visitor and emergency contacts to get the visitor ID
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-            
+
             _logger.LogInformation("Visitor created successfully: {VisitorId} ({Email}) by {CreatedBy}",
                 visitor.Id, visitor.Email.Value, request.CreatedBy);
+
+            // STEP 5: Grant creator access to the visitor
+            await _unitOfWork.VisitorAccess.GrantAccessAsync(
+                userId: request.CreatedBy,
+                visitorId: visitor.Id,
+                accessType: VisitorAccessType.Creator,
+                grantedBy: request.CreatedBy,
+                cancellationToken);
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Creator access granted to user {UserId} for visitor {VisitorId}",
+                request.CreatedBy, visitor.Id);
 
             // SECOND: Create visitor notes from special requirements (now visitor has an ID)
             await _visitorNotesBridgeService.CreateNotesFromRequirementsAsync(visitor, request.CreatedBy, cancellationToken);

@@ -58,6 +58,7 @@ public static class Permissions
     {
         public const string Create = "Visitor.Create";
         public const string Read = "Visitor.Read";
+        public const string ReadOwn = "Visitor.Read.Own";
         public const string ReadToday = "Visitor.Read.Today";
         public const string ReadAll = "Visitor.Read.All";
         public const string Update = "Visitor.Update";
@@ -211,6 +212,30 @@ public static class Permissions
     }
 
     // REMOVED: Alert permissions - Merged into Notification class below
+
+    /// <summary>
+    /// Visit purpose management permissions
+    /// </summary>
+    public static class VisitPurpose
+    {
+        public const string Read = "VisitPurpose.Read";
+        public const string ReadAll = "VisitPurpose.Read.All";
+        public const string Create = "VisitPurpose.Create";
+        public const string Update = "VisitPurpose.Update";
+        public const string Delete = "VisitPurpose.Delete";
+    }
+
+    /// <summary>
+    /// Location management permissions
+    /// </summary>
+    public static class Location
+    {
+        public const string Read = "Location.Read";
+        public const string ReadAll = "Location.Read.All";
+        public const string Create = "Location.Create";
+        public const string Update = "Location.Update";
+        public const string Delete = "Location.Delete";
+    }
 
     /// <summary>
     /// System configuration permissions (simplified)

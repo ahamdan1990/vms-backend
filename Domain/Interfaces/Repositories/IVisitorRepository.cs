@@ -26,6 +26,36 @@ public interface IVisitorRepository : IGenericRepository<Visitor>
     Task<Visitor?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets a visitor by phone number
+    /// </summary>
+    /// <param name="phoneNumber">Phone number</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Visitor if found</returns>
+    Task<Visitor?> GetByPhoneNumberAsync(string phoneNumber, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets visitors accessible by a user (paginated with filtering)
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    /// <param name="pageIndex">Page index</param>
+    /// <param name="pageSize">Page size</param>
+    /// <param name="searchTerm">Optional search term</param>
+    /// <param name="company">Optional company filter</param>
+    /// <param name="isVip">Optional VIP filter</param>
+    /// <param name="isBlacklisted">Optional blacklist filter</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Paginated list of accessible visitors</returns>
+    Task<(List<Visitor> Visitors, int TotalCount)> GetAccessibleByUserAsync(
+        int userId,
+        int pageIndex,
+        int pageSize,
+        string? searchTerm = null,
+        string? company = null,
+        bool? isVip = null,
+        bool? isBlacklisted = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Searches visitors by name, email, or company
     /// </summary>
     /// <param name="searchTerm">Search term</param>

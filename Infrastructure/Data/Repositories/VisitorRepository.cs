@@ -32,6 +32,73 @@ public class VisitorRepository : BaseRepository<Visitor>, IVisitorRepository
             .FirstOrDefaultAsync(v => v.NormalizedEmail == normalizedEmail, cancellationToken);
     }
 
+    public async Task<Visitor?> GetByPhoneNumberAsync(string phoneNumber, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(v => v.EmergencyContacts)
+            .Include(v => v.Documents)
+            .Include(v => v.VisitorNotes)
+            .FirstOrDefaultAsync(v => v.PhoneNumber != null && v.PhoneNumber.Value == phoneNumber && v.IsActive, cancellationToken);
+    }
+
+    public async Task<(List<Visitor> Visitors, int TotalCount)> GetAccessibleByUserAsync(
+        int userId,
+        int pageIndex,
+        int pageSize,
+        string? searchTerm = null,
+        string? company = null,
+        bool? isVip = null,
+        bool? isBlacklisted = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Join with VisitorAccess to get only accessible visitors
+        var query = _dbSet
+            .Where(v => v.IsActive &&
+                        v.VisitorAccesses.Any(va => va.UserId == userId && va.IsActive));
+
+        // Apply search term filter
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.ToLower().Trim();
+            query = query.Where(v =>
+                v.FirstName.ToLower().Contains(term) ||
+                v.LastName.ToLower().Contains(term) ||
+                v.Email.Value.ToLower().Contains(term) ||
+                (v.PhoneNumber != null && v.PhoneNumber.Value.Contains(term)) ||
+                (v.Company != null && v.Company.ToLower().Contains(term)));
+        }
+
+        // Apply company filter
+        if (!string.IsNullOrWhiteSpace(company))
+        {
+            query = query.Where(v => v.Company != null &&
+                                      v.Company.ToLower().Contains(company.ToLower()));
+        }
+
+        // Apply VIP filter
+        if (isVip.HasValue)
+        {
+            query = query.Where(v => v.IsVip == isVip.Value);
+        }
+
+        // Apply blacklist filter
+        if (isBlacklisted.HasValue)
+        {
+            query = query.Where(v => v.IsBlacklisted == isBlacklisted.Value);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var visitors = await query
+            .OrderBy(v => v.FirstName)
+            .ThenBy(v => v.LastName)
+            .Skip(pageIndex * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (visitors, totalCount);
+    }
+
     public async Task<(List<Visitor> Visitors, int TotalCount)> SearchVisitorsAsync(
         string searchTerm, 
         int pageIndex, 

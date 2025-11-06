@@ -104,6 +104,7 @@ public static class ServiceCollectionExtensions
 
         // Visitor services
         services.AddScoped<IVisitorService, VisitorService>();
+        services.AddScoped<IVisitorDuplicateDetectionService, VisitorDuplicateDetectionService>();
 
         // Capacity management services
         services.AddScoped<ICapacityService, CapacityService>();
@@ -244,6 +245,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IInvitationRepository, InvitationRepository>();
         services.AddScoped<IVisitorRepository, VisitorRepository>();
+        services.AddScoped<IVisitorAccessRepository, VisitorAccessRepository>();
         services.AddScoped<ISystemConfigurationRepository, SystemConfigurationRepository>();
         services.AddScoped<IConfigurationAuditRepository, ConfigurationAuditRepository>();
         services.AddScoped(typeof(IGenericRepository<>), typeof(BaseRepository<>));

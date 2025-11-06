@@ -66,7 +66,7 @@ public class InvitationsController : BaseController
     /// <param name="sortDirection">Sort direction</param>
     /// <returns>Paged list of invitations</returns>
     [HttpGet]
-    [Authorize(Policy = Permissions.Invitation.ReadOwn)]
+    [Authorize(Policy = "Permissions.Any.Invitation.Read,Invitation.Read.Own,Invitation.Read.All")]
     public async Task<IActionResult> GetInvitations(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
@@ -119,7 +119,7 @@ public class InvitationsController : BaseController
     /// <param name="includeApprovals">Include approvals workflow</param>
     /// <returns>Invitation details</returns>
     [HttpGet("{id:int}")]
-    [Authorize(Policy = Permissions.Invitation.ReadOwn)]
+    [Authorize(Policy = "Permissions.Any.Invitation.Read,Invitation.Read.Own,Invitation.Read.All")]
     public async Task<IActionResult> GetInvitation(
         int id,
         [FromQuery] bool includeDeleted = false,
@@ -153,7 +153,7 @@ public class InvitationsController : BaseController
     /// <param name="includeApprovals">Include approvals workflow</param>
     /// <returns>Invitation details</returns>
     [HttpGet("by-reference/{reference}")]
-    [Authorize(Policy = Permissions.Invitation.ReadOwn)]
+    [Authorize(Policy = "Permissions.Any.Invitation.Read,Invitation.Read.Own,Invitation.Read.All")]
     public async Task<IActionResult> GetInvitationByReference(
         string reference,
         [FromQuery] bool includeDeleted = false,
@@ -358,7 +358,7 @@ public class InvitationsController : BaseController
     /// <param name="includeDeleted">Include deleted invitations</param>
     /// <returns>Statistics</returns>
     [HttpGet("statistics")]
-    [Authorize(Policy = Permissions.Invitation.ReadOwn)]
+    [Authorize(Policy = "Permissions.Any.Invitation.Read,Invitation.Read.Own,Invitation.Read.All")]
     public async Task<IActionResult> GetInvitationStatistics(
         [FromQuery] DateTime? startDate = null,
         [FromQuery] DateTime? endDate = null,
@@ -383,7 +383,7 @@ public class InvitationsController : BaseController
     /// <param name="id">Invitation ID</param>
     /// <returns>QR code data</returns>
     [HttpGet("{id:int}/qr-code")]
-    [Authorize(Policy = Permissions.Invitation.ReadOwn)]
+    [Authorize(Policy = "Permissions.Any.Invitation.Read,Invitation.Read.Own,Invitation.Read.All")]
     public async Task<IActionResult> GetInvitationQrCode(int id)
     {
         var query = new GetInvitationByIdQuery { Id = id };
@@ -595,7 +595,7 @@ public class InvitationsController : BaseController
     /// <param name="branded">Include company branding (default: false)</param>
     /// <returns>QR code image as PNG</returns>
     [HttpGet("{id:int}/qr-code/image")]
-    [Authorize(Policy = Permissions.Invitation.Read)]
+    [Authorize(Policy = "Permissions.Any.Invitation.Read,Invitation.Read.Own,Invitation.Read.All")]
     public async Task<IActionResult> GetInvitationQrCodeImage(int id, [FromQuery] int size = 300, [FromQuery] bool branded = false)
     {
         try
@@ -633,7 +633,7 @@ public class InvitationsController : BaseController
     /// <param name="validateDto">QR code validation DTO</param>
     /// <returns>Validation result</returns>
     [HttpPost("qr-code/validate")]
-    [Authorize(Policy = Permissions.Invitation.Read)]
+    [Authorize(Policy = "Permissions.Any.Invitation.Read,Invitation.Read.Own,Invitation.Read.All")]
     public async Task<IActionResult> ValidateQrCode([FromBody] ValidateQrCodeDto validateDto)
     {
         try
@@ -675,7 +675,7 @@ public class InvitationsController : BaseController
     /// <param name="id">Invitation ID</param>
     /// <returns>QR code data</returns>
     [HttpGet("{id:int}/qr-code/data")]
-    [Authorize(Policy = Permissions.Invitation.Read)]
+    [Authorize(Policy = "Permissions.Any.Invitation.Read,Invitation.Read.Own,Invitation.Read.All")]
     public async Task<IActionResult> GetInvitationQrCodeData(int id)
     {
         try
@@ -701,7 +701,7 @@ public class InvitationsController : BaseController
     /// <param name="emailDto">Email sending options</param>
     /// <returns>Email sending result</returns>
     [HttpPost("{id:int}/send-qr-email")]
-    [Authorize(Policy = Permissions.Invitation.Read)]
+    [Authorize(Policy = "Permissions.Any.Invitation.Read,Invitation.Read.Own,Invitation.Read.All")]
     public async Task<IActionResult> SendQrCodeEmail(int id, [FromBody] SendQrEmailDto emailDto)
     {
         try { 

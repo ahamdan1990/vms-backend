@@ -205,6 +205,11 @@ public class Visitor : SoftDeleteEntity
     public virtual ICollection<EmergencyContact> EmergencyContacts { get; set; } = new List<EmergencyContact>();
 
     /// <summary>
+    /// Navigation property for visitor access records (users who can access this visitor)
+    /// </summary>
+    public virtual ICollection<VisitorAccess> VisitorAccesses { get; set; } = new List<VisitorAccess>();
+
+    /// <summary>
     /// Gets the visitor's full name
     /// </summary>
     public string FullName => $"{FirstName} {LastName}".Trim();

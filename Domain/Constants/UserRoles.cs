@@ -155,6 +155,7 @@ public static class UserRoles
             Permissions.Profile.ChangePassword,
             Permissions.Profile.ManagePreferences,
             Permissions.Profile.ViewActivity,
+            Permissions.Profile.UploadPhoto,
 
             // Own invitation management
             Permissions.Invitation.CreateOwn,
@@ -164,11 +165,37 @@ public static class UserRoles
             Permissions.Invitation.Read,
             Permissions.Invitation.ViewHistory,
 
-            // Visitor management (own)
+            // Visitor management (own and mutual visitors)
             Permissions.Visitor.Create,
             Permissions.Visitor.Read,
+            Permissions.Visitor.ReadOwn,
             Permissions.Visitor.Update,
             Permissions.Visitor.ViewStatistics,
+            Permissions.Visitor.Search,
+            Permissions.Visitor.ManagePhotos,
+
+            // Visitor documents (for invitation-related documents)
+            Permissions.VisitorDocument.Create,
+            Permissions.VisitorDocument.Read,
+            Permissions.VisitorDocument.Update,
+            Permissions.VisitorDocument.Upload,
+            Permissions.VisitorDocument.Download,
+
+            // Visitor notes (for tracking visitor information)
+            Permissions.VisitorNote.Create,
+            Permissions.VisitorNote.Read,
+            Permissions.VisitorNote.Update,
+
+            // Emergency contacts (for visitor safety)
+            Permissions.EmergencyContact.Create,
+            Permissions.EmergencyContact.Read,
+            Permissions.EmergencyContact.Update,
+
+            // Visit purposes (read-only for creating invitations)
+            Permissions.VisitPurpose.Read,
+
+            // Locations (read-only for creating invitations)
+            Permissions.Location.Read,
 
             // Calendar access
             Permissions.Calendar.ViewOwn,
@@ -176,6 +203,8 @@ public static class UserRoles
 
             // Own notifications
             Permissions.Notification.ReadOwn,
+            Permissions.Notification.Receive,
+            Permissions.Notification.Acknowledge,
 
             // Basic reporting
             Permissions.Report.GenerateOwn,
@@ -240,6 +269,30 @@ public static class UserRoles
             Permissions.Visitor.Read,
             Permissions.Visitor.Search,
             Permissions.Visitor.ViewStatistics,
+            Permissions.Visitor.ManagePhotos,
+
+            // Visitor documents (for walk-in registration and document verification)
+            Permissions.VisitorDocument.Create,
+            Permissions.VisitorDocument.Read,
+            Permissions.VisitorDocument.Update,
+            Permissions.VisitorDocument.Upload,
+            Permissions.VisitorDocument.Download,
+
+            // Visitor notes
+            Permissions.VisitorNote.Create,
+            Permissions.VisitorNote.Read,
+            Permissions.VisitorNote.Update,
+
+            // Emergency contacts
+            Permissions.EmergencyContact.Create,
+            Permissions.EmergencyContact.Read,
+            Permissions.EmergencyContact.Update,
+
+            // Visit purposes (read-only for viewing invitation details)
+            Permissions.VisitPurpose.Read,
+
+            // Locations (read-only for check-in operations)
+            Permissions.Location.Read,
 
             // QR Code operations
             Permissions.QRCode.Scan,
@@ -275,7 +328,7 @@ public static class UserRoles
             Permissions.Report.ViewHistory,
             Permissions.Report.Export,
 
-            // System config read (for locations, visit purposes, time slots)
+            // System config read (for general system settings, NOT replaced by granular permissions)
             Permissions.SystemConfig.Read,
 
             // User activity

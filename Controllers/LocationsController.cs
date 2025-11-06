@@ -32,7 +32,7 @@ public class LocationsController : BaseController
     /// <param name="includeInactive">Include inactive locations</param>
     /// <returns>List of locations</returns>
     [HttpGet]
-    [Authorize(Policy = Permissions.SystemConfig.Read)]
+    [Authorize(Policy = Permissions.Location.Read)]
     public async Task<IActionResult> GetLocations(
         [FromQuery] string? locationType = null,
         [FromQuery] bool rootOnly = false,
@@ -58,7 +58,7 @@ public class LocationsController : BaseController
     /// <param name="includeChildren">Include child locations</param>
     /// <returns>Location details</returns>
     [HttpGet("{id:int}")]
-    [Authorize(Policy = Permissions.SystemConfig.Read)]
+    [Authorize(Policy = Permissions.Location.Read)]
     public async Task<IActionResult> GetLocation(int id, [FromQuery] bool includeChildren = false)
     {
         var query = new GetLocationByIdQuery 
@@ -83,7 +83,7 @@ public class LocationsController : BaseController
     /// <param name="createDto">Location creation data</param>
     /// <returns>Created location</returns>
     [HttpPost]
-    [Authorize(Policy = Permissions.SystemConfig.Update)]
+    [Authorize(Policy = Permissions.Location.Create)]
     public async Task<IActionResult> CreateLocation([FromBody] CreateLocationDto createDto)
     {
         var command = new CreateLocationCommand
@@ -114,7 +114,7 @@ public class LocationsController : BaseController
     /// <param name="updateDto">Location update data</param>
     /// <returns>Updated location</returns>
     [HttpPut("{id:int}")]
-    [Authorize(Policy = Permissions.SystemConfig.Update)]
+    [Authorize(Policy = Permissions.Location.Update)]
     public async Task<IActionResult> UpdateLocation(int id, [FromBody] UpdateLocationDto updateDto)
     {
         var command = new UpdateLocationCommand
@@ -147,7 +147,7 @@ public class LocationsController : BaseController
     /// <param name="hardDelete">Whether to perform hard delete (default: false)</param>
     /// <returns>Deletion result</returns>
     [HttpDelete("{id:int}")]
-    [Authorize(Policy = Permissions.SystemConfig.Update)]
+    [Authorize(Policy = Permissions.Location.Delete)]
     public async Task<IActionResult> DeleteLocation(int id, [FromQuery] bool hardDelete = false)
     {
         var command = new DeleteLocationCommand

@@ -8,6 +8,7 @@ using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.Enums;
 using System.Security.Claims;
+using DomainPermissions = VisitorManagementSystem.Api.Domain.Constants.Permissions;
 
 namespace VisitorManagementSystem.Api.Application.Queries.Invitations;
 
@@ -177,26 +178,63 @@ public class GetInvitationsQueryHandler : IRequestHandler<GetInvitationsQuery, P
     {
         try
         {
-            // Get current user's role from claims
-            var userRoleClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Role)?.Value;
+            // Get current user ID and permissions
+            var currentUserId = GetCurrentUserId();
+            var userPermissions = GetCurrentUserPermissions();
 
-            _logger.LogDebug("Applying role-based filtering for role: {Role}", userRoleClaim);
+            _logger.LogDebug("Applying permission-based filtering for user: {UserId}", currentUserId);
 
-            // If user has Operator role, filter to only show Approved invitations
-            if (userRoleClaim == "Operator")
+            bool hasReadAll = userPermissions.Contains(DomainPermissions.Invitation.ReadAll);
+            bool hasReadOwn = userPermissions.Contains(DomainPermissions.Invitation.ReadOwn);
+
+            // STAFF: Has ReadOwn but not ReadAll - see only own invitations
+            if (hasReadOwn && !hasReadAll && currentUserId.HasValue)
             {
-                _logger.LogInformation("Filtering invitations for Operator role - showing only Approved invitations");
-                return invitations.Where(i => i.Status == InvitationStatus.Approved).ToList();
+                _logger.LogInformation("Filtering invitations for Staff user {UserId} - showing only own invitations (HostId)", currentUserId.Value);
+                return invitations.Where(i => i.HostId == currentUserId.Value).ToList();
             }
 
-            // For all other roles, return all invitations (no additional filtering)
+            // RECEPTIONIST: Has ReadAll - see all approved/active invitations for check-in operations
+            // Note: Receptionist role has Invitation.ReadAll permission according to role analysis
+            // They can see ALL invitations but for check-in purposes, we can optionally filter to active ones
+            // For now, returning all invitations as they have ReadAll permission
+            if (hasReadAll)
+            {
+                _logger.LogDebug("User has ReadAll permission - showing all invitations");
+                // Optional: Filter to active/approved invitations for receptionists
+                // Uncomment the line below if you want receptionist to see only active invitations
+                // return invitations.Where(i => i.Status == InvitationStatus.Approved || i.Status == InvitationStatus.Active).ToList();
+                return invitations;
+            }
+
+            // ADMINISTRATOR: Has all permissions - see everything
+            // For all other cases, return all invitations (no additional filtering)
             return invitations;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error applying role-based filtering, returning unfiltered results");
+            _logger.LogError(ex, "Error applying permission-based filtering, returning unfiltered results");
             return invitations;
         }
+    }
+
+    private int? GetCurrentUserId()
+    {
+        var userIdClaim = _httpContextAccessor.HttpContext?.User
+            .FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim))
+            return null;
+
+        return int.TryParse(userIdClaim, out var userId) ? userId : null;
+    }
+
+    private List<string> GetCurrentUserPermissions()
+    {
+        return _httpContextAccessor.HttpContext?.User
+            .FindAll("permission")
+            .Select(c => c.Value)
+            .ToList() ?? new List<string>();
     }
 
     private List<Invitation> ApplySearchInMemory(List<Invitation> invitations, string searchTerm)

@@ -30,7 +30,7 @@ public class VisitPurposesController : BaseController
     /// <param name="includeInactive">Include inactive purposes</param>
     /// <returns>List of visit purposes</returns>
     [HttpGet]
-    [Authorize(Policy = Permissions.SystemConfig.Read)]
+    [Authorize(Policy = Permissions.VisitPurpose.Read)]
     public async Task<IActionResult> GetVisitPurposes(
         [FromQuery] bool? requiresApproval = null,
         [FromQuery] bool includeInactive = false)
@@ -51,7 +51,7 @@ public class VisitPurposesController : BaseController
     /// <param name="id">Visit purpose ID</param>
     /// <returns>Visit purpose details</returns>
     [HttpGet("{id:int}")]
-    [Authorize(Policy = Permissions.SystemConfig.Read)]
+    [Authorize(Policy = Permissions.VisitPurpose.Read)]
     public async Task<IActionResult> GetVisitPurpose(int id)
     {
         var query = new GetVisitPurposeByIdQuery { Id = id };
@@ -71,7 +71,7 @@ public class VisitPurposesController : BaseController
     /// <param name="createDto">Visit purpose creation data</param>
     /// <returns>Created visit purpose</returns>
     [HttpPost]
-    [Authorize(Policy = Permissions.SystemConfig.Update)]
+    [Authorize(Policy = Permissions.VisitPurpose.Create)]
     public async Task<IActionResult> CreateVisitPurpose([FromBody] CreateVisitPurposeDto createDto)
     {
         var command = new CreateVisitPurposeCommand
@@ -97,7 +97,7 @@ public class VisitPurposesController : BaseController
     /// <param name="updateDto">Visit purpose update data</param>
     /// <returns>Updated visit purpose</returns>
     [HttpPut("{id:int}")]
-    [Authorize(Policy = Permissions.SystemConfig.Update)]
+    [Authorize(Policy = Permissions.VisitPurpose.Update)]
     public async Task<IActionResult> UpdateVisitPurpose(int id, [FromBody] UpdateVisitPurposeDto updateDto)
     {
         var command = new UpdateVisitPurposeCommand
@@ -124,7 +124,7 @@ public class VisitPurposesController : BaseController
     /// <param name="hardDelete">Whether to perform hard delete (default: false)</param>
     /// <returns>Deletion result</returns>
     [HttpDelete("{id:int}")]
-    [Authorize(Policy = Permissions.SystemConfig.Update)]
+    [Authorize(Policy = Permissions.VisitPurpose.Delete)]
     public async Task<IActionResult> DeleteVisitPurpose(int id, [FromQuery] bool hardDelete = false)
     {
         var command = new DeleteVisitPurposeCommand
