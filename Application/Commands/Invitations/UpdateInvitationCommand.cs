@@ -27,6 +27,11 @@ public class UpdateInvitationCommand : IRequest<InvitationDto>
     public int? LocationId { get; set; }
 
     /// <summary>
+    /// Time slot ID for calendar booking (optional)
+    /// </summary>
+    public int? TimeSlotId { get; set; }
+
+    /// <summary>
     /// Invitation type
     /// </summary>
     public InvitationType Type { get; set; } = InvitationType.Single;

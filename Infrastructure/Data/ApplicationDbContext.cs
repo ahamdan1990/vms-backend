@@ -47,6 +47,7 @@ public class ApplicationDbContext : DbContext
 
     // DbSets - Capacity Management
     public DbSet<TimeSlot> TimeSlots { get; set; } = null!;
+    public DbSet<TimeSlotBooking> TimeSlotBookings { get; set; } = null!;
     public DbSet<OccupancyLog> OccupancyLogs { get; set; } = null!;
 
     // DbSets - Invitation Domain
@@ -89,6 +90,7 @@ public class ApplicationDbContext : DbContext
 
         // Apply all configurations - Capacity Management
         modelBuilder.ApplyConfiguration(new TimeSlotConfiguration());
+        modelBuilder.ApplyConfiguration(new TimeSlotBookingConfiguration());
         modelBuilder.ApplyConfiguration(new OccupancyLogConfiguration());
 
         // Apply all configurations - Invitation Domain
@@ -118,6 +120,7 @@ public class ApplicationDbContext : DbContext
 
         // Capacity management soft delete filters
         modelBuilder.Entity<TimeSlot>().HasQueryFilter(ts => !ts.IsDeleted);
+        modelBuilder.Entity<TimeSlotBooking>().HasQueryFilter(b => !b.IsDeleted && !b.BookedByUser.IsDeleted);
 
         // Configure decimal precision globally
         foreach (var property in modelBuilder.Model.GetEntityTypes()

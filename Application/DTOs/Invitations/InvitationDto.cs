@@ -42,6 +42,11 @@ public class InvitationDto
     public int? LocationId { get; set; }
 
     /// <summary>
+    /// Time slot ID for calendar booking
+    /// </summary>
+    public int? TimeSlotId { get; set; }
+
+    /// <summary>
     /// Current status
     /// </summary>
     public InvitationStatus Status { get; set; }

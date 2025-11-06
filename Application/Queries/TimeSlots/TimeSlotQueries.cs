@@ -33,3 +33,21 @@ public class GetAvailableTimeSlotsQuery : IRequest<List<AvailableTimeSlotDto>>
     public DateTime Date { get; set; }
     public int? LocationId { get; set; }
 }
+
+/// <summary>
+/// Query to get a time slot booking by ID
+/// </summary>
+public class GetTimeSlotBookingByIdQuery : IRequest<TimeSlotBookingDto?>
+{
+    public int Id { get; set; }
+}
+
+/// <summary>
+/// Query to get bookings for a specific time slot
+/// </summary>
+public class GetTimeSlotBookingsQuery : IRequest<List<TimeSlotBookingDto>>
+{
+    public int TimeSlotId { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+}

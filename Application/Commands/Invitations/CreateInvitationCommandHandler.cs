@@ -73,6 +73,18 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                     throw new InvalidOperationException($"Location with ID '{request.LocationId}' not found.");
             }
 
+            // Validate time slot if specified
+            TimeSlot? timeSlot = null;
+            if (request.TimeSlotId.HasValue)
+            {
+                timeSlot = await _unitOfWork.Repository<TimeSlot>().GetByIdAsync(request.TimeSlotId.Value, cancellationToken);
+                if (timeSlot == null)
+                    throw new InvalidOperationException($"Time slot with ID '{request.TimeSlotId}' not found.");
+
+                if (!timeSlot.IsActive)
+                    throw new InvalidOperationException("Cannot book an inactive time slot.");
+            }
+
             // Validate capacity before creating invitation
             var capacityRequest = new CapacityValidationRequestDto
             {
@@ -133,6 +145,7 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                 HostId = request.HostId,
                 VisitPurposeId = visitPurposeId,
                 LocationId = locationId,
+                TimeSlotId = request.TimeSlotId,
                 Type = request.Type,
                 Subject = subject,
                 Message = request.Message?.Trim(),
@@ -198,6 +211,37 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                 {
                     template.IncrementUsage();
                     _unitOfWork.Repository<InvitationTemplate>().Update(template);
+                }
+
+                // Create time slot booking if time slot is specified
+                if (request.TimeSlotId.HasValue && timeSlot != null)
+                {
+                    var booking = new TimeSlotBooking
+                    {
+                        TimeSlotId = request.TimeSlotId.Value,
+                        BookingDate = request.ScheduledStartTime.Date,
+                        InvitationId = invitation.Id,
+                        VisitorCount = request.ExpectedVisitorCount,
+                        Status = BookingStatus.Confirmed,
+                        Notes = $"Auto-booked for invitation {invitation.InvitationNumber}",
+                        BookedBy = request.CreatedBy,
+                        BookedOn = DateTime.UtcNow
+                    };
+
+                    booking.SetCreatedBy(request.CreatedBy);
+
+                    // Validate booking
+                    var bookingErrors = booking.ValidateBooking();
+                    if (bookingErrors.Any())
+                    {
+                        _logger.LogWarning("Time slot booking validation warnings for invitation {InvitationId}: {Errors}",
+                            invitation.Id, string.Join(", ", bookingErrors));
+                    }
+
+                    await _unitOfWork.Repository<TimeSlotBooking>().AddAsync(booking, cancellationToken);
+
+                    _logger.LogInformation("Time slot booking created for invitation {InvitationId} in slot {TimeSlotId}",
+                        invitation.Id, request.TimeSlotId.Value);
                 }
 
                 await _unitOfWork.SaveChangesAsync(cancellationToken);

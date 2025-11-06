@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Application.DTOs.TimeSlots;
 using VisitorManagementSystem.Api.Application.Queries.TimeSlots;
 using VisitorManagementSystem.Api.Domain.Entities;
+using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 namespace VisitorManagementSystem.Api.Application.Queries.TimeSlots;
@@ -33,9 +34,9 @@ public class GetAvailableTimeSlotsQueryHandler : IRequestHandler<GetAvailableTim
             query = query.Where(ts => ts.LocationId == null || ts.LocationId == request.LocationId.Value);
         }
 
-        // Filter by day of week
-        var dayOfWeek = request.Date.DayOfWeek.ToString();
-        query = query.Where(ts => ts.ActiveDays.Contains(dayOfWeek));
+        // Filter by day of week (1=Monday, 7=Sunday)
+        var dayOfWeek = (int)request.Date.DayOfWeek == 0 ? 7 : (int)request.Date.DayOfWeek;
+        query = query.Where(ts => ts.ActiveDays.Contains(dayOfWeek.ToString()));
 
         var timeSlots = await query
             .Include(ts => ts.Location)
@@ -48,31 +49,75 @@ public class GetAvailableTimeSlotsQueryHandler : IRequestHandler<GetAvailableTim
         foreach (var timeSlot in timeSlots)
         {
             // Calculate current bookings for this time slot on the specified date
-            var currentBookings = await GetCurrentBookingsForTimeSlot(timeSlot.Id, request.Date);
-            var availableSlots = timeSlot.MaxVisitors - currentBookings;
+            var currentBookings = await GetCurrentBookingsForTimeSlot(timeSlot.Id, request.Date, cancellationToken);
+            var availableSpots = timeSlot.MaxVisitors - currentBookings;
+            var occupancyPercentage = timeSlot.MaxVisitors > 0
+                ? (double)currentBookings / timeSlot.MaxVisitors * 100
+                : 0;
 
-            availableTimeSlots.Add(new AvailableTimeSlotDto
+            var dto = _mapper.Map<AvailableTimeSlotDto>(timeSlot);
+            dto.CurrentBookings = currentBookings;
+            dto.AvailableSpots = Math.Max(0, availableSpots);
+            dto.IsFullyBooked = availableSpots <= 0;
+            dto.OccupancyPercentage = Math.Round(occupancyPercentage, 2);
+
+            // Calculate next available date if fully booked
+            if (dto.IsFullyBooked)
             {
-                Id = timeSlot.Id,
-                Name = timeSlot.Name,
-                StartTime = timeSlot.StartTime,
-                EndTime = timeSlot.EndTime,
-                MaxVisitors = timeSlot.MaxVisitors,
-                CurrentBookings = currentBookings,
-                AvailableSlots = Math.Max(0, availableSlots),
-                IsAvailable = availableSlots > 0,
-                LocationName = timeSlot.Location?.Name
-            });
+                dto.NextAvailableDate = await GetNextAvailableDate(timeSlot, request.Date, cancellationToken);
+            }
+
+            availableTimeSlots.Add(dto);
         }
 
         return availableTimeSlots;
     }
 
-    private Task<int> GetCurrentBookingsForTimeSlot(int timeSlotId, DateTime date)
+    /// <summary>
+    /// Gets the current number of confirmed bookings for a time slot on a specific date
+    /// </summary>
+    private async Task<int> GetCurrentBookingsForTimeSlot(int timeSlotId, DateTime date, CancellationToken cancellationToken)
     {
-        // This would calculate the current bookings for the time slot on the specified date
-        // Implementation would depend on how invitations/bookings are linked to time slots
-        // For now, returning 0 as a placeholder
-        return Task.FromResult(0);
+        var bookings = await _unitOfWork.Repository<TimeSlotBooking>()
+            .GetQueryable()
+            .Where(b => b.TimeSlotId == timeSlotId &&
+                       b.BookingDate.Date == date.Date &&
+                       b.Status == BookingStatus.Confirmed)
+            .ToListAsync(cancellationToken);
+
+        return bookings.Sum(b => b.VisitorCount);
+    }
+
+    /// <summary>
+    /// Finds the next available date (within 30 days) when this time slot has capacity
+    /// </summary>
+    private async Task<DateTime?> GetNextAvailableDate(TimeSlot timeSlot, DateTime startDate, CancellationToken cancellationToken)
+    {
+        var activeDays = timeSlot.ActiveDays?.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(d => int.TryParse(d.Trim(), out var day) ? day : 0)
+            .Where(d => d > 0)
+            .ToList() ?? new List<int>();
+
+        if (!activeDays.Any())
+            return null;
+
+        // Check next 30 days
+        for (int i = 1; i <= 30; i++)
+        {
+            var checkDate = startDate.AddDays(i);
+            var checkDayOfWeek = (int)checkDate.DayOfWeek == 0 ? 7 : (int)checkDate.DayOfWeek;
+
+            // Skip if not an active day
+            if (!activeDays.Contains(checkDayOfWeek))
+                continue;
+
+            var currentBookings = await GetCurrentBookingsForTimeSlot(timeSlot.Id, checkDate, cancellationToken);
+            if (currentBookings < timeSlot.MaxVisitors)
+            {
+                return checkDate;
+            }
+        }
+
+        return null; // No availability in next 30 days
     }
 }

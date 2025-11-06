@@ -174,4 +174,92 @@ public class TimeSlotsController : BaseController
         var result = await _mediator.Send(query);
         return SuccessResponse(result);
     }
+
+    /// <summary>
+    /// Books a time slot
+    /// </summary>
+    /// <param name="createDto">Booking creation data</param>
+    /// <returns>Created booking</returns>
+    [HttpPost("book")]
+    [Authorize(Policy = Permissions.Calendar.BookSlots)]
+    public async Task<IActionResult> BookTimeSlot([FromBody] CreateTimeSlotBookingDto createDto)
+    {
+        var command = new BookTimeSlotCommand
+        {
+            TimeSlotId = createDto.TimeSlotId,
+            BookingDate = createDto.BookingDate,
+            InvitationId = createDto.InvitationId,
+            VisitorCount = createDto.VisitorCount,
+            Notes = createDto.Notes,
+            BookedBy = GetCurrentUserId() ?? throw new UnauthorizedAccessException("User must be authenticated")
+        };
+
+        var result = await _mediator.Send(command);
+        return CreatedResponse(result, Url.Action(nameof(GetBooking), new { id = result.Id }));
+    }
+
+    /// <summary>
+    /// Gets a specific booking by ID
+    /// </summary>
+    /// <param name="id">Booking ID</param>
+    /// <returns>Booking details</returns>
+    [HttpGet("bookings/{id:int}")]
+    [Authorize(Policy = Permissions.Calendar.ViewAll)]
+    public async Task<IActionResult> GetBooking(int id)
+    {
+        var booking = await _mediator.Send(new GetTimeSlotBookingByIdQuery { Id = id });
+
+        if (booking == null)
+        {
+            return NotFoundResponse("Booking", id);
+        }
+
+        return SuccessResponse(booking);
+    }
+
+    /// <summary>
+    /// Gets all bookings for a specific time slot
+    /// </summary>
+    /// <param name="timeSlotId">Time slot ID</param>
+    /// <param name="startDate">Optional start date filter</param>
+    /// <param name="endDate">Optional end date filter</param>
+    /// <returns>List of bookings</returns>
+    [HttpGet("{timeSlotId:int}/bookings")]
+    [Authorize(Policy = Permissions.Calendar.ViewAll)]
+    public async Task<IActionResult> GetTimeSlotBookings(
+        int timeSlotId,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null)
+    {
+        var query = new GetTimeSlotBookingsQuery
+        {
+            TimeSlotId = timeSlotId,
+            StartDate = startDate,
+            EndDate = endDate
+        };
+
+        var result = await _mediator.Send(query);
+        return SuccessResponse(result);
+    }
+
+    /// <summary>
+    /// Cancels a time slot booking
+    /// </summary>
+    /// <param name="id">Booking ID</param>
+    /// <param name="cancellationReason">Reason for cancellation</param>
+    /// <returns>Success result</returns>
+    [HttpDelete("bookings/{id:int}")]
+    [Authorize(Policy = Permissions.Calendar.BookSlots)]
+    public async Task<IActionResult> CancelBooking(int id, [FromQuery] string? cancellationReason = null)
+    {
+        var command = new CancelTimeSlotBookingCommand
+        {
+            BookingId = id,
+            CancellationReason = cancellationReason,
+            CancelledBy = GetCurrentUserId() ?? throw new UnauthorizedAccessException("User must be authenticated")
+        };
+
+        var result = await _mediator.Send(command);
+        return SuccessResponse(result, "Booking cancelled successfully");
+    }
 }

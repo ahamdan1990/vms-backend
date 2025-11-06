@@ -125,6 +125,12 @@ public class InvitationConfiguration : IEntityTypeConfiguration<Invitation>
             .OnDelete(DeleteBehavior.NoAction)
             .IsRequired(false);
 
+        builder.HasOne(i => i.TimeSlot)
+            .WithMany()
+            .HasForeignKey(i => i.TimeSlotId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired(false);
+
         // Configure collections
         builder.HasMany(i => i.Approvals)
             .WithOne(a => a.Invitation)
@@ -164,6 +170,7 @@ public class InvitationConfiguration : IEntityTypeConfiguration<Invitation>
         builder.HasIndex(i => i.VisitorId);
         builder.HasIndex(i => i.ScheduledStartTime);
         builder.HasIndex(i => i.CreatedOn);
+        builder.HasIndex(i => i.TimeSlotId);
         builder.HasIndex(i => new { i.Status, i.ScheduledStartTime });
     }
 }

@@ -46,3 +46,26 @@ public class DeleteTimeSlotCommand : IRequest<bool>
     public bool HardDelete { get; set; }
     public int DeletedBy { get; set; }
 }
+
+/// <summary>
+/// Command to book a time slot
+/// </summary>
+public class BookTimeSlotCommand : IRequest<TimeSlotBookingDto>
+{
+    public int TimeSlotId { get; set; }
+    public DateTime BookingDate { get; set; }
+    public int? InvitationId { get; set; }
+    public int VisitorCount { get; set; } = 1;
+    public string? Notes { get; set; }
+    public int BookedBy { get; set; }
+}
+
+/// <summary>
+/// Command to cancel a time slot booking
+/// </summary>
+public class CancelTimeSlotBookingCommand : IRequest<bool>
+{
+    public int BookingId { get; set; }
+    public string? CancellationReason { get; set; }
+    public int CancelledBy { get; set; }
+}

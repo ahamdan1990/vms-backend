@@ -86,12 +86,17 @@ public class LocationsController : BaseController
     [Authorize(Policy = Permissions.Location.Create)]
     public async Task<IActionResult> CreateLocation([FromBody] CreateLocationDto createDto)
     {
+        if (createDto == null)
+        {
+            return BadRequestResponse("Request body cannot be null");
+        }
+
         var command = new CreateLocationCommand
         {
-            Name = createDto.Name,
-            Code = createDto.Code,
+            Name = createDto.Name ?? string.Empty,
+            Code = createDto.Code ?? string.Empty,
             Description = createDto.Description,
-            LocationType = createDto.LocationType,
+            LocationType = createDto.LocationType ?? string.Empty,
             Floor = createDto.Floor,
             Building = createDto.Building,
             Zone = createDto.Zone,

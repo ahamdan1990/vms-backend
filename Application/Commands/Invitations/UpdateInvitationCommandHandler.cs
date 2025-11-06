@@ -1,7 +1,9 @@
 using AutoMapper;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Application.DTOs.Invitations;
 using VisitorManagementSystem.Api.Domain.Entities;
+using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Invitations;
@@ -71,6 +73,18 @@ public class UpdateInvitationCommandHandler : IRequestHandler<UpdateInvitationCo
                 }
             }
 
+            // Validate time slot if specified
+            TimeSlot? timeSlot = null;
+            if (request.TimeSlotId.HasValue)
+            {
+                timeSlot = await _unitOfWork.Repository<TimeSlot>().GetByIdAsync(request.TimeSlotId.Value, cancellationToken);
+                if (timeSlot == null)
+                    throw new InvalidOperationException($"Time slot with ID '{request.TimeSlotId}' not found.");
+
+                if (!timeSlot.IsActive)
+                    throw new InvalidOperationException("Cannot book an inactive time slot.");
+            }
+
             using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
             try
             {
@@ -78,10 +92,12 @@ public class UpdateInvitationCommandHandler : IRequestHandler<UpdateInvitationCo
                 var originalSubject = invitation.Subject;
                 var originalStartTime = invitation.ScheduledStartTime;
                 var originalEndTime = invitation.ScheduledEndTime;
+                var originalTimeSlotId = invitation.TimeSlotId;
 
                 // Update invitation properties
                 invitation.VisitPurposeId = request.VisitPurposeId;
                 invitation.LocationId = request.LocationId;
+                invitation.TimeSlotId = request.TimeSlotId;
                 invitation.Type = request.Type;
                 invitation.Subject = request.Subject.Trim();
                 invitation.Message = request.Message?.Trim();
@@ -116,6 +132,58 @@ public class UpdateInvitationCommandHandler : IRequestHandler<UpdateInvitationCo
                     !string.IsNullOrEmpty(changes) ? $"{{\"changes\": \"{changes}\"}}" : null
                 );
                 await _unitOfWork.Repository<InvitationEvent>().AddAsync(modificationEvent, cancellationToken);
+
+                // Handle time slot booking changes
+                if (originalTimeSlotId != request.TimeSlotId)
+                {
+                    // Get existing booking for this invitation
+                    var existingBooking = await _unitOfWork.Repository<TimeSlotBooking>()
+                        .GetQueryable()
+                        .FirstOrDefaultAsync(b => b.InvitationId == invitation.Id &&
+                                                 b.Status != BookingStatus.Cancelled,
+                                            cancellationToken);
+
+                    // Cancel existing booking if it exists
+                    if (existingBooking != null)
+                    {
+                        existingBooking.Cancel(request.ModifiedBy, "Invitation time slot changed");
+                        _unitOfWork.Repository<TimeSlotBooking>().Update(existingBooking);
+
+                        _logger.LogInformation("Cancelled existing booking {BookingId} for invitation {InvitationId}",
+                            existingBooking.Id, invitation.Id);
+                    }
+
+                    // Create new booking if new time slot is specified
+                    if (request.TimeSlotId.HasValue && timeSlot != null)
+                    {
+                        var newBooking = new TimeSlotBooking
+                        {
+                            TimeSlotId = request.TimeSlotId.Value,
+                            BookingDate = request.ScheduledStartTime.Date,
+                            InvitationId = invitation.Id,
+                            VisitorCount = request.ExpectedVisitorCount,
+                            Status = BookingStatus.Confirmed,
+                            Notes = $"Auto-booked for invitation {invitation.InvitationNumber} (updated)",
+                            BookedBy = request.ModifiedBy,
+                            BookedOn = DateTime.UtcNow
+                        };
+
+                        newBooking.SetCreatedBy(request.ModifiedBy);
+
+                        // Validate booking
+                        var bookingErrors = newBooking.ValidateBooking();
+                        if (bookingErrors.Any())
+                        {
+                            _logger.LogWarning("Time slot booking validation warnings for invitation {InvitationId}: {Errors}",
+                                invitation.Id, string.Join(", ", bookingErrors));
+                        }
+
+                        await _unitOfWork.Repository<TimeSlotBooking>().AddAsync(newBooking, cancellationToken);
+
+                        _logger.LogInformation("Created new booking for invitation {InvitationId} in slot {TimeSlotId}",
+                            invitation.Id, request.TimeSlotId.Value);
+                    }
+                }
 
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
                 await _unitOfWork.CommitTransactionAsync(cancellationToken);

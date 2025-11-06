@@ -174,11 +174,22 @@ public class Invitation : SoftDeleteEntity
     /// Import batch ID if created via bulk import
     /// </summary>
     public int? ImportBatchId { get; set; }
+
+    /// <summary>
+    /// Time slot ID if this invitation is linked to a time slot
+    /// </summary>
+    public int? TimeSlotId { get; set; }
+
     // Navigation Properties
     /// <summary>
     /// Navigation property for the visitor
     /// </summary>
     public virtual Visitor Visitor { get; set; } = null!;
+
+    /// <summary>
+    /// Navigation property for the time slot
+    /// </summary>
+    public virtual TimeSlot? TimeSlot { get; set; }
 
     /// <summary>
     /// Navigation property for the host (staff member)
@@ -397,6 +408,32 @@ public class Invitation : SoftDeleteEntity
 
         if (Type == InvitationType.Group && ExpectedVisitorCount == 1)
             errors.Add("Group invitations must have more than 1 expected visitor.");
+
+        // Validate time slot if specified
+        if (TimeSlotId.HasValue && TimeSlot != null)
+        {
+            if (!TimeSlot.IsActive)
+                errors.Add("The selected time slot is not active.");
+
+            // Check if invitation time falls within time slot
+            var invitationStartTime = ScheduledStartTime.TimeOfDay;
+            var invitationEndTime = ScheduledEndTime.TimeOfDay;
+            var slotStartTime = TimeSlot.StartTime.ToTimeSpan();
+            var slotEndTime = TimeSlot.EndTime.ToTimeSpan();
+
+            if (invitationStartTime < slotStartTime || invitationEndTime > slotEndTime)
+                errors.Add($"Invitation time must fall within the selected time slot ({TimeSlot.StartTime:HH:mm} - {TimeSlot.EndTime:HH:mm}).");
+
+            // Check day of week
+            var dayOfWeek = (int)ScheduledStartTime.DayOfWeek == 0 ? 7 : (int)ScheduledStartTime.DayOfWeek; // Convert Sunday from 0 to 7
+            var activeDays = TimeSlot.ActiveDays?.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(d => int.TryParse(d.Trim(), out var day) ? day : 0)
+                .Where(d => d > 0)
+                .ToList() ?? new List<int>();
+
+            if (activeDays.Any() && !activeDays.Contains(dayOfWeek))
+                errors.Add($"The selected time slot is not active on {ScheduledStartTime.DayOfWeek}.");
+        }
 
         return errors;
     }

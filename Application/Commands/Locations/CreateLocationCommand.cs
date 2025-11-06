@@ -79,7 +79,7 @@ public class CreateLocationCommand : IRequest<LocationDto>
     /// Required access level
     /// </summary>
     [MaxLength(20)]
-    public string AccessLevel { get; set; } = "Public";
+    public string? AccessLevel { get; set; }
 
     /// <summary>
     /// User creating the location

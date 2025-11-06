@@ -32,7 +32,7 @@ public class UpdateTimeSlotDto
 }
 
 /// <summary>
-/// DTO for available time slot
+/// DTO for available time slot with booking information
 /// </summary>
 public class AvailableTimeSlotDto
 {
@@ -41,8 +41,20 @@ public class AvailableTimeSlotDto
     public TimeOnly StartTime { get; set; }
     public TimeOnly EndTime { get; set; }
     public int MaxVisitors { get; set; }
+    public string ActiveDays { get; set; } = string.Empty;
+    public int? LocationId { get; set; }
+    public string? LocationName { get; set; }
+    public bool IsActive { get; set; }
+    public int BufferMinutes { get; set; }
+    public int DurationMinutes { get; set; }
+    public int DisplayOrder { get; set; }
+
+    // Booking-specific properties
     public int CurrentBookings { get; set; }
     public int AvailableSlots { get; set; }
+    public int AvailableSpots { get; set; }
     public bool IsAvailable { get; set; }
-    public string? LocationName { get; set; }
+    public bool IsFullyBooked { get; set; }
+    public DateTime? NextAvailableDate { get; set; }
+    public double OccupancyPercentage { get; set; }
 }

@@ -62,7 +62,7 @@ public class CreateLocationCommandHandler : IRequestHandler<CreateLocationComman
                 DisplayOrder = request.DisplayOrder,
                 MaxCapacity = request.MaxCapacity,
                 RequiresEscort = request.RequiresEscort,
-                AccessLevel = request.AccessLevel.Trim(),
+                AccessLevel = request.AccessLevel?.Trim(),
                 IsActive = true
             };
 

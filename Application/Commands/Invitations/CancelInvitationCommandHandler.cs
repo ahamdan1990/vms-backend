@@ -1,7 +1,9 @@
 using AutoMapper;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Application.DTOs.Invitations;
 using VisitorManagementSystem.Api.Domain.Entities;
+using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Invitations;
@@ -67,6 +69,26 @@ public class CancelInvitationCommandHandler : IRequestHandler<CancelInvitationCo
                     !string.IsNullOrEmpty(request.Reason) ? $"{{\"reason\": \"{request.Reason}\"}}" : null
                 );
                 await _unitOfWork.Repository<InvitationEvent>().AddAsync(cancellationEvent, cancellationToken);
+
+                // Cancel associated time slot booking if exists
+                var existingBooking = await _unitOfWork.Repository<TimeSlotBooking>()
+                    .GetQueryable()
+                    .FirstOrDefaultAsync(b => b.InvitationId == invitation.Id &&
+                                             b.Status != BookingStatus.Cancelled,
+                                        cancellationToken);
+
+                if (existingBooking != null)
+                {
+                    var cancellationReason = !string.IsNullOrEmpty(request.Reason)
+                        ? $"Invitation cancelled: {request.Reason}"
+                        : "Invitation cancelled";
+
+                    existingBooking.Cancel(request.CancelledBy, cancellationReason);
+                    _unitOfWork.Repository<TimeSlotBooking>().Update(existingBooking);
+
+                    _logger.LogInformation("Cancelled time slot booking {BookingId} for invitation {InvitationId}",
+                        existingBooking.Id, invitation.Id);
+                }
 
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
                 await _unitOfWork.CommitTransactionAsync(cancellationToken);

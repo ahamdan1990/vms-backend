@@ -53,5 +53,25 @@ public class TimeSlotMappingProfile : Profile
         CreateMap<UpdateTimeSlotDto, Application.Commands.TimeSlots.UpdateTimeSlotCommand>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.ModifiedBy, opt => opt.Ignore());
+
+        // TimeSlotBooking mappings
+        CreateMap<TimeSlotBooking, TimeSlotBookingDto>()
+            .ForMember(dest => dest.TimeSlotName, opt => opt.MapFrom(src => src.TimeSlot != null ? src.TimeSlot.Name : null))
+            .ForMember(dest => dest.InvitationNumber, opt => opt.MapFrom(src => src.Invitation != null ? src.Invitation.InvitationNumber : null))
+            .ForMember(dest => dest.BookedByName, opt => opt.MapFrom(src => src.BookedByUser != null ? src.BookedByUser.FullName : null))
+            .ForMember(dest => dest.CancelledByName, opt => opt.MapFrom(src => src.CancelledByUser != null ? src.CancelledByUser.FullName : null));
+
+        CreateMap<CreateTimeSlotBookingDto, Application.Commands.TimeSlots.BookTimeSlotCommand>()
+            .ForMember(dest => dest.BookedBy, opt => opt.Ignore());
+
+        // AvailableTimeSlotDto mappings
+        CreateMap<TimeSlot, AvailableTimeSlotDto>()
+            .ForMember(dest => dest.LocationName, opt => opt.MapFrom(src => src.Location != null ? src.Location.Name : null))
+            .ForMember(dest => dest.DurationMinutes, opt => opt.MapFrom(src => src.DurationMinutes))
+            .ForMember(dest => dest.CurrentBookings, opt => opt.Ignore())
+            .ForMember(dest => dest.AvailableSpots, opt => opt.Ignore())
+            .ForMember(dest => dest.IsFullyBooked, opt => opt.Ignore())
+            .ForMember(dest => dest.NextAvailableDate, opt => opt.Ignore())
+            .ForMember(dest => dest.OccupancyPercentage, opt => opt.Ignore());
     }
 }
