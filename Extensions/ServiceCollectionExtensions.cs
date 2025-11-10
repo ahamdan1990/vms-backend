@@ -182,6 +182,7 @@ public static class ServiceCollectionExtensions
         //services.AddHostedService<FREventProcessorService>();
         services.AddHostedService<NotificationDispatcherService>();
         services.AddHostedService<VisitorTrackingService>();
+        services.AddHostedService<VisitorMonitoringService>();
 
         return services;
     }

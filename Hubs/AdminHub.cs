@@ -275,6 +275,61 @@ public class AdminHub : BaseHub
     }
 
     /// <summary>
+    /// Broadcast analytics update to all administrators and staff
+    /// </summary>
+    public async Task BroadcastAnalyticsUpdate(object analyticsData)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue || !HasPermission(Permissions.SystemConfig.Read))
+        {
+            return;
+        }
+
+        try
+        {
+            // Broadcast to administrators
+            await Clients.Group("Administrators").SendAsync("AnalyticsUpdate", analyticsData);
+
+            // Broadcast to staff dashboard (via HostHub)
+            // This will be picked up by staff members viewing their dashboard
+            await Clients.All.SendAsync("DashboardMetricsUpdated", analyticsData);
+
+            Logger.LogDebug("Analytics update broadcast by admin {UserId}", userId);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error broadcasting analytics update");
+        }
+    }
+
+    /// <summary>
+    /// Request real-time analytics data
+    /// </summary>
+    public async Task GetAnalytics()
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+        {
+            return;
+        }
+
+        try
+        {
+            // Return cached or computed analytics
+            // This will be called from the frontend to get latest data
+            await Clients.Caller.SendAsync("AnalyticsData", new
+            {
+                Message = "Use the /api/analytics/comprehensive endpoint for full analytics",
+                Timestamp = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error getting analytics for user {UserId}", userId);
+        }
+    }
+
+    /// <summary>
     /// Helper method to get active operator count
     /// </summary>
     private async Task<int> GetActiveOperatorCount()

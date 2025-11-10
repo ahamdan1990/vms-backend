@@ -642,6 +642,128 @@ public class NotificationService : INotificationService
         }
     }
 
+    public async Task NotifyVisitorDelayedAsync(int invitationId, int visitorId, string visitorName,
+        DateTime scheduledTime, int delayMinutes, int? locationId = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var title = "Visitor Delayed";
+            var message = $"{visitorName} is running {delayMinutes} minutes late for their scheduled visit at {scheduledTime:hh:mm tt}.";
+
+            var payloadData = new
+            {
+                InvitationId = invitationId,
+                VisitorId = visitorId,
+                VisitorName = visitorName,
+                ScheduledTime = scheduledTime,
+                DelayMinutes = delayMinutes,
+                LocationId = locationId
+            };
+
+            // Create and persist alert
+            var alert = NotificationAlert.CreateFRAlert(
+                title,
+                message,
+                NotificationAlertType.VisitorDelayed,
+                AlertPriority.Medium,
+                targetRole: UserRoles.Receptionist,
+                targetLocationId: locationId,
+                relatedEntityType: "Invitation",
+                relatedEntityId: invitationId,
+                payloadData: JsonSerializer.Serialize(payloadData)
+            );
+
+            await _unitOfWork.Repository<NotificationAlert>().AddAsync(alert, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            var notificationPayload = CreateNotificationPayload(alert, payloadData);
+
+            // Send to operators
+            if (locationId.HasValue)
+            {
+                await _operatorHubContext.Clients.Group($"Location_{locationId}")
+                    .SendAsync("VisitorDelayed", notificationPayload, cancellationToken);
+            }
+            else
+            {
+                await _operatorHubContext.Clients.Group("Operators")
+                    .SendAsync("VisitorDelayed", notificationPayload, cancellationToken);
+            }
+
+            _logger.LogInformation("Visitor delayed notification sent for {VisitorName}, Delay: {DelayMinutes} minutes",
+                visitorName, delayMinutes);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending visitor delayed notification for invitation {InvitationId}", invitationId);
+            throw;
+        }
+    }
+
+    public async Task NotifyVisitorNoShowAsync(int invitationId, int visitorId, string visitorName,
+        int hostId, DateTime scheduledTime, int? locationId = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var title = "Visitor No-Show";
+            var message = $"{visitorName} did not arrive for their scheduled visit at {scheduledTime:hh:mm tt}.";
+
+            var payloadData = new
+            {
+                InvitationId = invitationId,
+                VisitorId = visitorId,
+                VisitorName = visitorName,
+                HostId = hostId,
+                ScheduledTime = scheduledTime,
+                LocationId = locationId
+            };
+
+            // Create and persist alert
+            var alert = NotificationAlert.CreateFRAlert(
+                title,
+                message,
+                NotificationAlertType.VisitorNoShow,
+                AlertPriority.Medium,
+                targetRole: UserRoles.Receptionist,
+                targetLocationId: locationId,
+                relatedEntityType: "Invitation",
+                relatedEntityId: invitationId,
+                payloadData: JsonSerializer.Serialize(payloadData)
+            );
+
+            await _unitOfWork.Repository<NotificationAlert>().AddAsync(alert, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            var notificationPayload = CreateNotificationPayload(alert, payloadData);
+
+            // Send to operators
+            if (locationId.HasValue)
+            {
+                await _operatorHubContext.Clients.Group($"Location_{locationId}")
+                    .SendAsync("VisitorNoShow", notificationPayload, cancellationToken);
+            }
+            else
+            {
+                await _operatorHubContext.Clients.Group("Operators")
+                    .SendAsync("VisitorNoShow", notificationPayload, cancellationToken);
+            }
+
+            // Also notify the host
+            await _hostHubContext.Clients.Group($"Host_{hostId}")
+                .SendAsync("VisitorNoShow", notificationPayload, cancellationToken);
+
+            _logger.LogInformation("Visitor no-show notification sent for {VisitorName}, Scheduled: {ScheduledTime}",
+                visitorName, scheduledTime);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending visitor no-show notification for invitation {InvitationId}", invitationId);
+            throw;
+        }
+    }
+
     /// <summary>
     /// Creates a standardized notification payload
     /// </summary>

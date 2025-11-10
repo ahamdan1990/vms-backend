@@ -86,6 +86,16 @@ public enum NotificationAlertType
     BadgePrintingError = 16,
 
     /// <summary>
+    /// Visitor is delayed (arrived late for scheduled time)
+    /// </summary>
+    VisitorDelayed = 17,
+
+    /// <summary>
+    /// Visitor did not show up for scheduled visit
+    /// </summary>
+    VisitorNoShow = 18,
+
+    /// <summary>
     /// Custom user-defined alert
     /// </summary>
     Custom = 99

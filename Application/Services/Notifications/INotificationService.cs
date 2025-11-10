@@ -106,4 +106,18 @@ public interface INotificationService
     /// Update system health status for administrators
     /// </summary>
     Task UpdateSystemHealthAsync(object healthData, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Send delayed visitor notification to operators
+    /// </summary>
+    Task NotifyVisitorDelayedAsync(int invitationId, int visitorId, string visitorName,
+        DateTime scheduledTime, int delayMinutes, int? locationId = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Send no-show visitor notification to operators and host
+    /// </summary>
+    Task NotifyVisitorNoShowAsync(int invitationId, int visitorId, string visitorName,
+        int hostId, DateTime scheduledTime, int? locationId = null,
+        CancellationToken cancellationToken = default);
 }
