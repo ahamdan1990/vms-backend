@@ -124,7 +124,7 @@ public class NotificationsController : BaseController
     [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
     public async Task<IActionResult> AcknowledgeNotification(
-        int id, 
+        int id,
         [FromBody] AcknowledgeNotificationDto request)
     {
         try
@@ -151,6 +151,70 @@ public class NotificationsController : BaseController
         {
             _logger.LogError(ex, "Error acknowledging notification {NotificationId}", id);
             return ServerErrorResponse("An error occurred while acknowledging notification");
+        }
+    }
+
+    /// <summary>
+    /// Deletes a specific notification for the current user
+    /// </summary>
+    [HttpDelete("{id}")]
+    [ProducesResponseType(typeof(ApiResponseDto<bool>), 200)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
+    public async Task<IActionResult> DeleteNotification(int id)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return UnauthorizedResponse("User not authenticated");
+
+            var command = new DeleteNotificationCommand
+            {
+                NotificationId = id,
+                DeletedBy = userId.Value,
+                PermanentDelete = false
+            };
+
+            var result = await _mediator.Send(command);
+            return SuccessResponse(result, "Notification deleted successfully");
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFoundResponse("Notification", id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting notification {NotificationId}", id);
+            return ServerErrorResponse("An error occurred while deleting notification");
+        }
+    }
+
+    /// <summary>
+    /// Deletes all notifications for the current user
+    /// </summary>
+    [HttpDelete]
+    [ProducesResponseType(typeof(ApiResponseDto<bool>), 200)]
+    public async Task<IActionResult> DeleteAllNotifications()
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue)
+                return UnauthorizedResponse("User not authenticated");
+
+            var command = new DeleteAllNotificationsCommand
+            {
+                DeletedBy = userId.Value,
+                PermanentDelete = false
+            };
+
+            var result = await _mediator.Send(command);
+            return SuccessResponse(result, "All notifications deleted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting all notifications for user {UserId}", GetCurrentUserId());
+            return ServerErrorResponse("An error occurred while deleting notifications");
         }
     }
 

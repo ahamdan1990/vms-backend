@@ -27,6 +27,12 @@ namespace VisitorManagementSystem.Api.Middleware
                     if (permissions.Any())
                     {
                         var identity = context.User.Identity as ClaimsIdentity;
+                        if (identity == null)
+                        {
+                            await _next(context);
+                            return;
+                        }
+
                         var existing = identity.Claims.Where(c => c.Type == "permission").Select(c => c.Value).ToHashSet();
 
                         foreach (var permission in permissions.Except(existing))

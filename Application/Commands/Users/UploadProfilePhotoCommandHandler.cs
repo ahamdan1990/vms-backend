@@ -39,7 +39,7 @@ public class UploadProfilePhotoCommandHandler : IRequestHandler<UploadProfilePho
 
             _logger.LogInformation("Profile photo uploaded successfully for user: {UserId}", request.UserId);
 
-            return _fileUploadService.GetProfilePhotoUrl(filePath);
+            return _fileUploadService.GetProfilePhotoUrl(filePath) ?? string.Empty;
         }
         catch (Exception ex)
         {

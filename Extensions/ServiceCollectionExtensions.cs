@@ -96,6 +96,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITwoFactorService, TwoFactorService>();
         services.AddScoped<IPermissionService, PermissionService>();
 
+        // LDAP and Email verification services
+        services.AddScoped<ILdapService, LdapService>();
+        services.AddScoped<IEmailVerificationService, EmailVerificationService>();
+
         // User management services
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IUserLockoutService, UserLockoutService>();

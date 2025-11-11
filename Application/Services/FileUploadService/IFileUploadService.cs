@@ -31,7 +31,7 @@ public interface IFileUploadService
     /// </summary>
     /// <param name="filePath">File path</param>
     /// <returns>Full URL</returns>
-    string GetProfilePhotoUrl(string filePath);
+    string? GetProfilePhotoUrl(string? filePath);
 
     /// <summary>
     /// Uploads a visitor document

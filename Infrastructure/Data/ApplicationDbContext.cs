@@ -35,6 +35,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<RolePermission> RolePermissions { get; set; } = null!;
     public DbSet<PermissionChangeAuditLog> PermissionChangeAuditLogs { get; set; } = null!;
 
+    // DbSets - Organization (Company & Department)
+    public DbSet<Company> Companies { get; set; } = null!;
+    public DbSet<Department> Departments { get; set; } = null!;
+
     // DbSets - Visitor Domain
     public DbSet<Visitor> Visitors { get; set; } = null!;
     public DbSet<VisitorAccess> VisitorAccess { get; set; } = null!;
@@ -78,6 +82,10 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new RolePermissionConfiguration());
         modelBuilder.ApplyConfiguration(new PermissionChangeAuditLogConfiguration());
 
+        // Apply all configurations - Organization (Company & Department)
+        modelBuilder.ApplyConfiguration(new CompanyConfiguration());
+        modelBuilder.ApplyConfiguration(new DepartmentConfiguration());
+
         // Apply all configurations - Visitor Domain
         modelBuilder.ApplyConfiguration(new VisitorConfiguration());
         modelBuilder.ApplyConfiguration(new VisitorAccessConfiguration());
@@ -107,6 +115,10 @@ public class ApplicationDbContext : DbContext
         // Global query filters for soft delete (standardized on IsDeleted pattern)
         modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
         modelBuilder.Entity<RefreshToken>().HasQueryFilter(rt => !rt.User.IsDeleted);
+
+        // Organization soft delete filters
+        modelBuilder.Entity<Company>().HasQueryFilter(c => !c.IsDeleted);
+        modelBuilder.Entity<Department>().HasQueryFilter(d => !d.IsDeleted);
 
         // Visitor domain soft delete filters (standardized on IsDeleted pattern)
         modelBuilder.Entity<Visitor>().HasQueryFilter(v => !v.IsDeleted);

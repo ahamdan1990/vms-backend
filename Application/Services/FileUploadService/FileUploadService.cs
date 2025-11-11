@@ -160,7 +160,7 @@ public class FileUploadService : IFileUploadService
         return true;
     }
 
-    public string GetProfilePhotoUrl(string filePath)
+    public string? GetProfilePhotoUrl(string? filePath)
     {
         if (string.IsNullOrEmpty(filePath))
         {

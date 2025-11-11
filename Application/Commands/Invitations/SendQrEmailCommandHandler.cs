@@ -65,6 +65,13 @@ public class SendQrEmailCommandHandler
                 MimeType = "image/png"
             };
 
+            // Validate location exists
+            if (invitation.Location == null)
+            {
+                _logger.LogWarning("Location not found for invitation: {InvitationId}", request.InvitationId);
+                return ApiResponseDto<object>.ErrorResponse("Invitation location information is missing.");
+            }
+
             // Generate email content
             var emailContent = _emailTemplateService.GenerateQrInvitationTemplate(
                 invitation.Visitor.FullName,

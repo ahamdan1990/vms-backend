@@ -279,10 +279,14 @@ return result;
             {
                 user.SecurityStamp = Guid.NewGuid().ToString();
                 _unitOfWork.Users.Update(user);
-            }
 
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-            _logger.LogInformation("Security stamp updated for user: {UserId}, NewStamp: {Stamp}", user.Id, user.SecurityStamp);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                _logger.LogInformation("Security stamp updated for user: {UserId}, NewStamp: {Stamp}", user.Id, user.SecurityStamp);
+            }
+            else
+            {
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }
 
             _logger.LogInformation("Refresh token revoked for user: {UserId}, Reason: {Reason}",
                 refreshToken.UserId, reason);

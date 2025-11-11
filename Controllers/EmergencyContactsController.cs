@@ -86,7 +86,7 @@ public class EmergencyContactsController : BaseController
             FirstName = createDto.FirstName,
             LastName = createDto.LastName,
             Relationship = createDto.Relationship,
-            PhoneNumber = createDto.PhoneNumber,
+            PhoneNumber = createDto.PhoneNumber ?? string.Empty,
             AlternatePhoneNumber = createDto.AlternatePhoneNumber,
             Email = createDto.Email,
             Address = createDto.Address,

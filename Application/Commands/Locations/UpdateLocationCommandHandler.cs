@@ -80,9 +80,9 @@ public class UpdateLocationCommandHandler : IRequestHandler<UpdateLocationComman
 
             // Update properties
             location.Name = request.Name.Trim();
-            location.Code = request.Code?.Trim();
+            location.Code = request.Code?.Trim() ?? location.Code;
             location.Description = request.Description?.Trim();
-            location.LocationType = request.LocationType?.Trim();
+            location.LocationType = request.LocationType?.Trim() ?? location.LocationType;
             location.Floor = request.Floor?.Trim();
             location.Building = request.Building?.Trim();
             location.Zone = request.Zone?.Trim();

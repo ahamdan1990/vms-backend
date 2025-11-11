@@ -114,7 +114,7 @@ public class CapacityService : ICapacityService
                 query = query.Where(i => i.CheckedInAt != null && i.CheckedOutAt == null);
 
                 // For current occupancy, we consider anyone checked in today who hasn't checked out
-                query = query.Where(i => i.CheckedInAt.Value.Date <= dateTime.Date);
+                query = query.Where(i => i.CheckedInAt!.Value.Date <= dateTime.Date);
             }
             else
             {

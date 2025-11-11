@@ -118,12 +118,12 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                     {
                         var emailService = _serviceProvider.GetService<Application.Services.Email.IEmailService>();
                         var emailTemplateService = _serviceProvider.GetService<Application.Services.Email.IEmailTemplateService>();
-                        
+
                         if (emailService != null && emailTemplateService != null)
                         {
-                            var emailContent = await emailTemplateService.GenerateWelcomeTemplateAsync(user, request.NewPassword);
+                            var emailContent = await emailTemplateService.GenerateWelcomeTemplateAsync(user, newPassword);
                             await emailService.SendAsync(user.Email, "Password Reset - New Credentials", emailContent);
-                            
+
                             _logger.LogInformation("Password reset notification sent to user: {UserId}", request.UserId);
                         }
                         else

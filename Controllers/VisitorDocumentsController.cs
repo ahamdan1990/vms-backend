@@ -100,7 +100,7 @@ public class VisitorDocumentsController : BaseController
             Title = createDto.Title,
             Description = createDto.Description,
             DocumentType = createDto.DocumentType,
-            FilePath = createDto.FilePath,
+            FilePath = createDto.FilePath ?? string.Empty,
             OriginalFileName = createDto.OriginalFileName,
             FileSize = createDto.FileSize,
             MimeType = createDto.MimeType,

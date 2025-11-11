@@ -150,12 +150,12 @@ public class VisitorNotesBridgeService : IVisitorNotesBridgeService
         var hadPreviousContent = !string.IsNullOrWhiteSpace(previousContent);
         var hasNewContent = !string.IsNullOrWhiteSpace(newContent);
 
-        if (!hadPreviousContent && hasNewContent)
+        if (!hadPreviousContent && hasNewContent && !string.IsNullOrWhiteSpace(newContent))
         {
             // Create new note (requirement was added)
-            await CreateVisitorNoteAsync(visitorId, title, newContent, category, 
+            await CreateVisitorNoteAsync(visitorId, title, newContent, category,
                 isSecurityNote ? "High" : "Medium", isSecurityNote, isSecurityNote, modifiedBy, cancellationToken);
-            
+
             _logger.LogDebug("Created new note for added requirement: {Title} for visitor: {VisitorId}", title, visitorId);
         }
         else if (hadPreviousContent && !hasNewContent && existingNote != null)
@@ -163,24 +163,24 @@ public class VisitorNotesBridgeService : IVisitorNotesBridgeService
             // Remove note (requirement was cleared)
             existingNote.SoftDelete(modifiedBy);
             _unitOfWork.VisitorNotes.Update(existingNote);
-            
+
             _logger.LogDebug("Soft deleted note for removed requirement: {Title} for visitor: {VisitorId}", title, visitorId);
         }
-        else if (hadPreviousContent && hasNewContent && existingNote != null && previousContent != newContent)
+        else if (hadPreviousContent && hasNewContent && existingNote != null && previousContent != newContent && !string.IsNullOrWhiteSpace(newContent))
         {
             // Update existing note (requirement changed)
             existingNote.Content = newContent;
             existingNote.UpdateModifiedBy(modifiedBy);
             _unitOfWork.VisitorNotes.Update(existingNote);
-            
+
             _logger.LogDebug("Updated note for changed requirement: {Title} for visitor: {VisitorId}", title, visitorId);
         }
-        else if (hadPreviousContent && hasNewContent && existingNote == null)
+        else if (hadPreviousContent && hasNewContent && existingNote == null && !string.IsNullOrWhiteSpace(newContent))
         {
             // Edge case: note doesn't exist but should - create it
             await CreateVisitorNoteAsync(visitorId, title, newContent, category,
                 isSecurityNote ? "High" : "Medium", isSecurityNote, isSecurityNote, modifiedBy, cancellationToken);
-            
+
             _logger.LogDebug("Recreated missing note for requirement: {Title} for visitor: {VisitorId}", title, visitorId);
         }
     }

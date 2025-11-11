@@ -52,7 +52,7 @@ public class DeleteConfigurationCommandHandler : IRequestHandler<DeleteConfigura
                 Category = configuration.Category,
                 Key = configuration.Key,
                 OldValue = configuration.Value,
-                NewValue = null,
+                NewValue = string.Empty,
                 Action = "Delete",
                 Reason = request.Reason ?? "Configuration deleted",
                 CreatedBy = request.DeletedBy

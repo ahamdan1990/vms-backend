@@ -441,6 +441,81 @@ public class AuthController : BaseController
     }
 
     /// <summary>
+    /// Signup - Create a new user account
+    /// POST /api/Auth/signup
+    /// </summary>
+    [HttpPost("signup")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Signup([FromBody] SignupCommand command, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Log the request
+            _logger.LogDebug("Signup request received for email: {Email}", command.Email);
+
+            // Dispatch the command
+            var result = await _mediator.Send(command, cancellationToken);
+
+            // Return response
+            if (result.IsSuccess)
+            {
+                return CreatedAtAction(nameof(Login), new { email = command.Email }, result);
+            }
+
+            return BadRequestResponse(result.Errors, result.Message ?? "Signup failed");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during signup for email: {Email}", command?.Email);
+            return ServerErrorResponse("An error occurred during signup");
+        }
+    }
+
+    /// <summary>
+    /// LDAP Login - Authenticate using domain credentials
+    /// POST /api/Auth/ldap-login
+    /// </summary>
+    [HttpPost("ldap-login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> LdapLogin([FromBody] LdapLoginCommand command, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogDebug("LDAP login request received for username: {Username}", command.Username);
+
+            // Dispatch the LDAP login command
+            var result = await _mediator.Send(command, cancellationToken);
+
+            // If login successful, return user info and token
+            if (result.IsSuccess)
+            {
+                // Use HTTPS detection to set secure cookie flag
+                _authService.SetAuthenticationCookies(Response, result, Request.IsHttps);
+
+                var loginResponse = new LoginResponseDto
+                {
+                    IsSuccess = true,
+                    User = result.User,
+                    RequiresPasswordChange = result.RequiresPasswordChange,
+                    RequiresTwoFactor = result.RequiresTwoFactor
+                };
+
+                _logger.LogInformation("LDAP user logged in successfully: {Username} from {IpAddress}",
+                    command.Username, GetClientIpAddress());
+
+                return SuccessResponse(loginResponse, "LDAP login successful");
+            }
+
+            return UnauthorizedResponse(result.ErrorMessage ?? "LDAP authentication failed");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during LDAP login for username: {Username}", command?.Username);
+            return ServerErrorResponse("An error occurred during LDAP authentication");
+        }
+    }
+
+    /// <summary>
     /// Debug endpoint to view user claims - ONLY AVAILABLE IN DEVELOPMENT
     /// </summary>
     [HttpGet("debug-claims")]

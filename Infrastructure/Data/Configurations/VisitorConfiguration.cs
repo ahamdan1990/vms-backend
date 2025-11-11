@@ -175,6 +175,17 @@ public class VisitorConfiguration : AuditableEntityConfiguration<Visitor>
             .HasForeignKey(v => v.BlacklistedBy)
             .OnDelete(DeleteBehavior.Restrict);
 
+        // Company relationship
+        builder.HasOne(v => v.CompanyEntity)
+            .WithMany(c => c.Visitors)
+            .HasForeignKey(v => v.CompanyId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .HasConstraintName("FK_Visitors_Company");
+
+        // Company ID index
+        builder.HasIndex(v => v.CompanyId)
+            .HasDatabaseName("IX_Visitors_CompanyId");
+
         // Navigation properties
         builder.HasMany(v => v.Documents)
             .WithOne(d => d.Visitor)

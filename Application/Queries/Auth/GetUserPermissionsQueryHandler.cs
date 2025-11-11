@@ -45,7 +45,7 @@ namespace VisitorManagementSystem.Api.Application.Queries.Auth
                         UserId = request.UserId,
                         Permissions = new List<string>(),
                         PermissionsByCategory = new Dictionary<string, List<string>>(),
-                        Role = null
+                        Role = string.Empty
                     };
                 }
 
@@ -87,7 +87,7 @@ namespace VisitorManagementSystem.Api.Application.Queries.Auth
                     UserId = request.UserId,
                     Permissions = new List<string>(),
                     PermissionsByCategory = new Dictionary<string, List<string>>(),
-                    Role = null
+                    Role = string.Empty
                 };
             }
         }

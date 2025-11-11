@@ -66,6 +66,16 @@ public class User : SoftDeleteEntity
     public int? RoleId { get; set; }
 
     /// <summary>
+    /// Foreign key to Department (NEW - replacing string Department field)
+    /// </summary>
+    public int? DepartmentId { get; set; }
+
+    /// <summary>
+    /// Department navigation property
+    /// </summary>
+    public virtual Department? DepartmentEntity { get; set; }
+
+    /// <summary>
     /// User's current status
     /// </summary>
     [Required]
@@ -163,6 +173,43 @@ public class User : SoftDeleteEntity
     /// Navigation property to the user's role (new database-driven system)
     /// </summary>
     public virtual Role? RoleEntity { get; set; }
+
+    /// <summary>
+    /// Email verification token for new signup accounts
+    /// </summary>
+    [MaxLength(500)]
+    public string? EmailVerificationToken { get; set; }
+
+    /// <summary>
+    /// Email verification token expiry date
+    /// </summary>
+    public DateTime? EmailVerificationTokenExpiry { get; set; }
+
+    /// <summary>
+    /// Is email verified
+    /// </summary>
+    public bool IsEmailVerified { get; set; } = false;
+
+    /// <summary>
+    /// Date when email was verified
+    /// </summary>
+    public DateTime? EmailVerifiedOn { get; set; }
+
+    /// <summary>
+    /// Indicates if user was created via LDAP/AD authentication
+    /// </summary>
+    public bool IsLdapUser { get; set; } = false;
+
+    /// <summary>
+    /// LDAP distinguished name
+    /// </summary>
+    [MaxLength(500)]
+    public string? LdapDistinguishedName { get; set; }
+
+    /// <summary>
+    /// Last sync with LDAP
+    /// </summary>
+    public DateTime? LastLdapSyncOn { get; set; }
 
     /// <summary>
     /// Gets the user's full name

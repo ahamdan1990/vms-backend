@@ -100,9 +100,9 @@ public class VisitorRepository : BaseRepository<Visitor>, IVisitorRepository
     }
 
     public async Task<(List<Visitor> Visitors, int TotalCount)> SearchVisitorsAsync(
-        string searchTerm, 
-        int pageIndex, 
-        int pageSize, 
+        string searchTerm,
+        int pageIndex,
+        int pageSize,
         CancellationToken cancellationToken = default)
     {
         var query = _dbSet.AsQueryable();
@@ -110,11 +110,18 @@ public class VisitorRepository : BaseRepository<Visitor>, IVisitorRepository
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             var term = searchTerm.ToLower().Trim();
-            query = query.Where(v => 
+            // Normalize phone search term by removing common separators
+            var phoneSearchTerm = term.Replace("+", "").Replace("-", "").Replace(" ", "").Replace("(", "").Replace(")", "");
+
+            query = query.Where(v =>
                 v.FirstName.ToLower().Contains(term) ||
                 v.LastName.ToLower().Contains(term) ||
                 v.Email.Value.ToLower().Contains(term) ||
-                (v.Company != null && v.Company.ToLower().Contains(term)));
+                (v.Company != null && v.Company.ToLower().Contains(term)) ||
+                (v.PhoneNumber != null && (
+                    v.PhoneNumber.Value.Contains(term) ||
+                    v.PhoneNumber.Value.Replace("+", "").Replace("-", "").Replace(" ", "").Replace("(", "").Replace(")", "").Contains(phoneSearchTerm)
+                )));
         }
 
         // Filter active visitors (IsDeleted filtering handled by global query filter)

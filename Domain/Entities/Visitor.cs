@@ -41,10 +41,20 @@ public class Visitor : SoftDeleteEntity
     public PhoneNumber? PhoneNumber { get; set; }
 
     /// <summary>
-    /// Visitor's company name
+    /// Visitor's company name (DEPRECATED - use CompanyId instead)
     /// </summary>
     [MaxLength(100)]
     public string? Company { get; set; }
+
+    /// <summary>
+    /// Foreign key to Company (NEW - replacing string Company field)
+    /// </summary>
+    public int? CompanyId { get; set; }
+
+    /// <summary>
+    /// Company navigation property
+    /// </summary>
+    public virtual Company? CompanyEntity { get; set; }
 
     /// <summary>
     /// Visitor's job title

@@ -248,7 +248,7 @@ public class UserRepository : BaseRepository<User>, IUserRepository
         var items = auditLogs.Select(al => new UserActivityDto
         {
             Action = al.Action,
-            Description = al.Description,
+            Description = al.Description ?? string.Empty,
             Timestamp = al.CreatedOn,
             IpAddress = al.IpAddress,
             UserAgent = al.UserAgent,

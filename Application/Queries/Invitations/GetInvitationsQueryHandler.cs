@@ -77,10 +77,10 @@ public class GetInvitationsQueryHandler : IRequestHandler<GetInvitationsQuery, P
                 var repository = _unitOfWork.Repository<Invitation>();
                 allInvitations = await repository.GetAllIncludingAsync(
                                                                         cancellationToken,
-                                                                        i => i.Visitor,
-                                                                        i => i.Host,
-                                                                        i => i.VisitPurpose,
-                                                                        i => i.Location
+                                                                        i => i.Visitor!,
+                                                                        i => i.Host!,
+                                                                        i => i.VisitPurpose!,
+                                                                        i => i.Location!
                                                                     );
             }
 
