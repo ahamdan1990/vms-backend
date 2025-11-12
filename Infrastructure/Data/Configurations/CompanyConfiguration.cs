@@ -136,7 +136,8 @@ public class CompanyConfiguration : SoftDeleteEntityConfiguration<Company>
 
         // Blacklist properties
         builder.Property(c => c.BlacklistReason)
-            .HasMaxLength(500);
+            .HasMaxLength(500)
+            .IsRequired(false);
 
         builder.Property(c => c.BlacklistedOn)
             .IsRequired(false);

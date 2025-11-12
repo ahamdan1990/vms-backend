@@ -23,16 +23,20 @@ public class DepartmentConfiguration : SoftDeleteEntityConfiguration<Department>
             .HasMaxLength(50);
 
         builder.Property(d => d.Description)
-            .HasMaxLength(500);
+            .HasMaxLength(500)
+            .IsRequired(false);
 
         builder.Property(d => d.Email)
-            .HasMaxLength(256);
+            .HasMaxLength(256)
+            .IsRequired(false);
 
         builder.Property(d => d.Phone)
-            .HasMaxLength(20);
+            .HasMaxLength(20)
+            .IsRequired(false);
 
         builder.Property(d => d.Location)
-            .HasMaxLength(100);
+            .HasMaxLength(100)
+            .IsRequired(false);
 
         builder.Property(d => d.Budget)
             .HasColumnType("decimal(18,2)")
