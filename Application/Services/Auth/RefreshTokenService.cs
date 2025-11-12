@@ -183,9 +183,19 @@ public class RefreshTokenService : IRefreshTokenService
 
 
             // Validate device consistency if fingerprint is provided
+            // ✅ DEBUG: Log device fingerprint validation details
+            _logger.LogInformation("🔄 [REFRESH] Device fingerprint validation:");
+            _logger.LogInformation("  - Token stored fingerprint: {StoredFp}", oldToken.DeviceFingerprint ?? "NULL");
+            _logger.LogInformation("  - Request device fingerprint: {RequestFp}", deviceFingerprint ?? "NULL");
+            _logger.LogInformation("  - Are both null/empty: {BothEmpty}", string.IsNullOrEmpty(oldToken.DeviceFingerprint) && string.IsNullOrEmpty(deviceFingerprint));
 
             if (!string.IsNullOrEmpty(deviceFingerprint) && !oldToken.IsFromSameDevice(deviceFingerprint))
             {
+                _logger.LogWarning("🔄 [REFRESH] Device fingerprint mismatch detected!");
+                _logger.LogWarning("  - Stored: '{StoredFp}'", oldToken.DeviceFingerprint);
+                _logger.LogWarning("  - Requested: '{RequestedFp}'", deviceFingerprint);
+                _logger.LogWarning("  - IsFromSameDevice returned false");
+
                 result.RequiresDeviceVerification = true;
                 result.SuspiciousActivity = true;
 
@@ -195,6 +205,8 @@ public class RefreshTokenService : IRefreshTokenService
                 result.Errors.Add("Token is being used from a different device");
                 return result;
             }
+
+            _logger.LogInformation("🔄 [REFRESH] Device fingerprint validation passed");
 
 
             // Create new refresh token

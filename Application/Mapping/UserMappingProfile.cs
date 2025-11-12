@@ -2,6 +2,7 @@
 
 using AutoMapper;
 using Microsoft.Extensions.Configuration;
+using VisitorManagementSystem.Api.Application.DTOs.Auth;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Application.Commands.Users;
 using VisitorManagementSystem.Api.Domain.Entities;
@@ -91,6 +92,15 @@ public class UserMappingProfile : Profile
             .ForMember(dest => dest.Country, opt => opt.MapFrom(src => src.Address != null ? src.Address.Country : null))
             .ForMember(dest => dest.Latitude, opt => opt.MapFrom(src => src.Address != null ? src.Address.Latitude : null))
             .ForMember(dest => dest.Longitude, opt => opt.MapFrom(src => src.Address != null ? src.Address.Longitude : null));
+
+        // User Entity -> CurrentUserDto (For authentication responses)
+        CreateMap<User, CurrentUserDto>()
+            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email.Value))
+            .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
+            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.ToString()))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForMember(dest => dest.ProfilePhotoUrl, opt => opt.MapFrom<UserProfilePhotoUrlResolver>())
+            .ForMember(dest => dest.Permissions, opt => opt.Ignore()); // Set manually after mapping
     }
 
     private void CreateCommandMappings()

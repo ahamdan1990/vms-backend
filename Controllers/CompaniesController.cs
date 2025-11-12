@@ -122,7 +122,16 @@ public class CompaniesController : BaseController
         var command = new CreateCompanyCommand { CompanyData = createCompanyDto };
         var result = await _mediator.Send(command);
 
-        return CreatedResponse(result, Url.Action(nameof(GetCompanyById), new { id = result.Company?.Id }));
+        if (!result.IsSuccess)
+        {
+            if (result.Errors?.Any() == true)
+            {
+                return ValidationError(result.Errors, result.ErrorMessage ?? "Validation failed");
+            }
+            return BadRequestResponse(result.ErrorMessage ?? "Failed to create company");
+        }
+
+        return CreatedResponse(result.Company, Url.Action(nameof(GetCompanyById), new { id = result.Company?.Id }));
     }
 
     /// <summary>

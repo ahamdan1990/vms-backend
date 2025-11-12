@@ -82,6 +82,9 @@ public static class ComprehensiveConfigurationSeeder
             // 10. Application Configuration
             await SeedApplicationConfigurationAsync(configurations, configuration, now, systemUserId);
 
+            // 11. LDAP Configuration
+            await SeedLdapConfigurationAsync(configurations, configuration, now, systemUserId);
+
             logger?.LogInformation("Seeded {Count} configuration entries", configurations.Count);
         }
         catch (Exception ex)
@@ -921,6 +924,64 @@ public static class ComprehensiveConfigurationSeeder
             CreateConfiguration("Application", "CacheExpirationMinutes", 
                 "30",
                 "int", "Default cache expiration in minutes", false, false, false, now, systemUserId)
+        });
+
+        await Task.CompletedTask;
+    }
+
+    private static async Task SeedLdapConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int? systemUserId)
+    {
+        var ldapSection = configuration.GetSection("LdapConfiguration");
+
+        configurations.AddRange(new[]
+        {
+            CreateConfiguration("LDAP", "Enabled",
+                ldapSection["Enabled"] ?? "false",
+                "bool", "Enable or disable LDAP/Active Directory integration", false, false, false, now, systemUserId),
+
+            CreateConfiguration("LDAP", "Server",
+                ldapSection["Server"] ?? string.Empty,
+                "string", "LDAP server hostname or IP address", true, false, false, now, systemUserId),
+
+            CreateConfiguration("LDAP", "Port",
+                ldapSection["Port"] ?? "389",
+                "int", "LDAP server port", false, false, false, now, systemUserId),
+
+            CreateConfiguration("LDAP", "Domain",
+                ldapSection["Domain"] ?? string.Empty,
+                "string", "Default domain for user principal names", false, false, false, now, systemUserId),
+
+            CreateConfiguration("LDAP", "UserName",
+                ldapSection["UserName"] ?? string.Empty,
+                "string", "Service account username for LDAP binding", true, false, false, now, systemUserId),
+
+            CreateConfiguration("LDAP", "Password",
+                ldapSection["Password"] ?? string.Empty,
+                "string", "Service account password", true, true, true, now, systemUserId),
+
+            CreateConfiguration("LDAP", "BaseDn",
+                ldapSection["BaseDn"] ?? string.Empty,
+                "string", "Directory base distinguished name", true, false, false, now, systemUserId),
+
+            CreateConfiguration("LDAP", "AutoCreateUsers",
+                ldapSection["AutoCreateUsers"] ?? "true",
+                "bool", "Automatically create users on first LDAP login", false, false, false, now, systemUserId),
+
+            CreateConfiguration("LDAP", "SyncProfileOnLogin",
+                ldapSection["SyncProfileOnLogin"] ?? "true",
+                "bool", "Synchronize profile information on each login", false, false, false, now, systemUserId),
+
+            CreateConfiguration("LDAP", "IncludeDirectoryUsersInHostSearch",
+                ldapSection["IncludeDirectoryUsersInHostSearch"] ?? "true",
+                "bool", "Show directory users when searching for hosts", false, false, false, now, systemUserId),
+
+            CreateConfiguration("LDAP", "DefaultImportRole",
+                ldapSection["DefaultImportRole"] ?? Domain.Enums.UserRole.Staff.ToString(),
+                "string", "Default role to assign when importing LDAP users", false, false, false, now, systemUserId),
+
+            CreateConfiguration("LDAP", "AllowRoleSelectionOnImport",
+                ldapSection["AllowRoleSelectionOnImport"] ?? "false",
+                "bool", "Allow overriding user role during LDAP import", false, false, false, now, systemUserId)
         });
 
         await Task.CompletedTask;

@@ -51,10 +51,17 @@ public class CreateVisitorDto : IValidatableObject
     public string? PhoneType { get; set; }
 
     /// <summary>
-    /// Company name
+    /// Company name (legacy field - prefer CompanyId)
     /// </summary>
     [MaxLength(100)]
-    public string? Company { get; set; }    /// <summary>
+    public string? Company { get; set; }
+
+    /// <summary>
+    /// Company ID (foreign key to Company entity)
+    /// </summary>
+    public int? CompanyId { get; set; }
+
+    /// <summary>
     /// Job title
     /// </summary>
     [MaxLength(100)]

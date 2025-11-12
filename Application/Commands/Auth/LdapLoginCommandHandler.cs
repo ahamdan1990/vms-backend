@@ -5,15 +5,12 @@ using System.Threading.Tasks;
 using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using VisitorManagementSystem.Api.Application.DTOs.Auth;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Application.Services.Auth;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
-using VisitorManagementSystem.Api.Domain.ValueObjects;
-using VisitorManagementSystem.Api.Infrastructure.Utilities;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Auth
 {
@@ -29,7 +26,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Auth
         private readonly IRefreshTokenService _refreshTokenService;
         private readonly IPermissionService _permissionService;
         private readonly ILogger<LdapLoginCommandHandler> _logger;
-        private readonly LdapConfiguration _ldapConfig;
+        private readonly ILdapSettingsProvider _ldapSettingsProvider;
         private readonly IMapper _mapper;
 
         public LdapLoginCommandHandler(
@@ -38,7 +35,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Auth
             IJwtService jwtService,
             IRefreshTokenService refreshTokenService,
             IPermissionService permissionService,
-            IOptions<LdapConfiguration> ldapConfig,
+            ILdapSettingsProvider ldapSettingsProvider,
             ILogger<LdapLoginCommandHandler> logger,
             IMapper mapper)
         {
@@ -47,7 +44,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Auth
             _jwtService = jwtService ?? throw new ArgumentNullException(nameof(jwtService));
             _refreshTokenService = refreshTokenService ?? throw new ArgumentNullException(nameof(refreshTokenService));
             _permissionService = permissionService ?? throw new ArgumentNullException(nameof(permissionService));
-            _ldapConfig = ldapConfig?.Value ?? throw new ArgumentNullException(nameof(ldapConfig));
+            _ldapSettingsProvider = ldapSettingsProvider ?? throw new ArgumentNullException(nameof(ldapSettingsProvider));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
@@ -56,8 +53,10 @@ namespace VisitorManagementSystem.Api.Application.Commands.Auth
         {
             try
             {
+                var ldapConfig = await _ldapSettingsProvider.GetSettingsAsync(cancellationToken: cancellationToken);
+
                 // Validate LDAP is enabled
-                if (!_ldapConfig.Enabled)
+                if (!ldapConfig.Enabled)
                 {
                     _logger.LogWarning("LDAP login attempt but LDAP is disabled");
                     return new AuthenticationResult
@@ -113,10 +112,13 @@ namespace VisitorManagementSystem.Api.Application.Commands.Auth
                 if (user == null)
                 {
                     // Auto-create user from LDAP if enabled
-                    if (_ldapConfig.AutoCreateUsers)
-                    {
+                if (ldapConfig.AutoCreateUsers)
+                {
                         _logger.LogInformation("Creating new user from LDAP data: {Email}", ldapUser.Email);
-                        user = CreateUserFromLdap(ldapUser);
+                        user = LdapUserMapper.CreateUserFromLdap(
+                            ldapUser,
+                            ldapConfig,
+                            ResolveImportRole(ldapConfig.DefaultImportRole));
                         await _unitOfWork.Users.AddAsync(user, cancellationToken);
                         await _unitOfWork.SaveChangesAsync(cancellationToken);
                     }
@@ -134,10 +136,10 @@ namespace VisitorManagementSystem.Api.Application.Commands.Auth
                 else
                 {
                     // Sync profile from LDAP if enabled
-                    if (_ldapConfig.SyncProfileOnLogin)
+                    if (ldapConfig.SyncProfileOnLogin)
                     {
                         _logger.LogInformation("Syncing user profile from LDAP: {Email}", ldapUser.Email);
-                        SyncUserFromLdap(user, ldapUser);
+                        LdapUserMapper.SyncUserFromLdap(user, ldapUser);
                         _unitOfWork.Users.Update(user);
                         await _unitOfWork.SaveChangesAsync(cancellationToken);
                     }
@@ -192,98 +194,16 @@ namespace VisitorManagementSystem.Api.Application.Commands.Auth
                 };
             }
         }
-
-        /// <summary>
-        /// Creates a new User entity from LDAP user data
-        /// </summary>
-        private User CreateUserFromLdap(LdapUserResult ldapUser)
+        
+        private static UserRole ResolveImportRole(string? targetRoleName)
         {
-            // Validate email (should already be validated by caller, but adding for safety)
-            if (string.IsNullOrWhiteSpace(ldapUser.Email))
+            if (!string.IsNullOrWhiteSpace(targetRoleName) &&
+                Enum.TryParse<UserRole>(targetRoleName, true, out var parsedRole))
             {
-                throw new ArgumentException("LDAP user email is required", nameof(ldapUser));
+                return parsedRole;
             }
 
-            var salt = CryptoHelper.GenerateSalt();
-
-            return new User
-            {
-                Email = new Email(ldapUser.Email),
-                FirstName = ldapUser.FirstName ?? string.Empty,
-                LastName = ldapUser.LastName ?? string.Empty,
-                PhoneNumber = string.IsNullOrWhiteSpace(ldapUser.Phone)
-                    ? null
-                    : new PhoneNumber(ldapUser.Phone),
-                JobTitle = ldapUser.JobTitle,
-                Department = ldapUser.Department,
-                Status = UserStatus.Active,
-                Role = UserRole.Staff, // LDAP users default to Staff role
-                IsActive = true,
-                IsEmailVerified = true, // LDAP is pre-authenticated
-                IsLdapUser = true,
-                LdapDistinguishedName = ldapUser.DistinguishedName,
-                LastLdapSyncOn = DateTime.UtcNow,
-                DepartmentId = _ldapConfig.DefaultDepartmentId,
-                PasswordHash = CryptoHelper.HashPassword("ldap_disabled", salt), // LDAP users cannot use password
-                PasswordSalt = salt,
-                SecurityStamp = Guid.NewGuid().ToString(),
-                CreatedOn = DateTime.UtcNow,
-                IsDeleted = false,
-                NormalizedEmail = ldapUser.Email.ToUpperInvariant(),
-                TimeZone = "UTC",
-                Language = "en-US",
-                Theme = "light"
-            };
-        }
-
-        /// <summary>
-        /// Synchronizes user profile information from LDAP
-        /// </summary>
-        private void SyncUserFromLdap(User user, LdapUserResult ldapUser)
-        {
-            bool updated = false;
-
-            if (!string.IsNullOrWhiteSpace(ldapUser.FirstName) && user.FirstName != ldapUser.FirstName)
-            {
-                user.FirstName = ldapUser.FirstName;
-                updated = true;
-            }
-
-            if (!string.IsNullOrWhiteSpace(ldapUser.LastName) && user.LastName != ldapUser.LastName)
-            {
-                user.LastName = ldapUser.LastName;
-                updated = true;
-            }
-
-            if (!string.IsNullOrWhiteSpace(ldapUser.Phone) && ldapUser.Phone.Length >= 7)
-            {
-                if (user.PhoneNumber?.Value != ldapUser.Phone)
-                {
-                    user.PhoneNumber = new PhoneNumber(ldapUser.Phone);
-                    updated = true;
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(ldapUser.JobTitle) && user.JobTitle != ldapUser.JobTitle)
-            {
-                user.JobTitle = ldapUser.JobTitle;
-                updated = true;
-            }
-
-            if (!string.IsNullOrWhiteSpace(ldapUser.Department) && user.Department != ldapUser.Department)
-            {
-                user.Department = ldapUser.Department;
-                updated = true;
-            }
-
-            // Always update LDAP sync timestamp
-            user.LastLdapSyncOn = DateTime.UtcNow;
-            user.IsLdapUser = true;
-
-            if (updated)
-            {
-                user.ModifiedOn = DateTime.UtcNow;
-            }
+            return UserRole.Staff;
         }
     }
 }

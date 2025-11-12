@@ -32,6 +32,11 @@ public class CreateUserDto
     [StringLength(100, ErrorMessage = "Department cannot exceed 100 characters")]
     public string? Department { get; set; }
 
+    /// <summary>
+    /// Department ID (foreign key to Department entity)
+    /// </summary>
+    public int? DepartmentId { get; set; }
+
     [StringLength(100, ErrorMessage = "Job title cannot exceed 100 characters")]
     public string? JobTitle { get; set; }
 

@@ -122,6 +122,7 @@ public static class ServiceCollectionExtensions
         // Utility services
         services.AddSingleton<DateTimeProvider>();
         services.AddSingleton<GuidGenerator>();
+        services.AddScoped<ILdapSettingsProvider, LdapSettingsProvider>();
 
         // Encryption services
         services.AddSingleton<IEncryptionService, AESEncryptionService>();

@@ -67,7 +67,8 @@ public class AuthController : BaseController
                     IsSuccess = true,
                     User = result.User,
                     RequiresPasswordChange = result.RequiresPasswordChange,
-                    RequiresTwoFactor = result.RequiresTwoFactor
+                    RequiresTwoFactor = result.RequiresTwoFactor,
+                    DeviceFingerprint = result.DeviceFingerprint
                 };
 
                 _logger.LogInformation("User logged in successfully: {Email} from {IpAddress}",
@@ -100,12 +101,23 @@ public class AuthController : BaseController
             if (tokenInfo?.RefreshToken == null)
                 return BadRequestResponse("No refresh token found in cookies");
 
+            // ✅ DEBUG: Log device fingerprint from request
+            var requestDeviceFingerprint = request?.DeviceFingerprint;
+            _logger.LogInformation("🔄 [REFRESH] Request device fingerprint: {RequestFp}, IsNull: {IsNull}",
+                requestDeviceFingerprint ?? "NULL", string.IsNullOrWhiteSpace(requestDeviceFingerprint));
+
+            var generatedFp = GenerateDeviceFingerprint();
+            var finalDeviceFp = requestDeviceFingerprint ?? generatedFp;
+
+            _logger.LogInformation("🔄 [REFRESH] Generated fallback fingerprint: {GeneratedFp}", generatedFp);
+            _logger.LogInformation("🔄 [REFRESH] Using device fingerprint for validation: {FinalFp}", finalDeviceFp);
+
             var command = new RefreshTokenCommand
             {
                 RefreshToken = tokenInfo.RefreshToken,
                 IpAddress = GetClientIpAddress(),
                 UserAgent = GetUserAgent(),
-                DeviceFingerprint = request?.DeviceFingerprint ?? GenerateDeviceFingerprint()
+                DeviceFingerprint = finalDeviceFp
             };
 
             var result = await _mediator.Send(command);
@@ -483,6 +495,17 @@ public class AuthController : BaseController
         {
             _logger.LogDebug("LDAP login request received for username: {Username}", command.Username);
 
+            // ✅ SET CLIENT CONTEXT - Required for refresh token creation
+            command.IpAddress = GetClientIpAddress();
+            command.UserAgent = GetUserAgent();
+            if (string.IsNullOrWhiteSpace(command.DeviceFingerprint))
+            {
+                command.DeviceFingerprint = GenerateDeviceFingerprint();
+            }
+
+            _logger.LogDebug("LDAP login context set: IpAddress={IpAddress}, UserAgent={UserAgent}, DeviceFingerprint={DeviceFingerprint}",
+                command.IpAddress, command.UserAgent, command.DeviceFingerprint);
+
             // Dispatch the LDAP login command
             var result = await _mediator.Send(command, cancellationToken);
 
@@ -497,7 +520,8 @@ public class AuthController : BaseController
                     IsSuccess = true,
                     User = result.User,
                     RequiresPasswordChange = result.RequiresPasswordChange,
-                    RequiresTwoFactor = result.RequiresTwoFactor
+                    RequiresTwoFactor = result.RequiresTwoFactor,
+                    DeviceFingerprint = result.DeviceFingerprint
                 };
 
                 _logger.LogInformation("LDAP user logged in successfully: {Username} from {IpAddress}",

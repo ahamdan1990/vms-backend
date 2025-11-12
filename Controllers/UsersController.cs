@@ -74,6 +74,41 @@ public class UsersController : BaseController
     }
 
     /// <summary>
+    /// Searches hosts across local staff and the corporate directory.
+    /// </summary>
+    [HttpGet("host-search")]
+    [Authorize(Policy = Permissions.WalkIn.Register)]
+    [ProducesResponseType(typeof(ApiResponseDto<List<HostSearchResultDto>>), 200)]
+    public async Task<IActionResult> SearchHosts(
+        [FromQuery] string searchTerm,
+        [FromQuery] int maxResults = 10,
+        [FromQuery] bool includeDirectory = true)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            return BadRequestResponse("Search term is required");
+        }
+
+        try
+        {
+            var query = new SearchHostsQuery
+            {
+                SearchTerm = searchTerm,
+                MaxResults = maxResults,
+                IncludeDirectory = includeDirectory
+            };
+
+            var result = await _mediator.Send(query);
+            return SuccessResponse(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching hosts with term {SearchTerm}", searchTerm);
+            return ServerErrorResponse("An error occurred while searching hosts");
+        }
+    }
+
+    /// <summary>
     /// Gets user by ID
     /// </summary>
     [HttpGet("{id}")]
@@ -96,6 +131,44 @@ public class UsersController : BaseController
         {
             _logger.LogError(ex, "Error retrieving user {UserId}", id);
             return ServerErrorResponse("An error occurred while retrieving the user");
+        }
+    }
+
+    /// <summary>
+    /// Ensures the specified host exists by provisioning them from LDAP if needed.
+    /// </summary>
+    [HttpPost("ensure-host")]
+    [Authorize(Policy = Permissions.WalkIn.Register)]
+    [ProducesResponseType(typeof(ApiResponseDto<UserDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
+    public async Task<IActionResult> EnsureHostFromDirectory([FromBody] EnsureHostFromDirectoryDto request)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return ValidationError(GetModelStateErrors(), "Validation failed");
+
+            var command = new EnsureDirectoryHostCommand
+            {
+                Identifier = request.Identifier?.Trim() ?? string.Empty,
+                Email = request.Email?.Trim(),
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Role = request.Role
+            };
+
+            var result = await _mediator.Send(command);
+            return SuccessResponse(result, "Host ready to receive visitors");
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Directory provisioning failed for identifier {Identifier}", request.Identifier);
+            return BadRequestResponse(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error ensuring host {Identifier}", request.Identifier);
+            return ServerErrorResponse("An error occurred while preparing the host");
         }
     }
 

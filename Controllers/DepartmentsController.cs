@@ -58,6 +58,25 @@ public class DepartmentsController : BaseController
     }
 
     /// <summary>
+    /// Get complete department hierarchy
+    /// </summary>
+    /// <returns>Hierarchical structure of all departments</returns>
+    [HttpGet("hierarchy")]
+    public async Task<IActionResult> GetDepartmentHierarchy()
+    {
+        var query = new GetDepartmentsQuery
+        {
+            PageNumber = 1,
+            PageSize = 1000,
+            SortBy = "DisplayOrder",
+            SortDirection = "asc"
+        };
+
+        var result = await _mediator.Send(query);
+        return SuccessResponse(result);
+    }
+
+    /// <summary>
     /// Get a specific department by ID
     /// </summary>
     /// <param name="id">Department ID</param>

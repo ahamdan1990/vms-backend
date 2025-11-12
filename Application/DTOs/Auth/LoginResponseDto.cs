@@ -36,6 +36,12 @@ public class LoginResponseDto
     public TimeSpan? LockoutTimeRemaining { get; set; }
 
     /// <summary>
+    /// Device fingerprint used for token validation
+    /// Must be sent back with refresh token requests
+    /// </summary>
+    public string? DeviceFingerprint { get; set; }
+
+    /// <summary>
     /// List of validation errors
     /// </summary>
     public List<string> Errors { get; set; } = new();
