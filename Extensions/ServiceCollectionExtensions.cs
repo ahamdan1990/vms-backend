@@ -35,6 +35,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.RateLimiting;
 using VisitorManagementSystem.Api.Application.Services.FileUploadService;
+using VisitorManagementSystem.Api.Application.Services.FaceDetection;
 
 namespace VisitorManagementSystem.Api.Extensions;
 
@@ -53,6 +54,7 @@ public static class ServiceCollectionExtensions
         services.RegisterServices();
         services.RegisterRepositories();
         services.RegisterExternalServices();
+        services.RegisterCompreFaceServices(configuration);
         services.RegisterBackgroundServices();
         services.RegisterInfrastructureServices();
         services.RegisterValidators();
@@ -158,15 +160,29 @@ public static class ServiceCollectionExtensions
         // CSV service
         services.AddScoped<ICsvService, CsvService>();
 
-        // XLSX service  
+        // XLSX service
         services.AddScoped<IXlsxService, XlsxService>();
 
         // Other services (will be implemented)
         services.AddScoped<ISMSService, StubSMSService>();
         services.AddScoped<IFileStorageService, StubFileStorageService>();
-        
+
         // SignalR Notification service
         services.AddScoped<INotificationService, NotificationService>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers CompreFace face detection and recognition services
+    /// </summary>
+    private static IServiceCollection RegisterCompreFaceServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Configure CompreFace settings
+        services.Configure<CompreFaceSettings>(configuration.GetSection("CompreFace"));
+
+        // Register HttpClient for CompreFace with no base address (set per request)
+        services.AddHttpClient<IFaceDetectionService, CompreFaceService>();
 
         return services;
     }
@@ -879,6 +895,29 @@ public class ExternalServicesHealthCheck : IHealthCheck
             {
                 healthData["emailService"] = "error";
                 healthData["emailError"] = emailEx.Message;
+                hasError = true;
+            }
+
+            // Check CompreFace service if enabled
+            try
+            {
+                var faceDetectionService = scope.ServiceProvider
+                    .GetRequiredService<Application.Services.FaceDetection.IFaceDetectionService>();
+
+                var isCompreFaceHealthy = await faceDetectionService.IsServiceAvailableAsync();
+                healthData["compreFaceService"] = isCompreFaceHealthy ? "connected" : "disconnected";
+
+                if (!isCompreFaceHealthy)
+                {
+                    _logger.LogWarning("CompreFace service is not available");
+                    hasError = true;
+                }
+            }
+            catch (Exception compreFaceEx)
+            {
+                healthData["compreFaceService"] = "error";
+                healthData["compreFaceError"] = compreFaceEx.Message;
+                _logger.LogError(compreFaceEx, "CompreFace health check failed");
                 hasError = true;
             }
 

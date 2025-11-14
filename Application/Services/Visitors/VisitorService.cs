@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
+using VisitorManagementSystem.Api.Application.Services.FaceDetection;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
@@ -17,6 +19,8 @@ public class VisitorService : IVisitorService
     private readonly ILogger<VisitorService> _logger;
     private readonly IWebHostEnvironment _environment;
     private readonly IConfiguration _configuration;
+    private readonly IFaceDetectionService _faceDetectionService;
+    private readonly CompreFaceSettings _compreFaceSettings;
 
     private readonly string[] _allowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff" };
     private readonly long _maxFileSize = 5 * 1024 * 1024; // 5MB
@@ -28,13 +32,17 @@ public class VisitorService : IVisitorService
         IMapper mapper,
         ILogger<VisitorService> logger,
         IWebHostEnvironment environment,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IFaceDetectionService faceDetectionService,
+        IOptions<CompreFaceSettings> compreFaceSettings)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
         _environment = environment;
         _configuration = configuration;
+        _faceDetectionService = faceDetectionService;
+        _compreFaceSettings = compreFaceSettings.Value;
     }
 
     public async Task<ValidationResult> ValidateVisitorForCreationAsync(CreateVisitorDto createDto)
@@ -314,7 +322,7 @@ public class VisitorService : IVisitorService
         }
     }
 
-    public async Task<string> UploadVisitorPhotoAsync(int visitorId, IFormFile file, CancellationToken cancellationToken = default)
+    public async Task<PhotoUploadResult> UploadVisitorPhotoAsync(int visitorId, IFormFile file, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -338,20 +346,104 @@ public class VisitorService : IVisitorService
             }
 
             // Get visitor
-            var visitor = await _unitOfWork.Visitors.GetByIdAsync(visitorId);
+            var visitor = await _unitOfWork.Visitors.GetByIdAsync(visitorId, cancellationToken);
             if (visitor == null)
             {
                 throw new InvalidOperationException($"Visitor with ID {visitorId} not found");
+            }
+
+            // Create subject ID using visitor's email for CompreFace (guaranteed unique)
+            // Fall back to name if email is not available
+            string nameId = $"{visitor.FirstName}_{visitor.LastName}".Replace(" ", "_");
+            var subjectId = !string.IsNullOrEmpty(visitor.Email)
+                ? ((string)visitor.Email).ToLower(System.Globalization.CultureInfo.InvariantCulture)
+                : nameId.ToLower(System.Globalization.CultureInfo.InvariantCulture);
+
+            // Check if CompreFace is enabled and available
+            bool requireFaceDetection = false;
+            if (_compreFaceSettings.Enabled)
+            {
+                try
+                {
+                    var isAvailable = await _faceDetectionService.IsServiceAvailableAsync();
+                    if (isAvailable)
+                    {
+                        requireFaceDetection = true;
+                        _logger.LogDebug("CompreFace is enabled and available - face detection required");
+                    }
+                    else
+                    {
+                        _logger.LogWarning("CompreFace is enabled but not available - proceeding without face detection");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to check CompreFace availability - proceeding without face detection");
+                }
             }
 
             // Remove existing photo if exists
             if (!string.IsNullOrEmpty(visitor.ProfilePhotoPath))
             {
                 await RemoveExistingPhoto(visitor.ProfilePhotoPath);
+
+                // Also remove from CompreFace face collection using visitor's name if available
+                if (requireFaceDetection)
+                {
+                    await _faceDetectionService.RemoveFaceFromCollectionAsync(subjectId, cancellationToken);
+                }
+            }
+
+            // Try to detect and crop face from the uploaded image
+            byte[]? imageBytes = null;
+            bool faceDetected = false;
+            bool faceRecognitionEnabled = false;
+            string? warningMessage = null;
+            PhotoUploadWarningType? warningType = null;
+            bool shouldRetry = false;
+
+            using (var memoryStream = new MemoryStream())
+            {
+                await file.CopyToAsync(memoryStream, cancellationToken);
+                memoryStream.Position = 0;
+
+                // Attempt face detection and cropping with 40% margin for better framing
+                var croppedFaceBytes = await _faceDetectionService.DetectAndCropFaceAsync(
+                    memoryStream,
+                    marginPercent: 40,
+                    cancellationToken);
+
+                if (croppedFaceBytes != null && croppedFaceBytes.Length > 0)
+                {
+                    _logger.LogInformation("Face detected and cropped for visitor {VisitorId} ({VisitorName})",
+                        visitorId, subjectId);
+                    imageBytes = croppedFaceBytes;
+                    faceDetected = true;
+                }
+                else
+                {
+                    // No face detected
+                    if (requireFaceDetection)
+                    {
+                        // REJECT the upload when face detection is required but no face found
+                        _logger.LogWarning("No face detected for visitor {VisitorId} ({VisitorName}), rejecting photo upload",
+                            visitorId, subjectId);
+                        throw new InvalidOperationException("No face detected in the uploaded image. Please upload a photo with a clearly visible face, or take a new photo if using a camera.");
+                    }
+                    else
+                    {
+                        // If face detection is not available/required, save the original image
+                        _logger.LogInformation("Face detection service not available, saving original image for visitor {VisitorId}",
+                            visitorId);
+                        memoryStream.Position = 0;
+                        imageBytes = memoryStream.ToArray();
+                        faceDetected = false;
+                    }
+                }
             }
 
             // Generate unique filename
-            var fileName = $"visitor_{visitorId}_{Guid.NewGuid()}{extension}";
+            var fileName = $"visitor_{visitorId}_{Guid.NewGuid()}.jpg"; // Always save as JPEG
 
             // Create upload directory if it doesn't exist
             var uploadDir = Path.Combine(_environment.WebRootPath, "uploads", "visitors", visitorId.ToString());
@@ -361,20 +453,23 @@ public class VisitorService : IVisitorService
             var relativePath = $"uploads/visitors/{visitorId}/{fileName}";
 
             // Process and save image
-            using var image = await Image.LoadAsync(file.OpenReadStream(), cancellationToken);
-
-            // Resize if too large
-            if (image.Width > _maxWidth || image.Height > _maxHeight)
+            using (var imageStream = new MemoryStream(imageBytes))
             {
-                image.Mutate(x => x.Resize(new ResizeOptions
-                {
-                    Size = new Size(_maxWidth, _maxHeight),
-                    Mode = ResizeMode.Max,
-                    Sampler = KnownResamplers.Lanczos3
-                }));
-            }
+                using var image = await Image.LoadAsync(imageStream, cancellationToken);
 
-            await image.SaveAsync(filePath, cancellationToken);
+                // Resize if too large
+                if (image.Width > _maxWidth || image.Height > _maxHeight)
+                {
+                    image.Mutate(x => x.Resize(new ResizeOptions
+                    {
+                        Size = new Size(_maxWidth, _maxHeight),
+                        Mode = ResizeMode.Max,
+                        Sampler = KnownResamplers.Lanczos3
+                    }));
+                }
+
+                await image.SaveAsync(filePath, cancellationToken);
+            }
 
             // Update visitor profile photo path
             visitor.ProfilePhotoPath = relativePath;
@@ -383,12 +478,84 @@ public class VisitorService : IVisitorService
             _unitOfWork.Visitors.Update(visitor);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Profile photo uploaded successfully for visitor {VisitorId}: {FilePath}",
+            _logger.LogInformation("Profile photo saved successfully for visitor {VisitorId}: {FilePath}",
                 visitorId, relativePath);
 
-            // Return full URL
+            // Add face to CompreFace recognition collection for future recognition (only if face was detected)
+            if (requireFaceDetection && faceDetected)
+            {
+                try
+                {
+                    var addFaceResult = await _faceDetectionService.AddFaceToCollectionAsync(
+                        imageBytes,
+                        subjectId,
+                        cancellationToken);
+
+                    if (addFaceResult.Success)
+                    {
+                        _logger.LogInformation("Face added to recognition collection for visitor {VisitorId} ({VisitorName}), image_id: {ImageId}",
+                            visitorId, subjectId, addFaceResult.ImageId);
+                        faceRecognitionEnabled = true;
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to add face to recognition collection for visitor {VisitorId} ({VisitorName}): {Error}",
+                            visitorId, subjectId, addFaceResult.ErrorMessage);
+
+                        // Determine if error is transient
+                        bool isTransientError = addFaceResult.ErrorMessage?.Contains("500") == true ||
+                                               addFaceResult.ErrorMessage?.Contains("timeout") == true ||
+                                               addFaceResult.ErrorMessage?.Contains("synchronization") == true;
+
+                        if (isTransientError)
+                        {
+                            warningMessage = "Photo uploaded successfully with face detected, but the recognition service encountered a temporary error. Please try uploading again or contact support if the issue persists.";
+                            warningType = PhotoUploadWarningType.ServiceError;
+                            shouldRetry = true;
+                        }
+                        else
+                        {
+                            warningMessage = "Photo uploaded successfully with face detected, but face could not be added to recognition system. Face recognition may not work for this visitor.";
+                            warningType = PhotoUploadWarningType.PartialSuccess;
+                            shouldRetry = false;
+                        }
+                        faceRecognitionEnabled = false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Don't fail the entire operation if CompreFace is unavailable
+                    _logger.LogError(ex, "Error adding face to CompreFace collection for visitor {VisitorId} ({VisitorName})",
+                        visitorId, subjectId);
+
+                    warningMessage = "Photo uploaded successfully with face detected, but face recognition service encountered an error. Face recognition may not work for this visitor. You may try uploading again.";
+                    warningType = PhotoUploadWarningType.ServiceError;
+                    shouldRetry = true;
+                    faceRecognitionEnabled = false;
+                }
+            }
+            else if (!faceDetected)
+            {
+                _logger.LogDebug("Skipping CompreFace face collection addition - no face detected");
+                faceRecognitionEnabled = false;
+            }
+            else
+            {
+                _logger.LogDebug("Skipping CompreFace face collection addition - service not available");
+                faceRecognitionEnabled = false;
+            }
+
+            // Return full URL with status
             var baseUrl = _configuration["BaseUrl"] ?? "https://192.168.0.24:7000";
-            return $"{baseUrl.TrimEnd('/')}/{relativePath.Replace('\\', '/')}";
+            return new PhotoUploadResult
+            {
+                PhotoUrl = $"{baseUrl.TrimEnd('/')}/{relativePath.Replace('\\', '/')}",
+                FaceDetected = faceDetected,
+                FaceRecognitionEnabled = faceRecognitionEnabled,
+                WarningMessage = warningMessage,
+                WarningType = warningType,
+                ShouldRetry = shouldRetry
+            };
         }
         catch (Exception ex)
         {

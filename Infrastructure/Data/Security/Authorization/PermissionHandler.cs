@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using VisitorManagementSystem.Api.Domain.Constants;
+using VisitorManagementSystem.Api.Domain.Enums;
 
 namespace VisitorManagementSystem.Api.Infrastructure.Security.Authorization;
 
@@ -70,6 +71,15 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
             // Check if user has the required permission claim
             if (permissionClaims.Contains(requirement.Permission))
             {
+                if (PermissionGuardHelper.IsReportPermission(requirement.Permission) &&
+                    !PermissionGuardHelper.IsAdministrator(userRole))
+                {
+                    _logger.LogWarning("❌ Report permission {Permission} requires administrator role. User {UserId} with role {Role} denied.",
+                        requirement.Permission, userId, userRole);
+                    context.Fail();
+                    return Task.CompletedTask;
+                }
+
                 _logger.LogDebug("✅ Permission granted: {Permission} for user {UserId} with role {Role}",
                     requirement.Permission, userId, userRole);
                 context.Succeed(requirement);
@@ -129,6 +139,15 @@ public class MultiplePermissionsHandler : AuthorizationHandler<MultiplePermissio
 
             if (hasAllPermissions)
             {
+                if (requirement.Permissions.Any(PermissionGuardHelper.IsReportPermission) &&
+                    !PermissionGuardHelper.IsAdministrator(userRole))
+                {
+                    _logger.LogWarning("❌ Report permissions require administrator role. User {UserId} with role {Role} denied.",
+                        userId, userRole);
+                    context.Fail();
+                    return Task.CompletedTask;
+                }
+
                 _logger.LogDebug("✅ All permissions granted for user {UserId} with role {Role}", userId, userRole);
                 context.Succeed(requirement);
             }
@@ -181,11 +200,24 @@ public class AnyPermissionHandler : AuthorizationHandler<AnyPermissionRequiremen
             var userRole = context.User.FindFirst(ClaimTypes.Role)?.Value ?? "Unknown";
             var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Unknown";
 
-            // Check if user has ANY of the required permissions
-            var hasAnyPermission = requirement.Permissions.Any(permission => permissionClaims.Contains(permission));
+            // Determine which permissions the user actually has from the requirement list
+            var matchedPermissions = requirement.Permissions
+                .Where(permissionClaims.Contains)
+                .ToList();
+
+            var hasAnyPermission = matchedPermissions.Any();
 
             if (hasAnyPermission)
             {
+                var matchedRequiresAdmin = matchedPermissions.All(PermissionGuardHelper.IsReportPermission);
+                if (matchedRequiresAdmin && !PermissionGuardHelper.IsAdministrator(userRole))
+                {
+                    _logger.LogWarning("❌ Report permission requires administrator role. User {UserId} with role {Role} denied.",
+                        userId, userRole);
+                    context.Fail();
+                    return Task.CompletedTask;
+                }
+
                 _logger.LogDebug("✅ At least one permission granted for user {UserId} with role {Role}", userId, userRole);
                 context.Succeed(requirement);
             }
@@ -203,5 +235,19 @@ public class AnyPermissionHandler : AuthorizationHandler<AnyPermissionRequiremen
         }
 
         return Task.CompletedTask;
+    }
+}
+
+internal static class PermissionGuardHelper
+{
+    public static bool IsReportPermission(string? permission)
+    {
+        return !string.IsNullOrWhiteSpace(permission) &&
+               permission.StartsWith("Report.", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static bool IsAdministrator(string? role)
+    {
+        return string.Equals(role, UserRole.Administrator.ToString(), StringComparison.OrdinalIgnoreCase);
     }
 }

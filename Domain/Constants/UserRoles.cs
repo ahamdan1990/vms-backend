@@ -206,10 +206,6 @@ public static class UserRoles
             Permissions.Notification.Receive,
             Permissions.Notification.Acknowledge,
 
-            // Basic reporting
-            Permissions.Report.GenerateOwn,
-            Permissions.Report.ViewHistory,
-
             // Basic dashboard
             Permissions.Dashboard.ViewBasic,
 
@@ -322,11 +318,6 @@ public static class UserRoles
             Permissions.Emergency.GenerateRoster,
             Permissions.Emergency.ViewRoster,
             Permissions.Emergency.PrintRoster,
-
-            // Reports
-            Permissions.Report.GenerateAll,
-            Permissions.Report.ViewHistory,
-            Permissions.Report.Export,
 
             // System config read (for general system settings, NOT replaced by granular permissions)
             Permissions.SystemConfig.Read,

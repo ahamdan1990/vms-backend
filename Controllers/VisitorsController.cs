@@ -8,6 +8,7 @@ using VisitorManagementSystem.Api.Application.Commands.Visitors;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
 using VisitorManagementSystem.Api.Application.Queries.Visitors;
+using VisitorManagementSystem.Api.Application.Services.FaceDetection;
 using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
@@ -26,17 +27,20 @@ public class VisitorsController : BaseController
     private readonly ILogger<VisitorsController> _logger;
     private readonly IWebHostEnvironment _environment;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IFaceDetectionService _faceDetectionService;
 
     public VisitorsController(
         IMediator mediator,
         ILogger<VisitorsController> logger,
         IWebHostEnvironment environment,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IFaceDetectionService faceDetectionService)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _environment = environment ?? throw new ArgumentNullException(nameof(environment));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _faceDetectionService = faceDetectionService ?? throw new ArgumentNullException(nameof(faceDetectionService));
     }
 
     /// <summary>
@@ -276,13 +280,13 @@ public class VisitorsController : BaseController
         try
         {
             var result = await _mediator.Send(command);
-            return SuccessResponse(result);
+            return SuccessResponse(result, "Visitor deleted successfully");
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(new { message = ex.Message });
+            _logger.LogWarning(ex, "Cannot delete visitor {VisitorId}: {Message}", id, ex.Message);
+            return ConflictResponse(ex.Message, "Cannot delete visitor");
         }
-
     }
 
     /// <summary>
@@ -318,6 +322,39 @@ public class VisitorsController : BaseController
 
         var result = await _mediator.Send(query);
         return SuccessResponse(result);
+    }
+
+    /// <summary>
+    /// Searches for a visitor by face recognition from a photo
+    /// </summary>
+    /// <param name="photo">Photo file containing visitor's face</param>
+    /// <returns>Visitor details if face is recognized, null otherwise</returns>
+    [HttpPost("search-by-photo")]
+    [Authorize(Policy = "Permissions.Any.Visitor.Read,Visitor.Read.Own,Visitor.Read.All")]
+    public async Task<IActionResult> SearchVisitorByPhoto(IFormFile photo)
+    {
+        try
+        {
+            if (photo == null || photo.Length == 0)
+            {
+                return BadRequestResponse("No photo provided");
+            }
+
+            var query = new SearchVisitorByPhotoQuery { Photo = photo };
+            var result = await _mediator.Send(query);
+
+            if (result == null)
+            {
+                return SuccessResponse<VisitorDto?>(null, "No matching visitor found by face recognition");
+            }
+
+            return SuccessResponse(result, $"Visitor recognized: {result.FullName}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching visitor by photo");
+            return BadRequestResponse($"Error processing photo: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -435,7 +472,12 @@ public class VisitorsController : BaseController
     [Authorize(Policy = Permissions.Visitor.ViewStatistics)]
     public async Task<IActionResult> GetVisitorStatistics([FromQuery] bool includeDeleted = false)
     {
-        var query = new GetVisitorStatsQuery { IncludeDeleted = includeDeleted };
+        var query = new GetVisitorStatsQuery
+        {
+            IncludeDeleted = includeDeleted,
+            UserId = GetCurrentUserId(),
+            UserPermissions = GetCurrentUserPermissions()
+        };
         var result = await _mediator.Send(query);
         return SuccessResponse(result);
     }
@@ -514,6 +556,44 @@ public class VisitorsController : BaseController
     }
 
     /// <summary>
+    /// Validates a photo for face detection without saving it
+    /// </summary>
+    /// <param name="photo">Photo file to validate</param>
+    /// <returns>Validation result with face detection status</returns>
+    [HttpPost("validate-photo")]
+    [Authorize(Policy = "Permissions.Any.Visitor.Create,Visitor.Update")]
+    public async Task<IActionResult> ValidatePhoto(IFormFile photo)
+    {
+        try
+        {
+            if (photo == null || photo.Length == 0)
+            {
+                return BadRequestResponse("No photo provided");
+            }
+
+            // Use the face detection service to check if a face exists
+            using var stream = photo.OpenReadStream();
+            var faces = await _faceDetectionService.DetectFacesAsync(stream);
+
+            var faceDetected = faces != null && faces.Count > 0;
+
+            return SuccessResponse(new
+            {
+                faceDetected,
+                faceCount = faces?.Count ?? 0,
+                message = faceDetected
+                    ? "Face detected successfully in the photo."
+                    : "No face detected in the photo. Please ensure the face is clearly visible and try again."
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating photo");
+            return ServerErrorResponse("Error validating photo. Please try again.");
+        }
+    }
+
+    /// <summary>
     /// Uploads visitor profile photo
     /// </summary>
     /// <param name="id">Visitor ID</param>
@@ -543,6 +623,11 @@ public class VisitorsController : BaseController
         {
             _logger.LogWarning(ex, "Invalid photo upload for visitor {VisitorId}", id);
             return BadRequestResponse(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Face detection failed for visitor {VisitorId}", id);
+            return BadRequestResponse(ex.Message, "Face Detection Required");
         }
         catch (Exception ex)
         {
@@ -574,52 +659,16 @@ public class VisitorsController : BaseController
                 return NotFoundResponse("Profile photo", 0);
             }
 
-            // Use the existing UpdateVisitor command to set ProfilePhotoPath to null
-            var updateDto = new UpdateVisitorDto
+            // Use the RemoveVisitorProfilePhotoCommand to remove the photo
+            var command = new RemoveVisitorProfilePhotoCommand
             {
-                FirstName = visitor.FirstName,
-                LastName = visitor.LastName,
-                Email = visitor.Email,
-                PhoneNumber = visitor.PhoneNumber,
-                Company = visitor.Company,
-                JobTitle = visitor.JobTitle,
-                DateOfBirth = visitor.DateOfBirth,
-                GovernmentId = visitor.GovernmentId,
-                GovernmentIdType = visitor.GovernmentIdType,
-                Nationality = visitor.Nationality,
-                Language = visitor.Language,
-                DietaryRequirements = visitor.DietaryRequirements,
-                AccessibilityRequirements = visitor.AccessibilityRequirements,
-                SecurityClearance = visitor.SecurityClearance,
-                Notes = visitor.Notes,
-                ExternalId = visitor.ExternalId,
-                Address = visitor.Address
-            };
-
-            var command = new UpdateVisitorCommand
-            {
-                Id = id,
-                FirstName = updateDto.FirstName,
-                LastName = updateDto.LastName,
-                Email = updateDto.Email,
-                PhoneNumber = updateDto.PhoneNumber,
-                Company = updateDto.Company,
-                JobTitle = updateDto.JobTitle,
-                Address = updateDto.Address,
-                DateOfBirth = updateDto.DateOfBirth,
-                GovernmentId = updateDto.GovernmentId,
-                GovernmentIdType = updateDto.GovernmentIdType,
-                Nationality = updateDto.Nationality,
-                Language = updateDto.Language,
-                DietaryRequirements = updateDto.DietaryRequirements,
-                AccessibilityRequirements = updateDto.AccessibilityRequirements,
-                SecurityClearance = updateDto.SecurityClearance,
-                Notes = updateDto.Notes,
-                ExternalId = updateDto.ExternalId,
+                VisitorId = id,
                 ModifiedBy = GetCurrentUserId() ?? throw new UnauthorizedAccessException("User must be authenticated")
             };
 
             await _mediator.Send(command);
+
+            _logger.LogInformation("Profile photo removed successfully for visitor {VisitorId}", id);
             return SuccessResponse(new { message = "Profile photo removed successfully" });
         }
         catch (Exception ex)

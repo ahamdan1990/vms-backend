@@ -203,11 +203,11 @@ public class InvitationsController : BaseController
         _logger.LogDebug("Received CreateInvitationDto: {@CreateDto}. CorrelationId: {CorrelationId}", createDto, correlationId);
         // Determine the visitor ID based on invitation type
         int visitorId;
-        if (createDto.Type == InvitationType.Single)
+        if (createDto.Type == InvitationType.Single || createDto.Type == InvitationType.WalkIn)
         {
             if (!createDto.VisitorId.HasValue)
             {
-                return BadRequest("VisitorId is required for single visitor invitations.");
+                return BadRequest("VisitorId is required for single visitor and walk-in invitations.");
             }
             visitorId = createDto.VisitorId.Value;
         }
@@ -221,15 +221,27 @@ public class InvitationsController : BaseController
             // TODO: Enhance system to support multiple visitors properly
             visitorId = createDto.VisitorIds.First();
         }
+        else if (createDto.Type == InvitationType.Recurring || createDto.Type == InvitationType.BulkImport)
+        {
+            // Handle other types as they are implemented
+            if (!createDto.VisitorId.HasValue)
+            {
+                return BadRequest("VisitorId is required for this invitation type.");
+            }
+            visitorId = createDto.VisitorId.Value;
+        }
         else
         {
             return BadRequest("Invalid invitation type specified.");
         }
 
+        var currentUserId = GetCurrentUserId() ?? throw new UnauthorizedAccessException("User must be authenticated");
+        var hostId = createDto.HostId ?? currentUserId;
+
         var command = new CreateInvitationCommand
         {
             VisitorId = visitorId,
-            HostId = GetCurrentUserId() ?? throw new UnauthorizedAccessException("User must be authenticated"),
+            HostId = hostId,
             VisitPurposeId = createDto.VisitPurposeId,
             LocationId = createDto.LocationId,
             Type = createDto.Type,
@@ -246,7 +258,7 @@ public class InvitationsController : BaseController
             ParkingInstructions = createDto.ParkingInstructions,
             TemplateId = createDto.TemplateId,
             SubmitForApproval = createDto.SubmitForApproval,
-            CreatedBy = GetCurrentUserId() ?? throw new UnauthorizedAccessException("User must be authenticated")
+            CreatedBy = currentUserId
         };
 
         var result = await _mediator.Send(command);
@@ -370,7 +382,9 @@ public class InvitationsController : BaseController
             StartDate = startDate,
             EndDate = endDate,
             HostId = hostId,
-            IncludeDeleted = includeDeleted
+            IncludeDeleted = includeDeleted,
+            UserId = GetCurrentUserId(),
+            UserPermissions = GetCurrentUserPermissions()
         };
 
         var result = await _mediator.Send(query);

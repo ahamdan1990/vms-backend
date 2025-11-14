@@ -1,4 +1,7 @@
 ﻿using VisitorManagementSystem.Api.Application.DTOs.Common;
+using VisitorManagementSystem.Api.Application.DTOs.Companies;
+using VisitorManagementSystem.Api.Application.DTOs.Locations;
+using VisitorManagementSystem.Api.Application.DTOs.VisitPurposes;
 
 namespace VisitorManagementSystem.Api.Application.DTOs.Visitors;
 
@@ -48,9 +51,41 @@ public class VisitorDto
     public string? PhoneType { get; set; }
 
     /// <summary>
-    /// Company name
+    /// Company name (legacy - use CompanyObject instead)
     /// </summary>
-    public string? Company { get; set; }    /// <summary>
+    public string? Company { get; set; }
+
+    /// <summary>
+    /// Company ID
+    /// </summary>
+    public int? CompanyId { get; set; }
+
+    /// <summary>
+    /// Company details
+    /// </summary>
+    public CompanyDto? CompanyObject { get; set; }
+
+    /// <summary>
+    /// Preferred location ID
+    /// </summary>
+    public int? PreferredLocationId { get; set; }
+
+    /// <summary>
+    /// Preferred location details
+    /// </summary>
+    public LocationDto? PreferredLocation { get; set; }
+
+    /// <summary>
+    /// Default visit purpose ID
+    /// </summary>
+    public int? DefaultVisitPurposeId { get; set; }
+
+    /// <summary>
+    /// Default visit purpose details
+    /// </summary>
+    public VisitPurposeDto? DefaultVisitPurpose { get; set; }
+
+    /// <summary>
     /// Job title
     /// </summary>
     public string? JobTitle { get; set; }

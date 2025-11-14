@@ -83,6 +83,14 @@ public interface IInvitationRepository : IGenericRepository<Invitation>
     Task<InvitationStatistics> GetStatisticsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets invitation statistics filtered by user's accessible visitors (VisitorAccess)
+    /// </summary>
+    /// <param name="userId">User ID to filter by</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Filtered invitation statistics</returns>
+    Task<InvitationStatistics> GetStatisticsByUserAccessAsync(int userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets invitation by invitation number
     /// </summary>
     /// <param name="invitationNumber">Invitation number</param>

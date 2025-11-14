@@ -54,8 +54,8 @@ public interface IVisitorService
     /// <param name="visitorId">Visitor ID</param>
     /// <param name="file">Photo file to upload</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Photo URL</returns>
-    Task<string> UploadVisitorPhotoAsync(int visitorId, IFormFile file, CancellationToken cancellationToken = default);
+    /// <returns>Photo upload result with URL, face detection status, and warnings</returns>
+    Task<PhotoUploadResult> UploadVisitorPhotoAsync(int visitorId, IFormFile file, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates visitor's profile photo

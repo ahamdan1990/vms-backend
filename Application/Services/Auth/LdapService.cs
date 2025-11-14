@@ -64,6 +64,7 @@ namespace VisitorManagementSystem.Api.Application.Services.Auth
 
                 using var userConnection = new LdapConnection();
                 userConnection.SecureSocketLayer = config.Port == 636;
+                // Note: ReferralFollowing is not supported in current Novell.Directory.Ldap version
 
                 try
                 {
@@ -110,6 +111,7 @@ namespace VisitorManagementSystem.Api.Application.Services.Auth
             {
                 using var connection = new LdapConnection();
                 connection.SecureSocketLayer = config.Port == 636;
+                // Note: ReferralFollowing is not supported in current Novell.Directory.Ldap version
 
                 await connection.ConnectAsync(config.Server, config.Port);
                 _logger.LogDebug("Connected to LDAP server for user lookup: {Username}", username);
@@ -149,6 +151,12 @@ namespace VisitorManagementSystem.Api.Application.Services.Auth
                 _logger.LogWarning("LDAP user not found: {Username}", username);
                 return null;
             }
+            catch (LdapException ex) when (ex.ResultCode == 10)
+            {
+                var referralState = config.FollowReferrals ? "enabled" : "disabled";
+                _logger.LogDebug("LDAP referral encountered while retrieving user details for {Username}. Referral following is {ReferralState}.", username, referralState);
+                return null;
+            }
             catch (LdapException ex)
             {
                 _logger.LogError(ex, "LDAP error retrieving user details for: {Username} - {Message}", username, ex.LdapErrorMessage);
@@ -168,10 +176,11 @@ namespace VisitorManagementSystem.Api.Application.Services.Auth
         public async Task<List<LdapUserResult>> SearchUsersAsync(string searchTerm)
         {
             var results = new List<LdapUserResult>();
+            LdapConfiguration? config = null;
 
             try
             {
-                var config = await _ldapSettingsProvider.GetSettingsAsync();
+                config = await _ldapSettingsProvider.GetSettingsAsync();
                 if (!config.Enabled)
                 {
                     _logger.LogWarning("LDAP search attempted while LDAP integration is disabled");
@@ -185,6 +194,7 @@ namespace VisitorManagementSystem.Api.Application.Services.Auth
 
                 using var connection = new LdapConnection();
                 connection.SecureSocketLayer = config.Port == 636;
+                // Note: ReferralFollowing is not supported in current Novell.Directory.Ldap version
 
                 await connection.ConnectAsync(config.Server, config.Port);
                 _logger.LogDebug("Connected to LDAP server for user search");
@@ -243,6 +253,11 @@ namespace VisitorManagementSystem.Api.Application.Services.Auth
 
                 _logger.LogInformation("LDAP user search completed for term '{Term}': {Count} results", searchTerm, results.Count);
             }
+            catch (LdapException ex) when (ex.ResultCode == 10)
+            {
+                var referralState = config?.FollowReferrals == true ? "enabled" : "disabled";
+                _logger.LogDebug("LDAP user search encountered referrals for term '{Term}'. Referral following is {ReferralState}. Results retrieved before referral: {Count}", searchTerm, referralState, results.Count);
+            }
             catch (LdapException ex)
             {
                 _logger.LogError(ex, "LDAP error searching for: {Term} - {Message}", searchTerm, ex.LdapErrorMessage);
@@ -274,6 +289,7 @@ namespace VisitorManagementSystem.Api.Application.Services.Auth
 
                 using var connection = new LdapConnection();
                 connection.SecureSocketLayer = config.Port == 636;
+                // Note: ReferralFollowing is not supported in current Novell.Directory.Ldap version
 
                 await connection.ConnectAsync(config.Server, config.Port);
                 _logger.LogDebug("Connected to LDAP server for listing all users");
@@ -362,6 +378,7 @@ namespace VisitorManagementSystem.Api.Application.Services.Auth
 
                 using var connection = new LdapConnection();
                 connection.SecureSocketLayer = config.Port == 636;
+                // Note: ReferralFollowing is not supported in current Novell.Directory.Ldap version
 
                 await connection.ConnectAsync(config.Server, config.Port);
                 _logger.LogDebug("Connected to LDAP server for connection test");
@@ -526,6 +543,7 @@ namespace VisitorManagementSystem.Api.Application.Services.Auth
         public bool IncludeDirectoryUsersInHostSearch { get; set; } = true;
         public string DefaultImportRole { get; set; } = UserRole.Staff.ToString();
         public bool AllowRoleSelectionOnImport { get; set; } = false;
+        public bool FollowReferrals { get; set; } = false; // Follow LDAP referrals when searching multiple naming contexts
     }
 
     /// <summary>

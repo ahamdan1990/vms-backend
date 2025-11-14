@@ -101,10 +101,6 @@ public static class RolePermissionSeeder
             // Dashboard
             Permissions.Dashboard.ViewBasic,
 
-            // Reports (own data only)
-            Permissions.Report.GenerateOwn,
-            Permissions.Report.ViewHistory,
-
             // Template downloads
             Permissions.Template.DownloadSingle,
 
@@ -208,11 +204,6 @@ public static class RolePermissionSeeder
             Permissions.Emergency.GenerateRoster,
             Permissions.Emergency.ViewRoster,
             Permissions.Emergency.PrintRoster,
-
-            // Reports
-            Permissions.Report.GenerateAll,
-            Permissions.Report.ViewHistory,
-            Permissions.Report.Export,
 
             // System config read (for general system settings)
             Permissions.SystemConfig.Read,

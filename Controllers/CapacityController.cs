@@ -109,7 +109,7 @@ public class CapacityController : BaseController
     /// <param name="locationId">Location ID (optional)</param>
     /// <returns>Capacity statistics</returns>
     [HttpGet("statistics")]
-    [Authorize(Policy = Permissions.Report.GenerateOwn)]
+    [Authorize(Policy = Permissions.Report.GenerateAll)]
     public async Task<IActionResult> GetCapacityStatistics(
         [FromQuery, Required] DateTime startDate,
         [FromQuery, Required] DateTime endDate,
@@ -244,7 +244,7 @@ public class CapacityController : BaseController
     /// <param name="groupBy">Group by period (hour, day, week)</param>
     /// <returns>Capacity utilization trends</returns>
     [HttpGet("trends")]
-    [Authorize(Policy = Permissions.Report.GenerateOwn)]
+    [Authorize(Policy = Permissions.Report.GenerateAll)]
     public async Task<IActionResult> GetCapacityTrends(
         [FromQuery, Required] DateTime startDate,
         [FromQuery, Required] DateTime endDate,

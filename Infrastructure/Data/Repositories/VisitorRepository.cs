@@ -268,11 +268,100 @@ public class VisitorRepository : BaseRepository<Visitor>, IVisitorRepository
     }
 
     public async Task<List<CompanyVisitorCount>> GetTopCompaniesByVisitorCountAsync(
-        int limit = 10, 
+        int limit = 10,
         CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .Where(v => v.Company != null && v.IsActive)
+            .GroupBy(v => v.Company)
+            .Select(g => new CompanyVisitorCount
+            {
+                Company = g.Key!,
+                VisitorCount = g.Count(),
+                TotalVisits = g.Sum(v => v.VisitCount),
+                LastVisit = g.Max(v => v.LastVisitDate)
+            })
+            .OrderByDescending(c => c.VisitorCount)
+            .Take(limit)
+            .ToListAsync(cancellationToken);
+    }
+
+    // ===== USER-FILTERED STATISTICS METHODS =====
+    // These methods filter by VisitorAccess for staff users with ReadOwn permission
+
+    public async Task<VisitorStatistics> GetVisitorStatisticsForUserAsync(
+        int userId,
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTime.UtcNow;
+        var startOfMonth = new DateTime(now.Year, now.Month, 1);
+        var startOfYear = new DateTime(now.Year, 1, 1);
+
+        // Base query filtered by VisitorAccess
+        var accessibleVisitorsQuery = _dbSet
+            .Where(v => v.VisitorAccesses.Any(va => va.UserId == userId && va.IsActive));
+
+        var totalVisitors = await accessibleVisitorsQuery.CountAsync(cancellationToken);
+        var activeVisitors = await accessibleVisitorsQuery.CountAsync(v => v.IsActive, cancellationToken);
+        var vipVisitors = await accessibleVisitorsQuery.CountAsync(v => v.IsVip && v.IsActive, cancellationToken);
+        var blacklistedVisitors = await accessibleVisitorsQuery.CountAsync(v => v.IsBlacklisted && v.IsActive, cancellationToken);
+
+        var incompleteProfiles = await accessibleVisitorsQuery.CountAsync(v =>
+            v.IsActive &&
+            (v.PhoneNumber == null || v.Company == null || v.Address == null),
+            cancellationToken);
+
+        var visitorsThisMonth = await accessibleVisitorsQuery.CountAsync(v =>
+            v.CreatedOn >= startOfMonth && v.IsActive,
+            cancellationToken);
+
+        var visitorsThisYear = await accessibleVisitorsQuery.CountAsync(v =>
+            v.CreatedOn >= startOfYear && v.IsActive,
+            cancellationToken);
+
+        var totalVisits = await accessibleVisitorsQuery
+            .Where(v => v.IsActive)
+            .SumAsync(v => v.VisitCount, cancellationToken);
+
+        var averageVisitsPerVisitor = activeVisitors > 0 ? (double)totalVisits / activeVisitors : 0;
+
+        return new VisitorStatistics
+        {
+            TotalVisitors = totalVisitors,
+            ActiveVisitors = activeVisitors,
+            VipVisitors = vipVisitors,
+            BlacklistedVisitors = blacklistedVisitors,
+            IncompleteProfiles = incompleteProfiles,
+            VisitorsThisMonth = visitorsThisMonth,
+            VisitorsThisYear = visitorsThisYear,
+            AverageVisitsPerVisitor = Math.Round(averageVisitsPerVisitor, 2)
+        };
+    }
+
+    public async Task<List<Visitor>> GetVisitorsByDateRangeForUserAsync(
+        int userId,
+        DateTime startDate,
+        DateTime endDate,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Where(v => v.VisitorAccesses.Any(va => va.UserId == userId && va.IsActive) &&
+                       v.CreatedOn >= startDate &&
+                       v.CreatedOn <= endDate &&
+                       v.IsActive)
+            .OrderByDescending(v => v.CreatedOn)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<CompanyVisitorCount>> GetTopCompaniesByVisitorCountForUserAsync(
+        int userId,
+        int limit = 10,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Where(v => v.VisitorAccesses.Any(va => va.UserId == userId && va.IsActive) &&
+                       v.Company != null &&
+                       v.IsActive)
             .GroupBy(v => v.Company)
             .Select(g => new CompanyVisitorCount
             {

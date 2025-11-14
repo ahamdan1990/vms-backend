@@ -43,7 +43,10 @@ public class GetVisitorByIdQueryHandler : IRequestHandler<GetVisitorByIdQuery, V
                 v => v.VisitorNotes,
                 v => v.CreatedByUser!,
                 v => v.ModifiedByUser!,
-                v => v.BlacklistedByUser!
+                v => v.BlacklistedByUser!,
+                v => v.CompanyEntity!,
+                v => v.PreferredLocation!,
+                v => v.DefaultVisitPurpose!
             );
 
             if (visitor == null)

@@ -1,9 +1,17 @@
   Determining projects to restore...
   All projects are up-to-date for restore.
-  VisitorManagementSystem.Api -> /home/ahamdan/Desktop/development/vms/VisitorManagementSystem.Api/bin/Debug/net9.0/VisitorManagementSystem.Api.dll
+/home/ahamdan/Desktop/development/vms/VisitorManagementSystem.Api/Application/Queries/Reports/GetVisitorStatisticsQueryHandler.cs(52,83): error CS0117: 'InvitationStatus' does not contain a definition for 'NoShow' [/home/ahamdan/Desktop/development/vms/VisitorManagementSystem.Api/VisitorManagementSystem.Api.csproj]
+/home/ahamdan/Desktop/development/vms/VisitorManagementSystem.Api/Application/Queries/Reports/GetComprehensiveVisitorReportQueryHandler.cs(73,101): error CS0117: 'InvitationStatus' does not contain a definition for 'Pending' [/home/ahamdan/Desktop/development/vms/VisitorManagementSystem.Api/VisitorManagementSystem.Api.csproj]
+/home/ahamdan/Desktop/development/vms/VisitorManagementSystem.Api/Application/Queries/Reports/GetComprehensiveVisitorReportQueryHandler.cs(259,36): error CS1061: 'Invitation' does not contain a definition for 'CreatedAt' and no accessible extension method 'CreatedAt' accepting a first argument of type 'Invitation' could be found (are you missing a using directive or an assembly reference?) [/home/ahamdan/Desktop/development/vms/VisitorManagementSystem.Api/VisitorManagementSystem.Api.csproj]
+/home/ahamdan/Desktop/development/vms/VisitorManagementSystem.Api/Application/Queries/Reports/GetComprehensiveVisitorReportQueryHandler.cs(260,32): error CS1061: 'Invitation' does not contain a definition for 'Notes' and no accessible extension method 'Notes' accepting a first argument of type 'Invitation' could be found (are you missing a using directive or an assembly reference?) [/home/ahamdan/Desktop/development/vms/VisitorManagementSystem.Api/VisitorManagementSystem.Api.csproj]
 
-Build succeeded.
+Build FAILED.
+
+/home/ahamdan/Desktop/development/vms/VisitorManagementSystem.Api/Application/Queries/Reports/GetVisitorStatisticsQueryHandler.cs(52,83): error CS0117: 'InvitationStatus' does not contain a definition for 'NoShow' [/home/ahamdan/Desktop/development/vms/VisitorManagementSystem.Api/VisitorManagementSystem.Api.csproj]
+/home/ahamdan/Desktop/development/vms/VisitorManagementSystem.Api/Application/Queries/Reports/GetComprehensiveVisitorReportQueryHandler.cs(73,101): error CS0117: 'InvitationStatus' does not contain a definition for 'Pending' [/home/ahamdan/Desktop/development/vms/VisitorManagementSystem.Api/VisitorManagementSystem.Api.csproj]
+/home/ahamdan/Desktop/development/vms/VisitorManagementSystem.Api/Application/Queries/Reports/GetComprehensiveVisitorReportQueryHandler.cs(259,36): error CS1061: 'Invitation' does not contain a definition for 'CreatedAt' and no accessible extension method 'CreatedAt' accepting a first argument of type 'Invitation' could be found (are you missing a using directive or an assembly reference?) [/home/ahamdan/Desktop/development/vms/VisitorManagementSystem.Api/VisitorManagementSystem.Api.csproj]
+/home/ahamdan/Desktop/development/vms/VisitorManagementSystem.Api/Application/Queries/Reports/GetComprehensiveVisitorReportQueryHandler.cs(260,32): error CS1061: 'Invitation' does not contain a definition for 'Notes' and no accessible extension method 'Notes' accepting a first argument of type 'Invitation' could be found (are you missing a using directive or an assembly reference?) [/home/ahamdan/Desktop/development/vms/VisitorManagementSystem.Api/VisitorManagementSystem.Api.csproj]
     0 Warning(s)
-    0 Error(s)
+    4 Error(s)
 
-Time Elapsed 00:00:02.03
+Time Elapsed 00:00:14.51

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Configuration;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
+using VisitorManagementSystem.Api.Application.DTOs.Companies;
 using VisitorManagementSystem.Api.Application.DTOs.Locations;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
 using VisitorManagementSystem.Api.Application.DTOs.VisitPurposes;
@@ -30,6 +31,9 @@ public class VisitorMappingProfile : Profile
             .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
             .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
             .ForMember(dest => dest.ProfilePhotoUrl, opt => opt.MapFrom<VisitorProfilePhotoUrlResolver>())
+            .ForMember(dest => dest.CompanyObject, opt => opt.MapFrom(src => src.CompanyEntity))
+            .ForMember(dest => dest.PreferredLocation, opt => opt.MapFrom(src => src.PreferredLocation))
+            .ForMember(dest => dest.DefaultVisitPurpose, opt => opt.MapFrom(src => src.DefaultVisitPurpose))
             .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src => src.CreatedByUser != null ? src.CreatedByUser.FullName : null))
             .ForMember(dest => dest.ModifiedByName, opt => opt.MapFrom(src => src.ModifiedByUser != null ? src.ModifiedByUser.FullName : null))
             .ForMember(dest => dest.BlacklistedByName, opt => opt.MapFrom(src => src.BlacklistedByUser != null ? src.BlacklistedByUser.FullName : null));

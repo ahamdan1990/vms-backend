@@ -20,6 +20,11 @@ public class CreateInvitationDto : IValidatableObject
     public List<int> VisitorIds { get; set; } = new List<int>();
 
     /// <summary>
+    /// Host ID (defaults to current user if not supplied)
+    /// </summary>
+    public int? HostId { get; set; }
+
+    /// <summary>
     /// Visit purpose ID
     /// </summary>
     public int? VisitPurposeId { get; set; }

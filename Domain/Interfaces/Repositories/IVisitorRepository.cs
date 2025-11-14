@@ -110,6 +110,14 @@ public interface IVisitorRepository : IGenericRepository<Visitor>
     Task<VisitorStatistics> GetVisitorStatisticsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets visitor statistics filtered by user access
+    /// </summary>
+    /// <param name="userId">User ID to filter by VisitorAccess</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Visitor statistics for accessible visitors only</returns>
+    Task<VisitorStatistics> GetVisitorStatisticsForUserAsync(int userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets visitors created within a date range
     /// </summary>
     /// <param name="startDate">Start date</param>
@@ -117,8 +125,22 @@ public interface IVisitorRepository : IGenericRepository<Visitor>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of visitors created in the date range</returns>
     Task<List<Visitor>> GetVisitorsByDateRangeAsync(
-        DateTime startDate, 
-        DateTime endDate, 
+        DateTime startDate,
+        DateTime endDate,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets visitors created within a date range filtered by user access
+    /// </summary>
+    /// <param name="userId">User ID to filter by VisitorAccess</param>
+    /// <param name="startDate">Start date</param>
+    /// <param name="endDate">End date</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of accessible visitors created in the date range</returns>
+    Task<List<Visitor>> GetVisitorsByDateRangeForUserAsync(
+        int userId,
+        DateTime startDate,
+        DateTime endDate,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -128,7 +150,19 @@ public interface IVisitorRepository : IGenericRepository<Visitor>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of companies with visitor counts</returns>
     Task<List<CompanyVisitorCount>> GetTopCompaniesByVisitorCountAsync(
-        int limit = 10, 
+        int limit = 10,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets top companies by visitor count filtered by user access
+    /// </summary>
+    /// <param name="userId">User ID to filter by VisitorAccess</param>
+    /// <param name="limit">Number of top companies to return</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of companies with visitor counts for accessible visitors</returns>
+    Task<List<CompanyVisitorCount>> GetTopCompaniesByVisitorCountForUserAsync(
+        int userId,
+        int limit = 10,
         CancellationToken cancellationToken = default);
 
     /// <summary>

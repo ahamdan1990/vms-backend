@@ -19,18 +19,25 @@ public class VisitorAccessRepository : BaseRepository<VisitorAccess>, IVisitorAc
         int visitorId,
         CancellationToken cancellationToken = default)
     {
-        return await _dbSet.AnyAsync(
-            va => va.UserId == userId &&
-                  va.VisitorId == visitorId &&
-                  va.IsActive,
-            cancellationToken);
+        // IgnoreQueryFilters: We're checking access by UserId directly,
+        // so the global query filter on User.IsDeleted is redundant here
+        // and can cause issues if the User navigation isn't loaded
+        return await _dbSet
+            .IgnoreQueryFilters()
+            .AnyAsync(
+                va => va.UserId == userId &&
+                      va.VisitorId == visitorId &&
+                      va.IsActive,
+                cancellationToken);
     }
 
     public async Task<List<int>> GetAccessibleVisitorIdsAsync(
         int userId,
         CancellationToken cancellationToken = default)
     {
+        // IgnoreQueryFilters: Same reasoning as HasAccessAsync - we're querying by UserId directly
         return await _dbSet
+            .IgnoreQueryFilters()
             .Where(va => va.UserId == userId && va.IsActive)
             .Select(va => va.VisitorId)
             .ToListAsync(cancellationToken);
@@ -44,7 +51,9 @@ public class VisitorAccessRepository : BaseRepository<VisitorAccess>, IVisitorAc
         CancellationToken cancellationToken = default)
     {
         // Check if access already exists
+        // IgnoreQueryFilters: Need to find existing access regardless of User.IsDeleted
         var existingAccess = await _dbSet
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(
                 va => va.UserId == userId && va.VisitorId == visitorId,
                 cancellationToken);
@@ -92,6 +101,7 @@ public class VisitorAccessRepository : BaseRepository<VisitorAccess>, IVisitorAc
         CancellationToken cancellationToken = default)
     {
         return await _dbSet
+            .IgnoreQueryFilters() // Ignore global filter since we're querying by UserId
             .Include(va => va.Visitor)
             .Include(va => va.GrantedByUser)
             .Where(va => va.UserId == userId && va.IsActive)
@@ -104,7 +114,9 @@ public class VisitorAccessRepository : BaseRepository<VisitorAccess>, IVisitorAc
         int visitorId,
         CancellationToken cancellationToken = default)
     {
+        // IgnoreQueryFilters: Querying by UserId directly
         var access = await _dbSet
+            .IgnoreQueryFilters()
             .FirstOrDefaultAsync(
                 va => va.UserId == userId && va.VisitorId == visitorId && va.IsActive,
                 cancellationToken);

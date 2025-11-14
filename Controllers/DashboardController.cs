@@ -50,13 +50,29 @@ public class DashboardController : BaseController
             var todayStart = DateTime.Today;
             var todayEnd = todayStart.AddDays(1);
 
-            // Fetch data from existing query handlers
-            var visitorStats = await _mediator.Send(new GetVisitorStatsQuery(), cancellationToken);
-            var invitationStats = await _mediator.Send(new GetInvitationStatisticsQuery(), cancellationToken);
-            var todayInvitationStats = await _mediator.Send(new GetInvitationStatisticsQuery 
-            { 
-                StartDate = todayStart, 
-                EndDate = todayEnd 
+            // Get current user context for filtering
+            var userId = GetCurrentUserId();
+            var userPermissions = GetCurrentUserPermissions();
+
+            // Fetch data from existing query handlers with user context
+            var visitorStats = await _mediator.Send(new GetVisitorStatsQuery
+            {
+                UserId = userId,
+                UserPermissions = userPermissions
+            }, cancellationToken);
+
+            var invitationStats = await _mediator.Send(new GetInvitationStatisticsQuery
+            {
+                UserId = userId,
+                UserPermissions = userPermissions
+            }, cancellationToken);
+
+            var todayInvitationStats = await _mediator.Send(new GetInvitationStatisticsQuery
+            {
+                StartDate = todayStart,
+                EndDate = todayEnd,
+                UserId = userId,
+                UserPermissions = userPermissions
             }, cancellationToken);
 
             // Get system alerts count

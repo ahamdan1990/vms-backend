@@ -126,8 +126,21 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
             // Ensure mandatory fields with fallback or error
             var subject = request.Subject?.Trim() ?? throw new InvalidOperationException("Subject is required.");
 
-            var visitPurposeId = request.VisitPurposeId ?? template?.DefaultVisitPurposeId
-                                 ?? throw new InvalidOperationException("VisitPurposeId is required.");
+            // For walk-in invitations without a visit purpose, use the default GUEST purpose
+            int? visitPurposeId = request.VisitPurposeId ?? template?.DefaultVisitPurposeId;
+            if (!visitPurposeId.HasValue && request.Type == InvitationType.WalkIn)
+            {
+                var guestPurpose = await _unitOfWork.VisitPurposes.GetByCodeAsync("GUEST", cancellationToken);
+                if (guestPurpose != null)
+                {
+                    visitPurposeId = guestPurpose.Id;
+                    _logger.LogDebug("Using default GUEST purpose (ID: {PurposeId}) for walk-in invitation", visitPurposeId);
+                }
+            }
+
+            if (!visitPurposeId.HasValue)
+                throw new InvalidOperationException("VisitPurposeId is required.");
+
             var locationId = request.LocationId ?? template?.DefaultLocationId
                              ?? throw new InvalidOperationException("LocationId is required.");
 

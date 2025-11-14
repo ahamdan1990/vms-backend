@@ -294,6 +294,14 @@ public abstract class BaseController : ControllerBase
             : StatusCode(201, response);
     }
 
+    /// <summary>
+    /// Creates a conflict response
+    /// </summary>
+    protected IActionResult ConflictResponse(string error, string? message = null)
+    {
+        return Conflict(ApiResponseDto<object>.ErrorResponse(error, message, GetCorrelationId()));
+    }
+
     #endregion
 
     #region Utility Methods

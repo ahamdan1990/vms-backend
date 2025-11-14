@@ -1,4 +1,5 @@
 using MediatR;
+using VisitorManagementSystem.Api.Application.DTOs.Visitors;
 using VisitorManagementSystem.Api.Application.Services.Visitors;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Visitors;
@@ -6,7 +7,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Visitors;
 /// <summary>
 /// Handler for uploading visitor profile photo
 /// </summary>
-public class UploadVisitorProfilePhotoCommandHandler : IRequestHandler<UploadVisitorProfilePhotoCommand, string>
+public class UploadVisitorProfilePhotoCommandHandler : IRequestHandler<UploadVisitorProfilePhotoCommand, PhotoUploadResult>
 {
     private readonly IVisitorService _visitorService;
     private readonly ILogger<UploadVisitorProfilePhotoCommandHandler> _logger;
@@ -19,7 +20,7 @@ public class UploadVisitorProfilePhotoCommandHandler : IRequestHandler<UploadVis
         _logger = logger;
     }
 
-    public async Task<string> Handle(UploadVisitorProfilePhotoCommand request, CancellationToken cancellationToken)
+    public async Task<PhotoUploadResult> Handle(UploadVisitorProfilePhotoCommand request, CancellationToken cancellationToken)
     {
         try
         {
@@ -31,14 +32,15 @@ public class UploadVisitorProfilePhotoCommandHandler : IRequestHandler<UploadVis
             }
 
             // VisitorService will handle validation and saving
-            var photoUrl = await _visitorService.UploadVisitorPhotoAsync(
+            var result = await _visitorService.UploadVisitorPhotoAsync(
                 request.VisitorId,
                 request.File,
                 cancellationToken);
 
-            _logger.LogInformation("Profile photo uploaded successfully for visitor: {VisitorId}", request.VisitorId);
+            _logger.LogInformation("Profile photo uploaded successfully for visitor: {VisitorId}, FaceDetected: {FaceDetected}",
+                request.VisitorId, result.FaceDetected);
 
-            return photoUrl;
+            return result;
         }
         catch (Exception ex)
         {

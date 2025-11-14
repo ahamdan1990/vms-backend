@@ -208,8 +208,7 @@ public static class UserRoleExtensions
                 "Calendar.View.Own",
                 "Dashboard.View.Basic",
                 "Profile.Update.Own",
-                "Notification.Read.Own",
-                "Report.Generate.Own"
+                "Notification.Read.Own"
             },
             UserRole.Receptionist => new List<string>
             {

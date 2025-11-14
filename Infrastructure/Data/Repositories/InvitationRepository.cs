@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -10,8 +11,11 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Repositories
     /// </summary>
     public class InvitationRepository : BaseRepository<Invitation>, IInvitationRepository
     {
-        public InvitationRepository(ApplicationDbContext context) : base(context)
+        private readonly ILogger<InvitationRepository> _logger;
+
+        public InvitationRepository(ApplicationDbContext context, ILogger<InvitationRepository> logger) : base(context)
         {
+            _logger = logger;
         }
 
         public override async Task<Invitation?> GetByIdAsync(
@@ -133,6 +137,63 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Repositories
                 stats.AverageVisitDuration = completedWithTimes
                     .Average(i => (i.CheckedOutAt!.Value - i.CheckedInAt!.Value).TotalHours);
             }
+
+            return stats;
+        }
+
+        public async Task<InvitationStatistics> GetStatisticsByUserAccessAsync(int userId, CancellationToken cancellationToken = default)
+        {
+            _logger.LogDebug("GetStatisticsByUserAccessAsync called for userId={UserId}", userId);
+
+            // Get accessible visitor IDs first to avoid global query filter issues
+            // Use explicit join with VisitorAccess table, ignoring global query filters
+            var accessibleVisitorIds = await _context.Set<VisitorAccess>()
+                .IgnoreQueryFilters()  // Critical: ignore global filter on User.IsDeleted
+                .Where(va => va.UserId == userId && va.IsActive)
+                .Select(va => va.VisitorId)
+                .ToListAsync(cancellationToken);
+
+            _logger.LogDebug("User {UserId} has access to {Count} visitors: {VisitorIds}",
+                userId, accessibleVisitorIds.Count, string.Join(", ", accessibleVisitorIds));
+
+            // Get all invitations first (matching the pattern in GetFilteredStatisticsAsync which works correctly)
+            var allInvitations = await _dbSet.ToListAsync(cancellationToken);
+
+            _logger.LogDebug("Retrieved {Count} total invitations from database. VisitorIds: {VisitorIds}",
+                allInvitations.Count, string.Join(", ", allInvitations.Select(i => i.VisitorId)));
+
+            // Filter invitations to only those for accessible visitors (in-memory, matching working pattern)
+            var invitations = allInvitations
+                .Where(i => accessibleVisitorIds.Contains(i.VisitorId))
+                .ToList();
+
+            _logger.LogDebug("After VisitorAccess filtering: {Before} -> {After} invitations",
+                allInvitations.Count, invitations.Count);
+
+            var stats = new InvitationStatistics
+            {
+                TotalInvitations = invitations.Count,
+                PendingApprovals = invitations.Count(i => i.Status == InvitationStatus.Submitted || i.Status == InvitationStatus.UnderReview),
+                ApprovedInvitations = invitations.Count(i => i.Status == InvitationStatus.Approved),
+                ActiveVisitors = invitations.Count(i => i.Status == InvitationStatus.Active),
+                CompletedVisits = invitations.Count(i => i.Status == InvitationStatus.Completed),
+                CancelledInvitations = invitations.Count(i => i.Status == InvitationStatus.Cancelled),
+                ExpiredInvitations = invitations.Count(i => i.Status == InvitationStatus.Expired),
+                StatusBreakdown = invitations.GroupBy(i => i.Status).ToDictionary(g => g.Key, g => g.Count())
+            };
+
+            var completedWithTimes = invitations
+                .Where(i => i.Status == InvitationStatus.Completed && i.CheckedInAt.HasValue && i.CheckedOutAt.HasValue)
+                .ToList();
+
+            if (completedWithTimes.Any())
+            {
+                stats.AverageVisitDuration = completedWithTimes
+                    .Average(i => (i.CheckedOutAt!.Value - i.CheckedInAt!.Value).TotalHours);
+            }
+
+            _logger.LogDebug("Returning stats: Total={Total}, Pending={Pending}, Active={Active}",
+                stats.TotalInvitations, stats.PendingApprovals, stats.ActiveVisitors);
 
             return stats;
         }
