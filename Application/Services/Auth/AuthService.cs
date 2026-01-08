@@ -1558,9 +1558,9 @@ public class AuthService : IAuthService
 
             HttpOnly = true,
 
-            Secure = false,  // HTTP localhost requires false
+            Secure = true,  // HTTP localhost requires false
 
-            SameSite = SameSiteMode.Lax,  // Lax works for localhost
+            SameSite = SameSiteMode.None,  // Lax works for localhost
 
             Path = "/",
 
@@ -1640,9 +1640,9 @@ public class AuthService : IAuthService
 
             HttpOnly = true,
 
-            Secure = false,  // HTTP localhost
+            Secure = true,  // HTTP localhost
 
-            SameSite = SameSiteMode.Lax,  // Lax for localhost
+            SameSite = SameSiteMode.None,  // Lax for localhost
 
             Path = "/",
 

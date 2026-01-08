@@ -16,7 +16,8 @@
       "launchUrl": "swagger",
       "applicationUrl": "http://0.0.0.0:5000",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "REDIS_CONNECTION": "192.168.0.24:6379"
       }
     },
     "https": {
@@ -27,7 +28,8 @@
       "applicationUrl": "https://0.0.0.0:7000;http://0.0.0.0:5000",
       "sslPort": 7000,
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "REDIS_CONNECTION": "192.168.0.24:6379"
       }
     },
     "IIS Express": {
