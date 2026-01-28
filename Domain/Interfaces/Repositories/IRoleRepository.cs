@@ -8,6 +8,7 @@ namespace VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 public interface IRoleRepository
 {
     Task<Role?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+    Task<Role?> GetByNameAsync(string name, CancellationToken cancellationToken = default);
     Task<List<Role>> GetAsync(System.Linq.Expressions.Expression<Func<Role, bool>> predicate, CancellationToken cancellationToken = default);
     Task<List<Role>> GetAllAsync(CancellationToken cancellationToken = default);
     Task AddAsync(Role entity, CancellationToken cancellationToken = default);

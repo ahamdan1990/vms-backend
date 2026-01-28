@@ -22,6 +22,12 @@ public class RoleRepository : IRoleRepository
         return await _context.Roles.FindAsync(new object[] { id }, cancellationToken);
     }
 
+    public async Task<Role?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
+    {
+        return await _context.Roles
+            .FirstOrDefaultAsync(r => r.Name == name, cancellationToken);
+    }
+
     public async Task<List<Role>> GetAsync(Expression<Func<Role, bool>> predicate, CancellationToken cancellationToken = default)
     {
         return await _context.Roles.Where(predicate).ToListAsync(cancellationToken);

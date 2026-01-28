@@ -119,8 +119,16 @@ namespace VisitorManagementSystem.Api.Application.Commands.Auth
                             ldapUser,
                             ldapConfig,
                             ResolveImportRole(ldapConfig.DefaultImportRole));
+
+                        // CRITICAL: Set RoleId immediately to ensure user gets permissions
+                        // The LdapUserMapper only sets the deprecated Role enum for backwards compatibility
+                        // We must also set RoleId to link to the database role system
+                        await EnsureUserHasRoleIdAsync(user, cancellationToken);
+
                         await _unitOfWork.Users.AddAsync(user, cancellationToken);
                         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                        _logger.LogInformation("Created new LDAP user with RoleId: {RoleId} ({RoleName})", user.RoleId, user.Role);
                     }
                     else
                     {
@@ -135,11 +143,20 @@ namespace VisitorManagementSystem.Api.Application.Commands.Auth
                 }
                 else
                 {
+                    // Ensure existing user has RoleId set (for users created before RoleId system)
+                    var needsRoleId = await EnsureUserHasRoleIdAsync(user, cancellationToken);
+
                     // Sync profile from LDAP if enabled
                     if (ldapConfig.SyncProfileOnLogin)
                     {
                         _logger.LogInformation("Syncing user profile from LDAP: {Email}", ldapUser.Email);
                         LdapUserMapper.SyncUserFromLdap(user, ldapUser);
+                        _unitOfWork.Users.Update(user);
+                        await _unitOfWork.SaveChangesAsync(cancellationToken);
+                    }
+                    else if (needsRoleId)
+                    {
+                        // Save RoleId update even if sync is disabled
                         _unitOfWork.Users.Update(user);
                         await _unitOfWork.SaveChangesAsync(cancellationToken);
                     }
@@ -194,7 +211,52 @@ namespace VisitorManagementSystem.Api.Application.Commands.Auth
                 };
             }
         }
-        
+
+        /// <summary>
+        /// Ensures a user has RoleId set based on their Role enum.
+        /// This is critical for the permission system to work correctly.
+        /// </summary>
+        /// <param name="user">User entity to check and update</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>True if RoleId was set/updated, false if it was already set</returns>
+        private async Task<bool> EnsureUserHasRoleIdAsync(User user, CancellationToken cancellationToken)
+        {
+            // If RoleId is already set, no action needed
+            if (user.RoleId.HasValue)
+            {
+                return false;
+            }
+
+            // Map the deprecated Role enum to database RoleId
+            var roleName = user.Role switch
+            {
+                UserRole.Staff => "Staff",
+                UserRole.Receptionist => "Receptionist",
+                UserRole.Administrator => "Administrator",
+                _ => "Staff" // Default fallback
+            };
+
+            var role = await _unitOfWork.Roles.GetByNameAsync(roleName, cancellationToken);
+            if (role == null)
+            {
+                _logger.LogWarning("Role '{RoleName}' not found in database for user {Email}. Defaulting to Staff.",
+                    roleName, user.Email.Value);
+
+                // Fallback to Staff role
+                role = await _unitOfWork.Roles.GetByNameAsync("Staff", cancellationToken);
+                if (role == null)
+                {
+                    throw new InvalidOperationException("Critical: Staff role not found in database. Cannot assign user role.");
+                }
+            }
+
+            user.RoleId = role.Id;
+            _logger.LogInformation("Set RoleId={RoleId} ({RoleName}) for user {Email}",
+                role.Id, roleName, user.Email.Value);
+
+            return true;
+        }
+
         private static UserRole ResolveImportRole(string? targetRoleName)
         {
             if (!string.IsNullOrWhiteSpace(targetRoleName) &&

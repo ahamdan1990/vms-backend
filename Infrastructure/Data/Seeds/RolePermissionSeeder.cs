@@ -10,25 +10,60 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Seeds;
 public static class RolePermissionSeeder
 {
     /// <summary>
-    /// Seeds role-permission mappings to the database
+    /// Seeds role-permission mappings to the database with automatic detection of missing permissions
     /// </summary>
     public static async Task SeedRolePermissionsAsync(ApplicationDbContext context)
     {
-        // Check if role permissions already exist
-        if (await context.RolePermissions.AnyAsync())
+        Console.WriteLine("Checking role-permission mappings...");
+
+        // Get system roles
+        var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Administrator");
+        if (adminRole == null)
         {
-            Console.WriteLine("Role permissions already seeded. Skipping...");
+            Console.WriteLine("Administrator role not found. Cannot seed role permissions.");
             return;
+        }
+
+        // Count total permissions available in the system
+        var totalPermissionsCount = await context.Permissions.CountAsync(p => p.IsActive);
+
+        // Count permissions currently assigned to Administrator
+        var adminPermissionCount = await context.RolePermissions
+            .CountAsync(rp => rp.RoleId == adminRole.Id);
+
+        Console.WriteLine($"📊 System Status: {adminPermissionCount}/{totalPermissionsCount} permissions assigned to Administrator");
+
+        // Check if Administrator has all permissions
+        if (adminPermissionCount >= totalPermissionsCount && adminPermissionCount > 0)
+        {
+            Console.WriteLine("✅ Role permissions are up-to-date. All permissions assigned.");
+            return;
+        }
+
+        // Detect the scenario
+        if (adminPermissionCount == 0)
+        {
+            Console.WriteLine("🆕 First-time seeding: No role permissions exist.");
+        }
+        else
+        {
+            Console.WriteLine($"⚠️ Permission mismatch detected: Administrator missing {totalPermissionsCount - adminPermissionCount} permissions.");
+            Console.WriteLine("🔄 Re-seeding role permissions to include new permissions...");
+
+            // Clear existing role permissions for clean re-seed
+            var existingMappings = await context.RolePermissions.ToListAsync();
+            context.RolePermissions.RemoveRange(existingMappings);
+            await context.SaveChangesAsync();
+            Console.WriteLine($"   Cleared {existingMappings.Count} existing role-permission mappings.");
         }
 
         Console.WriteLine("Seeding role permissions to database...");
 
-        // Get roles from database
+        // Get remaining roles from database (adminRole already fetched above)
         var staffRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Staff");
         var receptionistRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Receptionist");
-        var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Administrator");
 
-        if (staffRole == null || receptionistRole == null || adminRole == null)
+        if (staffRole == null || receptionistRole == null)
         {
             throw new InvalidOperationException("System roles must be seeded before role permissions.");
         }
@@ -274,10 +309,23 @@ public static class RolePermissionSeeder
         await context.RolePermissions.AddRangeAsync(rolePermissions);
         await context.SaveChangesAsync();
 
-        Console.WriteLine($"Successfully seeded {rolePermissions.Count} role-permission mappings.");
-        Console.WriteLine($"  - Staff: {staffPermissions.Length} permissions");
-        Console.WriteLine($"  - Receptionist: {receptionistPermissions.Length} permissions");
-        Console.WriteLine($"  - Administrator: {adminPermissions.Length} permissions (ALL)");
+        Console.WriteLine($"✅ Successfully seeded {rolePermissions.Count} role-permission mappings.");
+        Console.WriteLine($"   📋 Staff: {staffPermissions.Length} permissions");
+        Console.WriteLine($"   📋 Receptionist: {receptionistPermissions.Length} permissions");
+        Console.WriteLine($"   📋 Administrator: {adminPermissions.Length} permissions (ALL)");
+
+        // Verify Administrator has all permissions
+        var verifyAdminCount = await context.RolePermissions.CountAsync(rp => rp.RoleId == adminRole.Id);
+        var verifyTotalCount = await context.Permissions.CountAsync(p => p.IsActive);
+
+        if (verifyAdminCount == verifyTotalCount)
+        {
+            Console.WriteLine($"✅ Verification passed: Administrator has all {verifyTotalCount} active permissions.");
+        }
+        else
+        {
+            Console.WriteLine($"⚠️ Verification warning: Administrator has {verifyAdminCount}/{verifyTotalCount} permissions.");
+        }
     }
 
     /// <summary>

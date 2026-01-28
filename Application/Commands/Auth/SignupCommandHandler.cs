@@ -100,10 +100,14 @@ namespace VisitorManagementSystem.Api.Application.Commands.Auth
                     Theme = "light"
                 };
 
+                // CRITICAL: Set RoleId immediately to ensure user gets permissions
+                await EnsureUserHasRoleIdAsync(newUser, cancellationToken);
+
                 await _unitOfWork.Users.AddAsync(newUser, cancellationToken);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-                _logger.LogInformation("New user created: {Email}, UserId: {UserId}", newUser.Email.Value, newUser.Id);
+                _logger.LogInformation("New user created: {Email}, UserId: {UserId}, RoleId: {RoleId}",
+                    newUser.Email.Value, newUser.Id, newUser.RoleId);
 
                 // Generate email verification token
                 var verificationToken = await _emailVerificationService.GenerateVerificationTokenAsync(newUser.Id);
@@ -226,6 +230,48 @@ namespace VisitorManagementSystem.Api.Application.Commands.Auth
                 errors.Add("Password must contain at least one special character");
 
             return errors;
+        }
+
+        /// <summary>
+        /// Ensures a user has RoleId set based on their Role enum.
+        /// This is critical for the permission system to work correctly.
+        /// </summary>
+        private async Task<bool> EnsureUserHasRoleIdAsync(User user, CancellationToken cancellationToken)
+        {
+            // If RoleId is already set, no action needed
+            if (user.RoleId.HasValue)
+            {
+                return false;
+            }
+
+            // Map the deprecated Role enum to database RoleId
+            var roleName = user.Role switch
+            {
+                UserRole.Staff => "Staff",
+                UserRole.Receptionist => "Receptionist",
+                UserRole.Administrator => "Administrator",
+                _ => "Staff" // Default fallback
+            };
+
+            var role = await _unitOfWork.Roles.GetByNameAsync(roleName, cancellationToken);
+            if (role == null)
+            {
+                _logger.LogWarning("Role '{RoleName}' not found in database for user {Email}. Defaulting to Staff.",
+                    roleName, user.Email.Value);
+
+                // Fallback to Staff role
+                role = await _unitOfWork.Roles.GetByNameAsync("Staff", cancellationToken);
+                if (role == null)
+                {
+                    throw new InvalidOperationException("Critical: Staff role not found in database. Cannot assign user role.");
+                }
+            }
+
+            user.RoleId = role.Id;
+            _logger.LogInformation("Set RoleId={RoleId} ({RoleName}) for new signup user {Email}",
+                role.Id, roleName, user.Email.Value);
+
+            return true;
         }
 
         /// <summary>

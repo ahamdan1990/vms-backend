@@ -62,7 +62,7 @@ public class EnsureDirectoryHostCommandHandler : IRequestHandler<EnsureDirectory
 
         if (existingUser != null)
         {
-            EnsureUserIsActive(existingUser);
+            await EnsureUserIsActiveAsync(existingUser, cancellationToken: cancellationToken);
             _unitOfWork.Users.Update(existingUser);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return _mapper.Map<UserDto>(existingUser);
@@ -108,6 +108,9 @@ public class EnsureDirectoryHostCommandHandler : IRequestHandler<EnsureDirectory
 
         var newUser = LdapUserMapper.CreateUserFromLdap(directoryUser, ldapSettings, targetRole);
 
+        // CRITICAL: Set RoleId immediately to ensure user gets permissions
+        await EnsureUserHasRoleIdAsync(newUser, cancellationToken);
+
         await _unitOfWork.Users.AddAsync(newUser, cancellationToken);
 
         try
@@ -123,7 +126,7 @@ public class EnsureDirectoryHostCommandHandler : IRequestHandler<EnsureDirectory
                 throw;
             }
 
-            EnsureUserIsActive(conflictUser, targetRole);
+            await EnsureUserIsActiveAsync(conflictUser, targetRole, cancellationToken);
             _unitOfWork.Users.Update(conflictUser);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return _mapper.Map<UserDto>(conflictUser);
@@ -133,15 +136,66 @@ public class EnsureDirectoryHostCommandHandler : IRequestHandler<EnsureDirectory
         return _mapper.Map<UserDto>(newUser);
     }
 
-    private static void EnsureUserIsActive(User user, UserRole? overwriteRole = null)
+    private async Task EnsureUserIsActiveAsync(User user, UserRole? overwriteRole = null, CancellationToken cancellationToken = default)
     {
         user.IsActive = true;
         user.IsDeleted = false;
         user.Status = UserStatus.Active;
+
         if (overwriteRole.HasValue)
         {
             user.Role = overwriteRole.Value;
+            // CRITICAL: Also update RoleId when role is changed
+            user.RoleId = null; // Clear RoleId to force re-mapping
+            await EnsureUserHasRoleIdAsync(user, cancellationToken);
         }
+        else
+        {
+            // Ensure existing user has RoleId set
+            await EnsureUserHasRoleIdAsync(user, cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Ensures a user has RoleId set based on their Role enum.
+    /// This is critical for the permission system to work correctly.
+    /// </summary>
+    private async Task<bool> EnsureUserHasRoleIdAsync(User user, CancellationToken cancellationToken)
+    {
+        // If RoleId is already set, no action needed
+        if (user.RoleId.HasValue)
+        {
+            return false;
+        }
+
+        // Map the deprecated Role enum to database RoleId
+        var roleName = user.Role switch
+        {
+            UserRole.Staff => "Staff",
+            UserRole.Receptionist => "Receptionist",
+            UserRole.Administrator => "Administrator",
+            _ => "Staff" // Default fallback
+        };
+
+        var role = await _unitOfWork.Roles.GetByNameAsync(roleName, cancellationToken);
+        if (role == null)
+        {
+            _logger.LogWarning("Role '{RoleName}' not found in database for user {Email}. Defaulting to Staff.",
+                roleName, user.Email.Value);
+
+            // Fallback to Staff role
+            role = await _unitOfWork.Roles.GetByNameAsync("Staff", cancellationToken);
+            if (role == null)
+            {
+                throw new InvalidOperationException("Critical: Staff role not found in database. Cannot assign user role.");
+            }
+        }
+
+        user.RoleId = role.Id;
+        _logger.LogInformation("Set RoleId={RoleId} ({RoleName}) for user {Email}",
+            role.Id, roleName, user.Email.Value);
+
+        return true;
     }
 
     private static bool IsUniqueEmailViolation(DbUpdateException exception)
@@ -150,6 +204,7 @@ public class EnsureDirectoryHostCommandHandler : IRequestHandler<EnsureDirectory
         return !string.IsNullOrWhiteSpace(message) &&
                message.Contains("IX_Users_NormalizedEmail", StringComparison.OrdinalIgnoreCase);
     }
+
     private static UserRole ResolveTargetRole(LdapConfiguration configuration, string? requestedRole)
     {
         if (!string.IsNullOrWhiteSpace(requestedRole))
