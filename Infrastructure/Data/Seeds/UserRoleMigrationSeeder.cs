@@ -11,6 +11,7 @@ public static class UserRoleMigrationSeeder
 {
     /// <summary>
     /// Migrates existing users to use RoleId instead of Role enum
+    /// IMPROVED: Also fixes mismatched Role/RoleId values, not just NULL
     /// </summary>
     public static async Task MigrateUserRolesAsync(ApplicationDbContext context)
     {
@@ -24,58 +25,131 @@ public static class UserRoleMigrationSeeder
             throw new InvalidOperationException("System roles must be seeded before migrating user roles.");
         }
 
-        // Get all users without RoleId set
-        var usersToMigrate = await context.Users
-            .Where(u => u.RoleId == null)
-            .ToListAsync();
+        // Get all users with NULL RoleId OR mismatched Role string vs RoleId FK
+        var allUsers = await context.Users.Include(u => u.RoleEntity).ToListAsync();
+
+        var usersToMigrate = allUsers
+            .Where(u => u.RoleId == null || u.RoleEntity == null || u.Role.ToString() != u.RoleEntity.Name)
+            .ToList();
 
         if (!usersToMigrate.Any())
         {
-            Console.WriteLine("No users to migrate. Skipping...");
+            Console.WriteLine("No users to migrate. All users have correct RoleId values.");
             return;
         }
 
+        Console.WriteLine($"Found {usersToMigrate.Count} users needing role migration:");
+
+        var nullRoleIdUsers = usersToMigrate.Where(u => u.RoleId == null).ToList();
+        var mismatchedUsers = usersToMigrate.Where(u => u.RoleId != null && u.RoleEntity != null && u.Role.ToString() != u.RoleEntity.Name).ToList();
+
+        if (nullRoleIdUsers.Any())
+        {
+            Console.WriteLine($"  - {nullRoleIdUsers.Count} users with NULL RoleId");
+        }
+
+        if (mismatchedUsers.Any())
+        {
+            Console.WriteLine($"  - {mismatchedUsers.Count} users with mismatched Role/RoleId:");
+            foreach (var user in mismatchedUsers)
+            {
+                Console.WriteLine($"      • {user.Email.Value}: Role enum={user.Role} but RoleId points to '{user.RoleEntity?.Name}'");
+            }
+        }
+
         var migratedCount = 0;
+        var fixedNullCount = 0;
+        var fixedMismatchCount = 0;
 
         foreach (var user in usersToMigrate)
         {
+            var oldRoleId = user.RoleId;
+
             // Map old enum Role to new RoleId
-            var newRoleId = user.Role switch
-            {
-                UserRole.Staff => roles["Staff"],
-                UserRole.Receptionist => roles["Receptionist"], // Operator becomes Receptionist
-                UserRole.Administrator => roles["Administrator"],
-                _ => roles["Staff"] // Default to Staff if unknown
-            };
+            var roleName = user.Role.ToString();
+            var newRoleId = roles.ContainsKey(roleName)
+                ? roles[roleName]
+                : roles["Staff"]; // Default to Staff if role name not found
 
             user.RoleId = newRoleId;
             migratedCount++;
+
+            // Track what we fixed
+            if (oldRoleId == null)
+            {
+                fixedNullCount++;
+            }
+            else if (oldRoleId != newRoleId)
+            {
+                fixedMismatchCount++;
+            }
         }
 
         await context.SaveChangesAsync();
 
-        Console.WriteLine($"Successfully migrated {migratedCount} users to new role system.");
+        Console.WriteLine($"Successfully migrated {migratedCount} users to new role system:");
+        if (fixedNullCount > 0)
+        {
+            Console.WriteLine($"  - Fixed {fixedNullCount} users with NULL RoleId");
+        }
+        if (fixedMismatchCount > 0)
+        {
+            Console.WriteLine($"  - Fixed {fixedMismatchCount} users with mismatched RoleId");
+        }
+
+        Console.WriteLine($"Role distribution:");
         Console.WriteLine($"  - Staff: {usersToMigrate.Count(u => u.Role == UserRole.Staff)}");
-        Console.WriteLine($"  - Receptionist (formerly Operator): {usersToMigrate.Count(u => u.Role == UserRole.Receptionist)}");
+        Console.WriteLine($"  - Receptionist: {usersToMigrate.Count(u => u.Role == UserRole.Receptionist)}");
         Console.WriteLine($"  - Administrator: {usersToMigrate.Count(u => u.Role == UserRole.Administrator)}");
     }
 
     /// <summary>
-    /// Validates that all users have been migrated
+    /// Validates that all users have been migrated and have matching Role/RoleId
     /// </summary>
     public static async Task<bool> ValidateMigrationAsync(ApplicationDbContext context)
     {
-        var unmigrated = await context.Users
+        // Check for NULL RoleId
+        var nullRoleIdCount = await context.Users
             .Where(u => u.RoleId == null)
             .CountAsync();
 
-        if (unmigrated > 0)
+        // Check for mismatched Role/RoleId
+        var allUsers = await context.Users.Include(u => u.RoleEntity).ToListAsync();
+        var mismatchedCount = allUsers
+            .Count(u => u.RoleId != null && u.RoleEntity != null && u.Role.ToString() != u.RoleEntity.Name);
+
+        var totalIssues = nullRoleIdCount + mismatchedCount;
+
+        if (totalIssues > 0)
         {
-            Console.WriteLine($"WARNING: {unmigrated} users still have null RoleId.");
+            Console.WriteLine("WARNING: User role validation failed:");
+            if (nullRoleIdCount > 0)
+            {
+                Console.WriteLine($"  - {nullRoleIdCount} users still have NULL RoleId");
+            }
+            if (mismatchedCount > 0)
+            {
+                Console.WriteLine($"  - {mismatchedCount} users have mismatched Role/RoleId");
+
+                // Show the mismatched users for debugging
+                var mismatchedUsers = allUsers
+                    .Where(u => u.RoleId != null && u.RoleEntity != null && u.Role.ToString() != u.RoleEntity.Name)
+                    .Take(5); // Show first 5 to avoid flooding console
+
+                foreach (var user in mismatchedUsers)
+                {
+                    Console.WriteLine($"      • {user.Email.Value}: Role={user.Role}, RoleId={user.RoleId} ({user.RoleEntity?.Name})");
+                }
+                if (mismatchedCount > 5)
+                {
+                    Console.WriteLine($"      ... and {mismatchedCount - 5} more");
+                }
+            }
             return false;
         }
 
-        Console.WriteLine("All users successfully migrated to new role system.");
+        Console.WriteLine("✅ All users successfully migrated to new role system.");
+        Console.WriteLine("   All users have matching Role enum and RoleId FK values.");
         return true;
     }
 

@@ -69,7 +69,29 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 user.LastName = request.LastName.Trim();
                 user.Email = new Email(request.Email.Trim().ToLowerInvariant());
                 user.NormalizedEmail = request.Email.Trim().ToUpperInvariant();
+
+                // CRITICAL: Update BOTH Role (deprecated) AND RoleId (active) to prevent mismatch
+                var roleChanged = user.Role != request.Role;
                 user.Role = request.Role;
+
+                // Synchronize RoleId with Role string to ensure permission system works correctly
+                if (roleChanged)
+                {
+                    var roleName = request.Role.ToString();
+                    var role = await _unitOfWork.Roles.GetByNameAsync(roleName, cancellationToken);
+                    if (role != null)
+                    {
+                        user.RoleId = role.Id;
+                        _logger.LogInformation("Updated RoleId to {RoleId} ({RoleName}) for user {UserId} due to role change",
+                            role.Id, roleName, user.Id);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Role '{RoleName}' not found in database for user {UserId}. RoleId not updated.",
+                            roleName, user.Id);
+                    }
+                }
+
                 user.Status = request.Status;
                 user.Department = request.Department?.Trim();
                 user.JobTitle = request.JobTitle?.Trim();

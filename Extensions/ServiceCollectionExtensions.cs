@@ -36,6 +36,9 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.RateLimiting;
 using VisitorManagementSystem.Api.Application.Services.FileUploadService;
 using VisitorManagementSystem.Api.Application.Services.FaceDetection;
+using VisitorManagementSystem.Api.Infrastructure.Caching;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace VisitorManagementSystem.Api.Extensions;
 
@@ -56,7 +59,7 @@ public static class ServiceCollectionExtensions
         services.RegisterExternalServices();
         services.RegisterCompreFaceServices(configuration);
         services.RegisterBackgroundServices();
-        services.RegisterInfrastructureServices();
+        services.RegisterInfrastructureServices(configuration);
         services.RegisterValidators();
 
         // Configure security
@@ -225,7 +228,7 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Registers infrastructure services
     /// </summary>
-    private static IServiceCollection RegisterInfrastructureServices(this IServiceCollection services)
+    private static IServiceCollection RegisterInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
         // HTTP client services
         services.AddHttpClient();
@@ -233,8 +236,50 @@ public static class ServiceCollectionExtensions
         // In-memory cache
         services.AddMemoryCache();
 
-        // —— SESSION: backing store + registration ——
-        services.AddDistributedMemoryCache();
+        // Configure resilient cache options from appsettings
+        services.Configure<ResilientCacheOptions>(configuration.GetSection(ResilientCacheOptions.SectionName));
+
+        // Get Redis connection string from environment or config
+        var redisConnection = Environment.GetEnvironmentVariable("REDIS_CONNECTION");
+        var hasRedisConfigured = !string.IsNullOrWhiteSpace(redisConnection);
+
+        if (hasRedisConfigured)
+        {
+            // Register the resilient cache that wraps both Redis and Memory cache
+            services.AddSingleton<ResilientDistributedCache>(sp =>
+            {
+                // Create Redis cache instance
+                IDistributedCache redisCache = new RedisCache(new RedisCacheOptions
+                {
+                    Configuration = redisConnection,
+                    InstanceName = "VMS_"
+                });
+
+                // Create memory cache instance for fallback - using the in-memory implementation
+                var memCache = sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+                IDistributedCache memoryCache = new MemoryDistributedCache(
+                    Microsoft.Extensions.Options.Options.Create(new Microsoft.Extensions.Caching.Memory.MemoryDistributedCacheOptions()));
+
+                var options = sp.GetRequiredService<IOptions<ResilientCacheOptions>>();
+                var logger = sp.GetRequiredService<ILogger<ResilientDistributedCache>>();
+
+                return new ResilientDistributedCache(redisCache, memoryCache, options, logger);
+            });
+
+            // Register as IDistributedCache
+            services.AddSingleton<IDistributedCache>(sp =>
+                sp.GetRequiredService<ResilientDistributedCache>());
+
+            // Register the health check background service
+            services.AddHostedService<RedisHealthCheckService>();
+        }
+        else
+        {
+            // No Redis configured - use memory cache only
+            services.AddDistributedMemoryCache();
+        }
+
+        // Session configuration
         services.AddSession(options =>
         {
             options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -242,12 +287,6 @@ public static class ServiceCollectionExtensions
             options.Cookie.IsEssential = true;
         });
 
-        // Distributed cache (Redis)
-        services.AddStackExchangeRedisCache(options =>
-        {
-           options.Configuration = Environment.GetEnvironmentVariable("REDIS_CONNECTION") ?? "localhost:6379";
-        });
-        // services.AddDistributedMemoryCache();
         // Data protection
         services.AddDataProtection()
             .SetApplicationName("VisitorManagementSystem")

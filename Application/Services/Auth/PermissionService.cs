@@ -36,15 +36,20 @@ public class PermissionService : IPermissionService
 
             if (_cache.TryGetValue(cacheKey, out List<string>? cachedPermissions))
             {
+                _logger.LogInformation("📦 Cache HIT - Returning {Count} cached permissions for user {UserId}", cachedPermissions?.Count ?? 0, userId);
                 return cachedPermissions ?? new List<string>();
             }
+
+            _logger.LogInformation("📦 Cache MISS - Fetching permissions from database for user {UserId}", userId);
 
             var user = await _unitOfWork.Users.GetByIdAsync(userId, cancellationToken);
             if (user == null)
             {
-                _logger.LogWarning("User not found for permissions check: {UserId}", userId);
+                _logger.LogWarning("❌ User not found for permissions check: {UserId}", userId);
                 return new List<string>();
             }
+
+            _logger.LogInformation("👤 User found: {Email}, Role: {Role}, RoleId: {RoleId}", user.Email.Value, user.Role, user.RoleId);
 
             // Use new database-driven permission system
             List<string> permissions;
@@ -52,24 +57,24 @@ public class PermissionService : IPermissionService
             {
                 // Query database for role permissions
                 permissions = await GetRolePermissionsFromDatabaseAsync(user.RoleId.Value, cancellationToken);
-                _logger.LogDebug("Retrieved {Count} permissions from database for user {UserId} with RoleId {RoleId}",
+                _logger.LogInformation("✅ Retrieved {Count} permissions from database for user {UserId} with RoleId {RoleId}",
                     permissions.Count, userId, user.RoleId.Value);
             }
             else
             {
                 // Fallback to old enum-based system for backward compatibility during migration
                 permissions = GetRolePermissions(user.Role);
-                _logger.LogWarning("User {UserId} has no RoleId, falling back to enum-based permissions", userId);
+                _logger.LogWarning("⚠️ User {UserId} has no RoleId, falling back to enum-based permissions (Count: {Count})", userId, permissions.Count);
             }
 
             _cache.Set(cacheKey, permissions, _cacheExpiry);
 
-            _logger.LogDebug("Retrieved {Count} permissions for user {UserId}", permissions.Count, userId);
+            _logger.LogInformation("✅ Cached and returning {Count} permissions for user {UserId}", permissions.Count, userId);
             return permissions;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving permissions for user {UserId}", userId);
+            _logger.LogError(ex, "❌ Error retrieving permissions for user {UserId}", userId);
             return new List<string>();
         }
     }
@@ -113,12 +118,17 @@ public class PermissionService : IPermissionService
 
             if (_cache.TryGetValue(cacheKey, out List<string>? cachedPermissions))
             {
+                _logger.LogInformation("📦 Role Cache HIT - Returning {Count} cached permissions for roleId {RoleId}", cachedPermissions?.Count ?? 0, roleId);
                 return cachedPermissions ?? new List<string>();
             }
+
+            _logger.LogInformation("📦 Role Cache MISS - Querying database for roleId {RoleId}", roleId);
 
             // Query RolePermissions with eager loading of Permission entity
             var rolePermissions = await _unitOfWork.RolePermissions
                 .GetRolePermissionsWithDetailsAsync(roleId, cancellationToken);
+
+            _logger.LogInformation("🔍 Retrieved {Count} role-permission mappings from database for roleId {RoleId}", rolePermissions.Count, roleId);
 
             var permissions = rolePermissions
                 .Where(rp => rp.Permission.IsActive) // Only active permissions
@@ -126,15 +136,21 @@ public class PermissionService : IPermissionService
                 .OrderBy(p => p)
                 .ToList();
 
+            _logger.LogInformation("✅ Filtered to {Count} active permissions for roleId {RoleId}", permissions.Count, roleId);
+
+            if (permissions.Count == 0)
+            {
+                _logger.LogWarning("⚠️ WARNING: No active permissions found for roleId {RoleId}!", roleId);
+            }
+
             // Cache for 15 minutes
             _cache.Set(cacheKey, permissions, _cacheExpiry);
 
-            _logger.LogDebug("Retrieved {Count} permissions from database for role {RoleId}", permissions.Count, roleId);
             return permissions;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving permissions from database for role {RoleId}", roleId);
+            _logger.LogError(ex, "❌ Error retrieving permissions from database for role {RoleId}", roleId);
             // Return empty list on error to fail closed (no permissions)
             return new List<string>();
         }

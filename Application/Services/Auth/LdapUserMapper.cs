@@ -1,6 +1,7 @@
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
+using VisitorManagementSystem.Api.Infrastructure.Data;
 using VisitorManagementSystem.Api.Infrastructure.Utilities;
 using DomainEmail = VisitorManagementSystem.Api.Domain.ValueObjects.Email;
 
@@ -18,9 +19,14 @@ public static class LdapUserMapper
     /// <param name="ldapUser">LDAP lookup result.</param>
     /// <param name="ldapConfig">LDAP configuration to hydrate defaults (department, etc.).</param>
     /// <param name="targetRole">Optional role override for the imported user.</param>
+    /// <param name="context">Database context for role lookup (optional, will be injected if available).</param>
     /// <returns>Populated user entity ready for persistence.</returns>
     /// <exception cref="ArgumentException">Thrown when required LDAP fields are missing.</exception>
-    public static User CreateUserFromLdap(LdapUserResult ldapUser, LdapConfiguration ldapConfig, UserRole? targetRole = null)
+    /// <remarks>
+    /// NOTE: RoleId will be null if context is not provided. The UserRoleMigrationSeeder will set it during migration.
+    /// For immediate role assignment, pass the database context to lookup RoleId.
+    /// </remarks>
+    public static User CreateUserFromLdap(LdapUserResult ldapUser, LdapConfiguration ldapConfig, UserRole? targetRole = null, ApplicationDbContext? context = null)
     {
         if (ldapUser == null)
         {
@@ -36,6 +42,24 @@ public static class LdapUserMapper
 
         var resolvedRole = targetRole ?? ResolveRole(ldapConfig.DefaultImportRole);
 
+        // Lookup RoleId from database if context is provided
+        int? roleId = null;
+        if (context != null)
+        {
+            var roleName = resolvedRole switch
+            {
+                UserRole.Staff => "Staff",
+                UserRole.Receptionist => "Receptionist",
+                UserRole.Administrator => "Administrator",
+                _ => "Staff"
+            };
+
+            roleId = context.Roles
+                .Where(r => r.Name == roleName)
+                .Select(r => (int?)r.Id)
+                .FirstOrDefault();
+        }
+
         return new User
         {
             Email = new DomainEmail(ldapUser.Email),
@@ -49,7 +73,8 @@ public static class LdapUserMapper
             Department = ldapUser.Department,
             DepartmentId = ldapConfig.DefaultDepartmentId,
             Status = UserStatus.Active,
-            Role = resolvedRole, // Default role for imported LDAP users
+            Role = resolvedRole, // DEPRECATED: Use RoleId instead
+            RoleId = roleId, // Database-driven role system (will be set by migration if null)
             IsActive = true,
             IsEmailVerified = true,
             IsLdapUser = true,

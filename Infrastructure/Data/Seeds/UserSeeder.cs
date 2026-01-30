@@ -70,6 +70,10 @@ public static class UserSeeder
     /// <param name="employeeId">Employee ID</param>
     /// <param name="password">Password (defaults to "Password123!")</param>
     /// <returns>User entity</returns>
+    /// <remarks>
+    /// NOTE: RoleId is not set here as roles may not be seeded yet.
+    /// The UserRoleMigrationSeeder will set RoleId during database initialization.
+    /// </remarks>
     private static User CreateUser(
         string firstName,
         string lastName,
@@ -90,7 +94,8 @@ public static class UserSeeder
             NormalizedEmail = email.ToUpperInvariant(),
             PasswordHash = passwordHash,
             PasswordSalt = passwordSalt,
-            Role = role,
+            Role = role, // DEPRECATED: RoleId will be set by UserRoleMigrationSeeder
+            RoleId = null, // Will be set during migration
             Status = UserStatus.Active,
             Department = department,
             JobTitle = jobTitle,
