@@ -614,7 +614,7 @@ public class NotificationService : INotificationService
             };
 
             await _operatorHubContext.Clients.Group("Operators")
-                .SendAsync("QueueUpdate", payload, cancellationToken);
+                .SendAsync("VisitorQueueUpdate", payload, cancellationToken);
 
             _logger.LogDebug("Operator queue updated: {WaitingCount} waiting, {ProcessingCount} processing", 
                 waitingCount, processingCount);

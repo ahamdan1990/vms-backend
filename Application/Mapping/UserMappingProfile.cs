@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using VisitorManagementSystem.Api.Application.DTOs.Auth;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Application.Commands.Users;
+using VisitorManagementSystem.Api.Application.Services.Common;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 
@@ -125,15 +126,15 @@ public class UserMappingProfile : Profile
 }
 
 /// <summary>
-/// AutoMapper value resolver for user profile photo URLs with configuration injection
+/// AutoMapper value resolver for user profile photo URLs with dynamic URL resolution
 /// </summary>
 public class UserProfilePhotoUrlResolver : IValueResolver<User, object, string?>
 {
-    private readonly IConfiguration _configuration;
+    private readonly IUrlResolverService _urlResolver;
 
-    public UserProfilePhotoUrlResolver(IConfiguration configuration)
+    public UserProfilePhotoUrlResolver(IUrlResolverService urlResolver)
     {
-        _configuration = configuration;
+        _urlResolver = urlResolver;
     }
 
     public string? Resolve(User source, object destination, string? destMember, ResolutionContext context)
@@ -143,7 +144,7 @@ public class UserProfilePhotoUrlResolver : IValueResolver<User, object, string?>
             return null;
         }
 
-        var baseUrl = _configuration["BaseUrl"] ?? "https://192.168.0.24:7000";
-        return $"{baseUrl.TrimEnd('/')}/{source.ProfilePhotoPath.Replace('\\', '/')}";
+        // Use dynamic URL resolver for server-independent URL generation
+        return _urlResolver.GetAbsoluteUrl(source.ProfilePhotoPath);
     }
 }

@@ -4,6 +4,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
 using VisitorManagementSystem.Api.Application.Services.FaceDetection;
+using VisitorManagementSystem.Api.Application.Services.Common;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
@@ -21,6 +22,7 @@ public class VisitorService : IVisitorService
     private readonly IConfiguration _configuration;
     private readonly IFaceDetectionService _faceDetectionService;
     private readonly CompreFaceSettings _compreFaceSettings;
+    private readonly IUrlResolverService _urlResolver;
 
     private readonly string[] _allowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff" };
     private readonly long _maxFileSize = 5 * 1024 * 1024; // 5MB
@@ -34,7 +36,8 @@ public class VisitorService : IVisitorService
         IWebHostEnvironment environment,
         IConfiguration configuration,
         IFaceDetectionService faceDetectionService,
-        IOptions<CompreFaceSettings> compreFaceSettings)
+        IOptions<CompreFaceSettings> compreFaceSettings,
+        IUrlResolverService urlResolver)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
@@ -43,6 +46,7 @@ public class VisitorService : IVisitorService
         _configuration = configuration;
         _faceDetectionService = faceDetectionService;
         _compreFaceSettings = compreFaceSettings.Value;
+        _urlResolver = urlResolver;
     }
 
     public async Task<ValidationResult> ValidateVisitorForCreationAsync(CreateVisitorDto createDto)
@@ -545,11 +549,10 @@ public class VisitorService : IVisitorService
                 faceRecognitionEnabled = false;
             }
 
-            // Return full URL with status
-            var baseUrl = _configuration["BaseUrl"] ?? "https://192.168.0.24:7000";
+            // Return full URL with status - using dynamic URL resolver
             return new PhotoUploadResult
             {
-                PhotoUrl = $"{baseUrl.TrimEnd('/')}/{relativePath.Replace('\\', '/')}",
+                PhotoUrl = _urlResolver.GetAbsoluteUrl(relativePath),
                 FaceDetected = faceDetected,
                 FaceRecognitionEnabled = faceRecognitionEnabled,
                 WarningMessage = warningMessage,

@@ -5,6 +5,7 @@ using VisitorManagementSystem.Api.Application.DTOs.Companies;
 using VisitorManagementSystem.Api.Application.DTOs.Locations;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
 using VisitorManagementSystem.Api.Application.DTOs.VisitPurposes;
+using VisitorManagementSystem.Api.Application.Services.Common;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Models;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
@@ -90,25 +91,23 @@ public class VisitorMappingProfile : Profile
 }
 
 /// <summary>
-/// AutoMapper value resolver for visitor profile photo URLs with configuration injection
+/// AutoMapper value resolver for visitor profile photo URLs with dynamic URL resolution
 /// </summary>
 public class VisitorProfilePhotoUrlResolver : IValueResolver<Visitor, VisitorDto, string?>
 {
-    private readonly IConfiguration _configuration;
+    private readonly IUrlResolverService _urlResolver;
 
-    public VisitorProfilePhotoUrlResolver(IConfiguration configuration)
+    public VisitorProfilePhotoUrlResolver(IUrlResolverService urlResolver)
     {
-        _configuration = configuration;
+        _urlResolver = urlResolver;
     }
 
     public string? Resolve(Visitor source, VisitorDto destination, string? destMember, ResolutionContext context)
     {
-        var baseUrl = _configuration["BaseUrl"] ?? "https://192.168.0.24:7000";
-
         // First check if visitor has ProfilePhotoPath set
         if (!string.IsNullOrEmpty(source.ProfilePhotoPath))
         {
-            return $"{baseUrl.TrimEnd('/')}/api/visitors/{source.Id}/photo";
+            return _urlResolver.GetApiUrl($"visitors/{source.Id}/photo");
         }
 
         // Then check for photo document
@@ -118,7 +117,7 @@ public class VisitorProfilePhotoUrlResolver : IValueResolver<Visitor, VisitorDto
 
         if (photoDocument != null)
         {
-            return $"{baseUrl.TrimEnd('/')}/api/visitors/{source.Id}/documents/{photoDocument.Id}/download";
+            return _urlResolver.GetApiUrl($"visitors/{source.Id}/documents/{photoDocument.Id}/download");
         }
 
         return null;
@@ -128,28 +127,26 @@ public class VisitorProfilePhotoUrlResolver : IValueResolver<Visitor, VisitorDto
 
 public class VisitorListProfilePhotoUrlResolver : IValueResolver<Visitor, VisitorListDto, string?>
 {
-    private readonly IConfiguration _configuration;
-    
-    public VisitorListProfilePhotoUrlResolver(IConfiguration configuration)
+    private readonly IUrlResolverService _urlResolver;
+
+    public VisitorListProfilePhotoUrlResolver(IUrlResolverService urlResolver)
     {
-        _configuration = configuration;
+        _urlResolver = urlResolver;
     }
-    
+
     public string? Resolve(Visitor source, VisitorListDto destination, string? destMember, ResolutionContext context)
     {
-        var baseUrl = _configuration["BaseUrl"] ?? "https://192.168.0.24:7000";
-        
         if (!string.IsNullOrEmpty(source.ProfilePhotoPath))
         {
-            return $"{baseUrl.TrimEnd('/')}/api/visitors/{source.Id}/photo";
+            return _urlResolver.GetApiUrl($"visitors/{source.Id}/photo");
         }
-        
+
         var photoDocument = source.Documents?.FirstOrDefault(d =>
             d.DocumentType.Equals("Photo", StringComparison.OrdinalIgnoreCase) &&
             !d.IsDeleted);
-        
-        return photoDocument != null 
-            ? $"{baseUrl.TrimEnd('/')}/api/visitors/{source.Id}/documents/{photoDocument.Id}/download"
+
+        return photoDocument != null
+            ? _urlResolver.GetApiUrl($"visitors/{source.Id}/documents/{photoDocument.Id}/download")
             : null;
     }
 }

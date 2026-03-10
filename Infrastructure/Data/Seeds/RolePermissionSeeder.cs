@@ -10,60 +10,38 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Seeds;
 public static class RolePermissionSeeder
 {
     /// <summary>
-    /// Seeds role-permission mappings to the database with automatic detection of missing permissions
+    /// Seeds role-permission mappings to the database (FIRST-TIME ONLY to preserve custom configurations)
     /// </summary>
+    /// <remarks>
+    /// ⚠️ IMPORTANT: This seeder will ONLY run on first-time setup when NO role permissions exist.
+    /// Once role permissions have been seeded, this will skip to preserve any custom configurations
+    /// made by administrators. To force re-seed (dev/test only), manually delete all RolePermissions.
+    /// </remarks>
     public static async Task SeedRolePermissionsAsync(ApplicationDbContext context)
     {
         Console.WriteLine("Checking role-permission mappings...");
 
-        // Get system roles
-        var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Administrator");
-        if (adminRole == null)
+        // ✅ FIX #4: Check if ANY role permissions exist (not just Administrator)
+        // If they exist, skip seeding to preserve custom configurations
+        var existingRolePermissionsCount = await context.RolePermissions.CountAsync();
+
+        if (existingRolePermissionsCount > 0)
         {
-            Console.WriteLine("Administrator role not found. Cannot seed role permissions.");
+            Console.WriteLine($"✅ Role permissions already seeded ({existingRolePermissionsCount} mappings exist).");
+            Console.WriteLine("   Skipping seed to preserve custom configurations.");
+            Console.WriteLine("   To force re-seed (dev/test only), manually delete all RolePermissions records.");
             return;
         }
 
-        // Count total permissions available in the system
-        var totalPermissionsCount = await context.Permissions.CountAsync(p => p.IsActive);
+        Console.WriteLine("🆕 First-time seeding: Creating initial role-permission mappings...");
+        Console.WriteLine("   (Subsequent runs will skip to preserve custom configurations)");
 
-        // Count permissions currently assigned to Administrator
-        var adminPermissionCount = await context.RolePermissions
-            .CountAsync(rp => rp.RoleId == adminRole.Id);
-
-        Console.WriteLine($"📊 System Status: {adminPermissionCount}/{totalPermissionsCount} permissions assigned to Administrator");
-
-        // Check if Administrator has all permissions
-        if (adminPermissionCount >= totalPermissionsCount && adminPermissionCount > 0)
-        {
-            Console.WriteLine("✅ Role permissions are up-to-date. All permissions assigned.");
-            return;
-        }
-
-        // Detect the scenario
-        if (adminPermissionCount == 0)
-        {
-            Console.WriteLine("🆕 First-time seeding: No role permissions exist.");
-        }
-        else
-        {
-            Console.WriteLine($"⚠️ Permission mismatch detected: Administrator missing {totalPermissionsCount - adminPermissionCount} permissions.");
-            Console.WriteLine("🔄 Re-seeding role permissions to include new permissions...");
-
-            // Clear existing role permissions for clean re-seed
-            var existingMappings = await context.RolePermissions.ToListAsync();
-            context.RolePermissions.RemoveRange(existingMappings);
-            await context.SaveChangesAsync();
-            Console.WriteLine($"   Cleared {existingMappings.Count} existing role-permission mappings.");
-        }
-
-        Console.WriteLine("Seeding role permissions to database...");
-
-        // Get remaining roles from database (adminRole already fetched above)
+        // Get system roles from database
         var staffRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Staff");
         var receptionistRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Receptionist");
+        var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Administrator");
 
-        if (staffRole == null || receptionistRole == null)
+        if (staffRole == null || receptionistRole == null || adminRole == null)
         {
             throw new InvalidOperationException("System roles must be seeded before role permissions.");
         }
@@ -291,7 +269,9 @@ public static class RolePermissionSeeder
             }
         }
 
-        // Create role permission mappings for Administrator (ALL permissions)
+        // ✅ FIX #4: Create role permission mappings for Administrator (ALL permissions on first-time seed)
+        // NOTE: This grants ALL permissions ONLY on first-time setup. Administrators can later customize
+        // permissions via the Role edit form, and those changes will NOT be overwritten on subsequent runs.
         foreach (var permissionName in adminPermissions)
         {
             if (allPermissions.TryGetValue(permissionName, out var permissionId))
@@ -312,7 +292,8 @@ public static class RolePermissionSeeder
         Console.WriteLine($"✅ Successfully seeded {rolePermissions.Count} role-permission mappings.");
         Console.WriteLine($"   📋 Staff: {staffPermissions.Length} permissions");
         Console.WriteLine($"   📋 Receptionist: {receptionistPermissions.Length} permissions");
-        Console.WriteLine($"   📋 Administrator: {adminPermissions.Length} permissions (ALL)");
+        Console.WriteLine($"   📋 Administrator: {adminPermissions.Length} permissions (ALL - initial setup)");
+        Console.WriteLine($"   💡 TIP: Use the Role management UI to customize permissions. Changes persist across restarts.");
 
         // Verify Administrator has all permissions
         var verifyAdminCount = await context.RolePermissions.CountAsync(rp => rp.RoleId == adminRole.Id);
@@ -320,7 +301,7 @@ public static class RolePermissionSeeder
 
         if (verifyAdminCount == verifyTotalCount)
         {
-            Console.WriteLine($"✅ Verification passed: Administrator has all {verifyTotalCount} active permissions.");
+            Console.WriteLine($"✅ Verification passed: Administrator has all {verifyTotalCount} active permissions (initial setup).");
         }
         else
         {

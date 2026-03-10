@@ -1,4 +1,5 @@
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
+using VisitorManagementSystem.Api.Application.Services.Common;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 
@@ -13,6 +14,7 @@ public class FileUploadService : IFileUploadService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<FileUploadService> _logger;
     private readonly IConfiguration _configuration;
+    private readonly IUrlResolverService _urlResolver;
 
     private readonly string[] _allowedExtensions = { ".jpg", ".jpeg", ".png", ".gif" };
     private readonly long _maxFileSize = 5 * 1024 * 1024; // 5MB
@@ -23,12 +25,14 @@ public class FileUploadService : IFileUploadService
         IWebHostEnvironment environment,
         IUnitOfWork unitOfWork,
         ILogger<FileUploadService> logger,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IUrlResolverService urlResolver)
     {
         _environment = environment;
         _unitOfWork = unitOfWork;
         _logger = logger;
         _configuration = configuration;
+        _urlResolver = urlResolver;
     }
 
     public async Task<string> UploadProfilePhotoAsync(int userId, IFormFile file)
@@ -167,8 +171,8 @@ public class FileUploadService : IFileUploadService
             return null;
         }
 
-        var baseUrl = _configuration["BaseUrl"] ?? "http://localhost:5000";
-        return $"{baseUrl.TrimEnd('/')}/{filePath.Replace('\\', '/')}";
+        // Use dynamic URL resolver for server-independent URL generation
+        return _urlResolver.GetAbsoluteUrl(filePath);
     }
 
     private Task RemoveExistingPhoto(string relativePath)
@@ -303,8 +307,8 @@ public class FileUploadService : IFileUploadService
         if (string.IsNullOrEmpty(filePath))
             return string.Empty;
 
-        var baseUrl = _configuration["BaseUrl"] ?? "http://localhost:5000";
-        return $"{baseUrl.TrimEnd('/')}/{filePath.TrimStart('/')}";
+        // Use dynamic URL resolver for server-independent URL generation
+        return _urlResolver.GetAbsoluteUrl(filePath);
     }
 
     public List<string> GetAllowedDocumentExtensions()

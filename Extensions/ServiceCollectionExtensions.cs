@@ -39,6 +39,7 @@ using VisitorManagementSystem.Api.Application.Services.FaceDetection;
 using VisitorManagementSystem.Api.Infrastructure.Caching;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Caching.Distributed;
+using VisitorManagementSystem.Api.Application.Services.Common;
 
 namespace VisitorManagementSystem.Api.Extensions;
 
@@ -92,6 +93,9 @@ public static class ServiceCollectionExtensions
     {
         // HTTP Context Accessor (required for accessing HttpContext in command handlers)
         services.AddHttpContextAccessor();
+
+        // URL Resolver Service (dynamic server-independent URL generation)
+        services.AddScoped<IUrlResolverService, UrlResolverService>();
 
         // Auth services
         services.AddScoped<IAuthService, AuthService>();

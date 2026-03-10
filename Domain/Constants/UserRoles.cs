@@ -331,13 +331,88 @@ public static class UserRoles
     }
 
     /// <summary>
-    /// Gets administrator permissions (ALL permissions)
+    /// Gets administrator permissions (FALLBACK ONLY - should use database)
     /// </summary>
     /// <returns>List of administrator permissions</returns>
+    /// <remarks>
+    /// ⚠️ DEPRECATED: This method is only used as fallback when RoleId is not set.
+    /// In the new system, Administrator permissions come from the database.
+    /// For safety during migration, return a reasonable default set of essential admin permissions.
+    /// This fallback should NEVER be hit once all users have RoleId set (via Fix #2 and Fix #7).
+    /// </remarks>
+    [Obsolete("Use database-driven permissions via RoleId. This is only a fallback for users without RoleId.")]
     private static List<string> GetAdministratorPermissions()
     {
-        // Administrator gets ALL permissions dynamically
-        return Permissions.GetAllPermissions();
+        // Essential administrator permissions for fallback only
+        // In production, administrators should get permissions from database
+        return new List<string>
+        {
+            // User management
+            Permissions.User.Create,
+            Permissions.User.ReadAll,
+            Permissions.User.Update,
+            Permissions.User.UpdateAll,
+            Permissions.User.Delete,
+            Permissions.User.Activate,
+            Permissions.User.Deactivate,
+            Permissions.User.ManageRoles,
+            Permissions.User.ManagePermissions,
+            Permissions.User.ResetPassword,
+
+            // Role management
+            Permissions.Role.Create,
+            Permissions.Role.ReadAll,
+            Permissions.Role.Update,
+            Permissions.Role.Delete,
+            Permissions.Role.ManagePermissions,
+
+            // System configuration
+            Permissions.SystemConfig.Read,
+            Permissions.SystemConfig.Update,
+
+            // Invitation management
+            Permissions.Invitation.CreateAll,
+            Permissions.Invitation.ReadAll,
+            Permissions.Invitation.UpdateAll,
+            Permissions.Invitation.CancelAll,
+            Permissions.Invitation.ApproveAll,
+            Permissions.Invitation.DenyAll,
+
+            // Visitor management
+            Permissions.Visitor.ReadAll,
+            Permissions.Visitor.Create,
+            Permissions.Visitor.Update,
+            Permissions.Visitor.Delete,
+            Permissions.Visitor.Blacklist,
+            Permissions.Visitor.RemoveBlacklist,
+
+            // Dashboard & Reports
+            Permissions.Dashboard.ViewAdmin,
+            Permissions.Report.GenerateAll,
+            Permissions.Report.ViewHistory,
+            Permissions.Report.Export,
+
+            // Audit & Security
+            Permissions.Audit.ReadAll,
+            Permissions.Audit.ViewSecurityEvents,
+
+            // Notification management
+            Permissions.Notification.ReadAll,
+            Permissions.Notification.SendSystem,
+
+            // Location & Visit Purpose management
+            Permissions.Location.Create,
+            Permissions.Location.Update,
+            Permissions.Location.Delete,
+            Permissions.VisitPurpose.Create,
+            Permissions.VisitPurpose.Update,
+            Permissions.VisitPurpose.Delete,
+
+            // Profile (own)
+            Permissions.Profile.ViewOwn,
+            Permissions.Profile.UpdateOwn,
+            Permissions.Profile.ChangePassword
+        };
     }
 
     /// <summary>

@@ -184,7 +184,7 @@ public class InvitationsController : BaseController
     /// <param name="createDto">Invitation creation data</param>
     /// <returns>Created invitation</returns>
     [HttpPost]
-    [Authorize(Policy = Permissions.Invitation.Create)]
+    [Authorize(Policy = "Permissions.Any.Invitation.Create.Own,Invitation.Create.All")]
     public async Task<IActionResult> CreateInvitation([FromBody] CreateInvitationDto createDto)
     {
         var correlationId = HttpContext.TraceIdentifier;
@@ -424,7 +424,7 @@ public class InvitationsController : BaseController
     /// <param name="cancellationDto">Cancellation data</param>
     /// <returns>Updated invitation</returns>
     [HttpPost("{id:int}/cancel")]
-    [Authorize(Policy = Permissions.Invitation.CancelAll)]
+    [Authorize(Policy = "Permissions.Any.Invitation.Cancel.Own,Invitation.Cancel.All")]
     public async Task<IActionResult> CancelInvitation(int id, [FromBody] CancelInvitationDto cancellationDto)
     {
         var command = new CancelInvitationCommand
@@ -470,7 +470,7 @@ public class InvitationsController : BaseController
     /// <param name="id">Invitation ID</param>
     /// <returns>Updated invitation</returns>
     [HttpPost("{id:int}/submit")]
-    [Authorize(Policy = Permissions.Invitation.Create)]
+    [Authorize(Policy = "Permissions.Any.Invitation.Create.Own,Invitation.Create.All")]
     public async Task<IActionResult> SubmitInvitation(int id)
     {
         var command = new SubmitInvitationCommand

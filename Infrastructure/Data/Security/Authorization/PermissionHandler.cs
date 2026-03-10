@@ -71,15 +71,8 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
             // Check if user has the required permission claim
             if (permissionClaims.Contains(requirement.Permission))
             {
-                if (PermissionGuardHelper.IsReportPermission(requirement.Permission) &&
-                    !PermissionGuardHelper.IsAdministrator(userRole))
-                {
-                    _logger.LogWarning("❌ Report permission {Permission} requires administrator role. User {UserId} with role {Role} denied.",
-                        requirement.Permission, userId, userRole);
-                    context.Fail();
-                    return Task.CompletedTask;
-                }
-
+                // ✅ FIX #3: Removed hardcoded report permission bypass
+                // All permissions are now treated equally and granted based on database configuration
                 _logger.LogDebug("✅ Permission granted: {Permission} for user {UserId} with role {Role}",
                     requirement.Permission, userId, userRole);
                 context.Succeed(requirement);
@@ -139,15 +132,8 @@ public class MultiplePermissionsHandler : AuthorizationHandler<MultiplePermissio
 
             if (hasAllPermissions)
             {
-                if (requirement.Permissions.Any(PermissionGuardHelper.IsReportPermission) &&
-                    !PermissionGuardHelper.IsAdministrator(userRole))
-                {
-                    _logger.LogWarning("❌ Report permissions require administrator role. User {UserId} with role {Role} denied.",
-                        userId, userRole);
-                    context.Fail();
-                    return Task.CompletedTask;
-                }
-
+                // ✅ FIX #3: Removed hardcoded report permission bypass
+                // All permissions are now treated equally and granted based on database configuration
                 _logger.LogDebug("✅ All permissions granted for user {UserId} with role {Role}", userId, userRole);
                 context.Succeed(requirement);
             }
@@ -209,15 +195,8 @@ public class AnyPermissionHandler : AuthorizationHandler<AnyPermissionRequiremen
 
             if (hasAnyPermission)
             {
-                var matchedRequiresAdmin = matchedPermissions.All(PermissionGuardHelper.IsReportPermission);
-                if (matchedRequiresAdmin && !PermissionGuardHelper.IsAdministrator(userRole))
-                {
-                    _logger.LogWarning("❌ Report permission requires administrator role. User {UserId} with role {Role} denied.",
-                        userId, userRole);
-                    context.Fail();
-                    return Task.CompletedTask;
-                }
-
+                // ✅ FIX #3: Removed hardcoded report permission bypass
+                // All permissions are now treated equally and granted based on database configuration
                 _logger.LogDebug("✅ At least one permission granted for user {UserId} with role {Role}", userId, userRole);
                 context.Succeed(requirement);
             }

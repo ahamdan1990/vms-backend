@@ -4,6 +4,7 @@ using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Application.Services.Auth;
 using VisitorManagementSystem.Api.Application.Services.Email;
+using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -95,6 +96,21 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                     SecurityStamp = Guid.NewGuid().ToString(),
                     IsActive = true
                 };
+
+                // ✅ CRITICAL FIX: Set RoleId to ensure user gets database permissions
+                var roleName = UserRoles.GetRoleName(request.Role);
+                var role = await _unitOfWork.Roles.GetByNameAsync(roleName, cancellationToken);
+                if (role != null)
+                {
+                    user.RoleId = role.Id;
+                    _logger.LogInformation("Set RoleId={RoleId} ({RoleName}) for new user {Email}",
+                        role.Id, role.Name, user.Email.Value);
+                }
+                else
+                {
+                    _logger.LogWarning("Role '{RoleName}' not found in database for new user {Email}. RoleId not set.",
+                        roleName, user.Email.Value);
+                }
 
                 // Set enhanced phone number if provided
                 if (!string.IsNullOrEmpty(request.PhoneNumber))

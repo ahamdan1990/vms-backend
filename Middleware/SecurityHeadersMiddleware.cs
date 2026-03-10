@@ -33,6 +33,7 @@ public class SecurityHeadersMiddleware
     private void AddSecurityHeaders(HttpContext context)
     {
         var response = context.Response;
+        var requestPath = context.Request.Path.Value?.ToLowerInvariant() ?? "";
 
         response.Headers["X-Content-Type-Options"] = "nosniff";
         response.Headers["X-Frame-Options"] = _options.FrameOptions;
@@ -53,9 +54,20 @@ public class SecurityHeadersMiddleware
         if (!string.IsNullOrEmpty(_options.PermissionsPolicy))
             response.Headers["Permissions-Policy"] = _options.PermissionsPolicy;
 
-        response.Headers["Cross-Origin-Embedder-Policy"] = "require-corp";
+        // Determine Cross-Origin-Resource-Policy based on request path
+        // Allow cross-origin access for resource endpoints (photos, documents, uploads)
+        // This enables the frontend (different port) to load images from the API
+        var isResourceEndpoint = requestPath.Contains("/photo") ||
+                                  requestPath.Contains("/download") ||
+                                  requestPath.Contains("/preview") ||
+                                  requestPath.Contains("/documents/") ||
+                                  requestPath.StartsWith("/uploads/") ||
+                                  requestPath.Contains("/profile-photo") ||
+                                  requestPath.Contains("/qrcode");
+
+        response.Headers["Cross-Origin-Embedder-Policy"] = isResourceEndpoint ? "unsafe-none" : "require-corp";
         response.Headers["Cross-Origin-Opener-Policy"] = "same-origin";
-        response.Headers["Cross-Origin-Resource-Policy"] = "same-origin";
+        response.Headers["Cross-Origin-Resource-Policy"] = isResourceEndpoint ? "cross-origin" : "same-origin";
 
         if (_options.RemoveServerHeader)
         {
