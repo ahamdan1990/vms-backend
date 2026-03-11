@@ -85,6 +85,9 @@ public static class ComprehensiveConfigurationSeeder
             // 11. LDAP Configuration
             await SeedLdapConfigurationAsync(configurations, configuration, now, systemUserId);
 
+            // 12. Invitations Configuration
+            await SeedInvitationsConfigurationAsync(configurations, now, systemUserId);
+
             logger?.LogInformation("Seeded {Count} configuration entries", configurations.Count);
         }
         catch (Exception ex)
@@ -1003,10 +1006,30 @@ public static class ComprehensiveConfigurationSeeder
         });
     }
 
+    private static async Task SeedInvitationsConfigurationAsync(List<SystemConfiguration> configurations, DateTime now, int? systemUserId)
+    {
+        configurations.AddRange(new[]
+        {
+            CreateConfiguration("Invitations", "RequireApprovalByDefault",
+                "true",
+                "bool", "When true, all new invitations are created as Submitted and require admin approval before the QR code is issued. Set to false to auto-approve.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Invitations", "MaxAdvanceBookingDays",
+                "90",
+                "int", "Maximum number of days in advance that an invitation can be scheduled.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Invitations", "DefaultVisitDurationHours",
+                "2",
+                "int", "Default visit duration in hours used when no end time is specified.", false, false, false, now, systemUserId)
+        });
+
+        await Task.CompletedTask;
+    }
+
     private static SystemConfiguration CreateConfiguration(
-        string category, 
-        string key, 
-        string value, 
+        string category,
+        string key,
+        string value,
         string dataType, 
         string description, 
         bool requiresRestart = false, 

@@ -1,7 +1,10 @@
 using AutoMapper;
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Invitations;
+using VisitorManagementSystem.Api.Application.Services.Notifications;
+using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Domain.Entities;
+using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Invitations;
@@ -14,15 +17,18 @@ public class SubmitInvitationCommandHandler : IRequestHandler<SubmitInvitationCo
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<SubmitInvitationCommandHandler> _logger;
+    private readonly INotificationService _notificationService;
 
     public SubmitInvitationCommandHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        ILogger<SubmitInvitationCommandHandler> logger)
+        ILogger<SubmitInvitationCommandHandler> logger,
+        INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
+        _notificationService = notificationService;
     }
 
     public async Task<InvitationDto> Handle(SubmitInvitationCommand request, CancellationToken cancellationToken)
@@ -73,6 +79,23 @@ public class SubmitInvitationCommandHandler : IRequestHandler<SubmitInvitationCo
 
                 _logger.LogInformation("Invitation submitted successfully: {InvitationId} by {SubmittedBy}",
                     request.InvitationId, request.SubmittedBy);
+
+                // Notify administrators about the pending approval
+                try
+                {
+                    await _notificationService.NotifyRoleAsync(
+                        UserRoles.Administrator,
+                        "New Invitation Pending Approval",
+                        $"Invitation #{invitation.InvitationNumber} submitted by {submitter.FullName} requires approval.",
+                        NotificationAlertType.InvitationPendingApproval,
+                        AlertPriority.Medium,
+                        new { InvitationId = invitation.Id, InvitationNumber = invitation.InvitationNumber },
+                        cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error sending submission notification for invitation {InvitationId}", invitation.Id);
+                }
 
                 // Return updated invitation DTO
                 var updatedInvitation = await _unitOfWork.Invitations.GetByIdAsync(invitation.Id, cancellationToken);

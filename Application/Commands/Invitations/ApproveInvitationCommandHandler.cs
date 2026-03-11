@@ -60,6 +60,18 @@ public class ApproveInvitationCommandHandler : IRequestHandler<ApproveInvitation
                 invitation.Approve(request.ApprovedBy, request.Comments);
                 _unitOfWork.Invitations.Update(invitation);
 
+                // Record the approval step in InvitationApproval table
+                var approvalRecord = new InvitationApproval
+                {
+                    InvitationId = invitation.Id,
+                    ApproverId = request.ApprovedBy,
+                    StepOrder = 1,
+                    Comments = request.Comments?.Trim()
+                };
+                approvalRecord.Approve(request.Comments);
+                approvalRecord.SetCreatedBy(request.ApprovedBy);
+                await _unitOfWork.Repository<InvitationApproval>().AddAsync(approvalRecord, cancellationToken);
+
                 // Create approval event
                 var approvalEvent = InvitationEvent.Create(
                     invitation.Id,

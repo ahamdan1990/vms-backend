@@ -342,6 +342,25 @@ public class InvitationsController : BaseController
     }
 
     /// <summary>
+    /// Assigns a submitted invitation to UnderReview status (admin only)
+    /// </summary>
+    /// <param name="id">Invitation ID</param>
+    /// <returns>Updated invitation</returns>
+    [HttpPost("{id:int}/assign-review")]
+    [Authorize(Policy = Permissions.Invitation.Approve)]
+    public async Task<IActionResult> AssignInvitationToReview(int id)
+    {
+        var command = new AssignInvitationToReviewCommand
+        {
+            InvitationId = id,
+            AssignedBy = GetCurrentUserId() ?? throw new UnauthorizedAccessException("User must be authenticated")
+        };
+
+        var result = await _mediator.Send(command);
+        return SuccessResponse(result);
+    }
+
+    /// <summary>
     /// Gets pending approvals for the current user or all (admin)
     /// </summary>
     /// <param name="forCurrentUserOnly">Only for current user</param>
@@ -526,8 +545,7 @@ public class InvitationsController : BaseController
             // Broadcast dashboard metrics update
             await _adminHubContext.Clients.All.SendAsync("DashboardMetricsUpdated", new
             {
-                expectedVisitors = result.Id, // Placeholder - should calculate real stats
-                checkedIn = 1, // Placeholder
+                expectedVisitors = result.ExpectedVisitorCount,
                 timestamp = DateTime.UtcNow
             });
 

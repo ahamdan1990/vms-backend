@@ -764,6 +764,121 @@ public class NotificationService : INotificationService
         }
     }
 
+    public async Task NotifyInvitationExpiredAsync(int invitationId, int hostId, string visitorName,
+        DateTime scheduledEndTime, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var title = "Invitation Expired";
+            var message = $"The invitation for {visitorName} expired without check-in (was scheduled to end {scheduledEndTime.ToLocalTime():MMM dd 'at' HH:mm}).";
+
+            var alert = NotificationAlert.CreateFRAlert(title, message, NotificationAlertType.InvitationExpired,
+                AlertPriority.Low, targetUserId: hostId, relatedEntityType: "Invitation", relatedEntityId: invitationId);
+
+            await _unitOfWork.Repository<NotificationAlert>().AddAsync(alert, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            var payload = new
+            {
+                AlertId = alert.Id,
+                Type = "InvitationExpired",
+                InvitationId = invitationId,
+                HostId = hostId,
+                VisitorName = visitorName,
+                ScheduledEndTime = scheduledEndTime,
+                Message = message,
+                Timestamp = DateTime.UtcNow
+            };
+
+            await _hostHubContext.Clients.Group($"Host_{hostId}")
+                .SendAsync("InvitationStatusUpdate", payload, cancellationToken);
+            await _operatorHubContext.Clients.Group("Operators")
+                .SendAsync("InvitationExpired", payload, cancellationToken);
+
+            _logger.LogInformation("Invitation expired notification sent for invitation {InvitationId}, host {HostId}", invitationId, hostId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending invitation expired notification for invitation {InvitationId}", invitationId);
+            throw;
+        }
+    }
+
+    public async Task NotifyInvitationUnderReviewAsync(int invitationId, int hostId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var title = "Invitation Under Review";
+            var message = "Your invitation is being reviewed by an administrator.";
+
+            var alert = NotificationAlert.CreateFRAlert(title, message, NotificationAlertType.InvitationUnderReview,
+                AlertPriority.Low, targetUserId: hostId, relatedEntityType: "Invitation", relatedEntityId: invitationId);
+
+            await _unitOfWork.Repository<NotificationAlert>().AddAsync(alert, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            var payload = new
+            {
+                AlertId = alert.Id,
+                Type = "InvitationUnderReview",
+                InvitationId = invitationId,
+                HostId = hostId,
+                Message = message,
+                Timestamp = DateTime.UtcNow
+            };
+
+            await _hostHubContext.Clients.Group($"Host_{hostId}")
+                .SendAsync("InvitationStatusUpdate", payload, cancellationToken);
+
+            _logger.LogInformation("Under-review notification sent to host {HostId} for invitation {InvitationId}", hostId, invitationId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending under-review notification for invitation {InvitationId}", invitationId);
+            throw;
+        }
+    }
+
+    public async Task NotifyInvitationCancelledAsync(int invitationId, int hostId, string? reason,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var title = "Invitation Cancelled";
+            var message = string.IsNullOrWhiteSpace(reason)
+                ? "Your invitation has been cancelled."
+                : $"Your invitation has been cancelled. Reason: {reason}";
+
+            var alert = NotificationAlert.CreateFRAlert(title, message, NotificationAlertType.InvitationCancelled,
+                AlertPriority.Low, targetUserId: hostId, relatedEntityType: "Invitation", relatedEntityId: invitationId);
+
+            await _unitOfWork.Repository<NotificationAlert>().AddAsync(alert, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            var payload = new
+            {
+                AlertId = alert.Id,
+                Type = "InvitationCancelled",
+                InvitationId = invitationId,
+                HostId = hostId,
+                Reason = reason,
+                Message = message,
+                Timestamp = DateTime.UtcNow
+            };
+
+            await _hostHubContext.Clients.Group($"Host_{hostId}")
+                .SendAsync("InvitationStatusUpdate", payload, cancellationToken);
+
+            _logger.LogInformation("Cancellation notification sent to host {HostId} for invitation {InvitationId}", hostId, invitationId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending cancellation notification for invitation {InvitationId}", invitationId);
+            throw;
+        }
+    }
+
     /// <summary>
     /// Creates a standardized notification payload
     /// </summary>

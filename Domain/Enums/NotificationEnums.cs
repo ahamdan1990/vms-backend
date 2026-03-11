@@ -96,6 +96,26 @@ public enum NotificationAlertType
     VisitorNoShow = 18,
 
     /// <summary>
+    /// Invitation has expired (visit window passed without check-in)
+    /// </summary>
+    InvitationExpired = 19,
+
+    /// <summary>
+    /// Invitation was created successfully (host confirmation)
+    /// </summary>
+    InvitationCreated = 20,
+
+    /// <summary>
+    /// Invitation was cancelled
+    /// </summary>
+    InvitationCancelled = 21,
+
+    /// <summary>
+    /// Invitation assigned to a reviewer (UnderReview transition)
+    /// </summary>
+    InvitationUnderReview = 22,
+
+    /// <summary>
     /// Custom user-defined alert
     /// </summary>
     Custom = 99

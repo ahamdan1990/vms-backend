@@ -243,11 +243,13 @@ public class Invitation : SoftDeleteEntity
     public bool CanBeModified => Status == InvitationStatus.Draft || Status == InvitationStatus.Submitted;
 
     /// <summary>
-    /// Checks if the invitation can be cancelled
+    /// Checks if the invitation can be cancelled.
+    /// Active invitations (visitor on-site) must be force-checked-out first.
     /// </summary>
-    public bool CanBeCancelled => Status != InvitationStatus.Cancelled && 
-                                  Status != InvitationStatus.Completed && 
-                                  Status != InvitationStatus.Expired;
+    public bool CanBeCancelled => Status != InvitationStatus.Cancelled &&
+                                  Status != InvitationStatus.Completed &&
+                                  Status != InvitationStatus.Expired &&
+                                  Status != InvitationStatus.Active;
 
     /// <summary>
     /// Gets the visit duration in hours
@@ -255,11 +257,9 @@ public class Invitation : SoftDeleteEntity
     public double VisitDurationHours => (ScheduledEndTime - ScheduledStartTime).TotalHours;
 
     /// <summary>
-    /// Checks if the invitation is expired
+    /// Checks if the invitation is expired (status-driven, set by background service)
     /// </summary>
-    public bool IsExpired => DateTime.UtcNow > ScheduledEndTime && 
-                            Status != InvitationStatus.Completed && 
-                            Status != InvitationStatus.Cancelled;
+    public bool IsExpired => Status == InvitationStatus.Expired;
     /// <summary>
     /// Submits the invitation for approval
     /// </summary>
@@ -305,14 +305,17 @@ public class Invitation : SoftDeleteEntity
     }
 
     /// <summary>
-    /// Rejects the invitation
+    /// Rejects the invitation. Only Submitted, UnderReview, or Approved invitations can be rejected.
     /// </summary>
     /// <param name="rejectedBy">User rejecting the invitation</param>
     /// <param name="reason">Rejection reason</param>
     public void Reject(int rejectedBy, string reason)
     {
-        //if (Status != InvitationStatus.Submitted && Status != InvitationStatus.UnderReview)
-        //    throw new InvalidOperationException("Only submitted or under review invitations can be rejected.");
+        if (Status != InvitationStatus.Submitted &&
+            Status != InvitationStatus.UnderReview &&
+            Status != InvitationStatus.Approved)
+            throw new InvalidOperationException(
+                $"Cannot reject an invitation with status '{Status}'. Only Submitted, UnderReview, or Approved invitations can be rejected.");
 
         Status = InvitationStatus.Rejected;
         RejectedOn = DateTime.UtcNow;
@@ -383,6 +386,42 @@ public class Invitation : SoftDeleteEntity
         CheckedOutAt = DateTime.UtcNow;
         UpdateModifiedBy(checkedOutBy);
     }
+    /// <summary>
+    /// Assigns the invitation to active review by an administrator.
+    /// Transitions from Submitted → UnderReview.
+    /// </summary>
+    /// <param name="reviewerId">Admin user starting the review</param>
+    public void AssignToReview(int reviewerId)
+    {
+        if (Status != InvitationStatus.Submitted)
+            throw new InvalidOperationException(
+                "Only submitted invitations can be assigned for review.");
+
+        Status = InvitationStatus.UnderReview;
+        UpdateModifiedBy(reviewerId);
+    }
+
+    /// <summary>
+    /// Expires the invitation. Called by the background service when the visit window has passed.
+    /// Only invitations that were never completed or cancelled can expire.
+    /// </summary>
+    /// <param name="expiredBySystem">System marker (use 0 for background service)</param>
+    public void Expire(int expiredBySystem = 0)
+    {
+        if (Status == InvitationStatus.Completed ||
+            Status == InvitationStatus.Cancelled ||
+            Status == InvitationStatus.Expired ||
+            Status == InvitationStatus.Active)
+            throw new InvalidOperationException(
+                $"Cannot expire an invitation with status '{Status}'.");
+
+        Status = InvitationStatus.Expired;
+        if (expiredBySystem > 0)
+            UpdateModifiedBy(expiredBySystem);
+        else
+            UpdateModifiedOn();
+    }
+
     /// <summary>
     /// Validates the invitation data
     /// </summary>

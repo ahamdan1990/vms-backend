@@ -93,4 +93,5 @@ public static class InvitationEventTypes
     public const string Escalated = "Escalated";
     public const string ReminderSent = "ReminderSent";
     public const string QrCodeGenerated = "QrCodeGenerated";
+    public const string UnderReview = "UnderReview";
 }

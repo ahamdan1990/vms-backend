@@ -47,5 +47,11 @@ public class UpdateUserCommand : IRequest<UserDto>
     
     public int ModifiedBy { get; set; }
     public bool UpdateSecurityStamp { get; set; } = false;
+
+    /// <summary>
+    /// Admin-controlled per-host approval override.
+    /// null = follow global setting, true = always require approval, false = always auto-approve.
+    /// </summary>
+    public bool? RequiresApprovalOverride { get; set; }
 }
 

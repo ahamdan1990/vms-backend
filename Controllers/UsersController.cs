@@ -308,7 +308,8 @@ public class UsersController : BaseController
                 Country = request.Country,
                 Latitude = request.Latitude,
                 Longitude = request.Longitude,
-                
+                RequiresApprovalOverride = request.RequiresApprovalOverride,
+
                 ModifiedBy = currentUserId.Value
             };
 

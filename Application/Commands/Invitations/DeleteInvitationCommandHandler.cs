@@ -35,13 +35,22 @@ public class DeleteInvitationCommandHandler : IRequestHandler<DeleteInvitationCo
                 throw new InvalidOperationException($"Invitation with ID '{request.Id}' not found.");
             }
 
-            // Check if invitation status allows deletion
-            var allowedStatuses = new[] { InvitationStatus.Cancelled, InvitationStatus.Rejected };
+            // Check if invitation status allows deletion.
+            // Allowed: Cancelled (admin/host), Rejected (host withdrawing), Submitted (host withdrawing before review),
+            // Expired (admin cleanup of lapsed invitations).
+            var allowedStatuses = new[]
+            {
+                InvitationStatus.Cancelled,
+                InvitationStatus.Rejected,
+                InvitationStatus.Submitted,
+                InvitationStatus.Expired
+            };
             if (!allowedStatuses.Contains(invitation.Status))
             {
-                _logger.LogWarning("Cannot delete invitation {Id} - status is {Status}, only Cancelled invitations can be deleted", 
-                    request.Id, invitation.Status);
-                throw new InvalidOperationException($"Only cancelled invitations can be deleted. Current status: {invitation.Status}");
+                _logger.LogWarning("Cannot delete invitation {Id} - status is {Status}", request.Id, invitation.Status);
+                throw new InvalidOperationException(
+                    $"Cannot delete invitation with status '{invitation.Status}'. " +
+                    $"Only Cancelled, Rejected, Submitted, or Expired invitations can be deleted.");
             }
 
             // First, delete all invitation events for this invitation

@@ -131,6 +131,9 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                     user.Address = null;
                 }
 
+                // Update per-host approval override (admin-only intent; UI shows only for Staff/Host roles)
+                user.RequiresApprovalOverride = request.RequiresApprovalOverride;
+
                 // Update preferences
                 user.UpdatePreferences(
                     timeZone: request.TimeZone,

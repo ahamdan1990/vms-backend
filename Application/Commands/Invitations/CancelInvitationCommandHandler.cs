@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Application.DTOs.Invitations;
+using VisitorManagementSystem.Api.Application.Services.Notifications;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -16,15 +17,18 @@ public class CancelInvitationCommandHandler : IRequestHandler<CancelInvitationCo
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<CancelInvitationCommandHandler> _logger;
+    private readonly INotificationService _notificationService;
 
     public CancelInvitationCommandHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        ILogger<CancelInvitationCommandHandler> logger)
+        ILogger<CancelInvitationCommandHandler> logger,
+        INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
+        _notificationService = notificationService;
     }
 
     public async Task<InvitationDto> Handle(CancelInvitationCommand request, CancellationToken cancellationToken)
@@ -95,6 +99,20 @@ public class CancelInvitationCommandHandler : IRequestHandler<CancelInvitationCo
 
                 _logger.LogInformation("Invitation cancelled successfully: {InvitationId} by {CancelledBy}",
                     request.InvitationId, request.CancelledBy);
+
+                // Notify host of cancellation (only if the canceller is not the host themselves)
+                if (request.CancelledBy != invitation.HostId)
+                {
+                    try
+                    {
+                        await _notificationService.NotifyInvitationCancelledAsync(
+                            invitation.Id, invitation.HostId, request.Reason, cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error sending cancellation notification for invitation {InvitationId}", invitation.Id);
+                    }
+                }
 
                 // Return updated invitation DTO
                 var updatedInvitation = await _unitOfWork.Invitations.GetByIdAsync(invitation.Id, cancellationToken);

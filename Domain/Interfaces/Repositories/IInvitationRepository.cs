@@ -21,6 +21,11 @@ public interface IInvitationRepository : IGenericRepository<Invitation>
     Task<List<Invitation>> GetByVisitorIdAsync(int visitorId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets invitations for a visitor, optionally scoped to a specific host (for staff users)
+    /// </summary>
+    Task<List<Invitation>> GetByVisitorIdAsync(int visitorId, int? hostId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets invitations by host ID
     /// </summary>
     /// <param name="hostId">Host ID</param>

@@ -1,6 +1,7 @@
 using AutoMapper;
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Invitations;
+using VisitorManagementSystem.Api.Application.Services.Notifications;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
@@ -14,15 +15,18 @@ namespace VisitorManagementSystem.Api.Application.Commands.Invitations
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILogger<CheckInInvitationCommandHandler> _logger;
+        private readonly INotificationService _notificationService;
 
         public CheckInInvitationCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
-            ILogger<CheckInInvitationCommandHandler> logger)
+            ILogger<CheckInInvitationCommandHandler> logger,
+            INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _logger = logger;
+            _notificationService = notificationService;
         }
 
         public async Task<InvitationDto> Handle(CheckInInvitationCommand request, CancellationToken cancellationToken)
@@ -43,6 +47,29 @@ namespace VisitorManagementSystem.Api.Application.Commands.Invitations
                 if (operatorUser == null)
                 {
                     throw new InvalidOperationException($"Operator with ID '{request.CheckedInBy}' not found.");
+                }
+
+                // Blacklist check — block check-in and alert security
+                if (invitation.Visitor?.IsBlacklisted == true)
+                {
+                    var locationName = invitation.Location?.Name ?? "Unknown location";
+                    _logger.LogWarning("Blacklisted visitor {VisitorId} ({VisitorName}) attempted check-in at {Location}",
+                        invitation.VisitorId, invitation.Visitor.FullName, locationName);
+
+                    try
+                    {
+                        await _notificationService.NotifyBlacklistDetectionAsync(
+                            $"{invitation.Visitor.FullName} (ID: {invitation.VisitorId})",
+                            locationName,
+                            cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send blacklist alert for visitor {VisitorId}", invitation.VisitorId);
+                    }
+
+                    throw new InvalidOperationException(
+                        $"Check-in denied: visitor '{invitation.Visitor.FullName}' is on the blacklist. Security has been alerted.");
                 }
 
                 using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);

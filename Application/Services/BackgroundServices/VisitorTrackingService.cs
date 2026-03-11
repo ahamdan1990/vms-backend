@@ -1,5 +1,6 @@
 ﻿using VisitorManagementSystem.Api.Application.Services.Notifications;
 using VisitorManagementSystem.Api.Domain.Entities;
+using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 namespace VisitorManagementSystem.Api.Application.Services.BackgroundServices;
@@ -353,10 +354,14 @@ public class VisitorTrackingService : BackgroundService
                      log => log.Date >= now.AddMinutes(-10), 
                      cancellationToken);
 
-        // Calculate queue metrics (these would come from actual check-in system)
-        var random = new Random();
-        var waitingVisitors = random.Next(0, 5);
-        var processingVisitors = random.Next(0, 3);
+        // Waiting = Approved invitations scheduled for today that haven't checked in yet
+        var approvedToday = await unitOfWork.Invitations.GetByStatusAsync(InvitationStatus.Approved, cancellationToken);
+        var waitingVisitors = approvedToday
+            .Count(i => i.ScheduledStartTime.Date == today && !i.IsDeleted);
+
+        // Processing = Active (currently checked-in) invitations
+        var activeInvitations = await unitOfWork.Invitations.GetActiveInvitationsAsync(cancellationToken);
+        var processingVisitors = activeInvitations.Count(i => !i.IsDeleted);
 
         return new DashboardMetrics
         {

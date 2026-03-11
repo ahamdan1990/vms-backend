@@ -1,6 +1,7 @@
 using AutoMapper;
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Invitations;
+using VisitorManagementSystem.Api.Application.Services.Notifications;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
@@ -14,15 +15,18 @@ public class RejectInvitationCommandHandler : IRequestHandler<RejectInvitationCo
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<RejectInvitationCommandHandler> _logger;
+    private readonly INotificationService _notificationService;
 
     public RejectInvitationCommandHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        ILogger<RejectInvitationCommandHandler> logger)
+        ILogger<RejectInvitationCommandHandler> logger,
+        INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
+        _notificationService = notificationService;
     }
 
     public async Task<InvitationDto> Handle(RejectInvitationCommand request, CancellationToken cancellationToken)
@@ -52,6 +56,18 @@ public class RejectInvitationCommandHandler : IRequestHandler<RejectInvitationCo
                 invitation.Reject(request.RejectedBy, request.Reason);
                 _unitOfWork.Invitations.Update(invitation);
 
+                // Record the rejection in InvitationApproval table
+                var rejectionRecord = new InvitationApproval
+                {
+                    InvitationId = invitation.Id,
+                    ApproverId = request.RejectedBy,
+                    StepOrder = 1,
+                    Comments = request.Reason?.Trim()
+                };
+                rejectionRecord.Reject(request.Reason);
+                rejectionRecord.SetCreatedBy(request.RejectedBy);
+                await _unitOfWork.Repository<InvitationApproval>().AddAsync(rejectionRecord, cancellationToken);
+
                 // Create rejection event
                 var rejectionEvent = InvitationEvent.Create(
                     invitation.Id,
@@ -67,6 +83,10 @@ public class RejectInvitationCommandHandler : IRequestHandler<RejectInvitationCo
 
                 _logger.LogInformation("Invitation rejected successfully: {InvitationId} by {RejectedBy} with reason: {Reason}",
                     request.InvitationId, request.RejectedBy, request.Reason);
+
+                // Notify host of rejection
+                await _notificationService.NotifyInvitationApprovalAsync(
+                    invitation.Id, invitation.HostId, approved: false, request.Reason, cancellationToken);
 
                 // Return updated invitation DTO
                 var updatedInvitation = await _unitOfWork.Invitations.GetByIdAsync(invitation.Id, cancellationToken);

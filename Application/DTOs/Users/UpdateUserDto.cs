@@ -79,4 +79,10 @@ public class UpdateUserDto
 
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
+
+    /// <summary>
+    /// Per-host invitation approval override (admin-only).
+    /// null = follow global setting, true = always require approval, false = always auto-approve.
+    /// </summary>
+    public bool? RequiresApprovalOverride { get; set; }
 }

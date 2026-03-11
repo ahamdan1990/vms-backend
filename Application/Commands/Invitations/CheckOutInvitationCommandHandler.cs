@@ -1,6 +1,7 @@
 using AutoMapper;
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Invitations;
+using VisitorManagementSystem.Api.Application.Services.Notifications;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
@@ -14,15 +15,18 @@ namespace VisitorManagementSystem.Api.Application.Commands.Invitations
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILogger<CheckOutInvitationCommandHandler> _logger;
+        private readonly INotificationService _notificationService;
 
         public CheckOutInvitationCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
-            ILogger<CheckOutInvitationCommandHandler> logger)
+            ILogger<CheckOutInvitationCommandHandler> logger,
+            INotificationService notificationService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _logger = logger;
+            _notificationService = notificationService;
         }
 
         public async Task<InvitationDto> Handle(CheckOutInvitationCommand request, CancellationToken cancellationToken)
@@ -67,6 +71,24 @@ namespace VisitorManagementSystem.Api.Application.Commands.Invitations
 
                     _logger.LogInformation("Invitation checked-out successfully: {InvitationId} ({InvitationNumber}) by {CheckedOutBy}",
                         invitation.Id, invitation.InvitationNumber, request.CheckedOutBy);
+
+                    // Notify host of check-out
+                    try
+                    {
+                        var visitorName = invitation.Visitor != null
+                            ? $"{invitation.Visitor.FirstName} {invitation.Visitor.LastName}"
+                            : "Unknown Visitor";
+                        await _notificationService.NotifyVisitorCheckOutAsync(
+                            invitation.HostId,
+                            invitation.VisitorId,
+                            visitorName,
+                            invitation.CheckedOutAt ?? DateTime.UtcNow,
+                            cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error sending check-out notification for invitation {InvitationId}", invitation.Id);
+                    }
 
                     // Return updated invitation DTO
                     var updatedInvitation = await _unitOfWork.Invitations.GetByIdAsync(invitation.Id, cancellationToken);

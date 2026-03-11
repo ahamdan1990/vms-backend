@@ -44,4 +44,12 @@ public class UserDto
     public int FailedLoginAttempts { get; set; }
     public bool MustChangePassword { get; set; }
     public DateTime? PasswordChangedDate { get; set; }
+
+    /// <summary>
+    /// Per-host invitation approval override.
+    /// null = follow global RequireApprovalByDefault setting.
+    /// true = always require approval regardless of global setting.
+    /// false = always auto-approve regardless of global setting.
+    /// </summary>
+    public bool? RequiresApprovalOverride { get; set; }
 }

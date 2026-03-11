@@ -100,6 +100,14 @@ public class User : SoftDeleteEntity
     public string? EmployeeId { get; set; }
 
     /// <summary>
+    /// Per-host invitation approval override.
+    /// null  = follow the global "Invitations.RequireApprovalByDefault" system setting.
+    /// true  = this host's invitations always require admin approval.
+    /// false = this host's invitations are auto-approved (skip approval workflow).
+    /// </summary>
+    public bool? RequiresApprovalOverride { get; set; }
+
+    /// <summary>
     /// User's profile photo path
     /// </summary>
     [MaxLength(500)]

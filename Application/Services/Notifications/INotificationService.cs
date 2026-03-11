@@ -120,4 +120,22 @@ public interface INotificationService
     Task NotifyVisitorNoShowAsync(int invitationId, int visitorId, string visitorName,
         int hostId, DateTime scheduledTime, int? locationId = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Notify host and operators that an invitation has expired without check-in
+    /// </summary>
+    Task NotifyInvitationExpiredAsync(int invitationId, int hostId, string visitorName,
+        DateTime scheduledEndTime, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Notify host that their invitation is now under admin review
+    /// </summary>
+    Task NotifyInvitationUnderReviewAsync(int invitationId, int hostId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Notify host that their invitation was cancelled
+    /// </summary>
+    Task NotifyInvitationCancelledAsync(int invitationId, int hostId, string? reason,
+        CancellationToken cancellationToken = default);
 }

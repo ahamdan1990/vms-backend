@@ -53,6 +53,14 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Repositories
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<List<Invitation>> GetByVisitorIdAsync(int visitorId, int? hostId, CancellationToken cancellationToken = default)
+        {
+            var query = ApplyIncludes(_dbSet).Where(i => i.VisitorId == visitorId);
+            if (hostId.HasValue)
+                query = query.Where(i => i.HostId == hostId.Value);
+            return await query.OrderByDescending(i => i.ScheduledStartTime).ToListAsync(cancellationToken);
+        }
+
         public async Task<List<Invitation>> GetByHostIdAsync(int hostId, CancellationToken cancellationToken = default)
         {
             return await ApplyIncludes(_dbSet)
@@ -98,9 +106,7 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Repositories
             var now = DateTime.UtcNow;
             return await ApplyIncludes(_dbSet)
                 .Where(i => i.ScheduledEndTime < now &&
-                            i.Status != InvitationStatus.Completed &&
-                            i.Status != InvitationStatus.Cancelled &&
-                            i.Status != InvitationStatus.Expired)
+                            i.Status == InvitationStatus.Approved)
                 .OrderBy(i => i.ScheduledEndTime)
                 .ToListAsync(cancellationToken);
         }
@@ -114,29 +120,35 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Repositories
 
         public async Task<InvitationStatistics> GetStatisticsAsync(CancellationToken cancellationToken = default)
         {
-            var invitations = await ApplyIncludes(_dbSet).ToListAsync(cancellationToken);
+            // Use projected GROUP BY queries to avoid loading all rows into memory
+            var statusCounts = await _dbSet
+                .GroupBy(i => i.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToListAsync(cancellationToken);
+
+            var countByStatus = statusCounts.ToDictionary(x => x.Status, x => x.Count);
 
             var stats = new InvitationStatistics
             {
-                TotalInvitations = invitations.Count,
-                PendingApprovals = invitations.Count(i => i.Status == InvitationStatus.Submitted || i.Status == InvitationStatus.UnderReview),
-                ApprovedInvitations = invitations.Count(i => i.Status == InvitationStatus.Approved),
-                ActiveVisitors = invitations.Count(i => i.Status == InvitationStatus.Active),
-                CompletedVisits = invitations.Count(i => i.Status == InvitationStatus.Completed),
-                CancelledInvitations = invitations.Count(i => i.Status == InvitationStatus.Cancelled),
-                ExpiredInvitations = invitations.Count(i => i.Status == InvitationStatus.Expired),
-                StatusBreakdown = invitations.GroupBy(i => i.Status).ToDictionary(g => g.Key, g => g.Count())
+                TotalInvitations = statusCounts.Sum(x => x.Count),
+                PendingApprovals = countByStatus.GetValueOrDefault(InvitationStatus.Submitted) +
+                                   countByStatus.GetValueOrDefault(InvitationStatus.UnderReview),
+                ApprovedInvitations = countByStatus.GetValueOrDefault(InvitationStatus.Approved),
+                ActiveVisitors = countByStatus.GetValueOrDefault(InvitationStatus.Active),
+                CompletedVisits = countByStatus.GetValueOrDefault(InvitationStatus.Completed),
+                CancelledInvitations = countByStatus.GetValueOrDefault(InvitationStatus.Cancelled),
+                ExpiredInvitations = countByStatus.GetValueOrDefault(InvitationStatus.Expired),
+                StatusBreakdown = countByStatus
             };
 
-            var completedWithTimes = invitations
-                .Where(i => i.Status == InvitationStatus.Completed && i.CheckedInAt.HasValue && i.CheckedOutAt.HasValue)
-                .ToList();
+            // Average visit duration only requires completed invitations with timestamps
+            var avgDuration = await _dbSet
+                .Where(i => i.Status == InvitationStatus.Completed && i.CheckedInAt != null && i.CheckedOutAt != null)
+                .Select(i => EF.Functions.DateDiffMinute(i.CheckedInAt!.Value, i.CheckedOutAt!.Value))
+                .AverageAsync(m => (double?)m, cancellationToken);
 
-            if (completedWithTimes.Any())
-            {
-                stats.AverageVisitDuration = completedWithTimes
-                    .Average(i => (i.CheckedOutAt!.Value - i.CheckedInAt!.Value).TotalHours);
-            }
+            if (avgDuration.HasValue)
+                stats.AverageVisitDuration = avgDuration.Value / 60.0; // convert minutes to hours
 
             return stats;
         }
@@ -145,52 +157,45 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Repositories
         {
             _logger.LogDebug("GetStatisticsByUserAccessAsync called for userId={UserId}", userId);
 
-            // Get accessible visitor IDs first to avoid global query filter issues
-            // Use explicit join with VisitorAccess table, ignoring global query filters
+            // Get accessible visitor IDs for this user
             var accessibleVisitorIds = await _context.Set<VisitorAccess>()
-                .IgnoreQueryFilters()  // Critical: ignore global filter on User.IsDeleted
+                .IgnoreQueryFilters()
                 .Where(va => va.UserId == userId && va.IsActive)
                 .Select(va => va.VisitorId)
                 .ToListAsync(cancellationToken);
 
-            _logger.LogDebug("User {UserId} has access to {Count} visitors: {VisitorIds}",
-                userId, accessibleVisitorIds.Count, string.Join(", ", accessibleVisitorIds));
+            _logger.LogDebug("User {UserId} has access to {Count} visitors", userId, accessibleVisitorIds.Count);
 
-            // Get all invitations first (matching the pattern in GetFilteredStatisticsAsync which works correctly)
-            var allInvitations = await _dbSet.ToListAsync(cancellationToken);
+            // Use GROUP BY projection — no full table scan
+            var baseQuery = _dbSet.Where(i => accessibleVisitorIds.Contains(i.VisitorId));
 
-            _logger.LogDebug("Retrieved {Count} total invitations from database. VisitorIds: {VisitorIds}",
-                allInvitations.Count, string.Join(", ", allInvitations.Select(i => i.VisitorId)));
+            var statusCounts = await baseQuery
+                .GroupBy(i => i.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToListAsync(cancellationToken);
 
-            // Filter invitations to only those for accessible visitors (in-memory, matching working pattern)
-            var invitations = allInvitations
-                .Where(i => accessibleVisitorIds.Contains(i.VisitorId))
-                .ToList();
-
-            _logger.LogDebug("After VisitorAccess filtering: {Before} -> {After} invitations",
-                allInvitations.Count, invitations.Count);
+            var countByStatus = statusCounts.ToDictionary(x => x.Status, x => x.Count);
 
             var stats = new InvitationStatistics
             {
-                TotalInvitations = invitations.Count,
-                PendingApprovals = invitations.Count(i => i.Status == InvitationStatus.Submitted || i.Status == InvitationStatus.UnderReview),
-                ApprovedInvitations = invitations.Count(i => i.Status == InvitationStatus.Approved),
-                ActiveVisitors = invitations.Count(i => i.Status == InvitationStatus.Active),
-                CompletedVisits = invitations.Count(i => i.Status == InvitationStatus.Completed),
-                CancelledInvitations = invitations.Count(i => i.Status == InvitationStatus.Cancelled),
-                ExpiredInvitations = invitations.Count(i => i.Status == InvitationStatus.Expired),
-                StatusBreakdown = invitations.GroupBy(i => i.Status).ToDictionary(g => g.Key, g => g.Count())
+                TotalInvitations = statusCounts.Sum(x => x.Count),
+                PendingApprovals = countByStatus.GetValueOrDefault(InvitationStatus.Submitted) +
+                                   countByStatus.GetValueOrDefault(InvitationStatus.UnderReview),
+                ApprovedInvitations = countByStatus.GetValueOrDefault(InvitationStatus.Approved),
+                ActiveVisitors = countByStatus.GetValueOrDefault(InvitationStatus.Active),
+                CompletedVisits = countByStatus.GetValueOrDefault(InvitationStatus.Completed),
+                CancelledInvitations = countByStatus.GetValueOrDefault(InvitationStatus.Cancelled),
+                ExpiredInvitations = countByStatus.GetValueOrDefault(InvitationStatus.Expired),
+                StatusBreakdown = countByStatus
             };
 
-            var completedWithTimes = invitations
-                .Where(i => i.Status == InvitationStatus.Completed && i.CheckedInAt.HasValue && i.CheckedOutAt.HasValue)
-                .ToList();
+            var avgDuration = await baseQuery
+                .Where(i => i.Status == InvitationStatus.Completed && i.CheckedInAt != null && i.CheckedOutAt != null)
+                .Select(i => EF.Functions.DateDiffMinute(i.CheckedInAt!.Value, i.CheckedOutAt!.Value))
+                .AverageAsync(m => (double?)m, cancellationToken);
 
-            if (completedWithTimes.Any())
-            {
-                stats.AverageVisitDuration = completedWithTimes
-                    .Average(i => (i.CheckedOutAt!.Value - i.CheckedInAt!.Value).TotalHours);
-            }
+            if (avgDuration.HasValue)
+                stats.AverageVisitDuration = avgDuration.Value / 60.0;
 
             _logger.LogDebug("Returning stats: Total={Total}, Pending={Pending}, Active={Active}",
                 stats.TotalInvitations, stats.PendingApprovals, stats.ActiveVisitors);

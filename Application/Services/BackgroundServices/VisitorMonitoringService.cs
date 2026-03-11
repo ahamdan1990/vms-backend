@@ -1,5 +1,5 @@
-using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Application.Services.Notifications;
+using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
@@ -57,95 +57,150 @@ public class VisitorMonitoringService : BackgroundService
         var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
 
         var now = DateTime.UtcNow;
-        var delayCheckTime = now.AddMinutes(-_delayThresholdMinutes);
-        var noShowCheckTime = now.AddMinutes(-_noShowThresholdMinutes);
 
         try
         {
-            // Get approved invitations that should have started but haven't been checked in
-            var relevantInvitations = await unitOfWork.Invitations.GetByDateRangeAsync(
-                now.AddHours(-2),
-                now,
-                cancellationToken);
-
-            var approvedNotCheckedIn = relevantInvitations?
-                .Where(i => i.Status == InvitationStatus.Approved && !i.IsDeleted)
-                .ToList() ?? new List<Domain.Entities.Invitation>();
-
-            foreach (var invitation in approvedNotCheckedIn)
-            {
-                if (invitation.ScheduledStartTime > now)
-                {
-                    continue; // Not yet time for the visit
-                }
-
-                var minutesLate = (int)(now - invitation.ScheduledStartTime).TotalMinutes;
-
-                // Check if this is a no-show case (30+ minutes late)
-                if (minutesLate >= _noShowThresholdMinutes)
-                {
-                    // Check if we've already sent a no-show notification
-                    var existingAlerts = await unitOfWork.NotificationAlerts.GetAllAsync(cancellationToken);
-                    var hasNoShowAlert = existingAlerts?.Any(n =>
-                        n.RelatedEntityType == "Invitation" &&
-                        n.RelatedEntityId == invitation.Id &&
-                        n.Type == NotificationAlertType.VisitorNoShow) ?? false;
-
-                    if (!hasNoShowAlert && invitation.Visitor != null)
-                    {
-                        // Send no-show notification
-                        await notificationService.NotifyVisitorNoShowAsync(
-                            invitation.Id,
-                            invitation.VisitorId,
-                            $"{invitation.Visitor.FirstName} {invitation.Visitor.LastName}",
-                            invitation.HostId,
-                            invitation.ScheduledStartTime,
-                            invitation.LocationId,
-                            cancellationToken
-                        );
-
-                        _logger.LogInformation(
-                            "No-show notification sent for invitation {InvitationId}",
-                            invitation.Id);
-                    }
-                }
-                // Check if this is a delayed case (15-29 minutes late)
-                else if (minutesLate >= _delayThresholdMinutes)
-                {
-                    // Check if we've already sent a delay notification
-                    var existingAlerts = await unitOfWork.NotificationAlerts.GetAllAsync(cancellationToken);
-                    var hasDelayAlert = existingAlerts?.Any(n =>
-                        n.RelatedEntityType == "Invitation" &&
-                        n.RelatedEntityId == invitation.Id &&
-                        n.Type == NotificationAlertType.VisitorDelayed) ?? false;
-
-                    if (!hasDelayAlert && invitation.Visitor != null)
-                    {
-                        // Send delayed visitor notification
-                        await notificationService.NotifyVisitorDelayedAsync(
-                            invitation.Id,
-                            invitation.VisitorId,
-                            $"{invitation.Visitor.FirstName} {invitation.Visitor.LastName}",
-                            invitation.ScheduledStartTime,
-                            minutesLate,
-                            invitation.LocationId,
-                            cancellationToken
-                        );
-
-                        _logger.LogInformation(
-                            "Delayed visitor notification sent for invitation {InvitationId}, Delay: {DelayMinutes} minutes",
-                            invitation.Id,
-                            minutesLate);
-                    }
-                }
-            }
-
-            _logger.LogDebug("Visitor monitoring check completed. Processed {Count} invitations", approvedNotCheckedIn.Count);
+            await ProcessExpiredInvitationsAsync(unitOfWork, notificationService, now, cancellationToken);
+            await ProcessDelayedAndNoShowsAsync(unitOfWork, notificationService, now, cancellationToken);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing visitor monitoring");
             throw;
         }
+    }
+
+    /// <summary>
+    /// Transition Approved invitations past their ScheduledEndTime to Expired status
+    /// and notify the host + operators.
+    /// </summary>
+    private async Task ProcessExpiredInvitationsAsync(
+        IUnitOfWork unitOfWork,
+        INotificationService notificationService,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        // GetExpiredInvitationsAsync returns Approved invitations whose ScheduledEndTime has passed
+        var expiredCandidates = await unitOfWork.Invitations.GetExpiredInvitationsAsync(cancellationToken);
+
+        if (expiredCandidates == null || !expiredCandidates.Any())
+            return;
+
+        int expiredCount = 0;
+        foreach (var invitation in expiredCandidates)
+        {
+            try
+            {
+                invitation.Expire();
+                unitOfWork.Invitations.Update(invitation);
+
+                var expireEvent = InvitationEvent.Create(
+                    invitation.Id,
+                    InvitationEventTypes.Expired,
+                    "Invitation expired — scheduled end time passed without check-in",
+                    null // system-generated
+                );
+                await unitOfWork.Repository<InvitationEvent>().AddAsync(expireEvent, cancellationToken);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
+
+                expiredCount++;
+
+                // Notify host and operators
+                var visitorName = invitation.Visitor != null
+                    ? $"{invitation.Visitor.FirstName} {invitation.Visitor.LastName}"
+                    : "Unknown Visitor";
+
+                await notificationService.NotifyInvitationExpiredAsync(
+                    invitation.Id,
+                    invitation.HostId,
+                    visitorName,
+                    invitation.ScheduledEndTime,
+                    cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error expiring invitation {InvitationId}", invitation.Id);
+            }
+        }
+
+        if (expiredCount > 0)
+            _logger.LogInformation("Expired {Count} invitations", expiredCount);
+    }
+
+    /// <summary>
+    /// Send delay and no-show notifications for approved invitations that haven't checked in.
+    /// </summary>
+    private async Task ProcessDelayedAndNoShowsAsync(
+        IUnitOfWork unitOfWork,
+        INotificationService notificationService,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        // Get approved invitations in a recent window that haven't been checked in
+        var relevantInvitations = await unitOfWork.Invitations.GetByDateRangeAsync(
+            now.AddHours(-2),
+            now,
+            cancellationToken);
+
+        var approvedNotCheckedIn = relevantInvitations?
+            .Where(i => i.Status == InvitationStatus.Approved && !i.IsDeleted)
+            .ToList() ?? new List<Invitation>();
+
+        foreach (var invitation in approvedNotCheckedIn)
+        {
+            if (invitation.ScheduledStartTime > now)
+                continue;
+
+            var minutesLate = (int)(now - invitation.ScheduledStartTime).TotalMinutes;
+
+            if (minutesLate >= _noShowThresholdMinutes)
+            {
+                var existingAlerts = await unitOfWork.NotificationAlerts.GetAllAsync(cancellationToken);
+                var hasNoShowAlert = existingAlerts?.Any(n =>
+                    n.RelatedEntityType == "Invitation" &&
+                    n.RelatedEntityId == invitation.Id &&
+                    n.Type == NotificationAlertType.VisitorNoShow) ?? false;
+
+                if (!hasNoShowAlert && invitation.Visitor != null)
+                {
+                    await notificationService.NotifyVisitorNoShowAsync(
+                        invitation.Id,
+                        invitation.VisitorId,
+                        $"{invitation.Visitor.FirstName} {invitation.Visitor.LastName}",
+                        invitation.HostId,
+                        invitation.ScheduledStartTime,
+                        invitation.LocationId,
+                        cancellationToken);
+
+                    _logger.LogInformation("No-show notification sent for invitation {InvitationId}", invitation.Id);
+                }
+            }
+            else if (minutesLate >= _delayThresholdMinutes)
+            {
+                var existingAlerts = await unitOfWork.NotificationAlerts.GetAllAsync(cancellationToken);
+                var hasDelayAlert = existingAlerts?.Any(n =>
+                    n.RelatedEntityType == "Invitation" &&
+                    n.RelatedEntityId == invitation.Id &&
+                    n.Type == NotificationAlertType.VisitorDelayed) ?? false;
+
+                if (!hasDelayAlert && invitation.Visitor != null)
+                {
+                    await notificationService.NotifyVisitorDelayedAsync(
+                        invitation.Id,
+                        invitation.VisitorId,
+                        $"{invitation.Visitor.FirstName} {invitation.Visitor.LastName}",
+                        invitation.ScheduledStartTime,
+                        minutesLate,
+                        invitation.LocationId,
+                        cancellationToken);
+
+                    _logger.LogInformation(
+                        "Delayed visitor notification sent for invitation {InvitationId}, Delay: {DelayMinutes} minutes",
+                        invitation.Id, minutesLate);
+                }
+            }
+        }
+
+        _logger.LogDebug("Visitor monitoring check completed. Processed {Count} invitations", approvedNotCheckedIn.Count);
     }
 }
