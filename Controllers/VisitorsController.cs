@@ -241,7 +241,10 @@ public class VisitorsController : BaseController
             LastName = updateDto.LastName,
             Email = updateDto.Email,
             PhoneNumber = updateDto.PhoneNumber,
+            PhoneCountryCode = updateDto.PhoneCountryCode,
+            PhoneType = updateDto.PhoneType,
             Company = updateDto.Company,
+            CompanyId = updateDto.CompanyId,
             JobTitle = updateDto.JobTitle,
             Address = updateDto.Address,
             DateOfBirth = updateDto.DateOfBirth,
@@ -254,6 +257,11 @@ public class VisitorsController : BaseController
             SecurityClearance = updateDto.SecurityClearance,
             Notes = updateDto.Notes,
             ExternalId = updateDto.ExternalId,
+            IsVip = updateDto.IsVip,
+            PreferredLocationId = updateDto.PreferredLocationId,
+            DefaultVisitPurposeId = updateDto.DefaultVisitPurposeId,
+            TimeZone = updateDto.TimeZone,
+            EmergencyContacts = updateDto.EmergencyContacts,
             ModifiedBy = GetCurrentUserId() ?? throw new UnauthorizedAccessException("User must be authenticated")
         };
 

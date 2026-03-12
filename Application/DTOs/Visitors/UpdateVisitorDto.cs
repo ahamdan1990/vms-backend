@@ -126,4 +126,30 @@ public class UpdateVisitorDto
     /// </summary>
     [MaxLength(100)]
     public string? ExternalId { get; set; }
+
+    /// <summary>
+    /// Whether visitor is VIP
+    /// </summary>
+    public bool IsVip { get; set; }
+
+    /// <summary>
+    /// Preferred location ID
+    /// </summary>
+    public int? PreferredLocationId { get; set; }
+
+    /// <summary>
+    /// Default visit purpose ID
+    /// </summary>
+    public int? DefaultVisitPurposeId { get; set; }
+
+    /// <summary>
+    /// Timezone (e.g. Asia/Beirut)
+    /// </summary>
+    [MaxLength(50)]
+    public string? TimeZone { get; set; } = "Asia/Beirut";
+
+    /// <summary>
+    /// Emergency contacts — replaces existing contacts on update
+    /// </summary>
+    public List<CreateEmergencyContactDto> EmergencyContacts { get; set; } = new();
 }

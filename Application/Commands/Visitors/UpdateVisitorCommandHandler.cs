@@ -3,6 +3,7 @@ using MediatR;
 using System.Security.Claims;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
 using VisitorManagementSystem.Api.Application.Services.Visitors;
+using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
 using DomainPermissions = VisitorManagementSystem.Api.Domain.Constants.Permissions;
@@ -121,6 +122,11 @@ public class UpdateVisitorCommandHandler : IRequestHandler<UpdateVisitorCommand,
             visitor.SecurityClearance = request.SecurityClearance?.Trim();
             visitor.Notes = request.Notes?.Trim();
             visitor.ExternalId = request.ExternalId?.Trim();
+            visitor.CompanyId = request.CompanyId;
+            visitor.IsVip = request.IsVip;
+            visitor.PreferredLocationId = request.PreferredLocationId;
+            visitor.DefaultVisitPurposeId = request.DefaultVisitPurposeId;
+            visitor.TimeZone = request.TimeZone;
 
             // Update enhanced phone number
             if (!string.IsNullOrEmpty(request.PhoneNumber))
@@ -169,6 +175,61 @@ public class UpdateVisitorCommandHandler : IRequestHandler<UpdateVisitorCommand,
 
             // Update visitor notes based on changes to special requirements
             await _visitorNotesBridgeService.UpdateNotesFromRequirementsAsync(visitor, previousVisitor, request.ModifiedBy, cancellationToken);
+
+            // Replace emergency contacts: soft-delete existing, add new ones
+            var existingContacts = await _unitOfWork.EmergencyContacts.GetByVisitorIdAsync(visitor.Id, cancellationToken);
+            foreach (var contact in existingContacts)
+            {
+                _unitOfWork.EmergencyContacts.SoftDelete(contact, request.ModifiedBy);
+            }
+
+            foreach (var contactDto in request.EmergencyContacts)
+            {
+                if (string.IsNullOrEmpty(contactDto.PhoneNumber) ||
+                    !PhoneNumber.IsValidPhoneNumber(contactDto.PhoneNumber))
+                {
+                    continue; // Skip invalid emergency contact
+                }
+
+                var contact = new EmergencyContact
+                {
+                    VisitorId = visitor.Id,
+                    FirstName = contactDto.FirstName.Trim(),
+                    LastName = contactDto.LastName.Trim(),
+                    Relationship = contactDto.Relationship.Trim(),
+                    PhoneNumber = new PhoneNumber(contactDto.PhoneNumber),
+                    Priority = contactDto.Priority,
+                    IsPrimary = contactDto.IsPrimary,
+                    Notes = contactDto.Notes?.Trim()
+                };
+
+                if (!string.IsNullOrEmpty(contactDto.AlternatePhoneNumber) &&
+                    PhoneNumber.IsValidPhoneNumber(contactDto.AlternatePhoneNumber))
+                {
+                    contact.AlternatePhoneNumber = new PhoneNumber(contactDto.AlternatePhoneNumber);
+                }
+
+                if (!string.IsNullOrEmpty(contactDto.Email))
+                {
+                    contact.Email = new Email(contactDto.Email);
+                }
+
+                if (contactDto.Address != null)
+                {
+                    contact.Address = new Address(
+                        contactDto.Address.Street1,
+                        contactDto.Address.City,
+                        contactDto.Address.State,
+                        contactDto.Address.PostalCode,
+                        contactDto.Address.Country,
+                        contactDto.Address.Street2,
+                        contactDto.Address.AddressType ?? "Home"
+                    );
+                }
+
+                contact.SetCreatedBy(request.ModifiedBy);
+                await _unitOfWork.EmergencyContacts.AddAsync(contact, cancellationToken);
+            }
 
             // Update in repository
             _unitOfWork.Visitors.Update(visitor);
