@@ -579,6 +579,17 @@ public class VisitorsController : BaseController
                 return BadRequestResponse("No photo provided");
             }
 
+            if (_faceDetectionService.IsServiceAvailableAsync().Result == false)
+            {
+                return SuccessResponse(new
+                {
+                    faceDetected = false,
+                    faceCount = 0,
+                    message = "Face detection is currently disabled.",
+                    detectionAvailable = false
+                });
+            }
+
             // Use the face detection service to check if a face exists
             using var stream = photo.OpenReadStream();
             var faces = await _faceDetectionService.DetectFacesAsync(stream);
