@@ -69,6 +69,12 @@ public class UserListDto
     /// </summary>
     public bool IsLockedOut { get; set; }
     public int FailedLoginAttempts { get; set; }
+
+    /// <summary>
+    /// Per-host invitation approval override.
+    /// null = follow global setting, true = always require approval, false = always auto-approve.
+    /// </summary>
+    public bool? RequiresApprovalOverride { get; set; }
 }
 
 

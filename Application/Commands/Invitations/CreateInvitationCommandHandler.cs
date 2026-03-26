@@ -184,7 +184,7 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                 SpecialInstructions = specialInstructions,
                 RequiresApproval = effectiveRequiresApproval,
                 RequiresEscort = request.RequiresEscort || (template?.DefaultRequiresEscort ?? false),
-                RequiresBadge = request.RequiresBadge || (template?.DefaultRequiresBadge ?? true),
+                RequiresBadge = request.RequiresBadge || (template?.DefaultRequiresBadge ?? false),
                 NeedsParking = request.NeedsParking,
                 ParkingInstructions = request.ParkingInstructions?.Trim(),
                 Status = effectiveRequiresApproval ? InvitationStatus.Submitted : InvitationStatus.Approved

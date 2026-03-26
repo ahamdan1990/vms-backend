@@ -53,6 +53,35 @@ public class ApproveInvitationCommandHandler : IRequestHandler<ApproveInvitation
                 throw new InvalidOperationException($"Approver with ID '{request.ApprovedBy}' not found.");
             }
 
+            // If the invitation's scheduled window has already passed, expire it instead of approving.
+            if (invitation.ScheduledEndTime < DateTime.UtcNow)
+            {
+                using var expireTransaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
+                try
+                {
+                    invitation.Expire();
+                    _unitOfWork.Invitations.Update(invitation);
+
+                    var expireEvent = InvitationEvent.Create(
+                        invitation.Id,
+                        InvitationEventTypes.Expired,
+                        "Approval attempted after scheduled end time — invitation automatically expired",
+                        request.ApprovedBy
+                    );
+                    await _unitOfWork.Repository<InvitationEvent>().AddAsync(expireEvent, cancellationToken);
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.CommitTransactionAsync(cancellationToken);
+                }
+                catch
+                {
+                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    throw;
+                }
+
+                var expiredInvitation = await _unitOfWork.Invitations.GetByIdAsync(invitation.Id, cancellationToken);
+                return _mapper.Map<InvitationDto>(expiredInvitation);
+            }
+
             using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
             try
             {

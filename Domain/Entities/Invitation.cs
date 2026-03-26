@@ -286,6 +286,9 @@ public class Invitation : SoftDeleteEntity
             Status != InvitationStatus.Rejected)
             throw new InvalidOperationException("Only submitted or under review invitations can be approved.");
 
+        if (ScheduledEndTime < DateTime.UtcNow)
+            throw new InvalidOperationException("This invitation has already passed its scheduled end time and cannot be approved. Please mark it as expired.");
+
         Status = InvitationStatus.Approved;
         ApprovedOn = DateTime.UtcNow;
         ApprovedBy = approvedBy;

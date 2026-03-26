@@ -102,7 +102,8 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResultDt
                 CreatedOn = u.CreatedOn,
                 IsActive = u.Status == UserStatus.Active,
                 IsLockedOut = u.IsCurrentlyLockedOut(),
-                FailedLoginAttempts = u.FailedLoginAttempts
+                FailedLoginAttempts = u.FailedLoginAttempts,
+                RequiresApprovalOverride = u.RequiresApprovalOverride
             }).ToList();
 
             var actualTotalCount = filteredUsers.Count();

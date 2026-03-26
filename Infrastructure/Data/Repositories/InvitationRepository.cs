@@ -106,7 +106,9 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Repositories
             var now = DateTime.UtcNow;
             return await ApplyIncludes(_dbSet)
                 .Where(i => i.ScheduledEndTime < now &&
-                            i.Status == InvitationStatus.Approved)
+                            (i.Status == InvitationStatus.Approved ||
+                             i.Status == InvitationStatus.Submitted ||
+                             i.Status == InvitationStatus.UnderReview))
                 .OrderBy(i => i.ScheduledEndTime)
                 .ToListAsync(cancellationToken);
         }
