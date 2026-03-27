@@ -77,8 +77,8 @@ public class GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuer
                 query = query.Where(n => n.ExpiresOn == null || n.ExpiresOn > DateTime.UtcNow);
             }
 
-            // Order by priority first, then by creation date (newest first)
-            query = query.OrderBy(n => n.Priority).ThenByDescending(n => n.CreatedOn);
+            // Order by highest priority first, then by creation date (newest first)
+            query = query.OrderByDescending(n => n.Priority).ThenByDescending(n => n.CreatedOn);
 
             // Get total count before pagination
             var totalCount = await query.CountAsync(cancellationToken);

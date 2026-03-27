@@ -3,6 +3,7 @@ using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Invitations;
 using VisitorManagementSystem.Api.Application.Services.QrCode;
 using VisitorManagementSystem.Api.Application.Services.Capacity;
+using VisitorManagementSystem.Api.Application.Services.Email;
 using VisitorManagementSystem.Api.Application.Services.Notifications;
 using VisitorManagementSystem.Api.Application.DTOs.Capacity;
 using VisitorManagementSystem.Api.Domain.Constants;
@@ -23,6 +24,7 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
     private readonly IQrCodeService _qrCodeService;
     private readonly ICapacityService _capacityService;
     private readonly INotificationService _notificationService;
+    private readonly IEmailService _emailService;
     
     public CreateInvitationCommandHandler(
         IUnitOfWork unitOfWork,
@@ -30,7 +32,8 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
         ILogger<CreateInvitationCommandHandler> logger,
         IQrCodeService qrCodeService,
         ICapacityService capacityService,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        IEmailService emailService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
@@ -38,6 +41,7 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
         _qrCodeService = qrCodeService;
         _capacityService = capacityService;
         _notificationService = notificationService;
+        _emailService = emailService;
     }
 
     public async Task<InvitationDto> Handle(CreateInvitationCommand request, CancellationToken cancellationToken)
@@ -56,6 +60,11 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
             var host = await _unitOfWork.Users.GetByIdAsync(request.HostId, cancellationToken);
             if (host == null)
                 throw new InvalidOperationException($"Host with ID '{request.HostId}' not found.");
+
+            var creator = request.CreatedBy == host.Id
+                ? host
+                : await _unitOfWork.Users.GetByIdAsync(request.CreatedBy, cancellationToken)
+                  ?? throw new InvalidOperationException($"User with ID '{request.CreatedBy}' not found.");
 
             // Validate visit purpose if specified
             if (request.VisitPurposeId.HasValue)
@@ -279,7 +288,7 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                 await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
                 // Send notifications after successful creation
-                await SendInvitationNotificationsAsync(invitation, host, visitor, effectiveRequiresApproval, cancellationToken);
+                await SendInvitationNotificationsAsync(invitation, host, creator, visitor, effectiveRequiresApproval, cancellationToken);
 
                 _logger.LogInformation("Invitation created successfully: {InvitationId} ({InvitationNumber}) for visitor {VisitorId} by {CreatedBy}",
                     invitation.Id, invitation.InvitationNumber, request.VisitorId, request.CreatedBy);
@@ -330,28 +339,128 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
     /// <summary>
     /// Send notifications for invitation creation
     /// </summary>
-    private async Task SendInvitationNotificationsAsync(Invitation invitation, User host, Visitor visitor,
+    private async Task SendInvitationNotificationsAsync(Invitation invitation, User host, User creator, Visitor visitor,
         bool requiresApproval, CancellationToken cancellationToken)
     {
         try
         {
+            var isWalkIn = invitation.Type == InvitationType.WalkIn;
+            var entityLabel = isWalkIn ? "walk-in" : "invitation";
+            var statusNote = requiresApproval
+                ? " It requires admin approval."
+                : " It has been auto-approved.";
+
+            var notificationData = new
+            {
+                InvitationId = invitation.Id,
+                InvitationNumber = invitation.InvitationNumber,
+                VisitorId = visitor.Id,
+                VisitorName = visitor.FullName,
+                Company = visitor.Company,
+                HostId = host.Id,
+                HostName = host.FullName,
+                CreatedByUserId = creator.Id,
+                CreatedByName = creator.FullName,
+                CreatedByRole = creator.Role.ToString(),
+                InvitationType = invitation.Type.ToString(),
+                RequiresApproval = requiresApproval,
+                ScheduledStartTime = invitation.ScheduledStartTime
+            };
+
+            if (creator.Id == host.Id)
+            {
+                await _notificationService.NotifyUserAsync(
+                    host.Id,
+                    isWalkIn ? "Walk-In Created" : "Invitation Created",
+                    $"Your {entityLabel} for {visitor.FullName} has been created successfully.{statusNote} " +
+                    $"Scheduled: {invitation.ScheduledStartTime:MMM dd, yyyy HH:mm}",
+                    NotificationAlertType.InvitationCreated,
+                    AlertPriority.Low,
+                    notificationData,
+                    cancellationToken);
+
+                var receptionistRecipients = await GetActiveUsersByRoleAsync(UserRole.Receptionist, cancellationToken);
+                await NotifyUsersAsync(
+                    receptionistRecipients,
+                    isWalkIn ? "New Walk-In Created" : "New Invitation Created",
+                    $"{host.FullName} created a {entityLabel} for {visitor.FullName}.{statusNote} " +
+                    $"Scheduled: {invitation.ScheduledStartTime:MMM dd, yyyy HH:mm}",
+                    NotificationAlertType.InvitationCreated,
+                    AlertPriority.Medium,
+                    notificationData,
+                    cancellationToken);
+
+                var adminRecipients = await GetActiveUsersByRoleAsync(UserRole.Administrator, cancellationToken);
+                await NotifyUsersAsync(
+                    adminRecipients,
+                    requiresApproval ? "New Invitation Pending Approval" : (isWalkIn ? "New Walk-In Created" : "New Invitation Created"),
+                    $"{host.FullName} created a {entityLabel} for {visitor.FullName}.{statusNote} " +
+                    $"Scheduled: {invitation.ScheduledStartTime:MMM dd, yyyy HH:mm}",
+                    requiresApproval ? NotificationAlertType.InvitationPendingApproval : NotificationAlertType.InvitationCreated,
+                    AlertPriority.Medium,
+                    notificationData,
+                    cancellationToken);
+
+                _logger.LogInformation("Host-created invitation notifications sent for invitation {InvitationId}", invitation.Id);
+                return;
+            }
+
+            if (creator.Role == UserRole.Receptionist)
+            {
+                await _notificationService.NotifyUserAsync(
+                    host.Id,
+                    isWalkIn ? "New Walk-In Created For You" : "New Invitation Created For You",
+                    $"{creator.FullName} created a {entityLabel} for your visitor {visitor.FullName}.{statusNote} " +
+                    $"Scheduled: {invitation.ScheduledStartTime:MMM dd, yyyy HH:mm}",
+                    NotificationAlertType.InvitationCreated,
+                    AlertPriority.Medium,
+                    notificationData,
+                    cancellationToken);
+
+                var adminRecipients = await GetActiveUsersByRoleAsync(UserRole.Administrator, cancellationToken);
+                await NotifyUsersAsync(
+                    adminRecipients,
+                    requiresApproval ? "New Invitation Pending Approval" : (isWalkIn ? "Receptionist Registered Walk-In" : "Receptionist Created Invitation"),
+                    $"{creator.FullName} created a {entityLabel} for {visitor.FullName} and assigned it to {host.FullName}.{statusNote} " +
+                    $"Scheduled: {invitation.ScheduledStartTime:MMM dd, yyyy HH:mm}",
+                    requiresApproval ? NotificationAlertType.InvitationPendingApproval : NotificationAlertType.InvitationCreated,
+                    AlertPriority.Medium,
+                    notificationData,
+                    cancellationToken);
+
+                await SendNotificationEmailsAsync(
+                    new[] { host },
+                    isWalkIn ? "New walk-in created for you" : "New invitation created for you",
+                    $"{creator.FullName} created a {entityLabel} for your visitor {visitor.FullName}.{statusNote}\n" +
+                    $"Invitation Number: {invitation.InvitationNumber}\n" +
+                    $"Scheduled: {invitation.ScheduledStartTime:MMM dd, yyyy HH:mm}",
+                    cancellationToken);
+
+                await SendNotificationEmailsAsync(
+                    adminRecipients,
+                    requiresApproval ? "New invitation pending approval" : (isWalkIn ? "Receptionist registered walk-in" : "Receptionist created invitation"),
+                    $"{creator.FullName} created a {entityLabel} for {visitor.FullName} and assigned it to {host.FullName}.{statusNote}\n" +
+                    $"Invitation Number: {invitation.InvitationNumber}\n" +
+                    $"Scheduled: {invitation.ScheduledStartTime:MMM dd, yyyy HH:mm}",
+                    cancellationToken);
+
+                _logger.LogInformation("Receptionist-created invitation notifications sent for invitation {InvitationId}", invitation.Id);
+                return;
+            }
+
             if (requiresApproval)
             {
-                // Notify administrators about pending approval
-                await _notificationService.NotifyRoleAsync(
-                    UserRoles.Administrator,
+                var adminRecipients = await GetActiveUsersByRoleAsync(UserRole.Administrator, cancellationToken);
+                await NotifyUsersAsync(
+                    adminRecipients,
                     "New Invitation Pending Approval",
                     $"Invitation for {visitor.FullName} from {visitor.Company} requires approval. Host: {host.FullName}",
                     NotificationAlertType.InvitationPendingApproval,
                     AlertPriority.Medium,
-                    new { InvitationId = invitation.Id, InvitationNumber = invitation.InvitationNumber },
+                    notificationData,
                     cancellationToken);
-
-                _logger.LogInformation("Approval notification sent for invitation {InvitationId}", invitation.Id);
             }
 
-            // Send confirmation to host
-            var statusNote = requiresApproval ? " It is pending admin approval." : " It has been automatically approved.";
             await _notificationService.NotifyUserAsync(
                 invitation.HostId,
                 "Invitation Created",
@@ -359,13 +468,66 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                 $"Scheduled: {invitation.ScheduledStartTime:MMM dd, yyyy HH:mm}",
                 NotificationAlertType.InvitationCreated,
                 AlertPriority.Low,
-                new { InvitationId = invitation.Id, InvitationNumber = invitation.InvitationNumber },
+                notificationData,
                 cancellationToken);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error sending invitation notifications for {InvitationId}", invitation.Id);
             // Don't throw - notification failure shouldn't break invitation creation
+        }
+    }
+
+    private async Task<List<User>> GetActiveUsersByRoleAsync(UserRole role, CancellationToken cancellationToken)
+    {
+        var users = await _unitOfWork.Users.GetByRoleAsync(role, cancellationToken);
+        return users.Where(u => u.IsActive).ToList();
+    }
+
+    private async Task NotifyUsersAsync(
+        IEnumerable<User> recipients,
+        string title,
+        string message,
+        NotificationAlertType type,
+        AlertPriority priority,
+        object data,
+        CancellationToken cancellationToken)
+    {
+        foreach (var recipient in recipients
+                     .Where(u => u.Id > 0)
+                     .GroupBy(u => u.Id)
+                     .Select(group => group.First()))
+        {
+            await _notificationService.NotifyUserAsync(
+                recipient.Id,
+                title,
+                message,
+                type,
+                priority,
+                data,
+                cancellationToken);
+        }
+    }
+
+    private async Task SendNotificationEmailsAsync(
+        IEnumerable<User> recipients,
+        string subject,
+        string body,
+        CancellationToken cancellationToken)
+    {
+        foreach (var recipient in recipients
+                     .Where(u => u.IsActive && !string.IsNullOrWhiteSpace(u.Email))
+                     .GroupBy(u => u.Id)
+                     .Select(group => group.First()))
+        {
+            try
+            {
+                await _emailService.SendAlertEmailAsync(recipient.Email!, subject, body, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending notification email to user {UserId}", recipient.Id);
+            }
         }
     }
 }

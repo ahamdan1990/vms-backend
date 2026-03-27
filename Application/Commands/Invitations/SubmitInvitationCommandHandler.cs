@@ -83,14 +83,31 @@ public class SubmitInvitationCommandHandler : IRequestHandler<SubmitInvitationCo
                 // Notify administrators about the pending approval
                 try
                 {
-                    await _notificationService.NotifyRoleAsync(
-                        UserRoles.Administrator,
-                        "New Invitation Pending Approval",
-                        $"Invitation #{invitation.InvitationNumber} submitted by {submitter.FullName} requires approval.",
-                        NotificationAlertType.InvitationPendingApproval,
-                        AlertPriority.Medium,
-                        new { InvitationId = invitation.Id, InvitationNumber = invitation.InvitationNumber },
-                        cancellationToken);
+                    var adminUsers = await _unitOfWork.Users.GetByRoleAsync(UserRole.Administrator, cancellationToken);
+                    var notificationData = new
+                    {
+                        InvitationId = invitation.Id,
+                        InvitationNumber = invitation.InvitationNumber,
+                        HostId = invitation.HostId,
+                        SubmittedByUserId = submitter.Id,
+                        SubmittedByName = submitter.FullName,
+                        SubmittedByRole = submitter.Role.ToString()
+                    };
+
+                    foreach (var admin in adminUsers
+                                 .Where(u => u.IsActive)
+                                 .GroupBy(u => u.Id)
+                                 .Select(group => group.First()))
+                    {
+                        await _notificationService.NotifyUserAsync(
+                            admin.Id,
+                            "New Invitation Pending Approval",
+                            $"Invitation #{invitation.InvitationNumber} submitted by {submitter.FullName} requires approval.",
+                            NotificationAlertType.InvitationPendingApproval,
+                            AlertPriority.Medium,
+                            notificationData,
+                            cancellationToken);
+                    }
                 }
                 catch (Exception ex)
                 {

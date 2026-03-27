@@ -147,6 +147,10 @@ public class NotificationsController : BaseController
         {
             return NotFoundResponse("Notification", id);
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            return ForbiddenResponse(ex.Message);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error acknowledging notification {NotificationId}", id);

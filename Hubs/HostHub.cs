@@ -28,8 +28,10 @@ public class HostHub : BaseHub
             return;
         }
 
-        // Check host permissions (staff can receive visitor notifications)
-        if (!HasPermission(Permissions.Invitation.ReadAll))
+        // Allow hosts and operational users with invitation visibility to receive targeted notifications.
+        if (!HasPermission(Permissions.Invitation.ReadOwn) &&
+            !HasPermission(Permissions.Invitation.ReadAll) &&
+            !HasPermission(Permissions.Notification.Receive))
         {
             await Clients.Caller.SendAsync("Error", "Insufficient permissions");
             return;

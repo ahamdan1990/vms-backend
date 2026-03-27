@@ -34,13 +34,35 @@ public class AcknowledgeNotificationCommandHandler : IRequestHandler<Acknowledge
             return true; // Already acknowledged, return success
         }
 
+        var user = await _unitOfWork.Users.GetByIdAsync(request.AcknowledgedBy, cancellationToken)
+                   ?? throw new KeyNotFoundException($"User with ID {request.AcknowledgedBy} not found");
+
+        var canAcknowledge =
+            notification.TargetUserId == request.AcknowledgedBy ||
+            (notification.TargetUserId == null && notification.TargetRole == null) ||
+            (!string.IsNullOrWhiteSpace(notification.TargetRole) &&
+             string.Equals(notification.TargetRole, user.Role.ToString(), StringComparison.OrdinalIgnoreCase));
+
+        if (!canAcknowledge)
+        {
+            _logger.LogWarning(
+                "User {UserId} attempted to acknowledge notification {NotificationId} without access",
+                request.AcknowledgedBy,
+                request.NotificationId);
+            throw new UnauthorizedAccessException("You do not have access to acknowledge this notification");
+        }
+
         // Acknowledge the notification
         notification.Acknowledge(request.AcknowledgedBy);
 
-        // Add optional notes to audit data
+        // Notes are accepted by the API contract but are not persisted on NotificationAlert.
+        // Keep the metadata payload intact so navigation and rendering continue to work.
         if (!string.IsNullOrWhiteSpace(request.Notes))
         {
-            notification.PayloadData = request.Notes;
+            _logger.LogInformation(
+                "Acknowledgment notes were supplied for notification {NotificationId} by user {UserId} but were not persisted",
+                request.NotificationId,
+                request.AcknowledgedBy);
         }
 
         _unitOfWork.Repository<NotificationAlert>().Update(notification);
