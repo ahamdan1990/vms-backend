@@ -287,7 +287,6 @@ public class InvitationsController : BaseController
             ScheduledEndTime = updateDto.ScheduledEndTime,
             ExpectedVisitorCount = updateDto.ExpectedVisitorCount,
             SpecialInstructions = updateDto.SpecialInstructions,
-            RequiresApproval = updateDto.RequiresApproval,
             RequiresEscort = updateDto.RequiresEscort,
             RequiresBadge = updateDto.RequiresBadge,
             NeedsParking = updateDto.NeedsParking,
@@ -620,6 +619,112 @@ public class InvitationsController : BaseController
     }
 
     /// <summary>
+    /// Requests host consent for a late check-in on an expired invitation.
+    /// Records an event and notifies the host — does not change invitation status.
+    /// </summary>
+    /// <param name="id">Invitation ID</param>
+    /// <param name="dto">Optional notes from the receptionist</param>
+    /// <returns>Invitation with event recorded</returns>
+    [HttpPost("{id:int}/request-late-checkin")]
+    [Authorize(Policy = Permissions.CheckIn.Process)]
+    public async Task<IActionResult> RequestLateCheckIn(int id, [FromBody] LateCheckInRequestDto dto)
+    {
+        var command = new RequestLateCheckInCommand
+        {
+            InvitationId = id,
+            RequestedBy = GetCurrentUserId() ?? throw new UnauthorizedAccessException("User must be authenticated"),
+            Notes = dto.Notes
+        };
+
+        try
+        {
+            var result = await _mediator.Send(command);
+
+            // Notify the host via SignalR
+            try
+            {
+                await _hostHubContext.Clients.Group($"Host_{result.HostId}").SendAsync("LateCheckInRequested", new
+                {
+                    invitationId = result.Id,
+                    invitationNumber = result.InvitationNumber,
+                    visitorName = result.Visitor?.FullName ?? "Unknown Visitor",
+                    requestedByName = result.Host?.FullName,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to broadcast late check-in request via SignalR for invitation {InvitationId}", result.Id);
+            }
+
+            return SuccessResponse(result, "Late check-in consent request sent to host.");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequestResponse(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Performs a force check-in override for an expired invitation (admin/operator only).
+    /// </summary>
+    /// <param name="id">Invitation ID</param>
+    /// <param name="dto">Optional override notes</param>
+    /// <returns>Updated invitation</returns>
+    [HttpPost("{id:int}/override-checkin")]
+    [Authorize(Policy = Permissions.CheckIn.Override)]
+    public async Task<IActionResult> OverrideCheckIn(int id, [FromBody] LateCheckInRequestDto dto)
+    {
+        var command = new OverrideCheckInCommand
+        {
+            InvitationId = id,
+            OverriddenBy = GetCurrentUserId() ?? throw new UnauthorizedAccessException("User must be authenticated"),
+            Notes = dto.Notes
+        };
+
+        try
+        {
+            var result = await _mediator.Send(command);
+
+            // Broadcast override check-in via SignalR
+            try
+            {
+                var eventData = new
+                {
+                    invitationId = result.Id,
+                    visitorName = result.Visitor?.FullName ?? "Unknown Visitor",
+                    hostName = result.Host?.FullName ?? "Unknown Host",
+                    locationName = result.Location?.Name ?? "Unknown Location",
+                    checkedInAt = result.CheckedInAt,
+                    isOverride = true,
+                    timestamp = DateTime.UtcNow
+                };
+
+                if (result.HostId > 0)
+                    await _hostHubContext.Clients.Group($"Host_{result.HostId}").SendAsync("VisitorCheckIn", eventData);
+
+                await _operatorHubContext.Clients.Group("Operators").SendAsync("VisitorCheckIn", eventData);
+
+                await _adminHubContext.Clients.All.SendAsync("DashboardMetricsUpdated", new
+                {
+                    expectedVisitors = result.ExpectedVisitorCount,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to broadcast override check-in event via SignalR for invitation {InvitationId}", result.Id);
+            }
+
+            return SuccessResponse(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequestResponse(ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Gets QR code image for an invitation
     /// </summary>
     /// <param name="id">Invitation ID</param>
@@ -779,6 +884,15 @@ public class CheckOutInvitationDto
 {
     /// <summary>
     /// Check-out notes
+    /// </summary>
+    [MaxLength(500)]
+    public string? Notes { get; set; }
+}
+
+public class LateCheckInRequestDto
+{
+    /// <summary>
+    /// Optional notes explaining the late check-in request or override reason
     /// </summary>
     [MaxLength(500)]
     public string? Notes { get; set; }

@@ -89,7 +89,7 @@ public class CreateInvitationDto : IValidatableObject
     /// <summary>
     /// Whether badge printing is required
     /// </summary>
-    public bool RequiresBadge { get; set; } = true;
+    public bool RequiresBadge { get; set; } = false;
 
     /// <summary>
     /// Whether parking is needed

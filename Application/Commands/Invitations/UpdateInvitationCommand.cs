@@ -74,11 +74,6 @@ public class UpdateInvitationCommand : IRequest<InvitationDto>
     public string? SpecialInstructions { get; set; }
 
     /// <summary>
-    /// Whether pre-approval is required
-    /// </summary>
-    public bool RequiresApproval { get; set; } = true;
-
-    /// <summary>
     /// Whether escort is required
     /// </summary>
     public bool RequiresEscort { get; set; } = false;
@@ -86,7 +81,7 @@ public class UpdateInvitationCommand : IRequest<InvitationDto>
     /// <summary>
     /// Whether badge printing is required
     /// </summary>
-    public bool RequiresBadge { get; set; } = true;
+    public bool RequiresBadge { get; set; } = false;
 
     /// <summary>
     /// Whether parking is needed

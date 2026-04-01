@@ -34,6 +34,7 @@ public class ValidateCapacityQueryHandler : IRequestHandler<ValidateCapacityQuer
                 LocationId = request.LocationId,
                 TimeSlotId = request.TimeSlotId,
                 DateTime = request.DateTime,
+                EndDateTime = request.EndDateTime,
                 ExpectedVisitors = request.ExpectedVisitors,
                 IsVipRequest = request.IsVipRequest,
                 ExcludeInvitationId = request.ExcludeInvitationId

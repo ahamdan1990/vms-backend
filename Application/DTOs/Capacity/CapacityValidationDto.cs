@@ -18,10 +18,16 @@ public class CapacityValidationRequestDto
     public int? TimeSlotId { get; set; }
 
     /// <summary>
-    /// Date and time for the appointment
+    /// Date and time for the appointment (start)
     /// </summary>
     [Required]
     public DateTime DateTime { get; set; }
+
+    /// <summary>
+    /// End date and time for the appointment (optional).
+    /// When provided, the occupancy check uses range overlap instead of point-in-time.
+    /// </summary>
+    public DateTime? EndDateTime { get; set; }
 
     /// <summary>
     /// Number of expected visitors

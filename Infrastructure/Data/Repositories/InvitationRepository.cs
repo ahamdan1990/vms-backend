@@ -88,7 +88,7 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Repositories
         public async Task<List<Invitation>> GetByDateRangeAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
         {
             return await ApplyIncludes(_dbSet)
-                .Where(i => i.ScheduledStartTime >= startDate && i.ScheduledStartTime <= endDate)
+                .Where(i => i.ScheduledStartTime >= startDate && i.ScheduledStartTime < endDate)
                 .OrderBy(i => i.ScheduledStartTime)
                 .ToListAsync(cancellationToken);
         }

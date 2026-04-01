@@ -22,6 +22,7 @@ using System.Text.Json;
 using VisitorManagementSystem.Api.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using VisitorManagementSystem.Api.Infrastructure.Security.Authentication;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,7 +79,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false;
+    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
     options.SaveToken = true;
     
     // Configure token validation parameters
@@ -305,9 +306,38 @@ builder.Services.ConfigureSwagger();
 // Services are already registered through the main registration method
 builder.Services.ConfigureApplicationServices(builder.Configuration);
 
+// Configure forwarded headers — must be registered before builder.Build().
+// Allows UrlResolverService and scheme detection to work correctly when IIS
+// or any reverse proxy terminates TLS and forwards X-Forwarded-Proto/Host.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+    // Accept forwarded headers from any source (IIS loopback is not in KnownNetworks by default)
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+
+// Must be FIRST: reads X-Forwarded-Proto/Host/For from IIS/proxy so that
+// request.Scheme and request.Host reflect the real public values.
+app.UseForwardedHeaders();
+
+// Redirect HTTP → HTTPS in production. Development uses its own HTTPS setup.
+// /vms-cert.cer and /install-cert.ps1 are intentionally served over plain HTTP
+// so client machines can download and trust the certificate before HTTPS works.
+// A public certificate contains no secrets, so HTTP delivery is safe here.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseWhen(
+        ctx => !ctx.Request.Path.StartsWithSegments("/vms-cert.cer") &&
+               !ctx.Request.Path.StartsWithSegments("/install-cert.ps1"),
+        branch => branch.UseHttpsRedirection()
+    );
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -318,7 +348,8 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// Static files (for serving uploaded images)
+// Static files (for serving uploaded images and the React SPA)
+app.UseDefaultFiles();
 app.UseStaticFiles();
 
 // CORS middleware
@@ -377,6 +408,9 @@ app.MapHealthChecks("/health", new HealthCheckOptions
         await context.Response.WriteAsync(result);
     }
 });
+
+// SPA fallback — must be AFTER all API/hub/health routes
+app.MapFallbackToFile("index.html");
 
 // Initialize database
 using (var scope = app.Services.CreateScope())

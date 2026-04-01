@@ -105,7 +105,8 @@ public class UpdateInvitationCommandHandler : IRequestHandler<UpdateInvitationCo
                 invitation.ScheduledEndTime = request.ScheduledEndTime;
                 invitation.ExpectedVisitorCount = request.ExpectedVisitorCount;
                 invitation.SpecialInstructions = request.SpecialInstructions?.Trim();
-                invitation.RequiresApproval = request.RequiresApproval;
+                // RequiresApproval is determined by host settings at creation time
+                // and must not be overwritten on edit — omitted intentionally.
                 invitation.RequiresEscort = request.RequiresEscort;
                 invitation.RequiresBadge = request.RequiresBadge;
                 invitation.NeedsParking = request.NeedsParking;

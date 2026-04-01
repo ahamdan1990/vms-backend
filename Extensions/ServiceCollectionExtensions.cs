@@ -96,6 +96,7 @@ public static class ServiceCollectionExtensions
 
         // URL Resolver Service (dynamic server-independent URL generation)
         services.AddScoped<IUrlResolverService, UrlResolverService>();
+        services.AddScoped<ISystemTimeZoneService, SystemTimeZoneService>();
 
         // Auth services
         services.AddScoped<IAuthService, AuthService>();
@@ -243,8 +244,9 @@ public static class ServiceCollectionExtensions
         // Configure resilient cache options from appsettings
         services.Configure<ResilientCacheOptions>(configuration.GetSection(ResilientCacheOptions.SectionName));
 
-        // Get Redis connection string from environment or config
-        var redisConnection = Environment.GetEnvironmentVariable("REDIS_CONNECTION");
+        // Get Redis connection string from environment or config (appsettings ConnectionStrings:Redis)
+        var redisConnection = Environment.GetEnvironmentVariable("REDIS_CONNECTION")
+            ?? configuration.GetConnectionString("Redis");
         var hasRedisConfigured = !string.IsNullOrWhiteSpace(redisConnection);
 
         if (hasRedisConfigured)

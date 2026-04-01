@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Application.DTOs.Reports;
+using VisitorManagementSystem.Api.Application.Services.Common;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
@@ -12,13 +13,16 @@ namespace VisitorManagementSystem.Api.Application.Queries.Reports;
 public class GetVisitorStatisticsQueryHandler : IRequestHandler<GetVisitorStatisticsQuery, VisitorStatisticsReportDto>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISystemTimeZoneService _systemTimeZoneService;
     private readonly ILogger<GetVisitorStatisticsQueryHandler> _logger;
 
     public GetVisitorStatisticsQueryHandler(
         IUnitOfWork unitOfWork,
+        ISystemTimeZoneService systemTimeZoneService,
         ILogger<GetVisitorStatisticsQueryHandler> logger)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _systemTimeZoneService = systemTimeZoneService ?? throw new ArgumentNullException(nameof(systemTimeZoneService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -27,8 +31,10 @@ public class GetVisitorStatisticsQueryHandler : IRequestHandler<GetVisitorStatis
         try
         {
             var now = DateTime.UtcNow;
-            var startDate = request.StartDate ?? now.AddMonths(-1);
-            var endDate = request.EndDate ?? now;
+            var systemTimeZone = await _systemTimeZoneService.GetSystemTimeZoneAsync(cancellationToken);
+            var normalizedDateRange = await _systemTimeZoneService.GetUtcDateRangeAsync(request.StartDate, request.EndDate, cancellationToken);
+            var startDateUtc = normalizedDateRange.StartUtc ?? now.AddMonths(-1);
+            var endDateUtcExclusive = normalizedDateRange.EndUtcExclusive ?? now;
 
             var query = _unitOfWork.Invitations
                 .GetQueryable()
@@ -36,7 +42,10 @@ public class GetVisitorStatisticsQueryHandler : IRequestHandler<GetVisitorStatis
                 .Include(i => i.Host)
                 .Include(i => i.Location)
                 .Include(i => i.VisitPurpose)
-                .Where(i => !i.IsDeleted && i.ScheduledStartTime >= startDate && i.ScheduledStartTime <= endDate);
+                .Where(i =>
+                    !i.IsDeleted &&
+                    (i.CheckedInAt ?? i.ScheduledStartTime) >= startDateUtc &&
+                    (i.CheckedInAt ?? i.ScheduledStartTime) < endDateUtcExclusive);
 
             if (request.LocationId.HasValue)
             {
@@ -117,17 +126,22 @@ public class GetVisitorStatisticsQueryHandler : IRequestHandler<GetVisitorStatis
                 .ToList();
 
             // Time series data
-            var timeSeries = GenerateTimeSeries(invitations, startDate, endDate, request.GroupBy);
+            var timeSeries = GenerateTimeSeries(
+                invitations,
+                startDateUtc,
+                endDateUtcExclusive,
+                request.GroupBy,
+                systemTimeZone);
 
             _logger.LogInformation(
                 "Generated visitor statistics report: {TotalVisitors} visitors from {StartDate:yyyy-MM-dd} to {EndDate:yyyy-MM-dd}",
-                totalVisitors, startDate, endDate);
+                totalVisitors, startDateUtc, endDateUtcExclusive);
 
             return new VisitorStatisticsReportDto
             {
                 GeneratedAt = now,
-                StartDate = startDate,
-                EndDate = endDate,
+                StartDate = startDateUtc,
+                EndDate = endDateUtcExclusive.AddTicks(-1),
                 TotalVisitors = totalVisitors,
                 TotalCheckedIn = totalCheckedIn,
                 TotalCheckedOut = totalCheckedOut,
@@ -152,28 +166,32 @@ public class GetVisitorStatisticsQueryHandler : IRequestHandler<GetVisitorStatis
     private List<TimeSeriesDataPointDto> GenerateTimeSeries(
         List<Domain.Entities.Invitation> invitations,
         DateTime startDate,
-        DateTime endDate,
-        string groupBy)
+        DateTime endDateExclusive,
+        string groupBy,
+        TimeZoneInfo timeZone)
     {
         return groupBy?.ToLower() switch
         {
-            "weekly" => GenerateWeeklyTimeSeries(invitations, startDate, endDate),
-            "monthly" => GenerateMonthlyTimeSeries(invitations, startDate, endDate),
-            _ => GenerateDailyTimeSeries(invitations, startDate, endDate)
+            "weekly" => GenerateWeeklyTimeSeries(invitations, startDate, endDateExclusive, timeZone),
+            "monthly" => GenerateMonthlyTimeSeries(invitations, startDate, endDateExclusive, timeZone),
+            _ => GenerateDailyTimeSeries(invitations, startDate, endDateExclusive, timeZone)
         };
     }
 
     private List<TimeSeriesDataPointDto> GenerateDailyTimeSeries(
         List<Domain.Entities.Invitation> invitations,
         DateTime startDate,
-        DateTime endDate)
+        DateTime endDateExclusive,
+        TimeZoneInfo timeZone)
     {
         var grouped = invitations
-            .GroupBy(i => i.ScheduledStartTime.Date)
+            .GroupBy(i => GetSystemReportDate(i, timeZone).Date)
             .ToDictionary(g => g.Key, g => g.ToList());
 
+        var startLocalDate = GetSystemDate(startDate, timeZone);
+        var endLocalDate = GetSystemDate(endDateExclusive.AddTicks(-1), timeZone);
         var result = new List<TimeSeriesDataPointDto>();
-        for (var date = startDate.Date; date <= endDate.Date; date = date.AddDays(1))
+        for (var date = startLocalDate; date <= endLocalDate; date = date.AddDays(1))
         {
             var dayInvitations = grouped.GetValueOrDefault(date, new List<Domain.Entities.Invitation>());
             result.Add(new TimeSeriesDataPointDto
@@ -192,14 +210,17 @@ public class GetVisitorStatisticsQueryHandler : IRequestHandler<GetVisitorStatis
     private List<TimeSeriesDataPointDto> GenerateWeeklyTimeSeries(
         List<Domain.Entities.Invitation> invitations,
         DateTime startDate,
-        DateTime endDate)
+        DateTime endDateExclusive,
+        TimeZoneInfo timeZone)
     {
         var grouped = invitations
-            .GroupBy(i => GetWeekStartDate(i.ScheduledStartTime))
+            .GroupBy(i => GetWeekStartDate(GetSystemReportDate(i, timeZone)))
             .ToDictionary(g => g.Key, g => g.ToList());
 
+        var startLocalDate = GetSystemDate(startDate, timeZone);
+        var endLocalDate = GetSystemDate(endDateExclusive.AddTicks(-1), timeZone);
         var result = new List<TimeSeriesDataPointDto>();
-        for (var date = GetWeekStartDate(startDate); date <= endDate; date = date.AddDays(7))
+        for (var date = GetWeekStartDate(startLocalDate); date <= endLocalDate; date = date.AddDays(7))
         {
             var weekInvitations = grouped.GetValueOrDefault(date, new List<Domain.Entities.Invitation>());
             result.Add(new TimeSeriesDataPointDto
@@ -218,15 +239,22 @@ public class GetVisitorStatisticsQueryHandler : IRequestHandler<GetVisitorStatis
     private List<TimeSeriesDataPointDto> GenerateMonthlyTimeSeries(
         List<Domain.Entities.Invitation> invitations,
         DateTime startDate,
-        DateTime endDate)
+        DateTime endDateExclusive,
+        TimeZoneInfo timeZone)
     {
         var grouped = invitations
-            .GroupBy(i => new DateTime(i.ScheduledStartTime.Year, i.ScheduledStartTime.Month, 1))
+            .GroupBy(i =>
+            {
+                var reportDate = GetSystemReportDate(i, timeZone);
+                return new DateTime(reportDate.Year, reportDate.Month, 1);
+            })
             .ToDictionary(g => g.Key, g => g.ToList());
 
+        var startLocalDate = GetSystemDate(startDate, timeZone);
+        var endLocalDate = GetSystemDate(endDateExclusive.AddTicks(-1), timeZone);
         var result = new List<TimeSeriesDataPointDto>();
-        for (var date = new DateTime(startDate.Year, startDate.Month, 1);
-             date <= endDate;
+        for (var date = new DateTime(startLocalDate.Year, startLocalDate.Month, 1);
+             date <= endLocalDate;
              date = date.AddMonths(1))
         {
             var monthInvitations = grouped.GetValueOrDefault(date, new List<Domain.Entities.Invitation>());
@@ -248,5 +276,20 @@ public class GetVisitorStatisticsQueryHandler : IRequestHandler<GetVisitorStatis
         var dayOfWeek = (int)date.DayOfWeek;
         var daysToSubtract = dayOfWeek == 0 ? 6 : dayOfWeek - 1; // Start week on Monday
         return date.Date.AddDays(-daysToSubtract);
+    }
+
+    private static DateTime GetReportDate(Domain.Entities.Invitation invitation)
+    {
+        return invitation.CheckedInAt ?? invitation.ScheduledStartTime;
+    }
+
+    private DateTime GetSystemReportDate(Domain.Entities.Invitation invitation, TimeZoneInfo timeZone)
+    {
+        return _systemTimeZoneService.ConvertUtcToSystemTime(GetReportDate(invitation), timeZone);
+    }
+
+    private DateTime GetSystemDate(DateTime utcDateTime, TimeZoneInfo timeZone)
+    {
+        return _systemTimeZoneService.ConvertUtcToSystemTime(utcDateTime, timeZone).Date;
     }
 }

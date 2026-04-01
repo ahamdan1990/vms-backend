@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VisitorManagementSystem.Api.Application.Queries.Visitors;
 using VisitorManagementSystem.Api.Application.Queries.Invitations;
+using VisitorManagementSystem.Api.Application.Services.Common;
 using VisitorManagementSystem.Api.Controllers;
 using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -21,15 +22,18 @@ public class DashboardController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISystemTimeZoneService _systemTimeZoneService;
     private readonly ILogger<DashboardController> _logger;
 
     public DashboardController(
         IMediator mediator,
         IUnitOfWork unitOfWork,
+        ISystemTimeZoneService systemTimeZoneService,
         ILogger<DashboardController> logger)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _systemTimeZoneService = systemTimeZoneService ?? throw new ArgumentNullException(nameof(systemTimeZoneService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -46,9 +50,10 @@ public class DashboardController : BaseController
         {
             _logger.LogDebug("Fetching aggregated dashboard metrics");
 
-            // Get today's date range
-            var todayStart = DateTime.Today;
-            var todayEnd = todayStart.AddDays(1);
+            var systemTimeZone = await _systemTimeZoneService.GetSystemTimeZoneAsync(cancellationToken);
+            var systemToday = DateTime.SpecifyKind(
+                TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, systemTimeZone).Date,
+                DateTimeKind.Unspecified);
 
             // Get current user context for filtering
             var userId = GetCurrentUserId();
@@ -69,8 +74,8 @@ public class DashboardController : BaseController
 
             var todayInvitationStats = await _mediator.Send(new GetInvitationStatisticsQuery
             {
-                StartDate = todayStart,
-                EndDate = todayEnd,
+                StartDate = systemToday,
+                EndDate = systemToday,
                 UserId = userId,
                 UserPermissions = userPermissions
             }, cancellationToken);
@@ -105,6 +110,29 @@ public class DashboardController : BaseController
         {
             _logger.LogError(ex, "Error generating dashboard metrics");
             return BadRequestResponse("Failed to generate dashboard metrics", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Get visitors who both checked in and checked out during the current system day.
+    /// </summary>
+    [HttpGet("receptionist/completed-today")]
+    [Authorize(Policy = Permissions.Dashboard.ViewOperations)]
+    public async Task<IActionResult> GetCompletedTodayVisitors([FromQuery] int? locationId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var visitors = await _mediator.Send(new GetCompletedTodayInvitationsQuery
+            {
+                LocationId = locationId
+            }, cancellationToken);
+
+            return SuccessResponse(visitors);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving completed-today visitors for dashboard");
+            return BadRequestResponse("Failed to retrieve completed-today visitors", ex.Message);
         }
     }
 

@@ -619,7 +619,7 @@ public class VisitorsController : BaseController
     /// <param name="file">Photo file</param>
     /// <returns>Photo URL</returns>
     [HttpPost("{id}/photo")]
-    [Authorize(Policy = Permissions.Visitor.Update)]
+    [Authorize(Policy = Permissions.Visitor.ManagePhotos)]
     public async Task<IActionResult> UploadVisitorPhoto(int id, IFormFile file)
     {
         try

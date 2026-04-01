@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
 using VisitorManagementSystem.Api.Application.DTOs.Invitations;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
+using VisitorManagementSystem.Api.Application.Services.Common;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.Enums;
@@ -19,17 +20,20 @@ public class GetInvitationsQueryHandler : IRequestHandler<GetInvitationsQuery, P
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly ISystemTimeZoneService _systemTimeZoneService;
     private readonly ILogger<GetInvitationsQueryHandler> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     public GetInvitationsQueryHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
+        ISystemTimeZoneService systemTimeZoneService,
         ILogger<GetInvitationsQueryHandler> logger,
         IHttpContextAccessor httpContextAccessor)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _systemTimeZoneService = systemTimeZoneService;
         _logger = logger;
         _httpContextAccessor = httpContextAccessor;
     }
@@ -39,6 +43,10 @@ public class GetInvitationsQueryHandler : IRequestHandler<GetInvitationsQuery, P
         try
         {
             _logger.LogDebug("Processing get invitations query with filters");
+            var normalizedDateRange = await _systemTimeZoneService.GetUtcDateRangeAsync(
+                request.StartDate,
+                request.EndDate,
+                cancellationToken);
 
             // Use specific repository methods for common queries
             List<Invitation> allInvitations;
@@ -63,9 +71,12 @@ public class GetInvitationsQueryHandler : IRequestHandler<GetInvitationsQuery, P
             {
                 allInvitations = await _unitOfWork.Invitations.GetByVisitorIdAsync(request.VisitorId.Value, cancellationToken);
             }
-            else if (request.StartDate.HasValue && request.EndDate.HasValue)
+            else if (normalizedDateRange.StartUtc.HasValue && normalizedDateRange.EndUtcExclusive.HasValue)
             {
-                allInvitations = await _unitOfWork.Invitations.GetByDateRangeAsync(request.StartDate.Value, request.EndDate.Value, cancellationToken);
+                allInvitations = await _unitOfWork.Invitations.GetByDateRangeAsync(
+                    normalizedDateRange.StartUtc.Value,
+                    normalizedDateRange.EndUtcExclusive.Value,
+                    cancellationToken);
             }
             else if (request.Status.HasValue)
             {
@@ -85,7 +96,11 @@ public class GetInvitationsQueryHandler : IRequestHandler<GetInvitationsQuery, P
             }
 
             // Apply additional filters in memory (for complex combinations)
-            var filteredInvitations = ApplyAdditionalFilters(allInvitations, request);
+            var filteredInvitations = ApplyAdditionalFilters(
+                allInvitations,
+                request,
+                normalizedDateRange.StartUtc,
+                normalizedDateRange.EndUtcExclusive);
 
             // Apply role-based filtering (Operator sees only approved invitations)
             filteredInvitations = ApplyRoleBasedFiltering(filteredInvitations);
@@ -131,7 +146,11 @@ public class GetInvitationsQueryHandler : IRequestHandler<GetInvitationsQuery, P
         }
     }
 
-    private List<Invitation> ApplyAdditionalFilters(List<Invitation> invitations, GetInvitationsQuery request)
+    private List<Invitation> ApplyAdditionalFilters(
+        List<Invitation> invitations,
+        GetInvitationsQuery request,
+        DateTime? startDateUtc,
+        DateTime? endDateUtcExclusive)
     {
         var filtered = invitations.AsQueryable();
 
@@ -151,18 +170,14 @@ public class GetInvitationsQueryHandler : IRequestHandler<GetInvitationsQuery, P
             filtered = filtered.Where(i => i.LocationId == request.LocationId.Value);
         }
 
-        // Apply date filters if not already applied
-        if (!request.StartDate.HasValue && !request.EndDate.HasValue)
+        if (startDateUtc.HasValue)
         {
-            if (request.StartDate.HasValue && !request.HostId.HasValue && !request.VisitorId.HasValue && !request.Status.HasValue)
-            {
-                filtered = filtered.Where(i => i.ScheduledStartTime >= request.StartDate.Value);
-            }
+            filtered = filtered.Where(i => i.ScheduledStartTime >= startDateUtc.Value);
+        }
 
-            if (request.EndDate.HasValue && !request.HostId.HasValue && !request.VisitorId.HasValue && !request.Status.HasValue)
-            {
-                filtered = filtered.Where(i => i.ScheduledStartTime <= request.EndDate.Value);
-            }
+        if (endDateUtcExclusive.HasValue)
+        {
+            filtered = filtered.Where(i => i.ScheduledStartTime < endDateUtcExclusive.Value);
         }
 
         // Filter by delete status

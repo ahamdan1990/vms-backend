@@ -3,7 +3,6 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VisitorManagementSystem.Api.Infrastructure.Data;
 
@@ -12,11 +11,9 @@ using VisitorManagementSystem.Api.Infrastructure.Data;
 namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251106121504_fixLocationControllerNullReference")]
-    partial class fixLocationControllerNullReference
+    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -555,6 +552,168 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Company", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BlacklistReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("BlacklistedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("BlacklistedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ContactPersonName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int?>("EmployeeCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Industry")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsVerified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("LogoPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("TaxId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("VerifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("VerifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("VisitorCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("Website")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlacklistedBy");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Companies_Code_Unique")
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("IX_Company_CreatedBy");
+
+                    b.HasIndex("CreatedOn")
+                        .HasDatabaseName("IX_Company_CreatedOn");
+
+                    b.HasIndex("DeletedBy")
+                        .HasDatabaseName("IX_Company_DeletedBy");
+
+                    b.HasIndex("DisplayOrder")
+                        .HasDatabaseName("IX_Companies_DisplayOrder");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_Company_IsActive");
+
+                    b.HasIndex("IsDeleted")
+                        .HasDatabaseName("IX_Companies_IsDeleted");
+
+                    b.HasIndex("IsVerified")
+                        .HasDatabaseName("IX_Companies_IsVerified");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("IX_Company_ModifiedBy");
+
+                    b.HasIndex("Name")
+                        .HasDatabaseName("IX_Companies_Name");
+
+                    b.HasIndex("VerifiedBy");
+
+                    b.HasIndex("IsActive", "CreatedOn")
+                        .HasDatabaseName("IX_Company_IsActive_CreatedOn");
+
+                    b.HasIndex("IsDeleted", "DeletedOn")
+                        .HasDatabaseName("IX_Company_IsDeleted_DeletedOn");
+
+                    b.HasIndex("IsVerified", "IsDeleted")
+                        .HasDatabaseName("IX_Companies_IsVerified_IsDeleted");
+
+                    b.ToTable("Companies", (string)null);
+                });
+
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit", b =>
                 {
                     b.Property<int>("Id")
@@ -674,6 +833,139 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         .HasDatabaseName("IX_ConfigurationAudits_Category_Key");
 
                     b.ToTable("ConfigurationAudits", (string)null);
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Department", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("Budget")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("ManagerId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("ParentDepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Departments_Code_Unique")
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("IX_Department_CreatedBy");
+
+                    b.HasIndex("CreatedOn")
+                        .HasDatabaseName("IX_Department_CreatedOn");
+
+                    b.HasIndex("DeletedBy")
+                        .HasDatabaseName("IX_Department_DeletedBy");
+
+                    b.HasIndex("DisplayOrder")
+                        .HasDatabaseName("IX_Departments_DisplayOrder");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_Department_IsActive");
+
+                    b.HasIndex("IsDeleted")
+                        .HasDatabaseName("IX_Departments_IsDeleted");
+
+                    b.HasIndex("ManagerId")
+                        .HasDatabaseName("IX_Departments_ManagerId");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("IX_Department_ModifiedBy");
+
+                    b.HasIndex("Name")
+                        .HasDatabaseName("IX_Departments_Name");
+
+                    b.HasIndex("ParentDepartmentId")
+                        .HasDatabaseName("IX_Departments_ParentDepartmentId");
+
+                    b.HasIndex("IsActive", "CreatedOn")
+                        .HasDatabaseName("IX_Department_IsActive_CreatedOn");
+
+                    b.HasIndex("IsDeleted", "DeletedOn")
+                        .HasDatabaseName("IX_Department_IsDeleted_DeletedOn");
+
+                    b.HasIndex("ParentDepartmentId", "IsDeleted")
+                        .HasDatabaseName("IX_Departments_ParentDepartmentId_IsDeleted");
+
+                    b.ToTable("Departments", (string)null);
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.EmergencyContact", b =>
@@ -2574,6 +2866,19 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EmailVerificationToken")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("EmailVerificationTokenExpiry")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("EmailVerifiedOn")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("EmployeeId")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -2598,6 +2903,12 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<bool>("IsEmailVerified")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsLdapUser")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsLockedOut")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -2614,6 +2925,9 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         .HasColumnType("nvarchar(10)")
                         .HasDefaultValue("en-US");
 
+                    b.Property<DateTime?>("LastLdapSyncOn")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("LastLoginDate")
                         .HasColumnType("datetime2");
 
@@ -2621,6 +2935,10 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("LdapDistinguishedName")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime?>("LockoutEnd")
                         .HasColumnType("datetime2");
@@ -2657,6 +2975,9 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.Property<string>("ProfilePhotoPath")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool?>("RequiresApprovalOverride")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Role")
                         .IsRequired()
@@ -2708,6 +3029,8 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
 
                     b.HasIndex("Department")
                         .HasDatabaseName("IX_Users_Department");
+
+                    b.HasIndex("DepartmentId");
 
                     b.HasIndex("EmployeeId")
                         .IsUnique()
@@ -2914,6 +3237,9 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("CompanyId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
@@ -3040,6 +3366,9 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
 
                     b.HasIndex("Company")
                         .HasDatabaseName("IX_Visitors_Company");
+
+                    b.HasIndex("CompanyId")
+                        .HasDatabaseName("IX_Visitors_CompanyId");
 
                     b.HasIndex("CreatedBy")
                         .HasDatabaseName("IX_Visitor_CreatedBy");
@@ -3503,6 +3832,186 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.Navigation("ModifiedByUser");
                 });
 
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Company", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("BlacklistedBy")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .HasConstraintName("FK_Companies_BlacklistedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Company_CreatedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "DeletedByUser")
+                        .WithMany()
+                        .HasForeignKey("DeletedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Company_DeletedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Company_ModifiedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("VerifiedBy")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .HasConstraintName("FK_Companies_VerifiedBy_User");
+
+                    b.OwnsOne("VisitorManagementSystem.Api.Domain.ValueObjects.Address", "Address", b1 =>
+                        {
+                            b1.Property<int>("CompanyId")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("AddressType")
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)")
+                                .HasColumnName("CompanyAddressType");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)")
+                                .HasColumnName("CompanyAddressCity");
+
+                            b1.Property<string>("Country")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)")
+                                .HasColumnName("CompanyAddressCountry");
+
+                            b1.Property<bool?>("IsValidated")
+                                .HasColumnType("bit")
+                                .HasColumnName("CompanyAddressIsValidated");
+
+                            b1.Property<double?>("Latitude")
+                                .HasColumnType("float")
+                                .HasColumnName("CompanyAddressLatitude");
+
+                            b1.Property<double?>("Longitude")
+                                .HasColumnType("float")
+                                .HasColumnName("CompanyAddressLongitude");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)")
+                                .HasColumnName("CompanyAddressPostalCode");
+
+                            b1.Property<string>("State")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)")
+                                .HasColumnName("CompanyAddressState");
+
+                            b1.Property<string>("Street1")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
+                                .HasColumnName("CompanyAddressStreet1");
+
+                            b1.Property<string>("Street2")
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
+                                .HasColumnName("CompanyAddressStreet2");
+
+                            b1.HasKey("CompanyId");
+
+                            b1.ToTable("Companies");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CompanyId");
+                        });
+
+                    b.OwnsOne("VisitorManagementSystem.Api.Domain.ValueObjects.Email", "Email", b1 =>
+                        {
+                            b1.Property<int>("CompanyId")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(256)
+                                .HasColumnType("nvarchar(256)")
+                                .HasColumnName("ContactEmail");
+
+                            b1.HasKey("CompanyId");
+
+                            b1.ToTable("Companies");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CompanyId");
+                        });
+
+                    b.OwnsOne("VisitorManagementSystem.Api.Domain.ValueObjects.PhoneNumber", "PhoneNumber", b1 =>
+                        {
+                            b1.Property<int>("CompanyId")
+                                .HasColumnType("int");
+
+                            b1.Property<string>("AreaCode")
+                                .HasMaxLength(4)
+                                .HasColumnType("nvarchar(4)")
+                                .HasColumnName("ContactPhoneAreaCode");
+
+                            b1.Property<string>("CountryCode")
+                                .HasMaxLength(4)
+                                .HasColumnType("nvarchar(4)")
+                                .HasColumnName("ContactPhoneCountryCode");
+
+                            b1.Property<string>("DigitsOnly")
+                                .IsRequired()
+                                .HasMaxLength(15)
+                                .HasColumnType("nvarchar(15)")
+                                .HasColumnName("ContactPhoneDigitsOnly");
+
+                            b1.Property<string>("FormattedValue")
+                                .IsRequired()
+                                .HasMaxLength(25)
+                                .HasColumnType("nvarchar(25)")
+                                .HasColumnName("ContactPhoneFormatted");
+
+                            b1.Property<bool>("IsVerified")
+                                .HasColumnType("bit")
+                                .HasColumnName("ContactPhoneIsVerified");
+
+                            b1.Property<string>("PhoneType")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("nvarchar(10)")
+                                .HasColumnName("ContactPhoneType");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)")
+                                .HasColumnName("ContactPhoneRaw");
+
+                            b1.HasKey("CompanyId");
+
+                            b1.ToTable("Companies");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CompanyId");
+                        });
+
+                    b.Navigation("Address");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("DeletedByUser");
+
+                    b.Navigation("Email");
+
+                    b.Navigation("ModifiedByUser");
+
+                    b.Navigation("PhoneNumber");
+                });
+
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.ConfigurationAudit", b =>
                 {
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ApprovedByUser")
@@ -3533,6 +4042,49 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.Navigation("ModifiedByUser");
 
                     b.Navigation("SystemConfiguration");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Department", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Department_CreatedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "DeletedByUser")
+                        .WithMany()
+                        .HasForeignKey("DeletedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Department_DeletedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "Manager")
+                        .WithMany()
+                        .HasForeignKey("ManagerId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Departments_Manager_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Department_ModifiedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Department", "ParentDepartment")
+                        .WithMany("ChildDepartments")
+                        .HasForeignKey("ParentDepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Departments_ParentDepartment");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("DeletedByUser");
+
+                    b.Navigation("Manager");
+
+                    b.Navigation("ModifiedByUser");
+
+                    b.Navigation("ParentDepartment");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.EmergencyContact", b =>
@@ -4280,6 +4832,12 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         .HasForeignKey("DeletedBy")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Department", "DepartmentEntity")
+                        .WithMany("Users")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Users_Department");
+
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
                         .WithMany()
                         .HasForeignKey("ModifiedBy")
@@ -4432,6 +4990,8 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
 
                     b.Navigation("DeletedByUser");
 
+                    b.Navigation("DepartmentEntity");
+
                     b.Navigation("Email")
                         .IsRequired();
 
@@ -4473,6 +5033,12 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("BlacklistedBy")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Company", "CompanyEntity")
+                        .WithMany("Visitors")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Visitors_Company");
 
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
                         .WithMany()
@@ -4639,6 +5205,8 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
 
                     b.Navigation("BlacklistedByUser");
 
+                    b.Navigation("CompanyEntity");
+
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("DefaultVisitPurpose");
@@ -4745,6 +5313,18 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.Navigation("ModifiedByUser");
 
                     b.Navigation("Visitor");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Company", b =>
+                {
+                    b.Navigation("Visitors");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Department", b =>
+                {
+                    b.Navigation("ChildDepartments");
+
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Invitation", b =>

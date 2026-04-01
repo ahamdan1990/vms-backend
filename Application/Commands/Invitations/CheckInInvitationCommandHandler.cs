@@ -49,6 +49,19 @@ namespace VisitorManagementSystem.Api.Application.Commands.Invitations
                     throw new InvalidOperationException($"Operator with ID '{request.CheckedInBy}' not found.");
                 }
 
+                // Duplicate active-visit check — a visitor can only be checked in to one visit at a time
+                var activeVisits = await _unitOfWork.Invitations
+                    .GetByVisitorIdAndStatusAsync(invitation.VisitorId, Domain.Enums.InvitationStatus.Active, cancellationToken);
+                var otherActiveVisit = activeVisits.FirstOrDefault(v => v.Id != invitation.Id);
+                if (otherActiveVisit != null)
+                {
+                    var hostName = otherActiveVisit.Host?.FullName ?? "unknown host";
+                    throw new InvalidOperationException(
+                        $"Visitor '{invitation.Visitor?.FullName}' is already checked in " +
+                        $"(visit #{otherActiveVisit.InvitationNumber}, host: {hostName}). " +
+                        "Please check them out before starting a new visit.");
+                }
+
                 // Blacklist check — block check-in and alert security
                 if (invitation.Visitor?.IsBlacklisted == true)
                 {

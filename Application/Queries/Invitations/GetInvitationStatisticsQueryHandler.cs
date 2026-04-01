@@ -1,4 +1,5 @@
 using MediatR;
+using VisitorManagementSystem.Api.Application.Services.Common;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using DomainPermissions = VisitorManagementSystem.Api.Domain.Constants.Permissions;
 
@@ -10,13 +11,16 @@ namespace VisitorManagementSystem.Api.Application.Queries.Invitations;
 public class GetInvitationStatisticsQueryHandler : IRequestHandler<GetInvitationStatisticsQuery, InvitationStatistics>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISystemTimeZoneService _systemTimeZoneService;
     private readonly ILogger<GetInvitationStatisticsQueryHandler> _logger;
 
     public GetInvitationStatisticsQueryHandler(
         IUnitOfWork unitOfWork,
+        ISystemTimeZoneService systemTimeZoneService,
         ILogger<GetInvitationStatisticsQueryHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _systemTimeZoneService = systemTimeZoneService;
         _logger = logger;
     }
 
@@ -78,9 +82,14 @@ public class GetInvitationStatisticsQueryHandler : IRequestHandler<GetInvitation
 
     private async Task<InvitationStatistics> GetFilteredStatisticsAsync(GetInvitationStatisticsQuery request, int? hostId, CancellationToken cancellationToken)
     {
+        var normalizedDateRange = await _systemTimeZoneService.GetUtcDateRangeAsync(
+            request.StartDate,
+            request.EndDate,
+            cancellationToken);
+
         // Use more reasonable defaults for date range
-        var startDate = request.StartDate ?? DateTime.UtcNow.AddYears(-10);
-        var endDate = request.EndDate ?? DateTime.UtcNow.AddYears(1);
+        var startDate = normalizedDateRange.StartUtc ?? DateTime.UtcNow.AddYears(-10);
+        var endDate = normalizedDateRange.EndUtcExclusive ?? DateTime.UtcNow.AddYears(1);
 
         _logger.LogDebug("GetFilteredStatisticsAsync: startDate={StartDate}, endDate={EndDate}, hostId={HostId}",
             startDate, endDate, hostId);

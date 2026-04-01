@@ -98,7 +98,7 @@ public class Invitation : SoftDeleteEntity
     /// <summary>
     /// Whether badge printing is required
     /// </summary>
-    public bool RequiresBadge { get; set; } = true;
+    public bool RequiresBadge { get; set; } = false;
 
     /// <summary>
     /// Whether parking is needed
@@ -370,6 +370,22 @@ public class Invitation : SoftDeleteEntity
             throw new InvalidOperationException(
                 $"This invitation has expired. It was scheduled to end on {localScheduledTime:MM/dd/yyyy 'at' h:mm tt}.");
         }
+
+        Status = InvitationStatus.Active;
+        CheckedInAt = DateTime.UtcNow;
+        UpdateModifiedBy(checkedInBy);
+    }
+
+    /// <summary>
+    /// Force check-in override for expired invitations (admin/operator use only).
+    /// Bypasses status and timing guards.
+    /// </summary>
+    /// <param name="checkedInBy">User processing the override</param>
+    public void ForceCheckIn(int checkedInBy)
+    {
+        if (Status != InvitationStatus.Expired && Status != InvitationStatus.Approved)
+            throw new InvalidOperationException(
+                $"Force check-in override is only allowed for expired or approved invitations. Current status: {Status}.");
 
         Status = InvitationStatus.Active;
         CheckedInAt = DateTime.UtcNow;

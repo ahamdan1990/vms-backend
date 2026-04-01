@@ -40,6 +40,7 @@ public class CapacityController : BaseController
         [FromQuery] int? locationId = null,
         [FromQuery] int? timeSlotId = null,
         [FromQuery, Required] DateTime dateTime = default,
+        [FromQuery] DateTime? endDateTime = null,
         [FromQuery, Range(1, 1000)] int expectedVisitors = 1,
         [FromQuery] bool isVipRequest = false,
         [FromQuery] int? excludeInvitationId = null)
@@ -59,6 +60,7 @@ public class CapacityController : BaseController
             LocationId = locationId,
             TimeSlotId = timeSlotId,
             DateTime = dateTime,
+            EndDateTime = endDateTime,
             ExpectedVisitors = expectedVisitors,
             IsVipRequest = isVipRequest,
             ExcludeInvitationId = excludeInvitationId

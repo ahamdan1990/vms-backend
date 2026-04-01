@@ -133,19 +133,32 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
             }
 
             // Determine effective approval requirement:
-            // 1. Per-host override (set by admin) takes highest precedence
-            // 2. Global system setting (Invitations.RequireApprovalByDefault)
-            // 3. Default: approval required
-            var globalApprovalSetting = await _unitOfWork.SystemConfigurations
-                .GetByCategoryAndKeyAsync("Invitations", "RequireApprovalByDefault", cancellationToken);
-            var globalRequiresApproval = globalApprovalSetting == null ||
-                !bool.TryParse(globalApprovalSetting.Value, out var parsedGlobal) || parsedGlobal;
+            // Walk-in visitors are physically present at the reception desk —
+            // approval is implicit and they must never be held in Submitted status.
+            // For all other types:
+            //   1. Per-host override (set by admin) takes highest precedence
+            //   2. Global system setting (Invitations.RequireApprovalByDefault)
+            //   3. Default: approval required
+            bool effectiveRequiresApproval;
+            if (request.Type == InvitationType.WalkIn)
+            {
+                effectiveRequiresApproval = false;
+                _logger.LogDebug("Walk-in invitation for host {HostId}: approval bypassed (visitor is physically present)",
+                    host.Id);
+            }
+            else
+            {
+                var globalApprovalSetting = await _unitOfWork.SystemConfigurations
+                    .GetByCategoryAndKeyAsync("Invitations", "RequireApprovalByDefault", cancellationToken);
+                var globalRequiresApproval = globalApprovalSetting == null ||
+                    !bool.TryParse(globalApprovalSetting.Value, out var parsedGlobal) || parsedGlobal;
 
-            var effectiveRequiresApproval = host.RequiresApprovalOverride ?? globalRequiresApproval;
+                effectiveRequiresApproval = host.RequiresApprovalOverride ?? globalRequiresApproval;
 
-            _logger.LogDebug("Effective approval requirement for host {HostId}: {RequiresApproval} " +
-                "(override: {Override}, global: {Global})",
-                host.Id, effectiveRequiresApproval, host.RequiresApprovalOverride, globalRequiresApproval);
+                _logger.LogDebug("Effective approval requirement for host {HostId}: {RequiresApproval} " +
+                    "(override: {Override}, global: {Global})",
+                    host.Id, effectiveRequiresApproval, host.RequiresApprovalOverride, globalRequiresApproval);
+            }
 
             // Ensure mandatory fields with fallback or error
             var subject = request.Subject?.Trim() ?? throw new InvalidOperationException("Subject is required.");
@@ -192,8 +205,8 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                 ExpectedVisitorCount = request.ExpectedVisitorCount,
                 SpecialInstructions = specialInstructions,
                 RequiresApproval = effectiveRequiresApproval,
-                RequiresEscort = request.RequiresEscort || (template?.DefaultRequiresEscort ?? false),
-                RequiresBadge = request.RequiresBadge || (template?.DefaultRequiresBadge ?? false),
+                RequiresEscort = request.RequiresEscort,
+                RequiresBadge = request.RequiresBadge,
                 NeedsParking = request.NeedsParking,
                 ParkingInstructions = request.ParkingInstructions?.Trim(),
                 Status = effectiveRequiresApproval ? InvitationStatus.Submitted : InvitationStatus.Approved
@@ -290,6 +303,9 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                 // Send notifications after successful creation
                 await SendInvitationNotificationsAsync(invitation, host, creator, visitor, effectiveRequiresApproval, cancellationToken);
 
+                // Warn the creator if the host is currently busy with another active visitor
+                await NotifyIfHostIsBusyAsync(invitation, host, creator, cancellationToken);
+
                 _logger.LogInformation("Invitation created successfully: {InvitationId} ({InvitationNumber}) for visitor {VisitorId} by {CreatedBy}",
                     invitation.Id, invitation.InvitationNumber, request.VisitorId, request.CreatedBy);
 
@@ -339,6 +355,53 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
     /// <summary>
     /// Send notifications for invitation creation
     /// </summary>
+    /// <summary>
+    /// Notifies the invitation creator when the assigned host currently has active (checked-in) visitors.
+    /// </summary>
+    private async Task NotifyIfHostIsBusyAsync(Invitation invitation, User host, User creator, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var hostInvitations = await _unitOfWork.Invitations.GetByHostIdAsync(host.Id, cancellationToken);
+            var activeHostVisits = hostInvitations
+                .Where(i => i.Status == Domain.Enums.InvitationStatus.Active && i.Id != invitation.Id)
+                .ToList();
+
+            if (!activeHostVisits.Any())
+                return;
+
+            var activeVisitorNames = activeHostVisits
+                .Select(i => i.Visitor?.FullName ?? "Unknown")
+                .Distinct()
+                .ToList();
+
+            var visitorList = string.Join(", ", activeVisitorNames);
+            var message = $"Note: {host.FullName} is currently with {activeHostVisits.Count} active visitor(s): {visitorList}. " +
+                          "They may not be immediately available.";
+
+            // Notify the creator (receptionist)
+            if (creator.Id != host.Id)
+            {
+                await _notificationService.NotifyUserAsync(
+                    creator.Id,
+                    "Host Currently Busy",
+                    message,
+                    NotificationAlertType.SystemAlert,
+                    AlertPriority.Medium,
+                    new { HostId = host.Id, HostName = host.FullName, ActiveVisitCount = activeHostVisits.Count },
+                    cancellationToken);
+            }
+
+            _logger.LogInformation("Host {HostId} has {Count} active visit(s) when new invitation {InvitationId} was created",
+                host.Id, activeHostVisits.Count, invitation.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not check host busy status for host {HostId}", host.Id);
+            // Non-critical — don't fail the invitation creation
+        }
+    }
+
     private async Task SendInvitationNotificationsAsync(Invitation invitation, User host, User creator, Visitor visitor,
         bool requiresApproval, CancellationToken cancellationToken)
     {
@@ -388,7 +451,8 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                     NotificationAlertType.InvitationCreated,
                     AlertPriority.Medium,
                     notificationData,
-                    cancellationToken);
+                    cancellationToken,
+                    excludedUserIds: new[] { host.Id });
 
                 var adminRecipients = await GetActiveUsersByRoleAsync(UserRole.Administrator, cancellationToken);
                 await NotifyUsersAsync(
@@ -399,7 +463,8 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                     requiresApproval ? NotificationAlertType.InvitationPendingApproval : NotificationAlertType.InvitationCreated,
                     AlertPriority.Medium,
                     notificationData,
-                    cancellationToken);
+                    cancellationToken,
+                    excludedUserIds: new[] { host.Id });
 
                 _logger.LogInformation("Host-created invitation notifications sent for invitation {InvitationId}", invitation.Id);
                 return;
@@ -426,7 +491,8 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                     requiresApproval ? NotificationAlertType.InvitationPendingApproval : NotificationAlertType.InvitationCreated,
                     AlertPriority.Medium,
                     notificationData,
-                    cancellationToken);
+                    cancellationToken,
+                    excludedUserIds: new[] { host.Id });
 
                 await SendNotificationEmailsAsync(
                     new[] { host },
@@ -437,7 +503,7 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                     cancellationToken);
 
                 await SendNotificationEmailsAsync(
-                    adminRecipients,
+                    adminRecipients.Where(admin => admin.Id != host.Id),
                     requiresApproval ? "New invitation pending approval" : (isWalkIn ? "Receptionist registered walk-in" : "Receptionist created invitation"),
                     $"{creator.FullName} created a {entityLabel} for {visitor.FullName} and assigned it to {host.FullName}.{statusNote}\n" +
                     $"Invitation Number: {invitation.InvitationNumber}\n" +
@@ -458,7 +524,8 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                     NotificationAlertType.InvitationPendingApproval,
                     AlertPriority.Medium,
                     notificationData,
-                    cancellationToken);
+                    cancellationToken,
+                    excludedUserIds: new[] { host.Id });
             }
 
             await _notificationService.NotifyUserAsync(
@@ -491,10 +558,13 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
         NotificationAlertType type,
         AlertPriority priority,
         object data,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IEnumerable<int>? excludedUserIds = null)
     {
+        var excludedRecipientIds = excludedUserIds?.ToHashSet() ?? new HashSet<int>();
+
         foreach (var recipient in recipients
-                     .Where(u => u.Id > 0)
+                     .Where(u => u.Id > 0 && !excludedRecipientIds.Contains(u.Id))
                      .GroupBy(u => u.Id)
                      .Select(group => group.First()))
         {

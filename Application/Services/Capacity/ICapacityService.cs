@@ -25,9 +25,10 @@ public interface ICapacityService
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Current occupancy count</returns>
     Task<int> GetCurrentOccupancyAsync(
-        DateTime dateTime, 
-        int? locationId = null, 
-        CancellationToken cancellationToken = default);
+        DateTime dateTime,
+        int? locationId = null,
+        CancellationToken cancellationToken = default,
+        DateTime? endDateTime = null);
 
     /// <summary>
     /// Gets maximum capacity for a specific date/time/location

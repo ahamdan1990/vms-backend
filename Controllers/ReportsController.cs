@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using VisitorManagementSystem.Api.Application.DTOs.Reports;
 using VisitorManagementSystem.Api.Application.Queries.Reports;
+using VisitorManagementSystem.Api.Application.Services.Common;
 using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Domain.Enums;
 
@@ -20,11 +21,16 @@ namespace VisitorManagementSystem.Api.Controllers;
 public class ReportsController : BaseController
 {
     private readonly IMediator _mediator;
+    private readonly ISystemTimeZoneService _systemTimeZoneService;
     private readonly ILogger<ReportsController> _logger;
 
-    public ReportsController(IMediator mediator, ILogger<ReportsController> logger)
+    public ReportsController(
+        IMediator mediator,
+        ISystemTimeZoneService systemTimeZoneService,
+        ILogger<ReportsController> logger)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+        _systemTimeZoneService = systemTimeZoneService ?? throw new ArgumentNullException(nameof(systemTimeZoneService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -54,6 +60,7 @@ public class ReportsController : BaseController
     [Authorize(Policy = "Permissions.Any.Report.Export,Emergency.Export")]
     public async Task<IActionResult> ExportInBuildingReport(
         [FromQuery] int? locationId = null,
+        [FromQuery] string? timeZone = null,
         [FromQuery] string format = "csv")
     {
         if (!string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
@@ -67,7 +74,8 @@ public class ReportsController : BaseController
         };
 
         var report = await _mediator.Send(query);
-        var csvBytes = GenerateCsv(report);
+        var exportTimeZone = await ResolveExportTimeZoneAsync(timeZone);
+        var csvBytes = GenerateCsv(report, exportTimeZone);
 
         var safeLocationName = string.IsNullOrWhiteSpace(report.LocationName)
             ? "all"
@@ -81,10 +89,10 @@ public class ReportsController : BaseController
         return File(csvBytes, "text/csv", fileName);
     }
 
-    private static byte[] GenerateCsv(WhoIsInBuildingReportDto report)
+    private static byte[] GenerateCsv(WhoIsInBuildingReportDto report, TimeZoneInfo timeZone)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("Visitor Name,Company,Visitor Phone,Visitor Email,Host Name,Host Department,Host Email,Host Phone,Location,Checked In At,Expected Checkout,Minutes On Site,Status,Overdue");
+        builder.AppendLine($"Visitor Name,Company,Visitor Phone,Visitor Email,Host Name,Host Department,Host Email,Host Phone,Location,Checked In At ({timeZone.Id}),Expected Checkout ({timeZone.Id}),Minutes On Site,Status,Overdue");
 
         foreach (var occupant in report.Occupants.OrderBy(o => o.CheckedInAt ?? DateTime.MaxValue))
         {
@@ -98,8 +106,8 @@ public class ReportsController : BaseController
                 Escape(occupant.HostEmail),
                 Escape(occupant.HostPhone),
                 Escape(occupant.LocationName),
-                Escape(FormatDate(occupant.CheckedInAt)),
-                Escape(FormatDate(occupant.ScheduledEndTime)),
+                Escape(FormatDate(occupant.CheckedInAt, timeZone)),
+                Escape(FormatDate(occupant.ScheduledEndTime, timeZone)),
                 occupant.MinutesOnSite.ToString(CultureInfo.InvariantCulture),
                 Escape(occupant.Status),
                 occupant.IsOverdue ? "Yes" : "No"));
@@ -108,9 +116,16 @@ public class ReportsController : BaseController
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    private static string FormatDate(DateTime? dateTime)
+    private static string FormatDate(DateTime? dateTime, TimeZoneInfo timeZone)
     {
-        return dateTime?.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) ?? string.Empty;
+        if (!dateTime.HasValue)
+        {
+            return string.Empty;
+        }
+
+        var utcDateTime = EnsureUtc(dateTime.Value);
+        var localDateTime = TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, timeZone);
+        return localDateTime.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
     }
 
     private static string Escape(string? value)
@@ -194,6 +209,7 @@ public class ReportsController : BaseController
         [FromQuery] bool? overdueOnly = null,
         [FromQuery] string sortBy = "CheckedInAt",
         [FromQuery] string sortDirection = "desc",
+        [FromQuery] string? timeZone = null,
         [FromQuery] string format = "csv")
     {
         if (!string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
@@ -222,7 +238,8 @@ public class ReportsController : BaseController
         };
 
         var report = await _mediator.Send(query);
-        var csvBytes = GenerateComprehensiveCsv(report);
+        var exportTimeZone = await ResolveExportTimeZoneAsync(timeZone);
+        var csvBytes = GenerateComprehensiveCsv(report, exportTimeZone);
 
         var fileName = $"visitor-report_{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv";
 
@@ -269,6 +286,7 @@ public class ReportsController : BaseController
         [FromQuery] DateTime? endDate = null,
         [FromQuery] int? locationId = null,
         [FromQuery] string groupBy = "daily",
+        [FromQuery] string? timeZone = null,
         [FromQuery] string format = "csv")
     {
         if (!string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
@@ -285,7 +303,8 @@ public class ReportsController : BaseController
         };
 
         var statistics = await _mediator.Send(query);
-        var csvBytes = GenerateStatisticsCsv(statistics);
+        var exportTimeZone = await ResolveExportTimeZoneAsync(timeZone);
+        var csvBytes = GenerateStatisticsCsv(statistics, exportTimeZone);
 
         var fileName = $"visitor-statistics_{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv";
 
@@ -294,10 +313,10 @@ public class ReportsController : BaseController
         return File(csvBytes, "text/csv", fileName);
     }
 
-    private static byte[] GenerateComprehensiveCsv(ComprehensiveVisitorReportDto report)
+    private static byte[] GenerateComprehensiveCsv(ComprehensiveVisitorReportDto report, TimeZoneInfo timeZone)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("Invitation ID,Visitor Name,Company,Email,Phone,Host Name,Host Department,Host Email,Host Phone,Location,Visit Purpose,Scheduled Start,Scheduled End,Checked In,Checked Out,Minutes On Site,Status,Overdue,Notes");
+        builder.AppendLine($"Invitation ID,Visitor Name,Company,Email,Phone,Host Name,Host Department,Host Email,Host Phone,Location,Visit Purpose,Scheduled Start ({timeZone.Id}),Scheduled End ({timeZone.Id}),Checked In ({timeZone.Id}),Checked Out ({timeZone.Id}),Minutes On Site,Status,Overdue,Notes");
 
         foreach (var visitor in report.Visitors)
         {
@@ -313,10 +332,10 @@ public class ReportsController : BaseController
                 Escape(visitor.HostPhone),
                 Escape(visitor.LocationName),
                 Escape(visitor.VisitPurpose),
-                Escape(FormatDate(visitor.ScheduledStartTime)),
-                Escape(FormatDate(visitor.ScheduledEndTime)),
-                Escape(FormatDate(visitor.CheckedInAt)),
-                Escape(FormatDate(visitor.CheckedOutAt)),
+                Escape(FormatDate(visitor.ScheduledStartTime, timeZone)),
+                Escape(FormatDate(visitor.ScheduledEndTime, timeZone)),
+                Escape(FormatDate(visitor.CheckedInAt, timeZone)),
+                Escape(FormatDate(visitor.CheckedOutAt, timeZone)),
                 visitor.MinutesOnSite.ToString(CultureInfo.InvariantCulture),
                 Escape(visitor.Status),
                 visitor.IsOverdue ? "Yes" : "No",
@@ -326,14 +345,14 @@ public class ReportsController : BaseController
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    private static byte[] GenerateStatisticsCsv(VisitorStatisticsReportDto statistics)
+    private static byte[] GenerateStatisticsCsv(VisitorStatisticsReportDto statistics, TimeZoneInfo timeZone)
     {
         var builder = new StringBuilder();
 
         // Summary section
         builder.AppendLine("VISITOR STATISTICS SUMMARY");
-        builder.AppendLine($"Generated,{FormatDate(statistics.GeneratedAt)}");
-        builder.AppendLine($"Period,{statistics.StartDate:yyyy-MM-dd} to {statistics.EndDate:yyyy-MM-dd}");
+        builder.AppendLine($"Generated ({timeZone.Id}),{FormatDate(statistics.GeneratedAt, timeZone)}");
+        builder.AppendLine($"Period ({timeZone.Id}),{FormatDate(statistics.StartDate, timeZone)} to {FormatDate(statistics.EndDate, timeZone)}");
         builder.AppendLine($"Total Visitors,{statistics.TotalVisitors}");
         builder.AppendLine($"Total Checked In,{statistics.TotalCheckedIn}");
         builder.AppendLine($"Total Checked Out,{statistics.TotalCheckedOut}");
@@ -388,5 +407,24 @@ public class ReportsController : BaseController
         }
 
         return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    private static DateTime EnsureUtc(DateTime dateTime)
+    {
+        return dateTime.Kind switch
+        {
+            DateTimeKind.Utc => dateTime,
+            DateTimeKind.Local => dateTime.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(dateTime, DateTimeKind.Utc)
+        };
+    }
+
+    private Task<TimeZoneInfo> ResolveExportTimeZoneAsync(string? requestedTimeZone, CancellationToken cancellationToken = default)
+    {
+        var effectiveTimeZoneId = string.IsNullOrWhiteSpace(requestedTimeZone)
+            ? GetCurrentUserTimeZone()
+            : requestedTimeZone;
+
+        return _systemTimeZoneService.ResolveTimeZoneAsync(effectiveTimeZoneId, cancellationToken);
     }
 }

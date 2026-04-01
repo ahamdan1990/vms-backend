@@ -34,6 +34,11 @@ public class ValidateCapacityQuery : IRequest<CapacityValidationResponseDto>
     public bool IsVipRequest { get; set; } = false;
 
     /// <summary>
+    /// End date and time for range-overlap capacity check (optional)
+    /// </summary>
+    public DateTime? EndDateTime { get; set; }
+
+    /// <summary>
     /// Invitation ID to exclude from capacity calculation (for updates)
     /// </summary>
     public int? ExcludeInvitationId { get; set; }

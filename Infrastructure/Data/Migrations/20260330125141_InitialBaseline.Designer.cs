@@ -12,8 +12,8 @@ using VisitorManagementSystem.Api.Infrastructure.Data;
 namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251112122704_MakeDepartmentFieldsNullable")]
-    partial class MakeDepartmentFieldsNullable
+    [Migration("20260330125141_InitialBaseline")]
+    partial class InitialBaseline
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -2978,6 +2978,9 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.Property<string>("ProfilePhotoPath")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool?>("RequiresApprovalOverride")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Role")
                         .IsRequired()

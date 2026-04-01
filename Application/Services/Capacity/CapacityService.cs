@@ -42,9 +42,9 @@ public class CapacityService : ICapacityService
             var maxCapacity = await GetMaxCapacityAsync(request.DateTime, request.LocationId, cancellationToken);
             response.MaxCapacity = maxCapacity;
 
-            // Get current occupancy
+            // Get current occupancy (use range-overlap when end time is provided)
             var currentOccupancy = await GetCurrentOccupancyAsync(
-                request.DateTime, request.LocationId, cancellationToken);
+                request.DateTime, request.LocationId, cancellationToken, request.EndDateTime);
             response.CurrentOccupancy = currentOccupancy;
 
             // Calculate available slots
@@ -95,7 +95,8 @@ public class CapacityService : ICapacityService
     public async Task<int> GetCurrentOccupancyAsync(
         DateTime dateTime,
         int? locationId = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        DateTime? endDateTime = null)
     {
         try
         {
@@ -119,13 +120,23 @@ public class CapacityService : ICapacityService
             else
             {
                 // For future: Count approved invitations for capacity planning
-                query = query.Where(i => i.Status == InvitationStatus.Approved &&
-                                       i.ScheduledStartTime.Date == dateTime.Date);
+                query = query.Where(i => i.Status == InvitationStatus.Approved);
 
-                // Filter by time overlap
-                query = query.Where(i =>
-                    i.ScheduledStartTime <= dateTime &&
-                    i.ScheduledEndTime >= dateTime);
+                // Range-overlap filter: existing invitation overlaps proposed slot
+                // Uses standard interval overlap: ExistingStart < ProposedEnd AND ExistingEnd > ProposedStart
+                if (endDateTime.HasValue)
+                {
+                    query = query.Where(i =>
+                        i.ScheduledStartTime < endDateTime.Value &&
+                        i.ScheduledEndTime > dateTime);
+                }
+                else
+                {
+                    // Fallback point-in-time: count invitations covering the exact datetime
+                    query = query.Where(i =>
+                        i.ScheduledStartTime <= dateTime &&
+                        i.ScheduledEndTime > dateTime);
+                }
             }
 
             // Apply location filter if specified

@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Application.DTOs.Reports;
+using VisitorManagementSystem.Api.Application.Services.Common;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using System.Linq.Expressions;
@@ -14,13 +15,16 @@ namespace VisitorManagementSystem.Api.Application.Queries.Reports;
 public class GetComprehensiveVisitorReportQueryHandler : IRequestHandler<GetComprehensiveVisitorReportQuery, ComprehensiveVisitorReportDto>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ISystemTimeZoneService _systemTimeZoneService;
     private readonly ILogger<GetComprehensiveVisitorReportQueryHandler> _logger;
 
     public GetComprehensiveVisitorReportQueryHandler(
         IUnitOfWork unitOfWork,
+        ISystemTimeZoneService systemTimeZoneService,
         ILogger<GetComprehensiveVisitorReportQueryHandler> logger)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _systemTimeZoneService = systemTimeZoneService ?? throw new ArgumentNullException(nameof(systemTimeZoneService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -30,6 +34,8 @@ public class GetComprehensiveVisitorReportQueryHandler : IRequestHandler<GetComp
 
         try
         {
+            var dateRange = await _systemTimeZoneService.GetUtcDateRangeAsync(request.StartDate, request.EndDate, cancellationToken);
+
             // Validate and cap page size
             var pageSize = Math.Min(Math.Max(request.PageSize, 1), 500);
             var pageIndex = Math.Max(request.PageIndex, 0);
@@ -45,7 +51,7 @@ public class GetComprehensiveVisitorReportQueryHandler : IRequestHandler<GetComp
                 .Where(i => !i.IsDeleted);
 
             // Apply filters
-            query = ApplyFilters(query, request, now);
+            query = ApplyFilters(query, request, now, dateRange.StartUtc, dateRange.EndUtcExclusive);
 
             // Get total count before pagination
             var totalCount = await query.CountAsync(cancellationToken);
@@ -107,7 +113,9 @@ public class GetComprehensiveVisitorReportQueryHandler : IRequestHandler<GetComp
     private IQueryable<Domain.Entities.Invitation> ApplyFilters(
         IQueryable<Domain.Entities.Invitation> query,
         GetComprehensiveVisitorReportQuery request,
-        DateTime now)
+        DateTime now,
+        DateTime? startDateUtc,
+        DateTime? endDateUtcExclusive)
     {
         // Location filter
         if (request.LocationId.HasValue)
@@ -116,15 +124,14 @@ public class GetComprehensiveVisitorReportQueryHandler : IRequestHandler<GetComp
         }
 
         // Date range filter
-        if (request.StartDate.HasValue)
+        if (startDateUtc.HasValue)
         {
-            query = query.Where(i => i.ScheduledStartTime >= request.StartDate.Value);
+            query = query.Where(i => (i.CheckedInAt ?? i.ScheduledStartTime) >= startDateUtc.Value);
         }
 
-        if (request.EndDate.HasValue)
+        if (endDateUtcExclusive.HasValue)
         {
-            var endOfDay = request.EndDate.Value.Date.AddDays(1).AddTicks(-1);
-            query = query.Where(i => i.ScheduledStartTime <= endOfDay);
+            query = query.Where(i => (i.CheckedInAt ?? i.ScheduledStartTime) < endDateUtcExclusive.Value);
         }
 
         // Status filter

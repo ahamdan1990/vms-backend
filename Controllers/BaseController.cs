@@ -42,6 +42,15 @@ public abstract class BaseController : ControllerBase
     }
 
     /// <summary>
+    /// Gets the current user's timezone from claims.
+    /// </summary>
+    protected string? GetCurrentUserTimeZone()
+    {
+        return User?.FindFirst("timezone")?.Value ??
+               User?.FindFirst("timeZone")?.Value;
+    }
+
+    /// <summary>
     /// Gets the current user's role from claims
     /// </summary>
     protected string? GetCurrentUserRole()

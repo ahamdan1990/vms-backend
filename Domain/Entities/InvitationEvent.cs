@@ -94,4 +94,6 @@ public static class InvitationEventTypes
     public const string ReminderSent = "ReminderSent";
     public const string QrCodeGenerated = "QrCodeGenerated";
     public const string UnderReview = "UnderReview";
+    public const string LateCheckInRequested = "LateCheckInRequested";
+    public const string LateCheckInOverride = "LateCheckInOverride";
 }

@@ -45,6 +45,34 @@ public class CheckInInvitationCommand : IRequest<InvitationDto>
 }
 
 /// <summary>
+/// Command for receptionist to request host consent for a late check-in on an expired invitation
+/// </summary>
+public class RequestLateCheckInCommand : IRequest<InvitationDto>
+{
+    [Required]
+    public int InvitationId { get; set; }
+
+    public int RequestedBy { get; set; }
+
+    [MaxLength(500)]
+    public string? Notes { get; set; }
+}
+
+/// <summary>
+/// Command for admin/operator to force check-in an expired invitation (override)
+/// </summary>
+public class OverrideCheckInCommand : IRequest<InvitationDto>
+{
+    [Required]
+    public int InvitationId { get; set; }
+
+    public int OverriddenBy { get; set; }
+
+    [MaxLength(500)]
+    public string? Notes { get; set; }
+}
+
+/// <summary>
 /// Command to check out a visitor
 /// </summary>
 public class CheckOutInvitationCommand : IRequest<InvitationDto>

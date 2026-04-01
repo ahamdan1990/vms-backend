@@ -4,6 +4,7 @@ using VisitorManagementSystem.Api.Infrastructure.Data.Configurations;
 using VisitorManagementSystem.Api.Infrastructure.Data.Configurations.Notifications;
 using VisitorManagementSystem.Api.Domain.Interfaces.Services;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace VisitorManagementSystem.Api.Infrastructure.Data;
 
@@ -12,6 +13,14 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data;
 /// </summary>
 public class ApplicationDbContext : DbContext
 {
+    private static readonly ValueConverter<DateTime, DateTime> UtcDateTimeConverter = new(
+        v => NormalizeUtc(v),
+        v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
+    private static readonly ValueConverter<DateTime?, DateTime?> NullableUtcDateTimeConverter = new(
+        v => v.HasValue ? NormalizeUtc(v.Value) : v,
+        v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v);
+
     private readonly IDomainEventPublisher? _domainEventPublisher;
     private readonly IServiceProvider _serviceProvider;
 
@@ -148,6 +157,15 @@ public class ApplicationDbContext : DbContext
             .Where(p => p.ClrType == typeof(DateTime) || p.ClrType == typeof(DateTime?)))
         {
             property.SetColumnType("datetime2");
+
+            if (property.ClrType == typeof(DateTime))
+            {
+                property.SetValueConverter(UtcDateTimeConverter);
+            }
+            else
+            {
+                property.SetValueConverter(NullableUtcDateTimeConverter);
+            }
         }
 
         // Configure string properties to use nvarchar
@@ -435,5 +453,15 @@ public class ApplicationDbContext : DbContext
 
         await Database.EnsureDeletedAsync();
         await Database.EnsureCreatedAsync();
+    }
+
+    private static DateTime NormalizeUtc(DateTime value)
+    {
+        return value.Kind switch
+        {
+            DateTimeKind.Utc => value,
+            DateTimeKind.Local => value.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+        };
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
@@ -56,12 +57,18 @@ public static class DbInitializer
 
                     await ComprehensiveConfigurationSeeder.SeedAllConfigurationsAsync(context, serviceProvider);
                 }
+                // Always sync JWT secret so reinstalls don't leave a stale DB key
+                await SyncJwtSecretFromAppSettingsAsync(context, serviceProvider);
                 return; // Database has already been seeded
             }
 
             // Seed data in order of dependencies
             await SeedUsersAsync(context);
             await context.SaveChangesAsync(); // Save users first
+
+            // Now that users exist, assign RoleId based on their Role enum
+            await UserRoleMigrationSeeder.MigrateUserRolesAsync(context);
+            await context.SaveChangesAsync();
 
             await SeedAlertEscalationsAsync(context);
             await context.SaveChangesAsync(); // Save alert escalations
@@ -72,6 +79,9 @@ public static class DbInitializer
             await SeedSystemConfigAsync(context, serviceProvider);
             await context.SaveChangesAsync(); // Save configurations
 
+            // Always sync JWT secret from appsettings to DB so signing and validation keys match
+            await SyncJwtSecretFromAppSettingsAsync(context, serviceProvider);
+
         }
         catch (Exception ex)
         {
@@ -79,6 +89,35 @@ public static class DbInitializer
             var logger = serviceProvider.GetService<ILogger<ApplicationDbContext>>();
             logger?.LogError(ex, "An error occurred while initializing the database");
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Ensures the JWT SecretKey in SystemConfigurations matches appsettings.
+    /// Must run on every startup so reinstalls don't leave a stale DB key that
+    /// diverges from the key the Bearer middleware was configured with.
+    /// </summary>
+    private static async Task SyncJwtSecretFromAppSettingsAsync(ApplicationDbContext context, IServiceProvider serviceProvider)
+    {
+        var configuration = serviceProvider.GetService<IConfiguration>();
+        var logger = serviceProvider.GetService<ILogger<ApplicationDbContext>>();
+
+        var appsettingsKey = configuration?["JWT:SecretKey"];
+        if (string.IsNullOrEmpty(appsettingsKey))
+            return;
+
+        var dbConfig = await context.SystemConfigurations
+            .FirstOrDefaultAsync(c => c.Category == "JWT" && c.Key == "SecretKey");
+
+        if (dbConfig == null)
+            return; // Not seeded yet — seeder will pick up the correct key
+
+        if (dbConfig.Value != appsettingsKey)
+        {
+            dbConfig.Value = appsettingsKey;
+            context.SystemConfigurations.Update(dbConfig);
+            await context.SaveChangesAsync();
+            logger?.LogInformation("JWT SecretKey synced from appsettings to database.");
         }
     }
 
