@@ -115,6 +115,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserLockoutService, UserLockoutService>();
         services.AddScoped<IUserPreferencesService, UserPreferencesService>();
         services.AddScoped<IUserActivityService, UserActivityService>();
+        services.AddScoped<IUserImportService, UserImportService>();
 
         // Visitor services
         services.AddScoped<IVisitorService, VisitorService>();
@@ -146,6 +147,13 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthorizationHandler, MultipleRolesHandler>();
         services.AddSingleton<IAuthorizationPolicyProvider, PolicyProvider>();
 
+        // Backup & storage monitoring services
+        services.AddScoped<Application.Services.Backup.IDatabaseStorageMonitor, Application.Services.Backup.DatabaseStorageMonitor>();
+        services.AddScoped<Application.Services.Backup.IDiskStorageMonitor, Application.Services.Backup.DiskStorageMonitor>();
+        services.AddScoped<Application.Services.Backup.IStorageAlertStateStore, Application.Services.Backup.StorageAlertStateStore>();
+        services.AddScoped<Application.Services.Backup.IDatabaseBackupService, Application.Services.Backup.DatabaseBackupService>();
+        services.AddScoped<Application.Services.Backup.IDataPurgeService, Application.Services.Backup.DataPurgeService>();
+        services.AddScoped<Application.Services.Backup.ILogFileService, Application.Services.Backup.LogFileService>();
 
         return services;
     }
@@ -212,6 +220,12 @@ public static class ServiceCollectionExtensions
         services.AddHostedService<NotificationDispatcherService>();
         services.AddHostedService<VisitorTrackingService>();
         services.AddHostedService<VisitorMonitoringService>();
+
+        // Backup & storage monitoring background services
+        services.AddHostedService<DatabaseBackupBackgroundService>();
+        services.AddHostedService<StorageAlertBackgroundService>();
+        services.AddHostedService<DataRetentionBackgroundService>();
+        services.AddHostedService<LogCleanupBackgroundService>();
 
         return services;
     }

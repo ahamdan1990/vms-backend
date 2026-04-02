@@ -318,6 +318,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 var app = builder.Build();
+var enforceCanonicalHost = builder.Configuration.GetValue<bool>("Security:EnforceCanonicalHost");
 
 // Configure the HTTP request pipeline.
 
@@ -325,17 +326,16 @@ var app = builder.Build();
 // request.Scheme and request.Host reflect the real public values.
 app.UseForwardedHeaders();
 
-// Redirect HTTP → HTTPS in production. Development uses its own HTTPS setup.
-// /vms-cert.cer and /install-cert.ps1 are intentionally served over plain HTTP
-// so client machines can download and trust the certificate before HTTPS works.
-// A public certificate contains no secrets, so HTTP delivery is safe here.
+// Redirect HTTP to HTTPS in production. Canonical-host enforcement is optional
+// because some deployments intentionally support localhost, machine-name, and IP access.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseWhen(
-        ctx => !ctx.Request.Path.StartsWithSegments("/vms-cert.cer") &&
-               !ctx.Request.Path.StartsWithSegments("/install-cert.ps1"),
-        branch => branch.UseHttpsRedirection()
-    );
+    if (enforceCanonicalHost)
+    {
+        app.UseMiddleware<CanonicalUrlRedirectMiddleware>();
+    }
+
+    app.UseHttpsRedirection();
 }
 
 if (app.Environment.IsDevelopment())

@@ -1,0 +1,10 @@
+# Downloaded prerequisites — download manually, see build-installer.ps1 for URLs
+prereqs/*.exe
+prereqs/*.msi
+
+# Build artifacts
+dist/
+output/
+
+# Temporary install files
+*.tmp

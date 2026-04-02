@@ -174,6 +174,9 @@ public static class UserRoles
             Permissions.Visitor.Search,
             Permissions.Visitor.ManagePhotos,
 
+            // Company lookup
+            Permissions.Company.Read,
+
             // Visitor documents (for invitation-related documents)
             Permissions.VisitorDocument.Create,
             Permissions.VisitorDocument.Read,
@@ -266,6 +269,10 @@ public static class UserRoles
             Permissions.Visitor.Search,
             Permissions.Visitor.ViewStatistics,
             Permissions.Visitor.ManagePhotos,
+
+            // Company lookup and quick creation during walk-in registration
+            Permissions.Company.Read,
+            Permissions.Company.Create,
 
             // Visitor documents (for walk-in registration and document verification)
             Permissions.VisitorDocument.Create,
@@ -407,6 +414,12 @@ public static class UserRoles
             Permissions.VisitPurpose.Create,
             Permissions.VisitPurpose.Update,
             Permissions.VisitPurpose.Delete,
+
+            // Company management
+            Permissions.Company.Create,
+            Permissions.Company.Read,
+            Permissions.Company.Update,
+            Permissions.Company.Delete,
 
             // Profile (own)
             Permissions.Profile.ViewOwn,

@@ -94,7 +94,8 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                     MustChangePassword = request.MustChangePassword,
                     PasswordChangedDate = DateTime.UtcNow,
                     SecurityStamp = Guid.NewGuid().ToString(),
-                    IsActive = true
+                    IsActive = true,
+                    RequiresApprovalOverride = request.RequiresApprovalOverride
                 };
 
                 // ✅ CRITICAL FIX: Set RoleId to ensure user gets database permissions

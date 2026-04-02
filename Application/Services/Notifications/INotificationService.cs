@@ -108,6 +108,11 @@ public interface INotificationService
     Task UpdateSystemHealthAsync(object healthData, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Broadcast dashboard metric updates to connected receptionist and administrator clients.
+    /// </summary>
+    Task BroadcastDashboardMetricsUpdateAsync(object metricsData, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Send delayed visitor notification to operators
     /// </summary>
     Task NotifyVisitorDelayedAsync(int invitationId, int visitorId, string visitorName,
@@ -137,5 +142,21 @@ public interface INotificationService
     /// Notify host that their invitation was cancelled
     /// </summary>
     Task NotifyInvitationCancelledAsync(int invitationId, int hostId, string? reason,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Send a storage threshold alert to all connected administrators.
+    /// Includes structured payload for real-time UI update without a full page refresh.
+    /// Critical alerts are automatically emailed by NotificationDispatcherService.
+    /// </summary>
+    Task NotifyStorageAlertAsync(
+        Domain.Enums.NotificationAlertType alertType,
+        string alertLevel,
+        double usedPercent,
+        double usedMb,
+        double limitMb,
+        string drivePath,
+        bool backupTriggered,
+        Domain.Enums.AlertPriority priority,
         CancellationToken cancellationToken = default);
 }

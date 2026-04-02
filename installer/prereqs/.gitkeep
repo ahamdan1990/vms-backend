@@ -1,0 +1,3 @@
+Place downloaded prerequisite binaries here.
+See build-installer.ps1 for the required files and download URLs.
+These files are excluded from git (.gitignore) due to their large size.

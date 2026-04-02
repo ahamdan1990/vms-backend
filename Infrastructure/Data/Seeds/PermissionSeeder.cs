@@ -224,6 +224,8 @@ public static class PermissionSeeder
             [Permissions.Invitation.UpdateAll] = new() { Permissions.Invitation.ReadAll },
             [Permissions.Invitation.UpdateOwn] = new() { Permissions.Invitation.ReadOwn },
             [Permissions.Visitor.Update] = new() { Permissions.Visitor.ReadAll },
+            [Permissions.Company.Update] = new() { Permissions.Company.Read },
+            [Permissions.Company.Delete] = new() { Permissions.Company.Read },
             [Permissions.Watchlist.ManageBlacklist] = new() { Permissions.Watchlist.View },
             [Permissions.CustomField.Update] = new() { Permissions.CustomField.ReadAll },
             [Permissions.SystemConfig.Update] = new() { Permissions.SystemConfig.Read }

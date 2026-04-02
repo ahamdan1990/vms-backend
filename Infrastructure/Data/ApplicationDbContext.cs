@@ -74,6 +74,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<OperatorSession> OperatorSessions { get; set; } = null!;
     public DbSet<AlertEscalation> AlertEscalations { get; set; } = null!;
 
+    // DbSets - Backup & Storage Management
+    public DbSet<BackupRecord> BackupRecords { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -120,6 +123,9 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new NotificationAlertConfiguration());
         modelBuilder.ApplyConfiguration(new OperatorSessionConfiguration());
         modelBuilder.ApplyConfiguration(new AlertEscalationConfiguration());
+
+        // Apply all configurations - Backup & Storage Management
+        modelBuilder.ApplyConfiguration(new BackupRecordConfiguration());
 
         // Global query filters for soft delete (standardized on IsDeleted pattern)
         modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);

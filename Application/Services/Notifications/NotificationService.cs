@@ -642,6 +642,26 @@ public class NotificationService : INotificationService
         }
     }
 
+    public async Task BroadcastDashboardMetricsUpdateAsync(object metricsData, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await Task.WhenAll(
+                _operatorHubContext.Clients.Group("Operators")
+                    .SendAsync("DashboardMetricsUpdated", metricsData, cancellationToken),
+                _adminHubContext.Clients.Group("Administrators")
+                    .SendAsync("DashboardMetricsUpdated", metricsData, cancellationToken)
+            );
+
+            _logger.LogDebug("Dashboard metrics update broadcast to operators and administrators");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error broadcasting dashboard metrics update");
+            throw;
+        }
+    }
+
     public async Task NotifyVisitorDelayedAsync(int invitationId, int visitorId, string visitorName,
         DateTime scheduledTime, int delayMinutes, int? locationId = null,
         CancellationToken cancellationToken = default)
@@ -875,6 +895,99 @@ public class NotificationService : INotificationService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error sending cancellation notification for invitation {InvitationId}", invitationId);
+            throw;
+        }
+    }
+
+    public async Task NotifyStorageAlertAsync(
+        NotificationAlertType alertType,
+        string alertLevel,
+        double usedPercent,
+        double usedMb,
+        double limitMb,
+        string drivePath,
+        bool backupTriggered,
+        AlertPriority priority,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var title = alertType switch
+            {
+                NotificationAlertType.DatabaseStorageWarning   => "Database Storage Warning",
+                NotificationAlertType.DatabaseStorageCritical  => "Database Storage Alert — Action Required",
+                NotificationAlertType.DatabaseStorageEmergency => "CRITICAL: Database Nearly Full",
+                NotificationAlertType.DiskSpaceWarning         => "Disk Space Warning",
+                NotificationAlertType.DiskSpaceCritical        => "CRITICAL: Disk Space Low",
+                NotificationAlertType.BackupFailed             => "Backup Failed",
+                _                                              => "Storage Alert"
+            };
+
+            var backupNote = backupTriggered
+                ? " An emergency backup was triggered to preserve a recovery point. NOTE: A backup does NOT free database space — administrative action is required."
+                : string.Empty;
+
+            var message = alertType switch
+            {
+                NotificationAlertType.DatabaseStorageWarning =>
+                    $"The database data file is at {usedPercent:F1}% of the SQL Server Express 10 GB limit ({usedMb:F0} MB of {limitMb:F0} MB used). No immediate action required, but plan a data archival review.",
+                NotificationAlertType.DatabaseStorageCritical =>
+                    $"The database data file is at {usedPercent:F1}% of the SQL Server Express 10 GB limit ({usedMb:F0} MB of {limitMb:F0} MB used). Archive or purge old visitor records to reduce database size.{backupNote}",
+                NotificationAlertType.DatabaseStorageEmergency =>
+                    $"The database data file is at {usedPercent:F1}% of the SQL Server Express 10 GB limit ({usedMb:F0} MB of {limitMb:F0} MB used). Write operations will fail when the limit is reached. Immediate action required.{backupNote}",
+                NotificationAlertType.DiskSpaceWarning =>
+                    $"Drive {drivePath} has only {usedPercent:F1}% free space remaining. Ensure sufficient space is available before the next scheduled backup.",
+                NotificationAlertType.DiskSpaceCritical =>
+                    $"Drive {drivePath} has only {usedPercent:F1}% free space. The next scheduled backup has been suppressed to prevent filling the drive. Free disk space immediately.",
+                NotificationAlertType.BackupFailed =>
+                    $"A backup operation failed. The previous successful backup may be outdated. Check the backup history for details.",
+                _ => $"Storage alert: {alertLevel} on {drivePath}"
+            };
+
+            var payloadData = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                AlertLevel = alertLevel,
+                UsedPercent = usedPercent,
+                UsedMb = usedMb,
+                LimitMb = limitMb,
+                DrivePath = drivePath,
+                BackupTriggered = backupTriggered
+            });
+
+            var alert = NotificationAlert.CreateFRAlert(
+                title, message, alertType, priority,
+                targetRole: Domain.Constants.UserRoles.Administrator,
+                payloadData: payloadData);
+
+            await _unitOfWork.Repository<NotificationAlert>().AddAsync(alert, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            // Push real-time update to admin hub with full structured payload
+            var hubPayload = new
+            {
+                AlertId = alert.Id,
+                AlertType = alertType.ToString(),
+                AlertLevel = alertLevel,
+                Title = title,
+                Message = message,
+                Priority = priority.ToString(),
+                UsedPercent = usedPercent,
+                UsedMb = usedMb,
+                LimitMb = limitMb,
+                DrivePath = drivePath,
+                BackupTriggered = backupTriggered,
+                Timestamp = DateTime.UtcNow
+            };
+
+            await _adminHubContext.Clients.Group("Administrators")
+                .SendAsync("StorageAlert", hubPayload, cancellationToken);
+
+            _logger.LogWarning("Storage alert sent to admins: {AlertType} {AlertLevel} {UsedPercent:F1}%",
+                alertType, alertLevel, usedPercent);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending storage alert notification {AlertType}", alertType);
             throw;
         }
     }

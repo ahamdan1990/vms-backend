@@ -29,7 +29,8 @@ public static class RolePermissionSeeder
         {
             Console.WriteLine($"✅ Role permissions already seeded ({existingRolePermissionsCount} mappings exist).");
             Console.WriteLine("   Skipping seed to preserve custom configurations.");
-            Console.WriteLine("   To force re-seed (dev/test only), manually delete all RolePermissions records.");
+            Console.WriteLine("   Applying additive sync for new system permissions only.");
+            await EnsureBuiltInRoleCompanyPermissionsAsync(context);
             return;
         }
 
@@ -78,6 +79,9 @@ public static class RolePermissionSeeder
             Permissions.Visitor.ViewStatistics,
             Permissions.Visitor.Search,
             Permissions.Visitor.ManagePhotos,
+
+            // Company lookup
+            Permissions.Company.Read,
 
             // Visitor documents (for invitation-related documents)
             Permissions.VisitorDocument.Create,
@@ -165,6 +169,10 @@ public static class RolePermissionSeeder
             Permissions.Visitor.Search,
             Permissions.Visitor.ViewStatistics,
             Permissions.Visitor.ManagePhotos,
+
+            // Company lookup and quick creation during walk-in registration
+            Permissions.Company.Read,
+            Permissions.Company.Create,
 
             // Visitor documents (for walk-in registration and document verification)
             Permissions.VisitorDocument.Create,
@@ -339,6 +347,7 @@ public static class RolePermissionSeeder
             Permissions.Visitor.Create,
             Permissions.Visitor.Read,
             Permissions.Visitor.Update,
+            Permissions.Company.Read,
             Permissions.Calendar.ViewOwn,
             Permissions.Calendar.ViewAvailability,
             Permissions.Notification.ReadOwn,
@@ -381,6 +390,8 @@ public static class RolePermissionSeeder
             Permissions.Visitor.Read,
             Permissions.Visitor.Search,
             Permissions.Visitor.ManagePhotos,
+            Permissions.Company.Read,
+            Permissions.Company.Create,
             Permissions.VisitorDocument.Create,
             Permissions.VisitorDocument.Read,
             Permissions.VisitorDocument.Update,
@@ -406,5 +417,99 @@ public static class RolePermissionSeeder
             Permissions.Report.ViewHistory,
             Permissions.Report.Export
         };
+    }
+
+    private static async Task EnsureBuiltInRoleCompanyPermissionsAsync(ApplicationDbContext context)
+    {
+        var roleNames = new[] { "Staff", "Receptionist", "Administrator" };
+        var roles = await context.Roles
+            .Where(r => roleNames.Contains(r.Name))
+            .ToDictionaryAsync(r => r.Name, r => r.Id);
+
+        if (!roles.Any())
+        {
+            Console.WriteLine("Warning: Built-in roles not found while syncing company permissions.");
+            return;
+        }
+
+        var companyPermissionsByRole = new Dictionary<string, List<string>>
+        {
+            ["Staff"] = new() { Permissions.Company.Read },
+            ["Receptionist"] = new() { Permissions.Company.Read, Permissions.Company.Create },
+            ["Administrator"] = new() { Permissions.Company.Create, Permissions.Company.Read, Permissions.Company.Update, Permissions.Company.Delete }
+        };
+
+        var requiredPermissionNames = companyPermissionsByRole
+            .SelectMany(kvp => kvp.Value)
+            .Distinct()
+            .ToList();
+
+        var permissions = await context.Permissions
+            .Where(p => requiredPermissionNames.Contains(p.Name))
+            .ToDictionaryAsync(p => p.Name, p => p.Id);
+
+        if (!permissions.Any())
+        {
+            Console.WriteLine("Warning: Company permissions were not found in the permissions table.");
+            return;
+        }
+
+        var targetRoleIds = roles.Values.ToList();
+        var targetPermissionIds = permissions.Values.ToList();
+
+        var existingMappings = await context.RolePermissions
+            .Where(rp => targetRoleIds.Contains(rp.RoleId) && targetPermissionIds.Contains(rp.PermissionId))
+            .Select(rp => new { rp.RoleId, rp.PermissionId })
+            .ToListAsync();
+
+        var existingMappingKeys = existingMappings
+            .Select(rp => $"{rp.RoleId}:{rp.PermissionId}")
+            .ToHashSet();
+
+        var newMappings = new List<RolePermission>();
+
+        foreach (var (roleName, permissionNames) in companyPermissionsByRole)
+        {
+            if (!roles.TryGetValue(roleName, out var roleId))
+            {
+                continue;
+            }
+
+            foreach (var permissionName in permissionNames)
+            {
+                if (!permissions.TryGetValue(permissionName, out var permissionId))
+                {
+                    Console.WriteLine($"Warning: Permission '{permissionName}' not found while syncing role '{roleName}'.");
+                    continue;
+                }
+
+                var mappingKey = $"{roleId}:{permissionId}";
+                if (existingMappingKeys.Contains(mappingKey))
+                {
+                    continue;
+                }
+
+                newMappings.Add(new RolePermission
+                {
+                    RoleId = roleId,
+                    PermissionId = permissionId,
+                    GrantedAt = DateTime.UtcNow,
+                    GrantedBy = null
+                });
+
+                existingMappingKeys.Add(mappingKey);
+            }
+        }
+
+        if (!newMappings.Any())
+        {
+            Console.WriteLine("Company permission sync complete. No new role mappings were required.");
+            return;
+        }
+
+        await context.RolePermissions.AddRangeAsync(newMappings);
+        await context.SaveChangesAsync();
+
+        Console.WriteLine($"Added {newMappings.Count} company permission mappings for built-in roles.");
     }
 }

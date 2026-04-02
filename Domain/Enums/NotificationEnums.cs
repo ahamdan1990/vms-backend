@@ -116,6 +116,41 @@ public enum NotificationAlertType
     InvitationUnderReview = 22,
 
     /// <summary>
+    /// Database data file approaching SQL Server Express 10 GB limit (70–84%)
+    /// </summary>
+    DatabaseStorageWarning = 23,
+
+    /// <summary>
+    /// Database data file at high risk of reaching limit (85–94%)
+    /// </summary>
+    DatabaseStorageCritical = 24,
+
+    /// <summary>
+    /// Database data file at 95%+ — imminent write failures
+    /// </summary>
+    DatabaseStorageEmergency = 25,
+
+    /// <summary>
+    /// Disk free space on backup or database drive below warning threshold
+    /// </summary>
+    DiskSpaceWarning = 26,
+
+    /// <summary>
+    /// Disk free space critically low — scheduled backup suppressed
+    /// </summary>
+    DiskSpaceCritical = 27,
+
+    /// <summary>
+    /// A scheduled or event-triggered backup failed
+    /// </summary>
+    BackupFailed = 28,
+
+    /// <summary>
+    /// A backup completed successfully (informational)
+    /// </summary>
+    BackupCompleted = 29,
+
+    /// <summary>
     /// Custom user-defined alert
     /// </summary>
     Custom = 99

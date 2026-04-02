@@ -9,6 +9,7 @@ using VisitorManagementSystem.Api.Application.DTOs.Common;
 using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Application.DTOs.Auth;
+using VisitorManagementSystem.Api.Application.Services.Users;
 
 namespace VisitorManagementSystem.Api.Controllers;
 
@@ -23,11 +24,16 @@ public class UsersController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<UsersController> _logger;
+    private readonly IUserImportService _userImportService;
 
-    public UsersController(IMediator mediator, ILogger<UsersController> logger)
+    public UsersController(
+        IMediator mediator,
+        ILogger<UsersController> logger,
+        IUserImportService userImportService)
     {
         _mediator = mediator;
         _logger = logger;
+        _userImportService = userImportService;
     }
 
     /// <summary>
@@ -227,6 +233,7 @@ public class UsersController : BaseController
                 
                 MustChangePassword = request.MustChangePassword,
                 SendWelcomeEmail = request.SendWelcomeEmail,
+                RequiresApprovalOverride = request.RequiresApprovalOverride,
                 CreatedBy = currentUserId.Value
             };
 
@@ -805,6 +812,166 @@ public class UsersController : BaseController
         {
             _logger.LogError(ex, "Error retrieving available roles");
             return ServerErrorResponse("An error occurred while retrieving available roles");
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // IMPORT ENDPOINTS
+    // ══════════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Downloads the blank Excel import template (.xlsx).
+    /// GET /api/Users/import/template
+    /// </summary>
+    [HttpGet("import/template")]
+    [Authorize(Policy = Permissions.User.Import)]
+    [ProducesResponseType(typeof(FileContentResult), 200)]
+    public async Task<IActionResult> DownloadImportTemplate(
+        [FromQuery] string format = "xlsx",
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (format.Equals("csv", StringComparison.OrdinalIgnoreCase))
+            {
+                var csv = await _userImportService.GenerateCsvImportTemplateAsync(cancellationToken);
+                return File(csv, "text/csv", "import-users-template.csv");
+            }
+
+            var xlsx = await _userImportService.GenerateImportTemplateAsync(cancellationToken);
+            return File(xlsx,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "import-users-template.xlsx");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating import template");
+            return ServerErrorResponse("An error occurred while generating the import template");
+        }
+    }
+
+    /// <summary>
+    /// Validates an uploaded file and returns a row-level report without creating any users.
+    /// POST /api/Users/import/validate
+    /// </summary>
+    [HttpPost("import/validate")]
+    [Authorize(Policy = Permissions.User.Import)]
+    [RequestSizeLimit(5_242_880)] // 5 MB
+    [ProducesResponseType(typeof(ApiResponseDto<ImportValidationResultDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
+    public async Task<IActionResult> ValidateImportFile(
+        IFormFile file,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            if (!currentUserId.HasValue)
+                return BadRequestResponse("User not authenticated");
+
+            // Run as dry-run through the full import pipeline
+            var command = new ImportUsersCommand
+            {
+                File = file,
+                SkipInvalidRows = true,
+                DryRun = true,
+                ImportedBy = currentUserId.Value
+            };
+
+            var importResult = await _mediator.Send(command, cancellationToken);
+
+            var validationResult = new ImportValidationResultDto
+            {
+                TotalRows   = importResult.TotalRows,
+                ValidRows   = importResult.Results.Count(r => r.Status != ImportRowStatus.Skipped && r.FieldErrors.Count == 0),
+                InvalidRows = importResult.Results.Count(r => r.Status == ImportRowStatus.Skipped || r.FieldErrors.Count > 0),
+                FileErrors  = importResult.Results
+                    .Where(r => r.RowNumber == 0)
+                    .SelectMany(r => r.FieldErrors.Select(fe => fe.Message))
+                    .ToList(),
+                RowResults  = importResult.Results
+            };
+
+            return SuccessResponse(validationResult, "File validated successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating import file");
+            return ServerErrorResponse("An error occurred while validating the import file");
+        }
+    }
+
+    /// <summary>
+    /// Batch-checks which emails and employee IDs already exist in the database.
+    /// POST /api/Users/check-duplicates
+    /// </summary>
+    [HttpPost("check-duplicates")]
+    [Authorize(Policy = Permissions.User.Import)]
+    [ProducesResponseType(typeof(ApiResponseDto<CheckDuplicatesResultDto>), 200)]
+    public async Task<IActionResult> CheckDuplicates(
+        [FromBody] CheckDuplicatesRequestDto request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var result = await _userImportService.CheckDuplicatesAsync(
+                request.Emails, request.EmployeeIds, cancellationToken);
+
+            return SuccessResponse(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking duplicates");
+            return ServerErrorResponse("An error occurred while checking for duplicates");
+        }
+    }
+
+    /// <summary>
+    /// Imports users from an uploaded .xlsx or .csv file.
+    /// POST /api/Users/import
+    /// </summary>
+    [HttpPost("import")]
+    [Authorize(Policy = Permissions.User.Import)]
+    [RequestSizeLimit(5_242_880)] // 5 MB
+    [ProducesResponseType(typeof(ApiResponseDto<ImportUsersResultDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
+    public async Task<IActionResult> ImportUsers(
+        IFormFile file,
+        [FromQuery] bool skipInvalidRows = true,
+        [FromQuery] bool dryRun = false,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var currentUserId = GetCurrentUserId();
+            if (!currentUserId.HasValue)
+                return BadRequestResponse("User not authenticated");
+
+            var command = new ImportUsersCommand
+            {
+                File           = file,
+                SkipInvalidRows = skipInvalidRows,
+                DryRun         = dryRun,
+                ImportedBy     = currentUserId.Value
+            };
+
+            var result = await _mediator.Send(command, cancellationToken);
+
+            _logger.LogInformation(
+                "Import completed by {UserId}. Total={Total}, Created={Created}, Skipped={Skipped}, Failed={Failed}",
+                currentUserId.Value, result.TotalRows, result.CreatedCount,
+                result.SkippedCount, result.FailedCount);
+
+            var message = dryRun
+                ? $"Dry run complete. {result.TotalRows - result.SkippedCount} rows are valid."
+                : $"Import complete. {result.CreatedCount} users created, {result.SkippedCount} skipped, {result.FailedCount} failed.";
+
+            return SuccessResponse(result, message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during user import");
+            return ServerErrorResponse("An error occurred during the import");
         }
     }
 }

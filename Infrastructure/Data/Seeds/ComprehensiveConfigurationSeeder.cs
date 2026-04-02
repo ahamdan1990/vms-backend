@@ -88,6 +88,12 @@ public static class ComprehensiveConfigurationSeeder
             // 12. Invitations Configuration
             await SeedInvitationsConfigurationAsync(configurations, now, systemUserId);
 
+            // 13. Backup Configuration
+            await SeedBackupConfigurationAsync(configurations, now, systemUserId);
+
+            // 14. Storage Alert Configuration
+            await SeedStorageAlertConfigurationAsync(configurations, now, systemUserId);
+
             logger?.LogInformation("Seeded {Count} configuration entries", configurations.Count);
         }
         catch (Exception ex)
@@ -1021,6 +1027,98 @@ public static class ComprehensiveConfigurationSeeder
             CreateConfiguration("Invitations", "DefaultVisitDurationHours",
                 "2",
                 "int", "Default visit duration in hours used when no end time is specified.", false, false, false, now, systemUserId)
+        });
+
+        await Task.CompletedTask;
+    }
+
+    private static async Task SeedBackupConfigurationAsync(List<SystemConfiguration> configurations, DateTime now, int? systemUserId)
+    {
+        configurations.AddRange(new[]
+        {
+            CreateConfiguration("Backup", "Enabled",
+                "false",
+                "bool", "Enable or disable automatic scheduled backups. Must be explicitly enabled by an administrator after verifying the destination path and disk space.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Backup", "ScheduleTime",
+                "02:00",
+                "string", "Daily backup time in HH:mm format (24-hour). The backup runs once per day at this local time.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Backup", "DestinationPath",
+                @"C:\VMS_Backups",
+                "string", "Absolute path to the folder where backup .bak files will be written. Must be writable by the application process.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Backup", "RetentionDays",
+                "14",
+                "int", "Number of days to retain backup files. Files older than this value are deleted after each successful backup.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Backup", "NextRunAt",
+                "",
+                "string", "ISO 8601 UTC datetime of the next scheduled backup. Calculated automatically by the scheduler.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Backup", "LastSuccessAt",
+                "",
+                "string", "ISO 8601 UTC datetime of the last successful backup.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Backup", "LastFailureMessage",
+                "",
+                "string", "Error message from the most recent failed backup, if any.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Backup", "AutoBackupOnAlert",
+                "false",
+                "bool", "Trigger an immediate backup when the database data file crosses the alert threshold (85% of Express limit). The backup provides a recovery point before the situation worsens but does NOT free database space.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Backup", "AutoBackupOnCritical",
+                "true",
+                "bool", "Trigger an immediate backup when the database data file crosses the critical threshold (95% of Express limit). Strongly recommended to keep enabled.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Backup", "LastEventBackupAt",
+                "",
+                "string", "ISO 8601 UTC datetime of the last event-triggered (storage alert) backup. Used to enforce 6-hour cooldown between event-triggered backups.", false, false, false, now, systemUserId),
+        });
+
+        await Task.CompletedTask;
+    }
+
+    private static async Task SeedStorageAlertConfigurationAsync(List<SystemConfiguration> configurations, DateTime now, int? systemUserId)
+    {
+        configurations.AddRange(new[]
+        {
+            CreateConfiguration("Storage", "AlertEnabled",
+                "true",
+                "bool", "Master switch for storage monitoring alerts. When false, no storage threshold notifications are sent.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Storage", "DbWarnThresholdPercent",
+                "70",
+                "int", "Database data file usage percentage at which a warning notification is sent to administrators (SQL Server Express 10 GB limit).", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Storage", "DbAlertThresholdPercent",
+                "85",
+                "int", "Database data file usage percentage at which a high-priority alert is sent. Auto-backup is triggered if Backup.AutoBackupOnAlert is enabled.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Storage", "DbCriticalThresholdPercent",
+                "95",
+                "int", "Database data file usage percentage at which a critical alert is sent and auto-backup is triggered regardless of settings.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Storage", "DiskWarnFreePercent",
+                "20",
+                "int", "Disk free space percentage below which a warning notification is sent.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Storage", "DiskCriticalFreePercent",
+                "10",
+                "int", "Disk free space percentage below which a critical alert is sent and the next scheduled backup is suppressed.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Storage", "LastDbAlertLevel",
+                "None",
+                "string", "Deduplication state for database size alerts. Values: None, Warning, High, Critical. Prevents repeated alerts for the same threshold.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Storage", "LastDiskAlertLevel",
+                "None",
+                "string", "Deduplication state for disk space alerts. Values: None, Warning, Critical.", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Storage", "LastAlertFiredAt",
+                "",
+                "string", "ISO 8601 UTC datetime of the last storage alert. Enforces minimum 4-hour cooldown between repeated alert firings.", false, false, false, now, systemUserId),
         });
 
         await Task.CompletedTask;

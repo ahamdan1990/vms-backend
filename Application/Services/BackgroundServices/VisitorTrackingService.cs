@@ -329,8 +329,14 @@ public class VisitorTrackingService : BackgroundService
             // Update system health for administrators
             await notificationService.UpdateSystemHealthAsync(metrics, cancellationToken);
 
-            _logger.LogDebug("Dashboard metrics updated: {TotalVisitors} visitors, {WaitingCount} waiting",
-                metrics.TotalVisitors, metrics.WaitingVisitors);
+            await notificationService.BroadcastDashboardMetricsUpdateAsync(new
+            {
+                overdueVisitors = metrics.OverdueVisitors,
+                timestamp = metrics.LastUpdated
+            }, cancellationToken);
+
+            _logger.LogDebug("Dashboard metrics updated: {TotalVisitors} visitors, {WaitingCount} waiting, {OverdueVisitors} overdue",
+                metrics.TotalVisitors, metrics.WaitingVisitors, metrics.OverdueVisitors);
         }
         catch (Exception ex)
         {
@@ -363,12 +369,20 @@ public class VisitorTrackingService : BackgroundService
         var activeInvitations = await unitOfWork.Invitations.GetActiveInvitationsAsync(cancellationToken);
         var processingVisitors = activeInvitations.Count(i => !i.IsDeleted);
 
+        var overdueVisitors = await unitOfWork.Invitations.CountAsync(
+            invitation => invitation.Status == InvitationStatus.Active &&
+                          invitation.CheckedInAt.HasValue &&
+                          !invitation.CheckedOutAt.HasValue &&
+                          invitation.ScheduledEndTime < now,
+            cancellationToken);
+
         return new DashboardMetrics
         {
             TotalVisitors = totalOccupancy,
             TodaysInvitations = todaysInvitations,
             WaitingVisitors = waitingVisitors,
             ProcessingVisitors = processingVisitors,
+            OverdueVisitors = overdueVisitors,
             SystemHealth = "Good",
             LastUpdated = now
         };
@@ -390,6 +404,7 @@ public class DashboardMetrics
     public int TodaysInvitations { get; set; }
     public int WaitingVisitors { get; set; }
     public int ProcessingVisitors { get; set; }
+    public int OverdueVisitors { get; set; }
     public string SystemHealth { get; set; } = "Good";
     public DateTime LastUpdated { get; set; }
 }

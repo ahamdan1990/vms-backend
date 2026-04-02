@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using VisitorManagementSystem.Api.Application.Commands.Companies;
 using VisitorManagementSystem.Api.Application.DTOs.Companies;
 using VisitorManagementSystem.Api.Application.Queries.Companies;
+using VisitorManagementSystem.Api.Domain.Constants;
 
 namespace VisitorManagementSystem.Api.Controllers;
 
@@ -35,6 +36,7 @@ public class CompaniesController : BaseController
     /// <param name="sortDirection">Sort direction (asc, desc)</param>
     /// <returns>Paginated list of companies</returns>
     [HttpGet]
+    [Authorize(Policy = Permissions.Company.Read)]
     public async Task<IActionResult> GetCompanies(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
@@ -63,6 +65,7 @@ public class CompaniesController : BaseController
     /// <param name="id">Company ID</param>
     /// <returns>Company details</returns>
     [HttpGet("{id}")]
+    [Authorize(Policy = Permissions.Company.Read)]
     public async Task<IActionResult> GetCompanyById(int id)
     {
         var query = new GetCompanyByIdQuery(id);
@@ -84,6 +87,7 @@ public class CompaniesController : BaseController
     /// <param name="maxResults">Maximum results to return</param>
     /// <returns>Search results</returns>
     [HttpGet("search")]
+    [Authorize(Policy = Permissions.Company.Read)]
     public async Task<IActionResult> SearchCompanies(
         [FromQuery] string searchTerm,
         [FromQuery] string searchField = "All",
@@ -111,7 +115,7 @@ public class CompaniesController : BaseController
     /// <param name="createCompanyDto">Company creation data</param>
     /// <returns>Created company</returns>
     [HttpPost]
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = Permissions.Company.Create)]
     public async Task<IActionResult> CreateCompany([FromBody] CreateCompanyDto createCompanyDto)
     {
         if (!ModelState.IsValid)
@@ -141,7 +145,7 @@ public class CompaniesController : BaseController
     /// <param name="updateCompanyDto">Update data</param>
     /// <returns>Updated company</returns>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = Permissions.Company.Update)]
     public async Task<IActionResult> UpdateCompany(int id, [FromBody] UpdateCompanyDto updateCompanyDto)
     {
         if (!ModelState.IsValid)
@@ -167,7 +171,7 @@ public class CompaniesController : BaseController
     /// <param name="reason">Optional deletion reason</param>
     /// <returns>Deletion result</returns>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = Permissions.Company.Delete)]
     public async Task<IActionResult> DeleteCompany(int id, [FromQuery] string? reason = null)
     {
         try

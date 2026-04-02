@@ -24,6 +24,7 @@ public static class Permissions
         public const string ManagePermissions = "User.ManagePermissions";
         public const string ViewActivity = "User.ViewActivity";
         public const string ResetPassword = "User.ResetPassword";
+        public const string Import = "User.Import";
     }
 
     /// <summary>
@@ -74,6 +75,17 @@ public static class Permissions
         public const string MarkAsVip = "Visitor.MarkAsVip";
         public const string RemoveVipStatus = "Visitor.RemoveVipStatus";
         public const string ViewStatistics = "Visitor.ViewStatistics";
+    }
+
+    /// <summary>
+    /// Company management permissions
+    /// </summary>
+    public static class Company
+    {
+        public const string Create = "Company.Create";
+        public const string Read = "Company.Read";
+        public const string Update = "Company.Update";
+        public const string Delete = "Company.Delete";
     }
 
     /// <summary>
@@ -244,7 +256,17 @@ public static class Permissions
     {
         public const string Read = "SystemConfig.Read";
         public const string Update = "SystemConfig.Update";
-        // Note: Backup/Restore removed until properly implemented with safety checks
+    }
+
+    /// <summary>
+    /// Backup and storage management permissions
+    /// </summary>
+    public static class Backup
+    {
+        public const string View = "Backup.View";
+        public const string Execute = "Backup.Execute";
+        public const string Configure = "Backup.Configure";
+        public const string Purge = "Backup.Purge";
     }
 
     // REMOVED: Configuration permissions - Merged into SystemConfig (over-engineered for current needs)

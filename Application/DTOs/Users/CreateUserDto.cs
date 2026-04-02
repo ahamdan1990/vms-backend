@@ -79,4 +79,10 @@ public class CreateUserDto
 
     public bool MustChangePassword { get; set; } = true;
     public bool SendWelcomeEmail { get; set; } = true;
+
+    /// <summary>
+    /// Per-host invitation approval override (admin-only).
+    /// null = follow global setting, true = always require approval, false = always auto-approve.
+    /// </summary>
+    public bool? RequiresApprovalOverride { get; set; } = null;
 }
