@@ -10,6 +10,8 @@ using VisitorManagementSystem.Api.Application.Services.Auth;
 using VisitorManagementSystem.Api.Application.Services.Email;
 using VisitorManagementSystem.Api.Application.Services.QrCode;
 using VisitorManagementSystem.Api.Application.Services.Pdf;
+using VisitorManagementSystem.Api.Application.Services.Badge;
+using VisitorManagementSystem.Api.Application.Services.Printing;
 using VisitorManagementSystem.Api.Application.Services.Csv;
 using VisitorManagementSystem.Api.Application.Services.Xlsx;
 using VisitorManagementSystem.Api.Application.Services.Users;
@@ -172,6 +174,13 @@ public static class ServiceCollectionExtensions
 
         // PDF service
         services.AddScoped<IPdfService, PdfService>();
+
+        // Badge service (generates A4 PDF + ZPL visitor badges)
+        services.AddScoped<IBadgeService, BadgeService>();
+
+        // Printer service — reads config from SystemConfigurations at runtime, falls through
+        // to NullPrinterService when no printer is configured (client uses bridge fallback)
+        services.AddScoped<IPrinterService, ConfiguredPrinterService>();
 
         // CSV service
         services.AddScoped<ICsvService, CsvService>();

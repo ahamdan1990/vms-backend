@@ -107,7 +107,7 @@ public class ConfigurationController : ControllerBase
         }
     }
     /// <summary>
-    /// Updates a configuration value
+    /// Creates or updates a configuration value (upsert).
     /// </summary>
     [HttpPut("{category}/{key}")]
     [Authorize(Policy = Permissions.SystemConfig.Update)]
@@ -121,34 +121,55 @@ public class ConfigurationController : ControllerBase
                 return Unauthorized(new { success = false, message = "User not authenticated" });
             }
 
-            // Validate the configuration first
+            var metadata = await _configService.GetConfigurationMetadataAsync(category, key, cancellationToken);
+
+            if (metadata == null)
+            {
+                // Key doesn't exist yet — create it with sensible defaults
+                var newConfig = new SystemConfiguration
+                {
+                    Category       = category,
+                    Key            = key,
+                    Value          = request.Value,
+                    DataType       = "String",
+                    RequiresRestart = false,
+                    IsEncrypted    = false,
+                    Environment    = "All",
+                };
+                var created = await _configService.CreateConfigurationAsync(newConfig, userId, cancellationToken);
+                if (created != null)
+                {
+                    _logger.LogInformation("Configuration {Category}.{Key} created (upsert) by user {UserId}", category, key, userId);
+                    return Ok(new { success = true, message = "Configuration created successfully", requiresRestart = false });
+                }
+
+                return BadRequest(new { success = false, message = "Failed to create configuration" });
+            }
+
+            // Key exists — validate then update
             var validation = await _configService.ValidateConfigurationAsync(category, key, request.Value, cancellationToken);
             if (!validation.IsValid)
             {
-                return BadRequest(new 
-                { 
-                    success = false, 
-                    message = "Invalid configuration value", 
+                return BadRequest(new
+                {
+                    success = false,
+                    message = "Invalid configuration value",
                     errors = validation.Errors,
                     warnings = validation.Warnings
                 });
             }
 
             var success = await _configService.SetConfigurationValueAsync(category, key, request.Value, userId, request.Reason, cancellationToken);
-            
+
             if (success)
             {
                 _logger.LogInformation("Configuration {Category}.{Key} updated by user {UserId}", category, key, userId);
-                
-                // Check if this change requires restart
-                var metadata = await _configService.GetConfigurationMetadataAsync(category, key, cancellationToken);
-                var requiresRestart = metadata?.RequiresRestart ?? false;
-
-                return Ok(new 
-                { 
-                    success = true, 
+                var requiresRestart = metadata.RequiresRestart;
+                return Ok(new
+                {
+                    success = true,
                     message = "Configuration updated successfully",
-                    requiresRestart = requiresRestart,
+                    requiresRestart,
                     restartWarning = requiresRestart ? "This change requires application restart to take effect" : null
                 });
             }
