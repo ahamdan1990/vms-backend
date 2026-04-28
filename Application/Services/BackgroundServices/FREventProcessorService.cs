@@ -148,7 +148,7 @@ public class FREventProcessorService : BackgroundService
         var vipNames = new[] { "CEO John Smith", "Director Mary Johnson", "Minister David Brown" };
         var vipName = vipNames[new Random().Next(vipNames.Length)];
         
-        await notificationService.NotifyVipArrivalAsync(vipName, "Main Entrance", cancellationToken);
+        await notificationService.NotifyVipArrivalAsync(vipName, "Main Entrance", cancellationToken: cancellationToken);
         
         _logger.LogInformation("Simulated VIP arrival: {VipName}", vipName);
     }
@@ -241,7 +241,8 @@ public class FREventProcessorService : BackgroundService
         if (visitor.IsVip)
         {
             await notificationService.NotifyVipArrivalAsync(
-                visitor.FullName, frEvent.CameraLocation ?? "Unknown Location", cancellationToken);
+                visitor.FullName, frEvent.CameraLocation ?? "Unknown Location",
+                visitorId: visitor.Id, cancellationToken: cancellationToken);
         }
         else
         {
@@ -269,9 +270,9 @@ public class FREventProcessorService : BackgroundService
         CancellationToken cancellationToken)
     {
         await notificationService.NotifyBlacklistDetectionAsync(
-            frEvent.PersonDescription ?? "Unknown Person", 
-            frEvent.CameraLocation ?? "Unknown Location", 
-            cancellationToken);
+            frEvent.PersonDescription ?? "Unknown Person",
+            frEvent.CameraLocation ?? "Unknown Location",
+            cancellationToken: cancellationToken);
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)

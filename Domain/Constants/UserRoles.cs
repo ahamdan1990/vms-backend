@@ -240,7 +240,6 @@ public static class UserRoles
             Permissions.CheckIn.ViewHistory,
             Permissions.CheckIn.PrintBadge,
             Permissions.CheckIn.QRScan,
-            Permissions.CheckIn.Override,
             Permissions.CheckIn.ManualVerification,
             Permissions.CheckIn.ManualEntry,
             Permissions.CheckIn.PhotoCapture,
@@ -265,6 +264,7 @@ public static class UserRoles
             Permissions.Visitor.ReadToday,
             Permissions.Visitor.ViewHistory,
             Permissions.Visitor.Create,
+            Permissions.Visitor.Update,
             Permissions.Visitor.Read,
             Permissions.Visitor.Search,
             Permissions.Visitor.ViewStatistics,
@@ -406,6 +406,7 @@ public static class UserRoles
             // Notification management
             Permissions.Notification.ReadAll,
             Permissions.Notification.SendSystem,
+            Permissions.Notification.ManageRecipients,
 
             // Location & Visit Purpose management
             Permissions.Location.Create,

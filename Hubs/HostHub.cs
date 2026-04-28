@@ -39,9 +39,10 @@ public class HostHub : BaseHub
 
         try
         {
-            // Join user-specific group for targeted notifications
+            // Join user-specific groups for targeted notifications
             await Groups.AddToGroupAsync(Context.ConnectionId, $"Host_{userId}");
-            
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"User_{userId.Value}");
+
             // Join general hosts group
             await Groups.AddToGroupAsync(Context.ConnectionId, "Hosts");
 

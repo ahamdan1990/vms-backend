@@ -354,6 +354,9 @@ public static class Permissions
         // Alert permissions (merged from Alert class)
         public const string Receive = "Notification.Receive"; // Receive alerts/notifications
         public const string Acknowledge = "Notification.Acknowledge"; // Acknowledge alerts/notifications
+
+        // Alert recipient configuration
+        public const string ManageRecipients = "Notification.ManageRecipients"; // Configure who receives which alerts
     }
 
     /// <summary>

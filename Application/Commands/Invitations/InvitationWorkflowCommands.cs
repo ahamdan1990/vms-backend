@@ -42,6 +42,11 @@ public class CheckInInvitationCommand : IRequest<InvitationDto>
     /// </summary>
     [MaxLength(500)]
     public string? Notes { get; set; }
+
+    /// <summary>
+    /// Granted blacklist override token — allows check-in for blacklisted visitors when set
+    /// </summary>
+    public Guid? BlacklistOverrideToken { get; set; }
 }
 
 /// <summary>

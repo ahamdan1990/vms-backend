@@ -41,6 +41,9 @@ public class AdminHub : BaseHub
         {
             // Join admin groups based on permissions
             await Groups.AddToGroupAsync(Context.ConnectionId, "Administrators");
+
+            // User-specific group — used by NotificationService.RouteToUserAsync
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"User_{userId.Value}");
             
             if (HasPermission(Permissions.SystemConfig.Read))
                 await Groups.AddToGroupAsync(Context.ConnectionId, "SystemConfig");

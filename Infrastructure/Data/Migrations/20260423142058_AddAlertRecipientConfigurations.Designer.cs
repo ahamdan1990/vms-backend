@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VisitorManagementSystem.Api.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using VisitorManagementSystem.Api.Infrastructure.Data;
 namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260423142058_AddAlertRecipientConfigurations")]
+    partial class AddAlertRecipientConfigurations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -517,74 +520,6 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.HasIndex("TriggeredByUserId");
 
                     b.ToTable("BackupRecords", (string)null);
-                });
-
-            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.BlacklistOverrideRequest", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("RequestedByUserId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("ReviewedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("ReviewedByUserId")
-                        .HasColumnType("int");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<Guid>("Token")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("VisitorId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedOn")
-                        .HasDatabaseName("IX_BlacklistOverrideRequests_CreatedOn");
-
-                    b.HasIndex("RequestedByUserId");
-
-                    b.HasIndex("ReviewedByUserId");
-
-                    b.HasIndex("Status")
-                        .HasDatabaseName("IX_BlacklistOverrideRequests_Status");
-
-                    b.HasIndex("Token")
-                        .IsUnique()
-                        .HasDatabaseName("IX_BlacklistOverrideRequests_Token");
-
-                    b.HasIndex("VisitorId");
-
-                    b.ToTable("BlacklistOverrideRequests", (string)null);
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Camera", b =>
@@ -4084,32 +4019,6 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.Navigation("ModifiedByUser");
 
                     b.Navigation("TriggeredByUser");
-                });
-
-            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.BlacklistOverrideRequest", b =>
-                {
-                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "RequestedByUser")
-                        .WithMany()
-                        .HasForeignKey("RequestedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ReviewedByUser")
-                        .WithMany()
-                        .HasForeignKey("ReviewedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Visitor", "Visitor")
-                        .WithMany()
-                        .HasForeignKey("VisitorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("RequestedByUser");
-
-                    b.Navigation("ReviewedByUser");
-
-                    b.Navigation("Visitor");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Camera", b =>

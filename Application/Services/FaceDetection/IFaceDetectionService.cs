@@ -61,6 +61,12 @@ public interface IFaceDetectionService
     /// </summary>
     /// <returns>True if service is available</returns>
     Task<bool> IsServiceAvailableAsync();
+
+    /// <summary>
+    /// Trims faces for a subject to at most maxFaces, deleting the oldest first (FIFO).
+    /// Does nothing if the subject has fewer than maxFaces faces.
+    /// </summary>
+    Task TrimFacesToMaxAsync(string subjectId, int maxFaces, CancellationToken cancellationToken = default);
 }
 
 /// <summary>

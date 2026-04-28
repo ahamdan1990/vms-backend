@@ -186,15 +186,18 @@ public class NotificationService : INotificationService
         }
     }
 
-    public async Task NotifyVipArrivalAsync(string visitorName, string location, CancellationToken cancellationToken = default)
+    public async Task NotifyVipArrivalAsync(string visitorName, string location,
+        int? visitorId = null, CancellationToken cancellationToken = default)
     {
         try
         {
-            var title = "VIP Visitor Arrival";
+            var title = "⭐ VIP Visitor Arrival";
             var message = $"VIP visitor {visitorName} has arrived at {location}";
 
-            var alert = NotificationAlert.CreateFRAlert(title, message, NotificationAlertType.VipArrival, 
-                AlertPriority.High, targetRole: UserRoles.Receptionist);
+            var alert = NotificationAlert.CreateFRAlert(title, message, NotificationAlertType.VipArrival,
+                AlertPriority.High, targetRole: UserRoles.Receptionist,
+                relatedEntityType: visitorId.HasValue ? "Visitor" : null,
+                relatedEntityId: visitorId);
 
             await _unitOfWork.Repository<NotificationAlert>().AddAsync(alert, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -204,17 +207,24 @@ public class NotificationService : INotificationService
                 AlertId = alert.Id,
                 Type = "VipArrival",
                 VisitorName = visitorName,
+                VisitorId = visitorId,
                 Location = location,
                 Message = message,
                 Priority = AlertPriority.High.ToString(),
+                RequiresAcknowledgement = true,
                 Timestamp = DateTime.UtcNow
             };
 
-            // Notify operators and security
-            await _operatorHubContext.Clients.Group("Operators")
-                .SendAsync("VipAlert", payload, cancellationToken);
-            await _securityHubContext.Clients.Group("SecurityVIP")
-                .SendAsync("VipAlert", payload, cancellationToken);
+            var hadConfiguredRecipients = await SendToConfiguredRecipientsAsync(
+                NotificationAlertType.VipArrival, "VipAlert", payload, cancellationToken);
+
+            if (!hadConfiguredRecipients)
+            {
+                await _operatorHubContext.Clients.Group("Operators")
+                    .SendAsync("VipAlert", payload, cancellationToken);
+                await _securityHubContext.Clients.Group("SecurityVIP")
+                    .SendAsync("VipAlert", payload, cancellationToken);
+            }
 
             _logger.LogInformation("VIP arrival notification sent: {VisitorName} at {Location}", visitorName, location);
         }
@@ -225,16 +235,18 @@ public class NotificationService : INotificationService
         }
     }
 
-    public async Task NotifyBlacklistDetectionAsync(string personDescription, string cameraLocation, 
-        CancellationToken cancellationToken = default)
+    public async Task NotifyBlacklistDetectionAsync(string personDescription, string cameraLocation,
+        int? visitorId = null, CancellationToken cancellationToken = default)
     {
         try
         {
             var title = "🚨 SECURITY ALERT: Blacklisted Person Detected";
             var message = $"Blacklisted individual detected at {cameraLocation}. Description: {personDescription}";
 
-            var alert = NotificationAlert.CreateFRAlert(title, message, NotificationAlertType.BlacklistAlert, 
-                AlertPriority.Critical);
+            var alert = NotificationAlert.CreateFRAlert(title, message, NotificationAlertType.BlacklistAlert,
+                AlertPriority.Critical,
+                relatedEntityType: visitorId.HasValue ? "Visitor" : null,
+                relatedEntityId: visitorId);
 
             await _unitOfWork.Repository<NotificationAlert>().AddAsync(alert, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -244,21 +256,28 @@ public class NotificationService : INotificationService
                 AlertId = alert.Id,
                 Type = "BlacklistAlert",
                 PersonDescription = personDescription,
+                VisitorId = visitorId,
                 CameraLocation = cameraLocation,
                 Message = message,
                 Priority = AlertPriority.Critical.ToString(),
+                RequiresAcknowledgement = true,
                 Timestamp = DateTime.UtcNow
             };
 
-            // Send to security and administrators immediately
-            await _securityHubContext.Clients.Group("SecurityBlacklist")
-                .SendAsync("SecurityAlert", payload, cancellationToken);
-            await _adminHubContext.Clients.Group("Administrators")
-                .SendAsync("CriticalAlert", payload, cancellationToken);
-            await _operatorHubContext.Clients.Group("Operators")
-                .SendAsync("SecurityAlert", payload, cancellationToken);
+            var hadConfiguredRecipients = await SendToConfiguredRecipientsAsync(
+                NotificationAlertType.BlacklistAlert, "SecurityAlert", payload, cancellationToken);
 
-            _logger.LogCritical("Blacklist detection alert sent: {PersonDescription} at {CameraLocation}", 
+            if (!hadConfiguredRecipients)
+            {
+                await _securityHubContext.Clients.Group("SecurityBlacklist")
+                    .SendAsync("SecurityAlert", payload, cancellationToken);
+                await _adminHubContext.Clients.Group("Administrators")
+                    .SendAsync("CriticalAlert", payload, cancellationToken);
+                await _operatorHubContext.Clients.Group("Operators")
+                    .SendAsync("SecurityAlert", payload, cancellationToken);
+            }
+
+            _logger.LogCritical("Blacklist detection alert sent: {PersonDescription} at {CameraLocation}",
                 personDescription, cameraLocation);
         }
         catch (Exception ex)
@@ -266,6 +285,81 @@ public class NotificationService : INotificationService
             _logger.LogError(ex, "Error sending blacklist detection alert");
             throw;
         }
+    }
+
+    /// <summary>
+    /// Queries AlertRecipientConfigurations for a given alert type and delivers
+    /// the payload to each enabled recipient via the appropriate hub.
+    /// Role-based recipients land in the role's default group.
+    /// User-based recipients land in a per-user group (User_{id}) present on all hubs.
+    /// </summary>
+    private async Task<bool> SendToConfiguredRecipientsAsync(
+        Domain.Enums.NotificationAlertType alertType,
+        string eventName,
+        object payload,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var recipients = (await _unitOfWork.Repository<Domain.Entities.AlertRecipientConfiguration>()
+                .GetAllAsync(r => r.AlertType == alertType && r.IsEnabled, cancellationToken: cancellationToken))
+                ?.ToList() ?? new List<Domain.Entities.AlertRecipientConfiguration>();
+
+            if (!recipients.Any()) return false;
+
+            foreach (var recipient in recipients)
+            {
+                if (recipient.TargetType == "Role" && !string.IsNullOrEmpty(recipient.TargetRole))
+                {
+                    await RouteToRoleAsync(recipient.TargetRole, eventName, payload, cancellationToken);
+                }
+                else if (recipient.TargetType == "User" && recipient.TargetUserId.HasValue)
+                {
+                    await RouteToUserAsync(recipient.TargetUserId.Value, eventName, payload, cancellationToken);
+                }
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            // Never let recipient routing errors surface and mask the primary alert delivery
+            _logger.LogError(ex, "Error sending alert to configured recipients for {AlertType}", alertType);
+            return false;
+        }
+    }
+
+    private async Task RouteToRoleAsync(string role, string eventName, object payload,
+        CancellationToken cancellationToken)
+    {
+        switch (role)
+        {
+            case UserRoles.Administrator:
+                await _adminHubContext.Clients.Group("Administrators")
+                    .SendAsync(eventName, payload, cancellationToken);
+                break;
+            case UserRoles.Staff:
+                await _hostHubContext.Clients.Group("Hosts")
+                    .SendAsync(eventName, payload, cancellationToken);
+                break;
+            case UserRoles.Receptionist:
+                await _operatorHubContext.Clients.Group("Operators")
+                    .SendAsync(eventName, payload, cancellationToken);
+                break;
+        }
+    }
+
+    private async Task RouteToUserAsync(int userId, string eventName, object payload,
+        CancellationToken cancellationToken)
+    {
+        // Every hub maintains a User_{id} group — the user joins it on connect.
+        // We fan-out across all hubs so the message reaches whatever hub the user is on.
+        var userGroup = $"User_{userId}";
+        await Task.WhenAll(
+            _operatorHubContext.Clients.Group(userGroup).SendAsync(eventName, payload, cancellationToken),
+            _hostHubContext.Clients.Group(userGroup).SendAsync(eventName, payload, cancellationToken),
+            _securityHubContext.Clients.Group(userGroup).SendAsync(eventName, payload, cancellationToken),
+            _adminHubContext.Clients.Group(userGroup).SendAsync(eventName, payload, cancellationToken)
+        );
     }
     public async Task NotifyUnknownFaceDetectionAsync(string cameraLocation, CancellationToken cancellationToken = default)
     {
@@ -989,6 +1083,70 @@ public class NotificationService : INotificationService
         {
             _logger.LogError(ex, "Error sending storage alert notification {AlertType}", alertType);
             throw;
+        }
+    }
+
+    public async Task NotifyBlacklistOverrideRequestedAsync(Guid requestId, int visitorId, string visitorName,
+        string requestedByName, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var payload = new
+            {
+                Type = "BlacklistOverrideRequested",
+                RequestId = requestId,
+                VisitorId = visitorId,
+                VisitorName = visitorName,
+                RequestedByName = requestedByName,
+                Message = $"Receptionist {requestedByName} is requesting authorization to check in blacklisted visitor {visitorName}.",
+                Priority = AlertPriority.Critical.ToString(),
+                RequiresAcknowledgement = true,
+                Timestamp = DateTime.UtcNow
+            };
+
+            // Route to configured recipients for blacklist alerts; fall back to admins
+            var hadConfigured = await SendToConfiguredRecipientsAsync(
+                Domain.Enums.NotificationAlertType.BlacklistAlert, "BlacklistOverrideRequested", payload, cancellationToken);
+
+            if (!hadConfigured)
+            {
+                await _adminHubContext.Clients.Group("Administrators")
+                    .SendAsync("BlacklistOverrideRequested", payload, cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending blacklist override request notification");
+        }
+    }
+
+    public async Task NotifyBlacklistOverrideResultAsync(Guid requestId, int visitorId, bool granted,
+        string reviewedByName, string? notes, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var eventName = granted ? "BlacklistOverrideGranted" : "BlacklistOverrideDenied";
+            var payload = new
+            {
+                Type = eventName,
+                RequestId = requestId,
+                VisitorId = visitorId,
+                Granted = granted,
+                ReviewedByName = reviewedByName,
+                Notes = notes,
+                Message = granted
+                    ? $"{reviewedByName} has authorized check-in for the blacklisted visitor. You may proceed."
+                    : $"{reviewedByName} has denied check-in for the blacklisted visitor.",
+                Timestamp = DateTime.UtcNow
+            };
+
+            // Send to all operators so the waiting receptionist gets the response
+            await _operatorHubContext.Clients.Group("Operators")
+                .SendAsync(eventName, payload, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending blacklist override result notification");
         }
     }
 

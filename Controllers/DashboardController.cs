@@ -137,6 +137,46 @@ public class DashboardController : BaseController
     }
 
     /// <summary>
+    /// Get all visitors currently in the building (checked in, not yet checked out).
+    /// Administrators only — used by the manager live dashboard.
+    /// </summary>
+    [HttpGet("in-building")]
+    [Authorize(Policy = Permissions.Dashboard.ViewAdmin)]
+    public async Task<IActionResult> GetInBuildingVisitors(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var now = DateTime.UtcNow;
+            var activeInvitations = await _unitOfWork.Invitations.GetActiveInvitationsAsync(cancellationToken);
+
+            var result = activeInvitations.Select(inv => new InBuildingVisitorDto
+            {
+                InvitationId = inv.Id,
+                VisitorId = inv.VisitorId,
+                VisitorName = $"{inv.Visitor.FirstName} {inv.Visitor.LastName}",
+                Company = inv.Visitor.Company ?? inv.Visitor.CompanyEntity?.Name,
+                ProfilePhotoPath = inv.Visitor.ProfilePhotoPath,
+                HostName = $"{inv.Host.FirstName} {inv.Host.LastName}",
+                LocationName = inv.Location?.Name,
+                VisitPurpose = inv.VisitPurpose?.Name,
+                CheckedInAt = inv.CheckedInAt ?? inv.CreatedOn,
+                ScheduledEndTime = inv.ScheduledEndTime,
+                IsVip = inv.Visitor.IsVip,
+                IsBlacklisted = inv.Visitor.IsBlacklisted,
+                IsOverdue = inv.ScheduledEndTime < now,
+                ElapsedMinutes = (int)(now - (inv.CheckedInAt ?? inv.CreatedOn)).TotalMinutes
+            }).OrderBy(v => v.CheckedInAt).ToList();
+
+            return SuccessResponse(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving in-building visitors");
+            return BadRequestResponse("Failed to retrieve in-building visitors", ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Get system alerts count (unacknowledged alerts from last 24 hours)
     /// </summary>
     private async Task<int> GetSystemAlertsCount(CancellationToken cancellationToken)
@@ -233,4 +273,22 @@ public class DashboardMetricsDto
     /// Average visit duration in hours
     /// </summary>
     public double AverageVisitDuration { get; set; }
+}
+
+public class InBuildingVisitorDto
+{
+    public int InvitationId { get; set; }
+    public int VisitorId { get; set; }
+    public string VisitorName { get; set; } = string.Empty;
+    public string? Company { get; set; }
+    public string? ProfilePhotoPath { get; set; }
+    public string HostName { get; set; } = string.Empty;
+    public string? LocationName { get; set; }
+    public string? VisitPurpose { get; set; }
+    public DateTime CheckedInAt { get; set; }
+    public DateTime ScheduledEndTime { get; set; }
+    public bool IsVip { get; set; }
+    public bool IsBlacklisted { get; set; }
+    public bool IsOverdue { get; set; }
+    public int ElapsedMinutes { get; set; }
 }

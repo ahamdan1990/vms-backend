@@ -62,27 +62,47 @@ namespace VisitorManagementSystem.Api.Application.Commands.Invitations
                         "Please check them out before starting a new visit.");
                 }
 
-                // Blacklist check — block check-in and alert security
+                // Blacklist check — block check-in unless a granted override token is present
                 if (invitation.Visitor?.IsBlacklisted == true)
                 {
-                    var locationName = invitation.Location?.Name ?? "Unknown location";
-                    _logger.LogWarning("Blacklisted visitor {VisitorId} ({VisitorName}) attempted check-in at {Location}",
-                        invitation.VisitorId, invitation.Visitor.FullName, locationName);
-
-                    try
+                    if (request.BlacklistOverrideToken.HasValue)
                     {
-                        await _notificationService.NotifyBlacklistDetectionAsync(
-                            $"{invitation.Visitor.FullName} (ID: {invitation.VisitorId})",
-                            locationName,
-                            cancellationToken);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Failed to send blacklist alert for visitor {VisitorId}", invitation.VisitorId);
-                    }
+                        // Validate the override token
+                        var overrideResults = await _unitOfWork.Repository<Domain.Entities.BlacklistOverrideRequest>()
+                            .GetAllAsync(predicate: r => r.Token == request.BlacklistOverrideToken.Value, cancellationToken: cancellationToken);
+                        var overrideReq = overrideResults.FirstOrDefault();
 
-                    throw new InvalidOperationException(
-                        $"Check-in denied: visitor '{invitation.Visitor.FullName}' is on the blacklist. Security has been alerted.");
+                        if (overrideReq == null || overrideReq.VisitorId != invitation.VisitorId || overrideReq.Status != "Granted")
+                        {
+                            throw new InvalidOperationException(
+                                "The provided blacklist override token is invalid or has not been granted.");
+                        }
+
+                        _logger.LogWarning("Blacklisted visitor {VisitorId} ({VisitorName}) checked in with override token {Token}",
+                            invitation.VisitorId, invitation.Visitor.FullName, request.BlacklistOverrideToken.Value);
+                    }
+                    else
+                    {
+                        var locationName = invitation.Location?.Name ?? "Unknown location";
+                        _logger.LogWarning("Blacklisted visitor {VisitorId} ({VisitorName}) attempted check-in at {Location}",
+                            invitation.VisitorId, invitation.Visitor.FullName, locationName);
+
+                        try
+                        {
+                            await _notificationService.NotifyBlacklistDetectionAsync(
+                                $"{invitation.Visitor.FullName} (ID: {invitation.VisitorId})",
+                                locationName,
+                                visitorId: invitation.VisitorId,
+                                cancellationToken: cancellationToken);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Failed to send blacklist alert for visitor {VisitorId}", invitation.VisitorId);
+                        }
+
+                        throw new InvalidOperationException(
+                            $"Check-in denied: visitor '{invitation.Visitor.FullName}' is on the blacklist. Security has been alerted.");
+                    }
                 }
 
                 using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);

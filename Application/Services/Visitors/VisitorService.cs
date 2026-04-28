@@ -386,16 +386,10 @@ public class VisitorService : IVisitorService
                 }
             }
 
-            // Remove existing photo if exists
+            // Remove existing photo file if exists (CompreFace faces are kept for FIFO trimming after new face is added)
             if (!string.IsNullOrEmpty(visitor.ProfilePhotoPath))
             {
                 await RemoveExistingPhoto(visitor.ProfilePhotoPath);
-
-                // Also remove from CompreFace face collection using visitor's name if available
-                if (requireFaceDetection)
-                {
-                    await _faceDetectionService.RemoveFaceFromCollectionAsync(subjectId, cancellationToken);
-                }
             }
 
             // Try to detect and crop face from the uploaded image
@@ -500,6 +494,9 @@ public class VisitorService : IVisitorService
                         _logger.LogInformation("Face added to recognition collection for visitor {VisitorId} ({VisitorName}), image_id: {ImageId}",
                             visitorId, subjectId, addFaceResult.ImageId);
                         faceRecognitionEnabled = true;
+
+                        // FIFO: keep at most 10 faces per subject for recognition accuracy
+                        await _faceDetectionService.TrimFacesToMaxAsync(subjectId, 10, cancellationToken);
                     }
                     else
                     {

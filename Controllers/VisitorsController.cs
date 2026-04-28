@@ -698,6 +698,31 @@ public class VisitorsController : BaseController
     }
 
     /// <summary>
+    /// Runs face recognition on a captured photo, checks VIP/blacklist classification,
+    /// and fires the appropriate real-time alert — all in one atomic operation.
+    /// Returns rich classification data so the frontend can show the right UI immediately.
+    /// </summary>
+    [HttpPost("recognize")]
+    [Authorize(Policy = Permissions.CheckIn.PhotoCapture)]
+    public async Task<IActionResult> RecognizeAndClassify(
+        [FromForm] IFormFile photo,
+        [FromForm] string? location = "Reception",
+        CancellationToken cancellationToken = default)
+    {
+        if (photo == null || photo.Length == 0)
+            return BadRequestResponse("A photo file is required.");
+
+        var command = new RecognizeAndClassifyVisitorCommand
+        {
+            Photo = photo,
+            Location = location ?? "Reception"
+        };
+
+        var result = await _mediator.Send(command, cancellationToken);
+        return SuccessResponse(result);
+    }
+
+    /// <summary>
     /// Debug endpoint to test model binding for invitation creation
     /// </summary>
     [HttpPost("debug-binding")]

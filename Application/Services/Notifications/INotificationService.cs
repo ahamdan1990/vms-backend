@@ -9,6 +9,17 @@ namespace VisitorManagementSystem.Api.Application.Services.Notifications;
 public interface INotificationService
 {
     /// <summary>
+    /// Send VIP arrival alert — respects configured recipients AND fires to default groups.
+    /// </summary>
+    Task NotifyVipArrivalAsync(string visitorName, string location, int? visitorId = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Send blacklist detection alert — respects configured recipients AND fires to default groups.
+    /// </summary>
+    Task NotifyBlacklistDetectionAsync(string personDescription, string cameraLocation,
+        int? visitorId = null, CancellationToken cancellationToken = default);
+    /// <summary>
     /// Send notification to specific user
     /// </summary>
     Task NotifyUserAsync(int userId, string title, string message, NotificationAlertType type, 
@@ -32,17 +43,6 @@ public interface INotificationService
     Task NotifyHostOfVisitorArrivalAsync(int hostId, int visitorId, string visitorName, 
         DateTime arrivalTime, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Send VIP arrival alert to security and operators
-    /// </summary>
-    Task NotifyVipArrivalAsync(string visitorName, string location, 
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Send blacklist detection alert to security
-    /// </summary>
-    Task NotifyBlacklistDetectionAsync(string personDescription, string cameraLocation, 
-        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Send unknown face detection alert to operators
@@ -159,4 +159,10 @@ public interface INotificationService
         bool backupTriggered,
         Domain.Enums.AlertPriority priority,
         CancellationToken cancellationToken = default);
+
+    Task NotifyBlacklistOverrideRequestedAsync(Guid requestId, int visitorId, string visitorName,
+        string requestedByName, CancellationToken cancellationToken = default);
+
+    Task NotifyBlacklistOverrideResultAsync(Guid requestId, int visitorId, bool granted,
+        string reviewedByName, string? notes, CancellationToken cancellationToken = default);
 }

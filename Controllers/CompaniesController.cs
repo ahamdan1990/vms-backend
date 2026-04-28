@@ -5,6 +5,7 @@ using VisitorManagementSystem.Api.Application.Commands.Companies;
 using VisitorManagementSystem.Api.Application.DTOs.Companies;
 using VisitorManagementSystem.Api.Application.Queries.Companies;
 using VisitorManagementSystem.Api.Domain.Constants;
+using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 namespace VisitorManagementSystem.Api.Controllers;
 
@@ -17,11 +18,13 @@ namespace VisitorManagementSystem.Api.Controllers;
 public class CompaniesController : BaseController
 {
     private readonly IMediator _mediator;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<CompaniesController> _logger;
 
-    public CompaniesController(IMediator mediator, ILogger<CompaniesController> logger)
+    public CompaniesController(IMediator mediator, IUnitOfWork unitOfWork, ILogger<CompaniesController> logger)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -162,6 +165,40 @@ public class CompaniesController : BaseController
         }
 
         return SuccessResponse(result);
+    }
+
+    /// <summary>
+    /// Mark a company as verified.
+    /// </summary>
+    [HttpPut("{id}/verify")]
+    [Authorize(Policy = Permissions.Company.Update)]
+    public async Task<IActionResult> VerifyCompany(int id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            if (userId == null) return UnauthorizedResponse();
+
+            var company = await _unitOfWork.Repository<Domain.Entities.Company>()
+                .GetByIdAsync(id, cancellationToken);
+
+            if (company == null) return NotFoundResponse("Company", id);
+
+            company.IsVerified = true;
+            company.VerifiedOn = DateTime.UtcNow;
+            company.VerifiedBy = userId.Value;
+
+            _unitOfWork.Repository<Domain.Entities.Company>().Update(company);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Company {Id} verified by user {UserId}", id, userId);
+            return SuccessResponse(new { company.Id, company.IsVerified, company.VerifiedOn });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error verifying company {Id}", id);
+            return BadRequestResponse("Failed to verify company", ex.Message);
+        }
     }
 
     /// <summary>

@@ -400,6 +400,50 @@ public class CompreFaceService : IFaceDetectionService
         }
     }
 
+    public async Task TrimFacesToMaxAsync(string subjectId, int maxFaces, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var imageIds = await GetFaceImageIdsForSubjectAsync(subjectId, cancellationToken);
+            var toDelete = imageIds.Count - maxFaces;
+            if (toDelete <= 0) return;
+
+            for (int i = 0; i < toDelete; i++)
+            {
+                await DeleteFaceByImageIdAsync(imageIds[i], cancellationToken);
+            }
+
+            _logger.LogInformation("Trimmed {Count} face(s) from subject {Subject} (kept newest {Max})",
+                toDelete, subjectId, maxFaces);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to trim faces for subject {Subject}", subjectId);
+        }
+    }
+
+    private async Task<List<string>> GetFaceImageIdsForSubjectAsync(string subjectId, CancellationToken cancellationToken)
+    {
+        var endpoint = $"/api/v1/recognition/faces?subject={Uri.EscapeDataString(subjectId)}&page=0&size=1000";
+        using var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
+        request.Headers.Add("x-api-key", _settings.RecognitionApiKey);
+
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode) return [];
+
+        var json = await response.Content.ReadAsStringAsync(cancellationToken);
+        var result = JsonSerializer.Deserialize<CompreFaceFaceListResponse>(json, _jsonOptions);
+        return result?.Faces?.Select(f => f.ImageId).Where(id => !string.IsNullOrEmpty(id)).ToList() ?? [];
+    }
+
+    private async Task DeleteFaceByImageIdAsync(string imageId, CancellationToken cancellationToken)
+    {
+        var endpoint = $"/api/v1/recognition/faces/{Uri.EscapeDataString(imageId)}";
+        using var request = new HttpRequestMessage(HttpMethod.Delete, endpoint);
+        request.Headers.Add("x-api-key", _settings.RecognitionApiKey);
+        await _httpClient.SendAsync(request, cancellationToken);
+    }
+
     public async Task<List<RecognizedFace>> RecognizeFacesAsync(Stream imageStream, CancellationToken cancellationToken = default)
     {
         try
@@ -644,6 +688,21 @@ internal class CompreFaceDeleteResponse
 {
     [JsonPropertyName("deleted")]
     public int Deleted { get; set; }
+}
+
+internal class CompreFaceFaceListResponse
+{
+    [JsonPropertyName("faces")]
+    public List<CompreFaceFaceEntry>? Faces { get; set; }
+}
+
+internal class CompreFaceFaceEntry
+{
+    [JsonPropertyName("image_id")]
+    public string ImageId { get; set; } = string.Empty;
+
+    [JsonPropertyName("subject")]
+    public string Subject { get; set; } = string.Empty;
 }
 
 internal class CompreFaceRecognitionResponse

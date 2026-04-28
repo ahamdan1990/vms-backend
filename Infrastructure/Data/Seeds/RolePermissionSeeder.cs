@@ -31,6 +31,7 @@ public static class RolePermissionSeeder
             Console.WriteLine("   Skipping seed to preserve custom configurations.");
             Console.WriteLine("   Applying additive sync for new system permissions only.");
             await EnsureBuiltInRoleCompanyPermissionsAsync(context);
+            await EnsureNewSystemPermissionsAsync(context);
             return;
         }
 
@@ -165,6 +166,7 @@ public static class RolePermissionSeeder
             Permissions.Visitor.ReadToday,
             Permissions.Visitor.ViewHistory,
             Permissions.Visitor.Create,
+            Permissions.Visitor.Update,
             Permissions.Visitor.Read,
             Permissions.Visitor.Search,
             Permissions.Visitor.ViewStatistics,
@@ -387,6 +389,7 @@ public static class RolePermissionSeeder
             Permissions.Visitor.ReadToday,
             Permissions.Visitor.ViewHistory,
             Permissions.Visitor.Create, // For walk-in creation
+            Permissions.Visitor.Update,
             Permissions.Visitor.Read,
             Permissions.Visitor.Search,
             Permissions.Visitor.ManagePhotos,
@@ -511,5 +514,67 @@ public static class RolePermissionSeeder
         await context.SaveChangesAsync();
 
         Console.WriteLine($"Added {newMappings.Count} company permission mappings for built-in roles.");
+    }
+
+    /// <summary>
+    /// Additively syncs permissions that were introduced after the initial seed.
+    /// Call this from SeedRolePermissionsAsync alongside EnsureBuiltInRoleCompanyPermissionsAsync.
+    /// </summary>
+    public static async Task EnsureNewSystemPermissionsAsync(ApplicationDbContext context)
+    {
+        // Permissions added after initial seed that must be patched into existing role rows
+        var additiveMappings = new Dictionary<string, string[]>
+        {
+            ["Administrator"] = new[] { Permissions.Notification.ManageRecipients },
+            ["Receptionist"]  = new[] { Permissions.Visitor.Update }
+        };
+
+        var roleNames = additiveMappings.Keys.ToArray();
+        var roles = await context.Roles
+            .Where(r => roleNames.Contains(r.Name))
+            .ToDictionaryAsync(r => r.Name!, r => r.Id);
+
+        var allPermissionNames = additiveMappings.Values.SelectMany(p => p).Distinct().ToList();
+        var permissionLookup = await context.Permissions
+            .Where(p => allPermissionNames.Contains(p.Name))
+            .ToDictionaryAsync(p => p.Name, p => p.Id);
+
+        var toAdd = new List<RolePermission>();
+
+        foreach (var (roleName, permNames) in additiveMappings)
+        {
+            if (!roles.TryGetValue(roleName, out var roleId)) continue;
+
+            var permIds = permNames
+                .Where(n => permissionLookup.ContainsKey(n))
+                .Select(n => permissionLookup[n])
+                .ToList();
+
+            var existing = (await context.RolePermissions
+                .Where(rp => rp.RoleId == roleId && permIds.Contains(rp.PermissionId))
+                .Select(rp => rp.PermissionId)
+                .ToListAsync())
+                .ToHashSet();
+
+            toAdd.AddRange(permNames
+                .Where(n => permissionLookup.TryGetValue(n, out var pid) && !existing.Contains(pid))
+                .Select(n => new RolePermission
+                {
+                    RoleId = roleId,
+                    PermissionId = permissionLookup[n],
+                    GrantedAt = DateTime.UtcNow,
+                    GrantedBy = null
+                }));
+        }
+
+        if (!toAdd.Any())
+        {
+            Console.WriteLine("New system permission sync complete. No additions required.");
+            return;
+        }
+
+        await context.RolePermissions.AddRangeAsync(toAdd);
+        await context.SaveChangesAsync();
+        Console.WriteLine($"Patched {toAdd.Count} new system permissions across roles.");
     }
 }

@@ -29,10 +29,8 @@ public class SecurityHub : BaseHub
             return;
         }
 
-        // Check security permissions
-        if (!HasPermission(Permissions.Notification.Receive) && 
-            !HasPermission(Permissions.Notification.Receive) &&
-            !HasPermission(Permissions.Notification.Receive))
+        // Any user with notification receive permission can join as security
+        if (!HasPermission(Permissions.Notification.Receive))
         {
             await Clients.Caller.SendAsync("Error", "Insufficient security permissions");
             return;
@@ -42,14 +40,17 @@ public class SecurityHub : BaseHub
         {
             // Join security groups based on permissions
             await Groups.AddToGroupAsync(Context.ConnectionId, "Security");
-            
-            if (HasPermission(Permissions.Notification.Receive))
+
+            // User-specific group — used by NotificationService.RouteToUserAsync
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"User_{userId.Value}");
+
+            if (HasPermission(Permissions.FRSystem.Monitor))
                 await Groups.AddToGroupAsync(Context.ConnectionId, "SecurityFR");
-                
-            if (HasPermission(Permissions.Notification.Receive))
+
+            if (HasPermission(Permissions.Watchlist.ManageBlacklist))
                 await Groups.AddToGroupAsync(Context.ConnectionId, "SecurityBlacklist");
-                
-            if (HasPermission(Permissions.Notification.Receive))
+
+            if (HasPermission(Permissions.Watchlist.ManageVIP))
                 await Groups.AddToGroupAsync(Context.ConnectionId, "SecurityVIP");
                 
             if (HasPermission(Permissions.Emergency.ViewRoster))

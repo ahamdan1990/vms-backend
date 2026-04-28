@@ -73,7 +73,10 @@ public class OperatorHub : BaseHub
 
             // Join appropriate groups
             await Groups.AddToGroupAsync(Context.ConnectionId, "Operators");
-            
+
+            // User-specific group — used by NotificationService.RouteToUserAsync
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"User_{userId.Value}");
+
             if (locationId.HasValue)
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"Location_{locationId}");

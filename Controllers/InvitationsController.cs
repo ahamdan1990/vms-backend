@@ -514,7 +514,8 @@ public class InvitationsController : BaseController
         {
             InvitationReference = checkInDto.InvitationReference,
             CheckedInBy = GetCurrentUserId() ?? throw new UnauthorizedAccessException("User must be authenticated"),
-            Notes = checkInDto.Notes
+            Notes = checkInDto.Notes,
+            BlacklistOverrideToken = checkInDto.BlacklistOverrideToken
         };
 
         var result = await _mediator.Send(command);
@@ -878,6 +879,11 @@ public class CheckInInvitationDto
     /// </summary>
     [MaxLength(500)]
     public string? Notes { get; set; }
+
+    /// <summary>
+    /// Granted blacklist override token — required when checking in a blacklisted visitor
+    /// </summary>
+    public Guid? BlacklistOverrideToken { get; set; }
 }
 
 public class CheckOutInvitationDto
