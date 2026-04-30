@@ -16,6 +16,21 @@ public class CompreFaceService : IFaceDetectionService
     private readonly ILogger<CompreFaceService> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
+    // Circuit breaker state
+    private volatile bool _circuitOpen = false;
+    private int _consecutiveFailures = 0;
+    private DateTime _circuitOpenedAt = DateTime.MinValue;
+    private readonly object _circuitLock = new object();
+    private const int FailureThreshold = 3;
+    private static readonly TimeSpan RecoveryWindow = TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    /// True when CompreFace is enabled and the circuit breaker is closed.
+    /// When false, callers should fall back immediately (QR / manual) without waiting for timeouts.
+    /// The circuit automatically re-closes after RecoveryWindow once IsServiceAvailableAsync() succeeds.
+    /// </summary>
+    public bool IsAvailable => _settings.Enabled && !_circuitOpen;
+
     public CompreFaceService(
         HttpClient httpClient,
         IOptions<CompreFaceSettings> settings,
@@ -40,6 +55,53 @@ public class CompreFaceService : IFaceDetectionService
         }
     }
 
+    private void RecordSuccess()
+    {
+        lock (_circuitLock)
+        {
+            _consecutiveFailures = 0;
+            if (_circuitOpen)
+            {
+                _circuitOpen = false;
+                _logger.LogInformation("CompreFace circuit breaker closed — service has recovered");
+            }
+        }
+    }
+
+    private void RecordFailure(string reason)
+    {
+        lock (_circuitLock)
+        {
+            _consecutiveFailures++;
+            _logger.LogWarning("CompreFace failure #{Count}: {Reason}", _consecutiveFailures, reason);
+
+            if (!_circuitOpen && _consecutiveFailures >= FailureThreshold)
+            {
+                _circuitOpen = true;
+                _circuitOpenedAt = DateTime.UtcNow;
+                _logger.LogError(
+                    "CompreFace circuit breaker OPEN after {Threshold} consecutive failures. " +
+                    "Face recognition disabled; check-in will fall back to QR/manual. " +
+                    "Circuit will attempt recovery in {Minutes} minutes.",
+                    FailureThreshold, RecoveryWindow.TotalMinutes);
+            }
+        }
+    }
+
+    private bool TryResetCircuitForProbe()
+    {
+        // Allow a single probe request after the recovery window has elapsed
+        lock (_circuitLock)
+        {
+            if (_circuitOpen && DateTime.UtcNow - _circuitOpenedAt >= RecoveryWindow)
+            {
+                _logger.LogInformation("CompreFace circuit breaker allowing probe after recovery window");
+                return true;
+            }
+            return false;
+        }
+    }
+
     /// <summary>
     /// Executes an operation with exponential backoff retry logic
     /// </summary>
@@ -49,6 +111,13 @@ public class CompreFaceService : IFaceDetectionService
         int maxRetries = 3,
         CancellationToken cancellationToken = default)
     {
+        // Fast-path: skip call entirely when circuit is open (unless a probe is allowed)
+        if (_circuitOpen && !TryResetCircuitForProbe())
+        {
+            _logger.LogDebug("CompreFace circuit open — skipping {Operation}", operationName);
+            throw new InvalidOperationException("CompreFace circuit breaker is open");
+        }
+
         var retryCount = 0;
         var delay = TimeSpan.FromMilliseconds(500);
 
@@ -56,7 +125,9 @@ public class CompreFaceService : IFaceDetectionService
         {
             try
             {
-                return await operation();
+                var result = await operation();
+                RecordSuccess();
+                return result;
             }
             catch (HttpRequestException ex) when (retryCount < maxRetries)
             {
@@ -66,10 +137,16 @@ public class CompreFaceService : IFaceDetectionService
                     retryCount, maxRetries, operationName, delay.TotalMilliseconds);
 
                 await Task.Delay(delay, cancellationToken);
-                delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * 2); // Exponential backoff
+                delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * 2);
+            }
+            catch (InvalidOperationException)
+            {
+                // Re-throw circuit-open exception without recording a failure
+                throw;
             }
             catch (Exception ex)
             {
+                RecordFailure($"{operationName} failed after {retryCount + 1} attempt(s): {ex.Message}");
                 _logger.LogError(ex, "Operation {Operation} failed after {Attempts} attempts",
                     operationName, retryCount);
                 throw;
@@ -605,12 +682,20 @@ public class CompreFaceService : IFaceDetectionService
             using var request = new HttpRequestMessage(HttpMethod.Get, "/");
             var response = await _httpClient.SendAsync(request, CancellationToken.None);
 
-            return response.IsSuccessStatusCode ||
-                   response.StatusCode == System.Net.HttpStatusCode.NotFound ||
-                   response.StatusCode == System.Net.HttpStatusCode.Unauthorized;
+            var reachable = response.IsSuccessStatusCode ||
+                            response.StatusCode == System.Net.HttpStatusCode.NotFound ||
+                            response.StatusCode == System.Net.HttpStatusCode.Unauthorized;
+
+            if (reachable)
+                RecordSuccess();
+            else
+                RecordFailure($"Health probe returned {(int)response.StatusCode}");
+
+            return reachable;
         }
-        catch
+        catch (Exception ex)
         {
+            RecordFailure($"Health probe exception: {ex.Message}");
             return false;
         }
     }

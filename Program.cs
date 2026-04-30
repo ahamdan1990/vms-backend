@@ -431,4 +431,26 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// Cache mode startup diagnostic
+var startupLogger = app.Services.GetRequiredService<ILogger<Program>>();
+var resilientCache = app.Services.GetService<VisitorManagementSystem.Api.Infrastructure.Caching.ResilientDistributedCache>();
+if (resilientCache == null)
+{
+    startupLogger.LogWarning(
+        "Redis is not configured (ConnectionStrings:Redis is empty). " +
+        "Running with in-memory cache only. " +
+        "Multi-server / load-balanced deployments will have inconsistent cache state.");
+}
+else if (!resilientCache.IsUsingRedis)
+{
+    startupLogger.LogWarning(
+        "Redis is configured but unreachable at startup. " +
+        "Fallen back to in-memory cache. " +
+        "Multi-server / load-balanced deployments will have inconsistent cache state until Redis recovers.");
+}
+else
+{
+    startupLogger.LogInformation("Cache mode: Redis (distributed)");
+}
+
 app.Run();

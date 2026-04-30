@@ -63,6 +63,13 @@ public interface IFaceDetectionService
     Task<bool> IsServiceAvailableAsync();
 
     /// <summary>
+    /// True when CompreFace is enabled AND the circuit breaker is closed (no recent failures).
+    /// Use this before calling any face detection method to decide whether to attempt the call
+    /// or skip it and fall back to QR / manual check-in without waiting for a timeout.
+    /// </summary>
+    bool IsAvailable { get; }
+
+    /// <summary>
     /// Trims faces for a subject to at most maxFaces, deleting the oldest first (FIFO).
     /// Does nothing if the subject has fewer than maxFaces faces.
     /// </summary>

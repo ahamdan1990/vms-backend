@@ -864,15 +864,22 @@ public class ApplicationHealthCheck : IHealthCheck
         try
         {
             using var scope = _serviceProvider.CreateScope();
-            
+
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             await unitOfWork.ExecuteSqlAsync("SELECT 1", Array.Empty<object>(), cancellationToken);
+
+            // Report current cache mode so operators can see it at a glance via /health
+            var resilientCache = _serviceProvider.GetService<VisitorManagementSystem.Api.Infrastructure.Caching.ResilientDistributedCache>();
+            var cacheMode = resilientCache == null ? "memory-only"
+                          : resilientCache.IsUsingRedis ? "redis"
+                          : "memory-fallback";
 
             var healthData = new Dictionary<string, object>
             {
                 { "timestamp", DateTime.UtcNow },
                 { "database", "connected" },
-                { "services", "operational" }
+                { "services", "operational" },
+                { "cacheMode", cacheMode }
             };
 
             return HealthCheckResult.Healthy("Application is running normally", healthData);

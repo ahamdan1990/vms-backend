@@ -6,6 +6,7 @@ using VisitorManagementSystem.Api.Application.DTOs.Cameras;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
 using VisitorManagementSystem.Api.Application.Queries.Cameras;
 using VisitorManagementSystem.Api.Application.Services;
+using VisitorManagementSystem.Api.Application.Services.FaceDetection;
 using VisitorManagementSystem.Api.Domain.Constants;
 
 namespace VisitorManagementSystem.Api.Controllers;
@@ -22,13 +23,16 @@ public class CamerasController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<CamerasController> _logger;
+    private readonly IFaceDetectionService _faceDetectionService;
 
     public CamerasController(
         IMediator mediator,
-        ILogger<CamerasController> logger)
+        ILogger<CamerasController> logger,
+        IFaceDetectionService faceDetectionService)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _faceDetectionService = faceDetectionService ?? throw new ArgumentNullException(nameof(faceDetectionService));
     }
 
     #region CRUD Operations
@@ -632,6 +636,38 @@ public class CamerasController : BaseController
         {
             _logger.LogError(ex, "Error performing health check on all cameras");
             return ServerErrorResponse("An error occurred while performing bulk health check");
+        }
+    }
+
+    #endregion
+
+    #region Face Recognition Status
+
+    /// <summary>
+    /// Returns the current availability mode of the CompreFace face recognition service.
+    /// Receptionist dashboards call this on load to decide whether to show the FR check-in option.
+    /// No permission required — any authenticated user may query this.
+    /// </summary>
+    [HttpGet("fr-status")]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
+    public IActionResult GetFaceRecognitionStatus()
+    {
+        try
+        {
+            var isAvailable = _faceDetectionService.IsAvailable;
+            var mode = isAvailable ? "active" : "degraded";
+
+            return SuccessResponse(new
+            {
+                isAvailable,
+                mode,
+                checkedAt = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving face recognition status");
+            return ServerErrorResponse("An error occurred while retrieving face recognition status");
         }
     }
 
