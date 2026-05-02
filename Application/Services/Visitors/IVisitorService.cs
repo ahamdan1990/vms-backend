@@ -49,13 +49,17 @@ public interface IVisitorService
     Task<List<VisitorDto>> FindPotentialDuplicatesAsync(Visitor visitor);
 
     /// <summary>
-    /// Uploads and saves a visitor's profile photo
+    /// Uploads a visitor photo. Always adds the face to the CompreFace recognition collection (FIFO, max 10).
+    /// The profile photo (used for UI display) is only updated when forceUpdateProfilePhoto is true
+    /// or when the visitor has no existing profile photo (first-time capture).
+    /// Subsequent visit captures preserve the existing profile photo.
     /// </summary>
     /// <param name="visitorId">Visitor ID</param>
     /// <param name="file">Photo file to upload</param>
+    /// <param name="forceUpdateProfilePhoto">When true, always overwrites the stored profile photo (use for explicit admin uploads).</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Photo upload result with URL, face detection status, and warnings</returns>
-    Task<PhotoUploadResult> UploadVisitorPhotoAsync(int visitorId, IFormFile file, CancellationToken cancellationToken = default);
+    Task<PhotoUploadResult> UploadVisitorPhotoAsync(int visitorId, IFormFile file, bool forceUpdateProfilePhoto = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Updates visitor's profile photo

@@ -326,7 +326,7 @@ public class VisitorService : IVisitorService
         }
     }
 
-    public async Task<PhotoUploadResult> UploadVisitorPhotoAsync(int visitorId, IFormFile file, CancellationToken cancellationToken = default)
+    public async Task<PhotoUploadResult> UploadVisitorPhotoAsync(int visitorId, IFormFile file, bool forceUpdateProfilePhoto = false, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -363,6 +363,12 @@ public class VisitorService : IVisitorService
                 ? ((string)visitor.Email).ToLower(System.Globalization.CultureInfo.InvariantCulture)
                 : nameId.ToLower(System.Globalization.CultureInfo.InvariantCulture);
 
+            // Determine whether to update the profile photo.
+            // Profile photo is only set on first capture (no existing photo) or explicit admin override.
+            // Subsequent visit captures preserve the profile photo and only update the CompreFace collection.
+            bool hasExistingProfilePhoto = !string.IsNullOrEmpty(visitor.ProfilePhotoPath);
+            bool shouldUpdateProfilePhoto = forceUpdateProfilePhoto || !hasExistingProfilePhoto;
+
             // Check if CompreFace is enabled and available
             bool requireFaceDetection = false;
             if (_compreFaceSettings.Enabled)
@@ -384,12 +390,6 @@ public class VisitorService : IVisitorService
                 {
                     _logger.LogWarning(ex, "Failed to check CompreFace availability - proceeding without face detection");
                 }
-            }
-
-            // Remove existing photo file if exists (CompreFace faces are kept for FIFO trimming after new face is added)
-            if (!string.IsNullOrEmpty(visitor.ProfilePhotoPath))
-            {
-                await RemoveExistingPhoto(visitor.ProfilePhotoPath);
             }
 
             // Try to detect and crop face from the uploaded image
@@ -440,44 +440,60 @@ public class VisitorService : IVisitorService
                 }
             }
 
-            // Generate unique filename
-            var fileName = $"visitor_{visitorId}_{Guid.NewGuid()}.jpg"; // Always save as JPEG
+            // Profile photo: save to disk and update DB only when appropriate.
+            // Recognition images always go to CompreFace (handled below).
+            string? profilePhotoRelativePath = visitor.ProfilePhotoPath; // default: keep existing
 
-            // Create upload directory if it doesn't exist
-            var uploadDir = Path.Combine(_environment.WebRootPath, "uploads", "visitors", visitorId.ToString());
-            Directory.CreateDirectory(uploadDir);
-
-            var filePath = Path.Combine(uploadDir, fileName);
-            var relativePath = $"uploads/visitors/{visitorId}/{fileName}";
-
-            // Process and save image
-            using (var imageStream = new MemoryStream(imageBytes))
+            if (shouldUpdateProfilePhoto)
             {
-                using var image = await Image.LoadAsync(imageStream, cancellationToken);
-
-                // Resize if too large
-                if (image.Width > _maxWidth || image.Height > _maxHeight)
+                // Delete old profile photo file if replacing
+                if (!string.IsNullOrEmpty(visitor.ProfilePhotoPath))
                 {
-                    image.Mutate(x => x.Resize(new ResizeOptions
-                    {
-                        Size = new Size(_maxWidth, _maxHeight),
-                        Mode = ResizeMode.Max,
-                        Sampler = KnownResamplers.Lanczos3
-                    }));
+                    await RemoveExistingPhoto(visitor.ProfilePhotoPath);
                 }
 
-                await image.SaveAsync(filePath, cancellationToken);
+                // Generate unique filename and save cropped/original image to disk
+                var fileName = $"visitor_{visitorId}_{Guid.NewGuid()}.jpg";
+                var uploadDir = Path.Combine(_environment.WebRootPath, "uploads", "visitors", visitorId.ToString());
+                Directory.CreateDirectory(uploadDir);
+                var filePath = Path.Combine(uploadDir, fileName);
+                profilePhotoRelativePath = $"uploads/visitors/{visitorId}/{fileName}";
+
+                using (var imageStream = new MemoryStream(imageBytes))
+                {
+                    using var image = await Image.LoadAsync(imageStream, cancellationToken);
+
+                    if (image.Width > _maxWidth || image.Height > _maxHeight)
+                    {
+                        image.Mutate(x => x.Resize(new ResizeOptions
+                        {
+                            Size = new Size(_maxWidth, _maxHeight),
+                            Mode = ResizeMode.Max,
+                            Sampler = KnownResamplers.Lanczos3
+                        }));
+                    }
+
+                    await image.SaveAsync(filePath, cancellationToken);
+                }
+
+                visitor.ProfilePhotoPath = profilePhotoRelativePath;
+                visitor.UpdateModifiedOn();
+                _unitOfWork.Visitors.Update(visitor);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation("Profile photo saved for visitor {VisitorId}: {FilePath}",
+                    visitorId, profilePhotoRelativePath);
             }
-
-            // Update visitor profile photo path
-            visitor.ProfilePhotoPath = relativePath;
-            visitor.UpdateModifiedOn();
-
-            _unitOfWork.Visitors.Update(visitor);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation("Profile photo saved successfully for visitor {VisitorId}: {FilePath}",
-                visitorId, relativePath);
+            else
+            {
+                // Existing profile photo is preserved. The captured image will still be
+                // added to the CompreFace recognition collection below (recognition images
+                // are independent of the profile photo shown in the UI).
+                _logger.LogInformation(
+                    "Preserving existing profile photo for visitor {VisitorId}. " +
+                    "Captured image will be added to CompreFace recognition collection only.",
+                    visitorId);
+            }
 
             // Add face to CompreFace recognition collection for future recognition (only if face was detected)
             if (requireFaceDetection && faceDetected)
@@ -546,10 +562,16 @@ public class VisitorService : IVisitorService
                 faceRecognitionEnabled = false;
             }
 
-            // Return full URL with status - using dynamic URL resolver
+            // Return the profile photo URL (existing when not updated, new when set/replaced).
+            // profilePhotoRelativePath is always non-null here: when shouldUpdateProfilePhoto is false
+            // we only reach this path if hasExistingProfilePhoto was true.
+            var photoUrl = !string.IsNullOrEmpty(profilePhotoRelativePath)
+                ? _urlResolver.GetAbsoluteUrl(profilePhotoRelativePath!)
+                : string.Empty;
+
             return new PhotoUploadResult
             {
-                PhotoUrl = _urlResolver.GetAbsoluteUrl(relativePath),
+                PhotoUrl = photoUrl,
                 FaceDetected = faceDetected,
                 FaceRecognitionEnabled = faceRecognitionEnabled,
                 WarningMessage = warningMessage,

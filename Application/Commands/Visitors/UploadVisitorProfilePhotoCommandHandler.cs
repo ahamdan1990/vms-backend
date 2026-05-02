@@ -31,10 +31,12 @@ public class UploadVisitorProfilePhotoCommandHandler : IRequestHandler<UploadVis
                 throw new ArgumentException("No file provided");
             }
 
-            // VisitorService will handle validation and saving
+            // forceUpdateProfilePhoto: true — this endpoint is an explicit admin action,
+            // so the profile photo must always be replaced regardless of whether one exists.
             var result = await _visitorService.UploadVisitorPhotoAsync(
                 request.VisitorId,
                 request.File,
+                forceUpdateProfilePhoto: true,
                 cancellationToken);
 
             _logger.LogInformation("Profile photo uploaded successfully for visitor: {VisitorId}, FaceDetected: {FaceDetected}",
