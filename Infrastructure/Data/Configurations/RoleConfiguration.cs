@@ -47,6 +47,10 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
         builder.Property(r => r.Icon)
             .HasMaxLength(50);
 
+        builder.Property(r => r.RowVersion)
+            .IsRowVersion()
+            .IsRequired();
+
         builder.Property(r => r.CreatedAt)
             .IsRequired()
             .HasDefaultValueSql("GETUTCDATE()");

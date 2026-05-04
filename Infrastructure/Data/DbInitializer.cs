@@ -35,6 +35,10 @@ public static class DbInitializer
             // Print seeding statistics
             await DatabaseSeeder.PrintSeedingStatisticsAsync(context);
 
+            // Seed Civil Defense roles, permissions, and default config (idempotent)
+            logger?.LogInformation("Seeding Civil Defense module...");
+            await CivilDefenseSeeder.SeedAsync(context);
+
             // Check if database is already seeded
             if (await context.Users.AnyAsync())
             {

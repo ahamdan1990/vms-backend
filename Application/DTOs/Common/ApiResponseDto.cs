@@ -25,9 +25,16 @@ public class ApiResponseDto<T>
     public T? Data { get; set; }
 
     /// <summary>
-    /// Error messages
+    /// Flat list of error messages (always populated on failure).
     /// </summary>
     public List<string> Errors { get; set; } = new();
+
+    /// <summary>
+    /// Field-level validation errors keyed by field name.
+    /// Populated only for validation failures so frontends can highlight the exact input.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Dictionary<string, List<string>>? FieldErrors { get; set; }
 
     /// <summary>
     /// Response metadata
@@ -79,10 +86,6 @@ public class ApiResponseDto<T>
     /// <summary>
     /// Creates an error response with single error
     /// </summary>
-    /// <param name="error">Error message</param>
-    /// <param name="message">Error message</param>
-    /// <param name="correlationId">Correlation Id</param>
-    /// <returns>Error API response</returns>
     public static ApiResponseDto<T> ErrorResponse(string error, string? message = null, string? correlationId = null)
     {
         return new ApiResponseDto<T>
@@ -90,6 +93,25 @@ public class ApiResponseDto<T>
             Success = false,
             Message = message,
             Errors = new List<string> { error },
+            Timestamp = DateTime.UtcNow,
+            CorrelationId = correlationId ?? Guid.NewGuid().ToString()
+        };
+    }
+
+    /// <summary>
+    /// Creates a validation error response that preserves per-field error context.
+    /// </summary>
+    public static ApiResponseDto<T> ValidationErrorResponse(
+        Dictionary<string, List<string>> fieldErrors,
+        string? message = null,
+        string? correlationId = null)
+    {
+        return new ApiResponseDto<T>
+        {
+            Success = false,
+            Message = message ?? "Validation failed",
+            Errors = fieldErrors.SelectMany(kvp => kvp.Value).ToList(),
+            FieldErrors = fieldErrors,
             Timestamp = DateTime.UtcNow,
             CorrelationId = correlationId ?? Guid.NewGuid().ToString()
         };

@@ -83,7 +83,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                     NormalizedEmail = request.Email.Trim().ToUpperInvariant(),
                     PasswordHash = hashedPassword.Hash,
                     PasswordSalt = hashedPassword.Salt,
-                    Role = request.Role,
+                    Role = Enum.TryParse<UserRole>(request.Role, out var parsedRole) ? parsedRole : UserRole.Staff,
                     Status = UserStatus.Active,
                     Department = request.Department?.Trim(),
                     JobTitle = request.JobTitle?.Trim(),
@@ -98,9 +98,8 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                     RequiresApprovalOverride = request.RequiresApprovalOverride
                 };
 
-                // ✅ CRITICAL FIX: Set RoleId to ensure user gets database permissions
-                var roleName = UserRoles.GetRoleName(request.Role);
-                var role = await _unitOfWork.Roles.GetByNameAsync(roleName, cancellationToken);
+                // Set RoleId from database to ensure permission system works for all roles
+                var role = await _unitOfWork.Roles.GetByNameAsync(request.Role, cancellationToken);
                 if (role != null)
                 {
                     user.RoleId = role.Id;
@@ -110,7 +109,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 else
                 {
                     _logger.LogWarning("Role '{RoleName}' not found in database for new user {Email}. RoleId not set.",
-                        roleName, user.Email.Value);
+                        request.Role, user.Email.Value);
                 }
 
                 // Set enhanced phone number if provided

@@ -443,6 +443,23 @@ public static class Permissions
     }
 
     /// <summary>
+    /// Civil Defense module permissions
+    /// </summary>
+    public static class CivilDefense
+    {
+        public const string ViewLiveBuilding  = "CivilDefense.ViewLiveBuilding";
+        public const string CheckIn           = "CivilDefense.CheckIn";
+        public const string CheckOut          = "CivilDefense.CheckOut";
+        public const string RegisterVisitor   = "CivilDefense.RegisterVisitor";
+        public const string StaffCheckIn      = "CivilDefense.StaffCheckIn";
+        public const string ViewReports       = "CivilDefense.ViewReports";
+        public const string ExportData        = "CivilDefense.ExportData";
+        public const string ScanDocument      = "CivilDefense.ScanDocument";
+        public const string ManageCameras     = "CivilDefense.ManageCameras";
+        public const string ProcessFaceFrame  = "CivilDefense.ProcessFaceFrame";
+    }
+
+    /// <summary>
     /// Gets all permissions as a flat list
     /// </summary>
     /// <returns>List of all permission strings</returns>

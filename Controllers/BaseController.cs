@@ -244,12 +244,12 @@ public abstract class BaseController : ControllerBase
     }
 
     /// <summary>
-    /// Creates a validation error response with field-specific errors
+    /// Creates a validation error response preserving field-name context for frontend highlighting.
     /// </summary>
     protected IActionResult ValidationError(Dictionary<string, List<string>> fieldErrors, string? message = null)
     {
-        return BadRequest(ApiResponseDto<object>.ErrorResponse(
-            fieldErrors.SelectMany(kvp => kvp.Value).ToList(), message, GetCorrelationId()));
+        return BadRequest(ApiResponseDto<object>.ValidationErrorResponse(
+            fieldErrors, message, GetCorrelationId()));
     }
 
     /// <summary>

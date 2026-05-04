@@ -1,4 +1,5 @@
 ﻿// Program.cs
+using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -192,38 +193,52 @@ builder.Services.AddAuthentication(options =>
 
 
 // Add Authorization
-// builder.Services.AddAuthorization(options =>
-// {
-//     // Register all permission constants as policies
-//     var allPermissions = Permissions.GetAllPermissions();
-
-//     foreach (var permission in allPermissions)
-//     {
-//         options.AddPolicy(permission, policy =>
-//         {
-//             policy.RequireAuthenticatedUser();
-//             policy.AddRequirements(new PermissionRequirement(permission));
-//         });
-//     }
-
-//     // Set default policy
-//     options.DefaultPolicy = new AuthorizationPolicyBuilder()
-//         .RequireAuthenticatedUser()
-//         .Build();
-// });
-
 builder.Services.AddAuthorization(options =>
 {
+    // Register every permission constant as a named policy so controllers can use
+    // [Authorize(Policy = Permissions.CivilDefense.CheckIn)] declaratively.
+    var allPermissions = Permissions.GetAllPermissions();
+    foreach (var permission in allPermissions)
+    {
+        options.AddPolicy(permission, policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.AddRequirements(new PermissionRequirement(permission));
+        });
+    }
+
     options.DefaultPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build();
 });
 
+// Register permission authorization handlers
+builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, MultiplePermissionsHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, AnyPermissionHandler>();
+
 // Add MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
 // Add AutoMapper
-builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+// AutoMapper 16 removed the Assembly/Type overloads; only Action<IMapperConfigurationExpression> remains.
+// cfg.AddMaps registers profiles but does NOT auto-register resolver types in DI — do it manually.
+builder.Services.AddAutoMapper(cfg => cfg.AddMaps(Assembly.GetExecutingAssembly()));
+
+// Register all IValueResolver / IMemberValueResolver / ITypeConverter / IValueConverter
+// implementations so AutoMapper can inject them from the DI container at mapping time.
+foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
+{
+    if (type.IsAbstract || type.IsInterface) continue;
+    var isResolver = type.GetInterfaces().Any(i =>
+        i.IsGenericType && (
+            i.GetGenericTypeDefinition() == typeof(IValueResolver<,,>) ||
+            i.GetGenericTypeDefinition() == typeof(IMemberValueResolver<,,,>) ||
+            i.GetGenericTypeDefinition() == typeof(ITypeConverter<,>) ||
+            i.GetGenericTypeDefinition() == typeof(IValueConverter<,>)));
+    if (isResolver)
+        builder.Services.AddTransient(type);
+}
 builder.Services.AddSingleton<PermissionHubFilter>();
 // Add SignalR
 builder.Services.AddSignalR(options =>
@@ -256,45 +271,66 @@ builder.Services.AddCors(options =>
         var allowedHeaders = builder.Configuration.GetSection("Cors:AllowedHeaders").Get<string[]>()
             ?? new[] { "Content-Type", "Authorization", "X-Request-ID", "X-VMS-Client", "X-VMS-Version" };
 
-        // For development, allow any origin from 192.168.0.* subnet
+        // Development: allow localhost and any RFC 1918 private-network origin so the
+        // dev frontend can reach the backend regardless of which LAN subnet the machine is on.
         if (builder.Environment.IsDevelopment())
         {
+            static bool IsRfc1918Host(string host)
+            {
+                if (!System.Net.IPAddress.TryParse(host, out var ip))
+                    return false;
+                var b = ip.GetAddressBytes();
+                return b[0] == 10 ||                                   // 10.0.0.0/8
+                       (b[0] == 172 && b[1] >= 16 && b[1] <= 31) ||   // 172.16.0.0/12
+                       (b[0] == 192 && b[1] == 168);                   // 192.168.0.0/16
+            }
+
             policy.SetIsOriginAllowed(origin =>
             {
                 if (string.IsNullOrEmpty(origin))
                     return false;
 
-                // Allow configured origins
                 if (allowedOrigins.Contains(origin))
                     return true;
 
-                // Allow any origin from local network (192.168.0.*)
-                if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
-                {
-                    var host = uri.Host;
-                    // Allow localhost and 192.168.0.* subnet
-                    return host == "localhost" ||
-                           host == "127.0.0.1" ||
-                           host.StartsWith("192.168.0.") ||
-                           host.StartsWith("192.168.1.") ||  // Common subnet
-                           host.StartsWith("10.0.0.");       // Another common subnet
-                }
+                if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                    return false;
 
-                return false;
+                var host = uri.Host;
+                return host == "localhost" || host == "127.0.0.1" || IsRfc1918Host(host);
             })
             .WithMethods(allowedMethods)
             .AllowAnyHeader()
             .AllowCredentials()
-            .SetPreflightMaxAge(TimeSpan.FromSeconds(86400)); // 24 hours cache for preflight
+            .SetPreflightMaxAge(TimeSpan.FromSeconds(86400));
         }
         else
         {
-            // Production: Strict origin checking
-            policy.WithOrigins(allowedOrigins)
-                  .WithMethods(allowedMethods)
-                  .AllowAnyHeader()
-                  .AllowCredentials()
-                  .SetPreflightMaxAge(TimeSpan.FromSeconds(86400));
+            // Production: strip any unreplaced #{TOKEN}# placeholders so a deployment
+            // that skips secret substitution still serves same-origin traffic correctly
+            // instead of silently allowing the literal token string as an origin.
+            var validOrigins = allowedOrigins
+                .Where(o => !string.IsNullOrWhiteSpace(o) && !o.TrimStart().StartsWith("#{"))
+                .ToArray();
+
+            if (validOrigins.Length > 0)
+            {
+                policy.WithOrigins(validOrigins)
+                      .WithMethods(allowedMethods)
+                      .AllowAnyHeader()
+                      .AllowCredentials()
+                      .SetPreflightMaxAge(TimeSpan.FromSeconds(86400));
+            }
+            else
+            {
+                // No configured origins (tokens not replaced) — same-origin only.
+                // Cross-origin requests will be blocked by the browser; same-origin
+                // requests never trigger CORS and will work normally.
+                policy.SetIsOriginAllowed(_ => false)
+                      .WithMethods(allowedMethods)
+                      .AllowAnyHeader()
+                      .AllowCredentials();
+            }
         }
     });
 });
@@ -379,7 +415,6 @@ app.UseAuthorization();
 app.UseMiddleware<AuditLoggingMiddleware>();
 
 app.MapControllers()
-    .RequireRateLimiting("login") // Apply login rate limiting to auth endpoints
     .WithOpenApi();
 
 // Map SignalR Hubs
@@ -387,6 +422,7 @@ app.MapHub<OperatorHub>("/hubs/operator");
 app.MapHub<HostHub>("/hubs/host");
 app.MapHub<SecurityHub>("/hubs/security");
 app.MapHub<AdminHub>("/hubs/admin");
+app.MapHub<CivilDefenseHub>("/hubs/civil-defense");
 
 app.MapHealthChecks("/health", new HealthCheckOptions
 {

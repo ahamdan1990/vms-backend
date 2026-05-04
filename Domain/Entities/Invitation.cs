@@ -228,9 +228,10 @@ public class Invitation : SoftDeleteEntity
 
     // Business Methods
     /// <summary>
-    /// Checks if the invitation is currently active
+    /// True when the visitor is currently checked in (Status == Active).
+    /// Use this instead of the base IsActive which tracks soft-delete state.
     /// </summary>
-    public new bool IsActive => Status == InvitationStatus.Active;
+    public bool IsVisitActive => Status == InvitationStatus.Active;
 
     /// <summary>
     /// Checks if the invitation is approved
@@ -497,13 +498,14 @@ public class Invitation : SoftDeleteEntity
     }
 
     /// <summary>
-    /// Generates a unique invitation number
+    /// Generates a unique invitation number.
+    /// Uses a cryptographically random suffix to minimise collision risk.
+    /// A UNIQUE index on InvitationNumber is the database-level safety net.
     /// </summary>
-    /// <returns>Invitation number</returns>
     public static string GenerateInvitationNumber()
     {
         var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
-        var random = new Random().Next(100, 999);
+        var random = System.Security.Cryptography.RandomNumberGenerator.GetInt32(100, 999);
         return $"INV-{timestamp}-{random}";
     }
 

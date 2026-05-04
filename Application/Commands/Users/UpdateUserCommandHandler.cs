@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
+using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
 
@@ -40,7 +41,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 }
 
                 var originalEmail = user.Email.Value;
-                var originalRole = user.Role;
+                var originalRoleId = user.RoleId;
 
                 // Validate email uniqueness if email is being changed
                 if (!user.Email.Value.Equals(request.Email, StringComparison.OrdinalIgnoreCase))
@@ -70,27 +71,18 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 user.Email = new Email(request.Email.Trim().ToLowerInvariant());
                 user.NormalizedEmail = request.Email.Trim().ToUpperInvariant();
 
-                // CRITICAL: Update BOTH Role (deprecated) AND RoleId (active) to prevent mismatch
-                var roleChanged = user.Role != request.Role;
-                user.Role = request.Role;
+                // Resolve role from database (supports all roles, not just the deprecated enum)
+                var dbRole = await _unitOfWork.Roles.GetByNameAsync(request.Role, cancellationToken);
+                if (dbRole == null)
+                    throw new InvalidOperationException($"Role '{request.Role}' not found.");
 
-                // Synchronize RoleId with Role string to ensure permission system works correctly
-                if (roleChanged)
-                {
-                    var roleName = request.Role.ToString();
-                    var role = await _unitOfWork.Roles.GetByNameAsync(roleName, cancellationToken);
-                    if (role != null)
-                    {
-                        user.RoleId = role.Id;
-                        _logger.LogInformation("Updated RoleId to {RoleId} ({RoleName}) for user {UserId} due to role change",
-                            role.Id, roleName, user.Id);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Role '{RoleName}' not found in database for user {UserId}. RoleId not updated.",
-                            roleName, user.Id);
-                    }
-                }
+                user.RoleId = dbRole.Id;
+
+                // Keep the deprecated enum in sync for legacy code paths that still read it
+                if (Enum.TryParse<UserRole>(request.Role, out var parsedRole))
+                    user.Role = parsedRole;
+
+                var roleChanged = user.RoleId != originalRoleId;
 
                 user.Status = request.Status;
                 user.Department = request.Department?.Trim();
@@ -141,11 +133,11 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                     theme: request.Theme);
 
                 // Update security stamp if requested or if role changed
-                if (request.UpdateSecurityStamp || originalRole != request.Role)
+                if (request.UpdateSecurityStamp || roleChanged)
                 {
                     user.UpdateSecurityStamp();
                     _logger.LogInformation("Security stamp updated for user: {UserId} due to {Reason}",
-                        request.Id, originalRole != request.Role ? "role change" : "manual request");
+                        request.Id, roleChanged ? "role change" : "manual request");
                 }
 
                 // Set audit information
@@ -155,8 +147,8 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 _unitOfWork.Users.Update(user);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-                _logger.LogInformation("User updated successfully: {UserId} by {ModifiedBy}. Email: {OriginalEmail} -> {NewEmail}, Role: {OriginalRole} -> {NewRole}",
-                    user.Id, request.ModifiedBy, originalEmail, user.Email.Value, originalRole, user.Role);
+                _logger.LogInformation("User updated successfully: {UserId} by {ModifiedBy}. Email: {OriginalEmail} -> {NewEmail}, RoleId: {OriginalRoleId} -> {NewRoleId}",
+                    user.Id, request.ModifiedBy, originalEmail, user.Email.Value, originalRoleId, user.RoleId);
 
                 // Map to DTO
                 var userDto = _mapper.Map<UserDto>(user);

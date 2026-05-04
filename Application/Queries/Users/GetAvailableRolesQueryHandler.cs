@@ -1,70 +1,40 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
-using VisitorManagementSystem.Api.Controllers; // For UserRoleDto
-using VisitorManagementSystem.Api.Domain.Enums;
+using VisitorManagementSystem.Api.Infrastructure.Data;
 
 namespace VisitorManagementSystem.Api.Application.Queries.Users;
 
-/// <summary>
-/// Handler for GetAvailableRolesQuery
-/// </summary>
 public class GetAvailableRolesQueryHandler : IRequestHandler<GetAvailableRolesQuery, List<UserRoleDto>>
 {
+    private readonly ApplicationDbContext _context;
     private readonly ILogger<GetAvailableRolesQueryHandler> _logger;
 
-    public GetAvailableRolesQueryHandler(ILogger<GetAvailableRolesQueryHandler> logger)
+    public GetAvailableRolesQueryHandler(ApplicationDbContext context, ILogger<GetAvailableRolesQueryHandler> logger)
     {
+        _context = context;
         _logger = logger;
     }
 
     public async Task<List<UserRoleDto>> Handle(GetAvailableRolesQuery request, CancellationToken cancellationToken)
     {
-        try
-        {
-            _logger.LogDebug("Processing GetAvailableRolesQuery for UserId: {UserId}", request.UserId);
+        _logger.LogDebug("Processing GetAvailableRolesQuery for UserId: {UserId}", request.UserId);
 
-            var roles = new List<UserRoleDto>();
-
-            foreach (UserRole role in Enum.GetValues<UserRole>())
+        var roles = await _context.Roles
+            .AsNoTracking()
+            .Where(r => r.IsActive)
+            .OrderBy(r => r.HierarchyLevel)
+            .ThenBy(r => r.DisplayOrder)
+            .Select(r => new UserRoleDto
             {
-                roles.Add(new UserRoleDto
-                {
-                    Name = role.ToString(),
-                    DisplayName = role.ToString(),
-                    Description = GetRoleDescription(role),
-                    HierarchyLevel = GetRoleLevel(role),
-                    CanAssign = true // You can add logic here to determine if user can assign this role
-                });
-            }
+                Name        = r.Name,
+                DisplayName = r.DisplayName ?? r.Name,
+                Description = r.Description ?? string.Empty,
+                HierarchyLevel = r.HierarchyLevel,
+                CanAssign   = true
+            })
+            .ToListAsync(cancellationToken);
 
-            return await Task.FromResult(roles.OrderBy(r => r.HierarchyLevel).ToList());
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing GetAvailableRolesQuery");
-            throw;
-        }
-    }
-
-    private static string GetRoleDescription(UserRole role)
-    {
-        return role switch
-        {
-            UserRole.Administrator => "Full system access with all administrative privileges",
-            UserRole.Staff => "Standard user with invitation management capabilities",
-            UserRole.Receptionist => "Front desk operations with check-in/out and walk-in management",
-            _ => role.ToString()
-        };
-    }
-
-    private static int GetRoleLevel(UserRole role)
-    {
-        return role switch
-        {
-            UserRole.Administrator => 1,
-            UserRole.Staff => 2,
-            UserRole.Receptionist => 3,
-            _ => 99
-        };
+        return roles;
     }
 }

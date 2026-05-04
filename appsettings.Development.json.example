@@ -1,0 +1,88 @@
+{
+  "BaseUrl": "https://localhost:7000",
+  "Cors": {
+    "AllowedOrigins": [
+      "http://localhost:3000",
+      "https://localhost:3000"
+    ]
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "Microsoft.AspNetCore": "Debug",
+      "Microsoft.EntityFrameworkCore": "Debug"
+    }
+  },
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost,1433;Database=VisitorManagementDB;User Id=sa;Password=YOUR_SQL_PASSWORD;TrustServerCertificate=true",
+    "Redis": "127.0.0.1:6379"
+  },
+  "JWT": {
+    "SecretKey": "YourLocalDevelopmentSecretKeyThatMustBeAtLeast256BitsLong_ChangeThis",
+    "ExpiryInMinutes": 60
+  },
+  "Security": {
+    "PasswordPolicy": {
+      "RequireDigit": false,
+      "RequireLowercase": false,
+      "RequireUppercase": false,
+      "RequireNonAlphanumeric": false,
+      "RequiredLength": 6,
+      "RequiredUniqueChars": 1
+    },
+    "Lockout": {
+      "DefaultLockoutTimeSpan": "00:05:00",
+      "MaxFailedAccessAttempts": 300
+    },
+    "RateLimiting": {
+      "LoginAttempts": {
+        "PermitLimit": 20,
+        "Window": "00:05:00"
+      },
+      "GeneralApi": {
+        "PermitLimit": 1000,
+        "Window": "00:01:00"
+      }
+    }
+  },
+  "Email": {
+    "SmtpHost": "localhost",
+    "SmtpPort": 1025,
+    "Username": "",
+    "Password": "",
+    "FromEmail": "dev@vms.com",
+    "FromName": "VMS Development",
+    "EnableSsl": false,
+    "EnableSending": false
+  },
+  "CompreFace": {
+    "Enabled": false,
+    "BaseUrl": "http://localhost:8000",
+    "DetectionApiKey": "YOUR_COMPREFACE_DETECTION_KEY",
+    "RecognitionApiKey": "YOUR_COMPREFACE_RECOGNITION_KEY",
+    "VerificationApiKey": "YOUR_COMPREFACE_VERIFICATION_KEY"
+  },
+  "LdapConfiguration": {
+    "Enabled": false,
+    "Server": "ldap.your-domain.local",
+    "Port": 389,
+    "Domain": "your-domain.com",
+    "UserName": "administrator@your-domain.com",
+    "Password": "YOUR_LDAP_PASSWORD",
+    "BaseDn": "DC=your-domain,DC=com",
+    "AutoCreateUsers": true,
+    "SyncProfileOnLogin": true
+  },
+  "Kestrel": {
+    "Endpoints": {
+      "Http": { "Url": "http://0.0.0.0:5000" },
+      "Https": {
+        "Url": "https://0.0.0.0:7000",
+        "Certificate": {
+          "Path": "cert.pem",
+          "KeyPath": "key.pem"
+        }
+      }
+    }
+  }
+}

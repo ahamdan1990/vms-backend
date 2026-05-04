@@ -81,6 +81,9 @@ public class ApplicationDbContext : DbContext
     // DbSets - Security
     public DbSet<BlacklistOverrideRequest> BlacklistOverrideRequests { get; set; } = null!;
 
+    // DbSets - Civil Defense Module
+    public DbSet<StaffAttendance> StaffAttendances { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -132,6 +135,9 @@ public class ApplicationDbContext : DbContext
         // Apply all configurations - Backup & Storage Management
         modelBuilder.ApplyConfiguration(new BackupRecordConfiguration());
         modelBuilder.ApplyConfiguration(new BlacklistOverrideRequestConfiguration());
+
+        // Apply all configurations - Civil Defense Module
+        modelBuilder.ApplyConfiguration(new StaffAttendanceConfiguration());
 
         // Global query filters for soft delete (standardized on IsDeleted pattern)
         modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);

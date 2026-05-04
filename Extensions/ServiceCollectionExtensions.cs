@@ -42,6 +42,7 @@ using VisitorManagementSystem.Api.Infrastructure.Caching;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Caching.Distributed;
 using VisitorManagementSystem.Api.Application.Services.Common;
+using VisitorManagementSystem.Api.Application.Services.CivilDefense;
 
 namespace VisitorManagementSystem.Api.Extensions;
 
@@ -149,6 +150,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuthorizationHandler, MultipleRolesHandler>();
         services.AddSingleton<IAuthorizationPolicyProvider, PolicyProvider>();
 
+        // Civil Defense OCR service (Tesseract, offline, Arabic IDs)
+        services.AddSingleton<ICdOcrService, CdOcrService>();
+
         // Backup & storage monitoring services
         services.AddScoped<Application.Services.Backup.IDatabaseStorageMonitor, Application.Services.Backup.DatabaseStorageMonitor>();
         services.AddScoped<Application.Services.Backup.IDiskStorageMonitor, Application.Services.Backup.DiskStorageMonitor>();
@@ -229,6 +233,9 @@ public static class ServiceCollectionExtensions
         services.AddHostedService<NotificationDispatcherService>();
         services.AddHostedService<VisitorTrackingService>();
         services.AddHostedService<VisitorMonitoringService>();
+
+        // Civil Defense camera frame-sampling service
+        services.AddHostedService<CivilDefenseCameraBackgroundService>();
 
         // Backup & storage monitoring background services
         services.AddHostedService<DatabaseBackupBackgroundService>();
@@ -330,6 +337,14 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection RegisterRepositories(this IServiceCollection services)
     {
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        // Domain-scoped context interfaces — resolved from the same UnitOfWork instance
+        // so all contexts within a single request share one DbContext / transaction scope.
+        services.AddScoped<IUserContext>(sp => sp.GetRequiredService<IUnitOfWork>());
+        services.AddScoped<IVisitorContext>(sp => sp.GetRequiredService<IUnitOfWork>());
+        services.AddScoped<IInvitationContext>(sp => sp.GetRequiredService<IUnitOfWork>());
+        services.AddScoped<ISecurityContext>(sp => sp.GetRequiredService<IUnitOfWork>());
+        services.AddScoped<IAdminContext>(sp => sp.GetRequiredService<IUnitOfWork>());
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
@@ -422,11 +437,19 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection ConfigureHealthChecks(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddHealthChecks()
+        var healthChecks = services.AddHealthChecks()
             .AddCheck<ApplicationHealthCheck>("application")
             .AddCheck<DatabaseHealthCheck>("database")
             .AddCheck<ExternalServicesHealthCheck>("external_services")
             .AddDbContextCheck<ApplicationDbContext>("dbcontext");
+
+        var redisConnection = Environment.GetEnvironmentVariable("REDIS_CONNECTION")
+            ?? configuration.GetConnectionString("Redis");
+
+        if (!string.IsNullOrWhiteSpace(redisConnection))
+        {
+            healthChecks.AddCheck<RedisHealthCheck>("redis");
+        }
 
         return services;
     }
@@ -925,6 +948,53 @@ public class DatabaseHealthCheck : IHealthCheck
         {
             _logger.LogError(ex, "Database health check failed");
             return HealthCheckResult.Unhealthy("Database connection failed", ex);
+        }
+    }
+}
+
+public class RedisHealthCheck : IHealthCheck
+{
+    private readonly IDistributedCache _cache;
+    private readonly ILogger<RedisHealthCheck> _logger;
+    private readonly IConfiguration _configuration;
+
+    public RedisHealthCheck(IDistributedCache cache, ILogger<RedisHealthCheck> logger, IConfiguration configuration)
+    {
+        _cache = cache;
+        _logger = logger;
+        _configuration = configuration;
+    }
+
+    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            const string probeKey = "health:probe";
+            const string probeValue = "ok";
+
+            await _cache.SetStringAsync(probeKey, probeValue,
+                new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(10) },
+                cancellationToken);
+
+            var result = await _cache.GetStringAsync(probeKey, cancellationToken);
+
+            if (result != probeValue)
+            {
+                return HealthCheckResult.Degraded("Redis round-trip verification failed");
+            }
+
+            var healthData = new Dictionary<string, object>
+            {
+                { "timestamp", DateTime.UtcNow },
+                { "connection", _configuration.GetConnectionString("Redis") ?? "configured" }
+            };
+
+            return HealthCheckResult.Healthy("Redis is reachable and responding", healthData);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Redis health check failed");
+            return HealthCheckResult.Unhealthy("Redis is unreachable", ex);
         }
     }
 }

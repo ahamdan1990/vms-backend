@@ -4,6 +4,7 @@ using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using System.Security.Claims;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace VisitorManagementSystem.Api.Application.Services.Auth;
@@ -16,16 +17,19 @@ public class PermissionService : IPermissionService
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<PermissionService> _logger;
     private readonly IMemoryCache _cache;
+    private readonly IDistributedCache? _distributedCache;
     private readonly TimeSpan _cacheExpiry = TimeSpan.FromMinutes(15);
 
     public PermissionService(
         IUnitOfWork unitOfWork,
         ILogger<PermissionService> logger,
-        IMemoryCache cache)
+        IMemoryCache cache,
+        IDistributedCache? distributedCache = null)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
         _cache = cache;
+        _distributedCache = distributedCache;
     }
 
     public async Task<List<string>> GetUserPermissionsAsync(int userId, CancellationToken cancellationToken = default)
@@ -160,10 +164,30 @@ public class PermissionService : IPermissionService
     /// Invalidates permission cache for a user
     /// </summary>
     /// <param name="userId">User ID</param>
+    /// <summary>
+    /// Returns the distributed-cache key used for a user's resolved permissions.
+    /// Both this service and <c>PermissionClaimsMiddleware</c> must use the same key format.
+    /// </summary>
+    public static string GetDistributedCacheKey(int userId) => $"permissions:user:{userId}";
+
     public void InvalidateUserPermissionCache(int userId)
     {
-        var cacheKey = $"user_permissions_{userId}";
-        _cache.Remove(cacheKey);
+        _cache.Remove($"user_permissions_{userId}");
+
+        if (_distributedCache != null)
+        {
+            try
+            {
+                // Fire-and-forget: best effort removal from distributed cache.
+                // If this fails the entry expires naturally within the configured TTL.
+                _ = _distributedCache.RemoveAsync(GetDistributedCacheKey(userId));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not remove distributed permission cache entry for user {UserId}", userId);
+            }
+        }
+
         _logger.LogDebug("Invalidated permission cache for user {UserId}", userId);
     }
 
@@ -173,9 +197,13 @@ public class PermissionService : IPermissionService
     /// <param name="roleId">Role ID</param>
     public void InvalidateRolePermissionCache(int roleId)
     {
-        var cacheKey = $"role_permissions_{roleId}";
-        _cache.Remove(cacheKey);
-        _logger.LogDebug("Invalidated permission cache for role {RoleId}", roleId);
+        _cache.Remove($"role_permissions_{roleId}");
+
+        // We cannot enumerate which users belong to a role from here efficiently.
+        // Per-user distributed cache entries will expire naturally within the
+        // PermissionClaimsMiddleware TTL (5 minutes) after a role permission change.
+
+        _logger.LogDebug("Invalidated in-memory permission cache for role {RoleId}. Distributed user entries will expire within the middleware TTL.", roleId);
     }
 
     public async Task<bool> HasPermissionAsync(int userId, string permission, CancellationToken cancellationToken = default)

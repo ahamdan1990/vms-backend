@@ -54,9 +54,14 @@ public class User : SoftDeleteEntity
     public PhoneNumber? PhoneNumber { get; set; }
 
     /// <summary>
-    /// User's role in the system (DEPRECATED - use RoleId instead)
+    /// User's role in the system.
     /// </summary>
+    /// <remarks>
+    /// DEPRECATED: Migrate all usages to <see cref="RoleId"/> / <see cref="RoleEntity"/>.
+    /// This column will be dropped in a future migration once all references are removed.
+    /// </remarks>
     [Required]
+    [Obsolete("Use RoleId and RoleEntity instead. This property will be removed in a future release.")]
     public UserRole Role { get; set; }
 
     /// <summary>
@@ -82,9 +87,11 @@ public class User : SoftDeleteEntity
     public UserStatus Status { get; set; } = UserStatus.Active;
 
     /// <summary>
-    /// Department the user belongs to
+    /// Department the user belongs to.
     /// </summary>
+    /// <remarks>DEPRECATED: Use <see cref="DepartmentId"/> / <see cref="DepartmentEntity"/> instead.</remarks>
     [MaxLength(100)]
+    [Obsolete("Use DepartmentId and DepartmentEntity instead. This property will be removed in a future release.")]
     public string? Department { get; set; }
 
     /// <summary>
@@ -316,41 +323,32 @@ public class User : SoftDeleteEntity
     }
 
     /// <summary>
-    /// Checks if the user has the specified role
+    /// Checks if the user has the specified role.
     /// </summary>
-    /// <param name="role">Role to check</param>
-    /// <returns>True if the user has the role</returns>
-    public bool HasRole(UserRole role)
-    {
-        return Role == role;
-    }
+    /// <remarks>DEPRECATED: Compare against <see cref="RoleEntity"/>.<see cref="Role.Name"/> instead.</remarks>
+    [Obsolete("Use RoleEntity.Name comparison instead. This method will be removed in a future release.")]
+    public bool HasRole(UserRole role) => Role == role;
 
     /// <summary>
-    /// Checks if the user is an administrator
+    /// Checks if the user is an administrator.
     /// </summary>
-    /// <returns>True if the user is an administrator</returns>
-    public bool IsAdministrator()
-    {
-        return Role == UserRole.Administrator;
-    }
+    /// <remarks>DEPRECATED: Compare against <see cref="RoleEntity"/>.<see cref="Role.Name"/> instead.</remarks>
+    [Obsolete("Use RoleEntity.Name == \"Administrator\" instead. This method will be removed in a future release.")]
+    public bool IsAdministrator() => Role == UserRole.Administrator;
 
     /// <summary>
-    /// Checks if the user is staff
+    /// Checks if the user is staff.
     /// </summary>
-    /// <returns>True if the user is staff</returns>
-    public bool IsStaff()
-    {
-        return Role == UserRole.Staff;
-    }
+    /// <remarks>DEPRECATED: Compare against <see cref="RoleEntity"/>.<see cref="Role.Name"/> instead.</remarks>
+    [Obsolete("Use RoleEntity.Name == \"Staff\" instead. This method will be removed in a future release.")]
+    public bool IsStaff() => Role == UserRole.Staff;
 
     /// <summary>
-    /// Checks if the user is an operator
+    /// Checks if the user is a receptionist.
     /// </summary>
-    /// <returns>True if the user is an operator</returns>
-    public bool IsReceptionist()
-    {
-        return Role == UserRole.Receptionist;
-    }
+    /// <remarks>DEPRECATED: Compare against <see cref="RoleEntity"/>.<see cref="Role.Name"/> instead.</remarks>
+    [Obsolete("Use RoleEntity.Name == \"Receptionist\" instead. This method will be removed in a future release.")]
+    public bool IsReceptionist() => Role == UserRole.Receptionist;
 
     /// <summary>
     /// Validates the user's current state

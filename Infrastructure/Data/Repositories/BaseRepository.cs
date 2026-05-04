@@ -143,6 +143,8 @@ public class BaseRepository<TEntity> : IGenericRepository<TEntity> where TEntity
 
         if (orderBy != null)
             query = query.OrderBy(orderBy);
+        else
+            query = query.OrderBy(e => e.Id); // stable default — avoids non-deterministic paging
 
         var entities = await query.Skip(pageIndex * pageSize).Take(pageSize).ToListAsync(cancellationToken);
 
@@ -489,6 +491,10 @@ public static class SpecificationEvaluator
         else if (specification.OrderByDescending != null)
         {
             query = query.OrderByDescending(specification.OrderByDescending);
+        }
+        else if (specification.IsPagingEnabled)
+        {
+            query = query.OrderBy(e => e.Id); // stable default; prevents non-deterministic paging
         }
 
         // Apply grouping

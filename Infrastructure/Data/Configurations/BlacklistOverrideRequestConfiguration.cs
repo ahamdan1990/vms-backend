@@ -20,5 +20,9 @@ public class BlacklistOverrideRequestConfiguration : IEntityTypeConfiguration<Bl
         builder.HasOne(e => e.Visitor).WithMany().HasForeignKey(e => e.VisitorId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(e => e.RequestedByUser).WithMany().HasForeignKey(e => e.RequestedByUserId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(e => e.ReviewedByUser).WithMany().HasForeignKey(e => e.ReviewedByUserId).OnDelete(DeleteBehavior.Restrict);
+
+        // Mirror the User soft-delete filter so EF Core knows both sides are consistent
+        // and does not warn about a required navigation potentially being filtered out.
+        builder.HasQueryFilter(b => !b.RequestedByUser.IsDeleted);
     }
 }

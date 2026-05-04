@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace VisitorManagementSystem.Api.Domain.Entities;
 
@@ -67,6 +68,12 @@ public class Role
     /// </summary>
     [MaxLength(50)]
     public string? Icon { get; set; }
+
+    /// <summary>
+    /// Optimistic concurrency token — updated by the database on every write.
+    /// </summary>
+    [Timestamp]
+    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 
     /// <summary>
     /// When this role was created

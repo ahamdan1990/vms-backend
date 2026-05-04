@@ -92,6 +92,19 @@ public class Camera : SoftDeleteEntity
     public int FailureCount { get; set; } = 0;
 
     /// <summary>
+    /// Role of this camera at its installation point (entry door, exit door, or none).
+    /// Used by the Civil Defense module to route face-recognition results.
+    /// </summary>
+    public CameraRole CameraRole { get; set; } = CameraRole.None;
+
+    /// <summary>
+    /// How often (in seconds) the Civil Defense background service samples a frame
+    /// from this camera for face recognition. Minimum 1 second.
+    /// </summary>
+    [Range(1, 60)]
+    public int FrameSamplingIntervalSeconds { get; set; } = 2;
+
+    /// <summary>
     /// Whether the camera should be enabled for facial recognition processing
     /// </summary>
     public bool EnableFacialRecognition { get; set; } = true;

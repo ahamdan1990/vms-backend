@@ -47,6 +47,10 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
         builder.Property(p => p.DisplayOrder)
             .HasDefaultValue(0);
 
+        builder.Property(p => p.RowVersion)
+            .IsRowVersion()
+            .IsRequired();
+
         builder.Property(p => p.CreatedAt)
             .IsRequired()
             .HasDefaultValueSql("GETUTCDATE()");

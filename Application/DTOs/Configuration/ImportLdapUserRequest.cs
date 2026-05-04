@@ -1,23 +1,16 @@
 using System.ComponentModel.DataAnnotations;
-using VisitorManagementSystem.Api.Domain.Enums;
 
 namespace VisitorManagementSystem.Api.Application.DTOs.Configuration;
 
-/// <summary>
-/// Request to import a single LDAP user.
-/// </summary>
 public class ImportLdapUserRequest
 {
     [Required]
     public string Username { get; set; } = string.Empty;
 
     [Required]
-    public UserRole Role { get; set; }
+    public string Role { get; set; } = string.Empty;
 }
 
-/// <summary>
-/// Request to import multiple LDAP users with a unified role.
-/// </summary>
 public class BulkImportLdapUsersRequest
 {
     [Required]
@@ -25,12 +18,9 @@ public class BulkImportLdapUsersRequest
     public List<string> Usernames { get; set; } = new();
 
     [Required]
-    public UserRole Role { get; set; }
+    public string Role { get; set; } = string.Empty;
 }
 
-/// <summary>
-/// Request to import multiple LDAP users with individual roles.
-/// </summary>
 public class BulkImportLdapUsersWithRolesRequest
 {
     [Required]
@@ -44,7 +34,7 @@ public class LdapUserImportItem
     public string Username { get; set; } = string.Empty;
 
     [Required]
-    public UserRole Role { get; set; }
+    public string Role { get; set; } = string.Empty;
 }
 
 /// <summary>

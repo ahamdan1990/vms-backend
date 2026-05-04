@@ -174,15 +174,16 @@ public class ImportUsersCommandHandler : IRequestHandler<ImportUsersCommand, Imp
 
             try
             {
-                if (!Enum.TryParse<UserRole>(row.Role?.Trim(), ignoreCase: true, out var role))
+                var roleName = row.Role?.Trim();
+                if (string.IsNullOrEmpty(roleName))
                 {
                     vr.Status = ImportRowStatus.Failed;
-                    vr.ErrorMessage = $"Could not parse role value: \"{row.Role}\".";
+                    vr.ErrorMessage = "Role is required.";
                     failed++;
                     continue;
                 }
 
-                var command = BuildCreateUserCommand(row, role, request.ImportedBy);
+                var command = BuildCreateUserCommand(row, roleName, request.ImportedBy);
                 var userDto = await _mediator.Send(command, cancellationToken);
 
                 vr.Status = ImportRowStatus.Created;
@@ -235,7 +236,7 @@ public class ImportUsersCommandHandler : IRequestHandler<ImportUsersCommand, Imp
     }
 
     private static CreateUserCommand BuildCreateUserCommand(
-        ImportUserRowDto row, UserRole role, int importedBy)
+        ImportUserRowDto row, string role, int importedBy)
     {
         return new CreateUserCommand
         {

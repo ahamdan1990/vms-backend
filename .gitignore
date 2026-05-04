@@ -79,10 +79,10 @@ _ReSharper*/
 # Ignore source link files
 *.sourcelink.json
 
-# Ignore environment configs (optional - if you want to commit some of them, remove these lines)
+# Environment-specific config files with real secrets — never commit these.
+# appsettings.json and appsettings.Production.json are safe to commit (no real secrets).
 appsettings.Development.json
 appsettings.Local.json
-appsettings.*.json
 
 # Ignore coverage output
 coverage/

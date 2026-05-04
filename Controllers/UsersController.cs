@@ -196,21 +196,18 @@ public class UsersController : BaseController
             if (!currentUserId.HasValue)
                 return BadRequestResponse("User not authenticated");
 
-            if (!Enum.TryParse<UserRole>(request.Role, out var targetRole))
-                return BadRequestResponse($"Invalid role: {request.Role}");
-
             var command = new CreateUserCommand
             {
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Email = request.Email,
-                
+
                 // Enhanced phone fields
                 PhoneNumber = request.PhoneNumber,
                 PhoneCountryCode = request.PhoneCountryCode,
                 PhoneType = request.PhoneType,
-                
-                Role = targetRole,
+
+                Role = request.Role,
                 Department = request.Department,
                 JobTitle = request.JobTitle,
                 EmployeeId = request.EmployeeId,
@@ -276,9 +273,6 @@ public class UsersController : BaseController
             if (!currentUserId.HasValue)
                 return BadRequestResponse("User not authenticated");
 
-            if (!Enum.TryParse<UserRole>(request.Role, out var targetRole))
-                return BadRequestResponse($"Invalid role: {request.Role}");
-
             if (!Enum.TryParse<UserStatus>(request.Status, out var targetStatus))
                 return BadRequestResponse($"Invalid status: {request.Status}");
 
@@ -288,13 +282,13 @@ public class UsersController : BaseController
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Email = request.Email,
-                
+
                 // Enhanced phone fields
                 PhoneNumber = request.PhoneNumber,
                 PhoneCountryCode = request.PhoneCountryCode,
                 PhoneType = request.PhoneType,
-                
-                Role = targetRole,
+
+                Role = request.Role,
                 Status = targetStatus,
                 Department = request.Department,
                 JobTitle = request.JobTitle,

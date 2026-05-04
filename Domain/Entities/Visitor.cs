@@ -41,9 +41,15 @@ public class Visitor : SoftDeleteEntity
     public PhoneNumber? PhoneNumber { get; set; }
 
     /// <summary>
-    /// Visitor's company name (DEPRECATED - use CompanyId instead)
+    /// Visitor's company name.
     /// </summary>
+    /// <remarks>
+    /// DEPRECATED: Migrate all usages to <see cref="CompanyId"/> / <see cref="CompanyEntity"/>.
+    /// Use the pattern <c>Company ?? CompanyEntity?.Name</c> when reading.
+    /// This column will be dropped in a future migration once all references are removed.
+    /// </remarks>
     [MaxLength(100)]
+    [Obsolete("Use CompanyId and CompanyEntity instead. Read via 'Company ?? CompanyEntity?.Name'. This property will be removed in a future release.")]
     public string? Company { get; set; }
 
     /// <summary>
@@ -95,6 +101,19 @@ public class Visitor : SoftDeleteEntity
     /// </summary>
     [MaxLength(10)]
     public string Language { get; set; } = "en-US";
+
+    /// <summary>
+    /// Whether this visitor is a civilian (مدني).
+    /// Civil Defense: set false for military / government personnel.
+    /// </summary>
+    public bool IsCivilian { get; set; } = true;
+
+    /// <summary>
+    /// Origin / authority the visitor represents when IsCivilian is false
+    /// (e.g., "وزارة الدفاع", "الجيش اللبناني").
+    /// </summary>
+    [MaxLength(200)]
+    public string? CivilianOrigin { get; set; }
 
     /// <summary>
     /// Path to visitor's profile photo
