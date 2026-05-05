@@ -1,9 +1,10 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Application.Queries.Users;
 using VisitorManagementSystem.Api.Domain.Enums;
-
+using VisitorManagementSystem.Api.Infrastructure.Data;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 /// <summary>
@@ -12,13 +13,16 @@ using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResultDto<UserListDto>>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ApplicationDbContext _context;
     private readonly ILogger<GetUsersQueryHandler> _logger;
 
     public GetUsersQueryHandler(
         IUnitOfWork unitOfWork,
+        ApplicationDbContext context,
         ILogger<GetUsersQueryHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _context = context;
         _logger = logger;
     }
 
@@ -35,6 +39,13 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResultDt
                 request.SortBy,
                 request.SortDescending,
                 cancellationToken);
+
+            // Build a RoleId → Name lookup so the response carries the Roles-table name
+            // (e.g. "civil_defense_receptionist") rather than the legacy UserRole enum string.
+            var roleNames = await _context.Roles
+                .AsNoTracking()
+                .Where(r => r.IsActive)
+                .ToDictionaryAsync(r => r.Id, r => r.Name, cancellationToken);
 
             // Apply additional filtering if specified
             var filteredUsers = users.AsQueryable();
@@ -93,7 +104,9 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResultDt
                 PhoneCountryCode = u.PhoneNumber != null ? u.PhoneNumber.CountryCode : null,
                 PhoneType = u.PhoneNumber != null ? u.PhoneNumber.PhoneType : null,
                 
-                Role = u.Role.ToString(),
+                Role = u.RoleId.HasValue
+                    ? roleNames.GetValueOrDefault(u.RoleId.Value) ?? u.Role.ToString()
+                    : u.Role.ToString(),
                 Status = u.Status.ToString(),
                 Department = u.Department,
                 JobTitle = u.JobTitle,

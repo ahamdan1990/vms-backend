@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
+using VisitorManagementSystem.Api.Application.Services.Auth;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
@@ -14,15 +15,18 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IPermissionService _permissionService;
         private readonly ILogger<UpdateUserCommandHandler> _logger;
 
         public UpdateUserCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
+            IPermissionService permissionService,
             ILogger<UpdateUserCommandHandler> logger)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _permissionService = permissionService;
             _logger = logger;
         }
 
@@ -146,6 +150,13 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 // Update user in repository
                 _unitOfWork.Users.Update(user);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                // Invalidate permission cache so the next login/request picks up the new role's permissions
+                if (roleChanged)
+                {
+                    _permissionService.InvalidateUserPermissionCache(user.Id);
+                    _logger.LogInformation("Permission cache invalidated for user {UserId} due to role change", user.Id);
+                }
 
                 _logger.LogInformation("User updated successfully: {UserId} by {ModifiedBy}. Email: {OriginalEmail} -> {NewEmail}, RoleId: {OriginalRoleId} -> {NewRoleId}",
                     user.Id, request.ModifiedBy, originalEmail, user.Email.Value, originalRoleId, user.RoleId);

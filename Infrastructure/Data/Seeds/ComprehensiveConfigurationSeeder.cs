@@ -15,7 +15,7 @@ public static class ComprehensiveConfigurationSeeder
     /// </summary>
     public static async Task SeedAllConfigurationsAsync(ApplicationDbContext context, IServiceProvider serviceProvider, int? systemUserId = null)
     {
-        if (context.SystemConfigurations.Any())
+        if (context.SystemConfigurations.Any(c => c.Category == "JWT"))
         {
             return; // Already seeded
         }

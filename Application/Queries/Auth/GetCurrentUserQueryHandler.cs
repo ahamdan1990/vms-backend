@@ -1,8 +1,10 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Application.DTOs.Auth;
 using VisitorManagementSystem.Api.Application.Services.Auth;
 using VisitorManagementSystem.Api.Application.Services.FileUploadService;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
+using VisitorManagementSystem.Api.Infrastructure.Data;
 
 namespace VisitorManagementSystem.Api.Application.Queries.Auth
 {
@@ -13,17 +15,20 @@ namespace VisitorManagementSystem.Api.Application.Queries.Auth
     public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, CurrentUserDto?>
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ApplicationDbContext _context;
         private readonly IPermissionService _permissionService;
         private readonly IFileUploadService _fileUploadService;
         private readonly ILogger<GetCurrentUserQueryHandler> _logger;
 
         public GetCurrentUserQueryHandler(
             IUnitOfWork unitOfWork,
+            ApplicationDbContext context,
             IPermissionService permissionService,
             IFileUploadService fileUploadService,
             ILogger<GetCurrentUserQueryHandler> logger)
         {
             _unitOfWork = unitOfWork;
+            _context = context;
             _permissionService = permissionService;
             _fileUploadService = fileUploadService;
             _logger = logger;
@@ -51,6 +56,16 @@ namespace VisitorManagementSystem.Api.Application.Queries.Auth
 
                 var permissions = await _permissionService.GetUserPermissionsAsync(user.Id, cancellationToken);
 
+                // Resolve the role name from the Roles table so civil-defense and other
+                // custom roles return their actual name rather than the legacy enum string.
+                var roleName = user.RoleId.HasValue
+                    ? await _context.Roles
+                        .AsNoTracking()
+                        .Where(r => r.Id == user.RoleId.Value)
+                        .Select(r => r.Name)
+                        .FirstOrDefaultAsync(cancellationToken)
+                    : null;
+
                 var currentUser = new CurrentUserDto
                 {
                     Id = user.Id,
@@ -58,7 +73,7 @@ namespace VisitorManagementSystem.Api.Application.Queries.Auth
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     FullName = user.FullName,
-                    Role = user.Role.ToString(),
+                    Role = roleName ?? user.Role.ToString(),
                     Status = user.Status.ToString(),
                     Department = user.Department,
                     JobTitle = user.JobTitle,

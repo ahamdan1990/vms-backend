@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
+namespace VisitorManagementSystem.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialBaseline : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -42,6 +42,30 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AlertEscalations", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AlertRecipientConfigurations",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AlertType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    TargetType = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    TargetRole = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    TargetUserId = table.Column<int>(type: "int", nullable: true),
+                    IsEnabled = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CreatedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AlertRecipientConfigurations", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -90,6 +114,60 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "BackupRecords",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TriggerType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    TriggeredByUserId = table.Column<int>(type: "int", nullable: true),
+                    TriggeredByDisplay = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    StartedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    FilePath = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    FileName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    FileSizeBytes = table.Column<long>(type: "bigint", nullable: false),
+                    DurationSeconds = table.Column<int>(type: "int", nullable: false),
+                    ErrorMessage = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    DatabaseName = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: true),
+                    DataFileSizeMbAtBackup = table.Column<double>(type: "float", nullable: false),
+                    CreatedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BackupRecords", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BlacklistOverrideRequests",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Token = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    VisitorId = table.Column<int>(type: "int", nullable: false),
+                    RequestedByUserId = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    ReviewedByUserId = table.Column<int>(type: "int", nullable: true),
+                    ReviewedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Notes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CreatedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BlacklistOverrideRequests", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Cameras",
                 columns: table => new
                 {
@@ -108,6 +186,8 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     LastOnlineTime = table.Column<DateTime>(type: "datetime2", nullable: true),
                     LastErrorMessage = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
                     FailureCount = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    CameraRole = table.Column<int>(type: "int", nullable: false),
+                    FrameSamplingIntervalSeconds = table.Column<int>(type: "int", nullable: false),
                     EnableFacialRecognition = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     Priority = table.Column<int>(type: "int", nullable: false, defaultValue: 5),
                     Manufacturer = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
@@ -405,10 +485,10 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     ExternalId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     ImportBatchId = table.Column<int>(type: "int", nullable: true),
                     TimeSlotId = table.Column<int>(type: "int", nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ModifiedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedBy = table.Column<int>(type: "int", nullable: false),
                     ModifiedBy = table.Column<int>(type: "int", nullable: true),
                     CreatedByUserId = table.Column<int>(type: "int", nullable: true),
@@ -655,6 +735,7 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     IsSystemPermission = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     DisplayOrder = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     CreatedBy = table.Column<int>(type: "int", nullable: true)
                 },
@@ -735,6 +816,7 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     DisplayOrder = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
                     Color = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     Icon = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     CreatedBy = table.Column<int>(type: "int", nullable: true),
                     ModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -840,6 +922,54 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     table.ForeignKey(
                         name: "FK_Users_Users_DeletedBy",
                         column: x => x.DeletedBy,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "StaffAttendances",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    CheckInTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CheckOutTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Method = table.Column<int>(type: "int", nullable: false),
+                    CameraId = table.Column<int>(type: "int", nullable: true),
+                    Notes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CreatedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ModifiedOn = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: true),
+                    ModifiedBy = table.Column<int>(type: "int", nullable: true),
+                    CreatedByUserId = table.Column<int>(type: "int", nullable: true),
+                    ModifiedByUserId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StaffAttendances", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_StaffAttendances_Cameras_CameraId",
+                        column: x => x.CameraId,
+                        principalTable: "Cameras",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_StaffAttendances_Users_CreatedByUserId",
+                        column: x => x.CreatedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_StaffAttendances_Users_ModifiedByUserId",
+                        column: x => x.ModifiedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_StaffAttendances_Users_UserId",
+                        column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -1109,6 +1239,8 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     GovernmentIdType = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: true),
                     Nationality = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     Language = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false, defaultValue: "en-US"),
+                    IsCivilian = table.Column<bool>(type: "bit", nullable: false),
+                    CivilianOrigin = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     ProfilePhotoPath = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     DietaryRequirements = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     AccessibilityRequirements = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
@@ -1389,6 +1521,31 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                 columns: new[] { "AlertType", "AlertPriority", "IsEnabled" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_AlertRecipientConfigurations_AlertType",
+                table: "AlertRecipientConfigurations",
+                column: "AlertType");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AlertRecipientConfigurations_AlertType_IsEnabled",
+                table: "AlertRecipientConfigurations",
+                columns: new[] { "AlertType", "IsEnabled" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AlertRecipientConfigurations_CreatedBy",
+                table: "AlertRecipientConfigurations",
+                column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AlertRecipientConfigurations_ModifiedBy",
+                table: "AlertRecipientConfigurations",
+                column: "ModifiedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AlertRecipientConfigurations_TargetUserId",
+                table: "AlertRecipientConfigurations",
+                column: "TargetUserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_AuditLog_CreatedOn",
                 table: "AuditLogs",
                 column: "CreatedOn");
@@ -1477,6 +1634,67 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                 name: "IX_AuditLogs_UserId_CreatedOn",
                 table: "AuditLogs",
                 columns: new[] { "UserId", "CreatedOn" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BackupRecords_CreatedBy",
+                table: "BackupRecords",
+                column: "CreatedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BackupRecords_ModifiedBy",
+                table: "BackupRecords",
+                column: "ModifiedBy");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BackupRecords_StartedAt",
+                table: "BackupRecords",
+                column: "StartedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BackupRecords_Status",
+                table: "BackupRecords",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BackupRecords_TriggeredByUserId",
+                table: "BackupRecords",
+                column: "TriggeredByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BackupRecords_TriggerType",
+                table: "BackupRecords",
+                column: "TriggerType");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BlacklistOverrideRequests_CreatedOn",
+                table: "BlacklistOverrideRequests",
+                column: "CreatedOn");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BlacklistOverrideRequests_RequestedByUserId",
+                table: "BlacklistOverrideRequests",
+                column: "RequestedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BlacklistOverrideRequests_ReviewedByUserId",
+                table: "BlacklistOverrideRequests",
+                column: "ReviewedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BlacklistOverrideRequests_Status",
+                table: "BlacklistOverrideRequests",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BlacklistOverrideRequests_Token",
+                table: "BlacklistOverrideRequests",
+                column: "Token",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BlacklistOverrideRequests_VisitorId",
+                table: "BlacklistOverrideRequests",
+                column: "VisitorId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Camera_CreatedBy",
@@ -2414,6 +2632,36 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_StaffAttendances_CameraId",
+                table: "StaffAttendances",
+                column: "CameraId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StaffAttendances_CheckInTime",
+                table: "StaffAttendances",
+                column: "CheckInTime");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StaffAttendances_CreatedByUserId",
+                table: "StaffAttendances",
+                column: "CreatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StaffAttendances_ModifiedByUserId",
+                table: "StaffAttendances",
+                column: "ModifiedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StaffAttendances_UserId",
+                table: "StaffAttendances",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StaffAttendances_UserId_CheckOutTime",
+                table: "StaffAttendances",
+                columns: new[] { "UserId", "CheckOutTime" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_SystemConfigurations_Category",
                 table: "SystemConfigurations",
                 column: "Category");
@@ -2967,12 +3215,82 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                 principalColumn: "Id");
 
             migrationBuilder.AddForeignKey(
+                name: "FK_AlertRecipientConfigurations_Users_CreatedBy",
+                table: "AlertRecipientConfigurations",
+                column: "CreatedBy",
+                principalTable: "Users",
+                principalColumn: "Id");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_AlertRecipientConfigurations_Users_ModifiedBy",
+                table: "AlertRecipientConfigurations",
+                column: "ModifiedBy",
+                principalTable: "Users",
+                principalColumn: "Id");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_AlertRecipientConfigurations_Users_TargetUserId",
+                table: "AlertRecipientConfigurations",
+                column: "TargetUserId",
+                principalTable: "Users",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.SetNull);
+
+            migrationBuilder.AddForeignKey(
                 name: "FK_AuditLogs_Users_UserId",
                 table: "AuditLogs",
                 column: "UserId",
                 principalTable: "Users",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.SetNull);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_BackupRecords_Users_CreatedBy",
+                table: "BackupRecords",
+                column: "CreatedBy",
+                principalTable: "Users",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_BackupRecords_Users_ModifiedBy",
+                table: "BackupRecords",
+                column: "ModifiedBy",
+                principalTable: "Users",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_BackupRecords_Users_TriggeredByUserId",
+                table: "BackupRecords",
+                column: "TriggeredByUserId",
+                principalTable: "Users",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.SetNull);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_BlacklistOverrideRequests_Users_RequestedByUserId",
+                table: "BlacklistOverrideRequests",
+                column: "RequestedByUserId",
+                principalTable: "Users",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_BlacklistOverrideRequests_Users_ReviewedByUserId",
+                table: "BlacklistOverrideRequests",
+                column: "ReviewedByUserId",
+                principalTable: "Users",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_BlacklistOverrideRequests_Visitors_VisitorId",
+                table: "BlacklistOverrideRequests",
+                column: "VisitorId",
+                principalTable: "Visitors",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Camera_CreatedBy_User",
@@ -3500,10 +3818,16 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                 name: "AlertEscalations");
 
             migrationBuilder.DropTable(
+                name: "AlertRecipientConfigurations");
+
+            migrationBuilder.DropTable(
                 name: "AuditLogs");
 
             migrationBuilder.DropTable(
-                name: "Cameras");
+                name: "BackupRecords");
+
+            migrationBuilder.DropTable(
+                name: "BlacklistOverrideRequests");
 
             migrationBuilder.DropTable(
                 name: "ConfigurationAudits");
@@ -3539,6 +3863,9 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                 name: "RolePermissions");
 
             migrationBuilder.DropTable(
+                name: "StaffAttendances");
+
+            migrationBuilder.DropTable(
                 name: "TimeSlotBookings");
 
             migrationBuilder.DropTable(
@@ -3555,6 +3882,9 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "Permissions");
+
+            migrationBuilder.DropTable(
+                name: "Cameras");
 
             migrationBuilder.DropTable(
                 name: "Invitations");
