@@ -1,7 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using VisitorManagementSystem.Api.Application.Services.VideoProcessing;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
+
+using System.Diagnostics;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace VisitorManagementSystem.Api.Application.Services.Cameras;
 
@@ -14,21 +21,39 @@ public class CameraService : ICameraService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<CameraService> _logger;
+    private readonly IConfiguration _configuration;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IFfmpegFrameGrabber _ffmpegFrameGrabber;
     private readonly Dictionary<int, CameraStreamInfo> _activeStreams = new();
     private readonly Dictionary<int, bool> _activeFacialRecognition = new();
     private readonly object _streamLock = new();
 
     public CameraService(
         IUnitOfWork unitOfWork,
-        ILogger<CameraService> logger)
+        ILogger<CameraService> logger,
+        IConfiguration configuration,
+        IHttpClientFactory httpClientFactory,
+        IFfmpegFrameGrabber ffmpegFrameGrabber)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+        _ffmpegFrameGrabber = ffmpegFrameGrabber ?? throw new ArgumentNullException(nameof(ffmpegFrameGrabber));
     }
 
     #region Connection Management
 
     public async Task<bool> TestConnectionAsync(int cameraId, bool updateStatus = true, CancellationToken cancellationToken = default)
+    {
+        var result = await TestConnectionDetailsAsync(cameraId, updateStatus, cancellationToken);
+        return result.IsSuccess;
+    }
+
+    public async Task<CameraConnectionTestResult> TestConnectionDetailsAsync(
+        int cameraId,
+        bool updateStatus = true,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -36,7 +61,7 @@ public class CameraService : ICameraService
             if (camera == null)
             {
                 _logger.LogWarning("Camera not found for connection test: {CameraId}", cameraId);
-                return false;
+                return CameraConnectionTestResult.Failure("Camera not found", CameraStatus.Inactive);
             }
 
             var result = await TestConnectionAsync(
@@ -52,7 +77,11 @@ public class CameraService : ICameraService
                 await UpdateCameraStatusAsync(cameraId, result.Status, result.ErrorMessage, null, cancellationToken);
             }
 
-            return result.IsSuccess;
+            result.Details["cameraId"] = cameraId;
+            result.Details["cameraType"] = camera.CameraType.ToString();
+            result.Details["updatedStatus"] = updateStatus;
+
+            return result;
         }
         catch (Exception ex)
         {
@@ -63,7 +92,7 @@ public class CameraService : ICameraService
                 await UpdateCameraStatusAsync(cameraId, CameraStatus.Error, ex.Message, null, cancellationToken);
             }
             
-            return false;
+            return CameraConnectionTestResult.Failure($"Connection test failed: {ex.Message}");
         }
     }
 
@@ -94,8 +123,10 @@ public class CameraService : ICameraService
             {
                 CameraType.RTSP => await TestRtspConnectionAsync(connectionString, username, password, timeoutSeconds, cancellationToken),
                 CameraType.IP => await TestIpCameraConnectionAsync(connectionString, username, password, timeoutSeconds, cancellationToken),
+                CameraType.HttpMjpeg => await TestIpCameraConnectionAsync(connectionString, username, password, timeoutSeconds, cancellationToken),
                 CameraType.USB => await TestUsbCameraConnectionAsync(connectionString, timeoutSeconds, cancellationToken),
                 CameraType.ONVIF => await TestOnvifConnectionAsync(connectionString, username, password, timeoutSeconds, cancellationToken),
+                CameraType.File => await TestFileSourceConnectionAsync(connectionString, timeoutSeconds, cancellationToken),
                 _ => CameraConnectionTestResult.Failure($"Unsupported camera type: {cameraType}")
             };
 
@@ -297,13 +328,29 @@ public class CameraService : ICameraService
             }
 
             var previousStatus = camera.Status;
-            var connectionTest = await TestConnectionAsync(cameraId, false, cancellationToken);
+            var connectionTest = await TestConnectionAsync(
+                camera.CameraType,
+                camera.ConnectionString,
+                camera.Username,
+                await DecryptPassword(camera.Password),
+                camera.GetConfiguration().ConnectionTimeoutSeconds,
+                cancellationToken);
 
             var result = connectionTest
-                ? CameraHealthCheckResult.Healthy(cameraId, camera.Name, 0)
-                : CameraHealthCheckResult.Unhealthy(cameraId, camera.Name, "Connection failed", CameraStatus.Error, camera.FailureCount + 1);
+                .IsSuccess
+                    ? CameraHealthCheckResult.Healthy(cameraId, camera.Name, connectionTest.ResponseTimeMs)
+                    : CameraHealthCheckResult.Unhealthy(
+                        cameraId,
+                        camera.Name,
+                        connectionTest.ErrorMessage ?? "Connection failed",
+                        connectionTest.Status,
+                        camera.FailureCount + 1);
 
             result.PreviousStatus = previousStatus;
+            result.ResponseTimeMs = connectionTest.ResponseTimeMs;
+            result.Details = connectionTest.Details;
+
+            await UpdateCameraStatusAsync(cameraId, connectionTest.Status, connectionTest.ErrorMessage, null, cancellationToken);
             
             return result;
         }
@@ -401,10 +448,57 @@ public class CameraService : ICameraService
 
     public async Task<byte[]?> CaptureFrameAsync(int cameraId, CancellationToken cancellationToken = default)
     {
-        // Placeholder implementation - would capture actual frame in real implementation
-        await Task.CompletedTask;
-        _logger.LogDebug("Captured frame from camera {CameraId}", cameraId);
-        return null; // Would return actual frame data
+        var result = await CaptureFrameDetailsAsync(cameraId, cancellationToken);
+        return result.IsSuccess ? result.FrameBytes : null;
+    }
+
+    public async Task<CameraFrameCaptureResult> CaptureFrameDetailsAsync(int cameraId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var camera = await _unitOfWork.Cameras.GetByIdAsync(cameraId, cancellationToken);
+            if (camera == null || camera.IsDeleted)
+            {
+                return CameraFrameCaptureResult.Failure(cameraId, "Camera not found");
+            }
+
+            if (!camera.IsActive)
+            {
+                return CameraFrameCaptureResult.Failure(cameraId, "Camera is inactive");
+            }
+
+            var ffmpegResult = await _ffmpegFrameGrabber.CaptureFrameAsync(camera, cancellationToken);
+            var result = new CameraFrameCaptureResult
+            {
+                CameraId = cameraId,
+                IsSuccess = ffmpegResult.IsSuccess,
+                FrameBytes = ffmpegResult.FrameBytes,
+                ContentType = ffmpegResult.ContentType,
+                ErrorMessage = ffmpegResult.ErrorMessage,
+                ElapsedMs = ffmpegResult.ElapsedMs,
+                CapturedAt = ffmpegResult.CapturedAt,
+                HardwareAcceleration = ffmpegResult.HardwareAcceleration.ToString(),
+                UsedCpuFallback = ffmpegResult.UsedCpuFallback,
+                Details = ffmpegResult.Details
+            };
+
+            if (result.IsSuccess)
+            {
+                camera.UpdateStatus(CameraStatus.Active);
+            }
+            else
+            {
+                camera.UpdateStatus(CameraStatus.Error, result.ErrorMessage);
+            }
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error capturing frame from camera {CameraId}", cameraId);
+            return CameraFrameCaptureResult.Failure(cameraId, $"Frame capture failed: {ex.Message}");
+        }
     }
 
     public async Task<bool> StartFrameCaptureAsync(int cameraId, CancellationToken cancellationToken = default)
@@ -442,6 +536,12 @@ public class CameraService : ICameraService
             CameraType.IP when !connectionString.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
                               !connectionString.StartsWith("https://", StringComparison.OrdinalIgnoreCase) =>
                 (false, "IP camera connection string must start with 'http://' or 'https://'"),
+            CameraType.HttpMjpeg when !connectionString.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                                      !connectionString.StartsWith("https://", StringComparison.OrdinalIgnoreCase) =>
+                (false, "HTTP/MJPEG camera connection string must start with 'http://' or 'https://'"),
+            CameraType.ONVIF when !connectionString.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                                  !connectionString.StartsWith("https://", StringComparison.OrdinalIgnoreCase) =>
+                (false, "ONVIF camera connection string must start with 'http://' or 'https://'"),
             _ => (true, string.Empty)
         };
     }
@@ -452,17 +552,43 @@ public class CameraService : ICameraService
     private async Task<CameraConnectionTestResult> TestRtspConnectionAsync(string connectionString, 
         string? username, string? password, int timeoutSeconds, CancellationToken cancellationToken)
     {
-        // Placeholder implementation - would use RTSP client library
-        await Task.Delay(100, cancellationToken); // Simulate connection time
-        
-        // Basic validation
         if (!Uri.TryCreate(connectionString, UriKind.Absolute, out var uri))
             return CameraConnectionTestResult.Failure("Invalid RTSP URL format");
 
-        // TODO: Implement actual RTSP connection test using library like FFMpeg.NET or similar
-        _logger.LogDebug("Testing RTSP connection to {Host}:{Port}", uri.Host, uri.Port);
-        
-        return CameraConnectionTestResult.Success(100);
+        var ffprobePath = ResolveFfmpegToolPath("ffprobe");
+        if (string.IsNullOrWhiteSpace(ffprobePath))
+        {
+            return CameraConnectionTestResult.Failure("ffprobe was not found. Configure FFmpeg:FFprobePath or place ffprobe.exe in the backend ffmpeg folder.");
+        }
+
+        var testUrl = ApplyCredentialsToUri(uri, username, password);
+        var timeoutMicroseconds = Math.Max(5, timeoutSeconds) * 1_000_000;
+
+        var processResult = await RunProcessAsync(
+            ffprobePath,
+            new[]
+            {
+                "-v", "error",
+                "-rtsp_transport", "tcp",
+                "-timeout", timeoutMicroseconds.ToString(),
+                "-select_streams", "v:0",
+                "-show_entries", "stream=codec_type,width,height,r_frame_rate",
+                "-of", "default=noprint_wrappers=1:nokey=0",
+                testUrl
+            },
+            timeoutSeconds,
+            cancellationToken);
+
+        var result = processResult.ExitCode == 0
+            ? CameraConnectionTestResult.Success(processResult.ElapsedMs)
+            : CameraConnectionTestResult.Failure(GetProcessError(processResult, "RTSP stream probe failed"));
+
+        result.Details["tool"] = "ffprobe";
+        result.Details["host"] = uri.Host;
+        result.Details["transport"] = "tcp";
+        result.Details["stdout"] = Truncate(processResult.StdOut, 1000);
+        result.Details["stderr"] = Truncate(processResult.StdErr, 1000);
+        return result;
     }
 
     /// <summary>
@@ -473,20 +599,27 @@ public class CameraService : ICameraService
     {
         try
         {
-            using var httpClient = new HttpClient();
-            httpClient.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
-            
-            if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
-            {
-                var credentials = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes($"{username}:{password}"));
-                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
-            }
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(Math.Max(5, timeoutSeconds)));
 
-            var response = await httpClient.GetAsync(connectionString, cancellationToken);
-            
-            return response.IsSuccessStatusCode
+            var httpClient = _httpClientFactory.CreateClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(Math.Max(5, timeoutSeconds));
+
+            using var request = new HttpRequestMessage(HttpMethod.Head, connectionString);
+            AddBasicAuthentication(request, username, password);
+
+            using var response = await SendHttpProbeAsync(httpClient, request, timeoutCts.Token);
+            var isSuccess = IsReachableHttpResponse(response);
+            var result = isSuccess
                 ? CameraConnectionTestResult.Success()
                 : CameraConnectionTestResult.Failure($"HTTP {(int)response.StatusCode}: {response.ReasonPhrase}");
+
+            result.Status = isSuccess ? CameraStatus.Active : CameraStatus.Error;
+            result.Details["httpStatusCode"] = (int)response.StatusCode;
+            result.Details["httpReasonPhrase"] = response.ReasonPhrase ?? string.Empty;
+            result.Details["contentType"] = response.Content.Headers.ContentType?.MediaType ?? string.Empty;
+            
+            return result;
         }
         catch (HttpRequestException ex)
         {
@@ -504,13 +637,44 @@ public class CameraService : ICameraService
     private async Task<CameraConnectionTestResult> TestUsbCameraConnectionAsync(string connectionString, 
         int timeoutSeconds, CancellationToken cancellationToken)
     {
-        // Placeholder implementation - would enumerate USB devices and test access
-        await Task.Delay(50, cancellationToken);
-        
-        // TODO: Implement actual USB camera detection and test using OpenCV or DirectShow
-        _logger.LogDebug("Testing USB camera: {DevicePath}", connectionString);
-        
-        return CameraConnectionTestResult.Success(50);
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return File.Exists(connectionString)
+                ? CameraConnectionTestResult.Success()
+                : CameraConnectionTestResult.Failure("USB camera testing currently supports Windows DirectShow or an existing device path");
+        }
+
+        var ffmpegPath = ResolveFfmpegToolPath("ffmpeg");
+        if (string.IsNullOrWhiteSpace(ffmpegPath))
+        {
+            return CameraConnectionTestResult.Failure("ffmpeg was not found. Configure FFmpeg:FFmpegPath or place ffmpeg.exe in the backend ffmpeg folder.");
+        }
+
+        var deviceName = NormalizeDirectShowDeviceName(connectionString);
+        var processResult = await RunProcessAsync(
+            ffmpegPath,
+            new[]
+            {
+                "-hide_banner",
+                "-nostdin",
+                "-loglevel", "error",
+                "-f", "dshow",
+                "-i", deviceName,
+                "-frames:v", "1",
+                "-f", "null",
+                "-"
+            },
+            timeoutSeconds,
+            cancellationToken);
+
+        var result = processResult.ExitCode == 0
+            ? CameraConnectionTestResult.Success(processResult.ElapsedMs)
+            : CameraConnectionTestResult.Failure(GetProcessError(processResult, "USB camera frame probe failed"));
+
+        result.Details["tool"] = "ffmpeg";
+        result.Details["device"] = deviceName;
+        result.Details["stderr"] = Truncate(processResult.StdErr, 1000);
+        return result;
     }
 
     /// <summary>
@@ -519,13 +683,81 @@ public class CameraService : ICameraService
     private async Task<CameraConnectionTestResult> TestOnvifConnectionAsync(string connectionString,
         string? username, string? password, int timeoutSeconds, CancellationToken cancellationToken)
     {
-        // Placeholder implementation - would use ONVIF client library
-        await Task.Delay(200, cancellationToken);
-        
-        // TODO: Implement actual ONVIF device discovery and connection test
-        _logger.LogDebug("Testing ONVIF camera: {ConnectionString}", GetSafeConnectionString(connectionString));
-        
-        return CameraConnectionTestResult.Success(200);
+        if (!Uri.TryCreate(connectionString, UriKind.Absolute, out var uri))
+        {
+            return CameraConnectionTestResult.Failure("Invalid ONVIF URL format");
+        }
+
+        var candidates = BuildOnvifProbeUris(uri).Distinct().ToArray();
+        var errors = new List<string>();
+
+        foreach (var candidate in candidates)
+        {
+            try
+            {
+                var result = await TestIpCameraConnectionAsync(candidate, username, password, timeoutSeconds, cancellationToken);
+                result.Details["probeUrl"] = GetSafeConnectionString(candidate);
+                result.Details["onvifProbe"] = true;
+
+                if (result.IsSuccess)
+                {
+                    return result;
+                }
+
+                errors.Add($"{GetSafeConnectionString(candidate)}: {result.ErrorMessage}");
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                errors.Add($"{GetSafeConnectionString(candidate)}: {ex.Message}");
+            }
+        }
+
+        var failure = CameraConnectionTestResult.Failure($"ONVIF probe failed. {string.Join(" | ", errors.Take(3))}");
+        failure.Details["probeUrls"] = candidates.Select(GetSafeConnectionString).ToArray();
+        return failure;
+    }
+
+    private async Task<CameraConnectionTestResult> TestFileSourceConnectionAsync(
+        string connectionString,
+        int timeoutSeconds,
+        CancellationToken cancellationToken)
+    {
+        if (!File.Exists(connectionString))
+        {
+            return CameraConnectionTestResult.Failure("File test source was not found");
+        }
+
+        var ffprobePath = ResolveFfmpegToolPath("ffprobe");
+        if (string.IsNullOrWhiteSpace(ffprobePath))
+        {
+            var result = CameraConnectionTestResult.Success();
+            result.Details["fileExists"] = true;
+            result.Details["probeSkipped"] = "ffprobe was not found";
+            return result;
+        }
+
+        var processResult = await RunProcessAsync(
+            ffprobePath,
+            new[]
+            {
+                "-v", "error",
+                "-select_streams", "v:0",
+                "-show_entries", "stream=codec_type,width,height,r_frame_rate",
+                "-of", "default=noprint_wrappers=1:nokey=0",
+                connectionString
+            },
+            timeoutSeconds,
+            cancellationToken);
+
+        var testResult = processResult.ExitCode == 0
+            ? CameraConnectionTestResult.Success(processResult.ElapsedMs)
+            : CameraConnectionTestResult.Failure(GetProcessError(processResult, "Video file probe failed"));
+
+        testResult.Details["tool"] = "ffprobe";
+        testResult.Details["fileExists"] = true;
+        testResult.Details["stdout"] = Truncate(processResult.StdOut, 1000);
+        testResult.Details["stderr"] = Truncate(processResult.StdErr, 1000);
+        return testResult;
     }
 
     /// <summary>
@@ -557,6 +789,225 @@ public class CameraService : ICameraService
         
         return "***";
     }
+
+    private string ResolveFfmpegToolPath(string toolName)
+    {
+        var executableName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? $"{toolName}.exe"
+            : toolName;
+
+        var configuredPath = _configuration[$"FFmpeg:{toolName}Path"]
+            ?? _configuration[$"FFmpeg:{char.ToUpperInvariant(toolName[0])}{toolName[1..]}Path"];
+
+        var configuredDirectory = _configuration["FFmpeg:Directory"];
+        var candidates = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(configuredPath))
+            candidates.Add(configuredPath);
+
+        if (!string.IsNullOrWhiteSpace(configuredDirectory))
+            candidates.Add(Path.Combine(configuredDirectory, executableName));
+
+        candidates.Add(Path.Combine(Directory.GetCurrentDirectory(), "ffmpeg", executableName));
+        candidates.Add(Path.Combine(AppContext.BaseDirectory, "ffmpeg", executableName));
+        candidates.Add(Path.Combine(Directory.GetCurrentDirectory(), executableName));
+
+        var foundPath = candidates.FirstOrDefault(File.Exists);
+        return foundPath ?? executableName;
+    }
+
+    private static string ApplyCredentialsToUri(Uri uri, string? username, string? password)
+    {
+        if (!string.IsNullOrWhiteSpace(uri.UserInfo) || string.IsNullOrWhiteSpace(username))
+        {
+            return uri.ToString();
+        }
+
+        var builder = new UriBuilder(uri)
+        {
+            UserName = username,
+            Password = password ?? string.Empty
+        };
+
+        return builder.Uri.ToString();
+    }
+
+    private static void AddBasicAuthentication(HttpRequestMessage request, string? username, string? password)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            return;
+        }
+
+        var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{username}:{password ?? string.Empty}"));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Basic", credentials);
+    }
+
+    private static async Task<HttpResponseMessage> SendHttpProbeAsync(
+        HttpClient httpClient,
+        HttpRequestMessage initialRequest,
+        CancellationToken cancellationToken)
+    {
+        var response = await httpClient.SendAsync(initialRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        if (response.StatusCode is not (HttpStatusCode.MethodNotAllowed or HttpStatusCode.NotFound))
+        {
+            return response;
+        }
+
+        var uri = initialRequest.RequestUri;
+        var auth = initialRequest.Headers.Authorization;
+        response.Dispose();
+
+        using var getRequest = new HttpRequestMessage(HttpMethod.Get, uri);
+        getRequest.Headers.Authorization = auth;
+        return await httpClient.SendAsync(getRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+    }
+
+    private static bool IsReachableHttpResponse(HttpResponseMessage response)
+    {
+        if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 400)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static string NormalizeDirectShowDeviceName(string connectionString)
+    {
+        var trimmed = connectionString.Trim();
+        if (trimmed.StartsWith("video=", StringComparison.OrdinalIgnoreCase))
+        {
+            return trimmed;
+        }
+
+        var escaped = trimmed.Replace("\"", "\\\"");
+        return $"video=\"{escaped}\"";
+    }
+
+    private static IEnumerable<string> BuildOnvifProbeUris(Uri uri)
+    {
+        yield return uri.ToString();
+
+        var root = $"{uri.Scheme}://{uri.Authority}";
+        yield return $"{root}/onvif/device_service";
+        yield return $"{root}/onvif/DeviceService";
+    }
+
+    private static async Task<ProcessRunResult> RunProcessAsync(
+        string fileName,
+        IEnumerable<string> arguments,
+        int timeoutSeconds,
+        CancellationToken cancellationToken)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        using var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = fileName,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            },
+            EnableRaisingEvents = true
+        };
+
+        foreach (var argument in arguments)
+        {
+            process.StartInfo.ArgumentList.Add(argument);
+        }
+
+        var stdout = new StringBuilder();
+        var stderr = new StringBuilder();
+
+        process.OutputDataReceived += (_, e) =>
+        {
+            if (e.Data != null) stdout.AppendLine(e.Data);
+        };
+        process.ErrorDataReceived += (_, e) =>
+        {
+            if (e.Data != null) stderr.AppendLine(e.Data);
+        };
+
+        try
+        {
+            if (!process.Start())
+            {
+                return new ProcessRunResult(-1, string.Empty, "Process could not be started", 0, TimedOut: false);
+            }
+
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(Math.Max(5, timeoutSeconds)));
+
+            try
+            {
+                await process.WaitForExitAsync(timeoutCts.Token);
+                stopwatch.Stop();
+                return new ProcessRunResult(process.ExitCode, stdout.ToString(), stderr.ToString(), (int)stopwatch.ElapsedMilliseconds, TimedOut: false);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    if (!process.HasExited)
+                    {
+                        process.Kill(entireProcessTree: true);
+                    }
+                }
+                catch
+                {
+                    // Best-effort process cleanup.
+                }
+
+                stopwatch.Stop();
+                return new ProcessRunResult(-1, stdout.ToString(), stderr.ToString(), (int)stopwatch.ElapsedMilliseconds, TimedOut: true);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            stopwatch.Stop();
+            return new ProcessRunResult(-1, stdout.ToString(), ex.Message, (int)stopwatch.ElapsedMilliseconds, TimedOut: false);
+        }
+    }
+
+    private static string GetProcessError(ProcessRunResult processResult, string fallback)
+    {
+        if (processResult.TimedOut)
+        {
+            return $"{fallback}: timed out after {processResult.ElapsedMs}ms";
+        }
+
+        var error = string.IsNullOrWhiteSpace(processResult.StdErr)
+            ? processResult.StdOut
+            : processResult.StdErr;
+
+        return string.IsNullOrWhiteSpace(error)
+            ? fallback
+            : $"{fallback}: {Truncate(error, 500)}";
+    }
+
+    private static string Truncate(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var trimmed = value.Trim();
+        return trimmed.Length <= maxLength ? trimmed : trimmed[..maxLength];
+    }
+
+    private sealed record ProcessRunResult(
+        int ExitCode,
+        string StdOut,
+        string StdErr,
+        int ElapsedMs,
+        bool TimedOut);
 
     /// <summary>
     /// Decrypts password (placeholder implementation)

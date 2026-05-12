@@ -55,6 +55,7 @@ public class ReportsController : BaseController
     /// Exports the "who is in the building" report as a CSV file.
     /// </summary>
     /// <param name="locationId">Optional location filter.</param>
+    /// <param name="timeZone">Optional export time zone identifier.</param>
     /// <param name="format">Export format (currently only CSV).</param>
     [HttpGet("in-building/export")]
     [Authorize(Policy = "Permissions.Any.Report.Export,Emergency.Export")]

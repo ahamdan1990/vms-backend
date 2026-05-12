@@ -199,8 +199,13 @@ public class Camera : SoftDeleteEntity
     /// </summary>
     public bool IsAvailableForStreaming()
     {
-        return IsOperational() && 
-               (CameraType == CameraType.RTSP || CameraType == CameraType.IP || CameraType == CameraType.ONVIF);
+        return IsOperational() && CameraType is
+            CameraType.USB or
+            CameraType.RTSP or
+            CameraType.IP or
+            CameraType.ONVIF or
+            CameraType.HttpMjpeg or
+            CameraType.File;
     }
 
     /// <summary>
@@ -264,11 +269,16 @@ public class Camera : SoftDeleteEntity
         }
 
         // Validate IP camera format
-        if (CameraType == CameraType.IP)
+        if (CameraType == CameraType.IP || CameraType == CameraType.HttpMjpeg || CameraType == CameraType.ONVIF)
         {
             if (!ConnectionString.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
                 !ConnectionString.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-                validationErrors.Add("IP cameras must have a valid HTTP/HTTPS URL");
+                validationErrors.Add($"{CameraType} cameras must have a valid HTTP/HTTPS URL");
+        }
+
+        if (CameraType == CameraType.File && string.IsNullOrWhiteSpace(ConnectionString))
+        {
+            validationErrors.Add("File test source cameras must have a file path");
         }
 
         // Validate camera configuration

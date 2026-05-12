@@ -30,8 +30,6 @@ var builder = WebApplication.CreateBuilder(args);
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
-    .WriteTo.Console()
-    .WriteTo.File("logs/vms-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
 builder.Host.UseSerilog();
@@ -58,6 +56,16 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
         b => b.MigrationsAssembly("VisitorManagementSystem.Api"));
+
+    if (builder.Configuration.GetValue("Database:EnableDetailedErrors", builder.Environment.IsDevelopment()))
+    {
+        options.EnableDetailedErrors();
+    }
+
+    if (builder.Configuration.GetValue<bool>("Database:EnableSensitiveDataLogging"))
+    {
+        options.EnableSensitiveDataLogging();
+    }
 
     // Suppress MARS warnings in production
     if (!builder.Environment.IsDevelopment())
@@ -223,7 +231,16 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
 // Add AutoMapper
-builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+builder.Services.AddAutoMapper(cfg =>
+{
+    cfg.AddMaps(Assembly.GetExecutingAssembly());
+
+    var autoMapperLicenseKey = builder.Configuration["AutoMapper:LicenseKey"];
+    if (!string.IsNullOrWhiteSpace(autoMapperLicenseKey))
+    {
+        cfg.LicenseKey = autoMapperLicenseKey;
+    }
+});
 builder.Services.AddSingleton<PermissionHubFilter>();
 // Add SignalR
 builder.Services.AddSignalR(options =>
@@ -254,7 +271,7 @@ builder.Services.AddCors(options =>
             ?? new[] { "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH" };
 
         var allowedHeaders = builder.Configuration.GetSection("Cors:AllowedHeaders").Get<string[]>()
-            ?? new[] { "Content-Type", "Authorization", "X-Request-ID", "X-VMS-Client", "X-VMS-Version" };
+            ?? new[] { "Content-Type", "Authorization", "X-Correlation-ID", "X-Request-ID", "X-VMS-Client", "X-VMS-Version" };
 
         // For development, allow any origin from 192.168.0.* subnet
         if (builder.Environment.IsDevelopment())
@@ -326,6 +343,9 @@ var enforceCanonicalHost = builder.Configuration.GetValue<bool>("Security:Enforc
 // request.Scheme and request.Host reflect the real public values.
 app.UseForwardedHeaders();
 
+// Establishes one request correlation ID for logs, response headers, response bodies, and audit metadata.
+app.UseMiddleware<RequestLoggingMiddleware>();
+
 // Redirect HTTP to HTTPS in production. Canonical-host enforcement is optional
 // because some deployments intentionally support localhost, machine-name, and IP access.
 if (!app.Environment.IsDevelopment())
@@ -362,9 +382,6 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Security headers
 app.UseMiddleware<SecurityHeadersMiddleware>();
-
-// Request logging
-app.UseMiddleware<RequestLoggingMiddleware>();
 
 // Rate limiting
 app.UseMiddleware<RateLimitingMiddleware>();

@@ -6,7 +6,9 @@ using VisitorManagementSystem.Api.Application.DTOs.Cameras;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
 using VisitorManagementSystem.Api.Application.Queries.Cameras;
 using VisitorManagementSystem.Api.Application.Services;
+using VisitorManagementSystem.Api.Application.Services.Cameras;
 using VisitorManagementSystem.Api.Application.Services.FaceDetection;
+using VisitorManagementSystem.Api.Application.Services.VideoProcessing;
 using VisitorManagementSystem.Api.Domain.Constants;
 
 namespace VisitorManagementSystem.Api.Controllers;
@@ -24,15 +26,21 @@ public class CamerasController : BaseController
     private readonly IMediator _mediator;
     private readonly ILogger<CamerasController> _logger;
     private readonly IFaceDetectionService _faceDetectionService;
+    private readonly ICameraService _cameraService;
+    private readonly IFfmpegCapabilityService _ffmpegCapabilityService;
 
     public CamerasController(
         IMediator mediator,
         ILogger<CamerasController> logger,
-        IFaceDetectionService faceDetectionService)
+        IFaceDetectionService faceDetectionService,
+        ICameraService cameraService,
+        IFfmpegCapabilityService ffmpegCapabilityService)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _faceDetectionService = faceDetectionService ?? throw new ArgumentNullException(nameof(faceDetectionService));
+        _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
+        _ffmpegCapabilityService = ffmpegCapabilityService ?? throw new ArgumentNullException(nameof(ffmpegCapabilityService));
     }
 
     #region CRUD Operations
@@ -343,8 +351,6 @@ public class CamerasController : BaseController
     {
         try
         {
-            // TODO: Create TestCameraConnectionCommand and Handler
-            // For now, return a placeholder response following MediatR pattern
             var camera = await _mediator.Send(new GetCameraByIdQuery { Id = id });
             
             if (camera == null)
@@ -352,12 +358,17 @@ public class CamerasController : BaseController
                 return NotFoundResponse("Camera", id);
             }
 
+            var result = await _cameraService.TestConnectionDetailsAsync(id, updateStatus, HttpContext.RequestAborted);
             return SuccessResponse(new
             {
                 CameraId = id,
-                Success = true,
-                Message = "Connection test functionality will be implemented with dedicated worker services",
-                TestedAt = DateTime.UtcNow
+                Success = result.IsSuccess,
+                result.IsSuccess,
+                Status = result.Status,
+                result.ErrorMessage,
+                result.ResponseTimeMs,
+                result.TestedAt,
+                result.Details
             });
         }
         catch (Exception ex)
@@ -375,26 +386,67 @@ public class CamerasController : BaseController
     [HttpPost("test-connection")]
     [Authorize(Policy = Permissions.SystemConfig.Update)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
-    public Task<IActionResult> TestConnectionParameters([FromBody] CameraConnectionTestDto testDto)
+    public async Task<IActionResult> TestConnectionParameters([FromBody] CameraConnectionTestDto testDto)
     {
         try
         {
-            // TODO: Create TestCameraConnectionParametersCommand and Handler
-            // For now, return a placeholder response following MediatR pattern
-            return Task.FromResult<IActionResult>(SuccessResponse(new
+            if (!ModelState.IsValid)
             {
-                Success = true,
-                Status = "Connected",
-                ErrorMessage = (string?)null,
-                ResponseTimeMs = 150,
-                TestedAt = DateTime.UtcNow,
-                Details = "Connection test functionality will be implemented with dedicated worker services"
-            }));
+                return ValidationError(GetModelStateErrors(), "Invalid camera connection test data");
+            }
+
+            var result = await _cameraService.TestConnectionAsync(
+                testDto.CameraType,
+                testDto.ConnectionString,
+                testDto.Username,
+                testDto.Password,
+                testDto.TimeoutSeconds,
+                HttpContext.RequestAborted);
+
+            return SuccessResponse(new
+            {
+                Success = result.IsSuccess,
+                result.IsSuccess,
+                Status = result.Status,
+                result.ErrorMessage,
+                result.ResponseTimeMs,
+                result.TestedAt,
+                result.Details
+            });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error testing camera connection parameters");
-            return Task.FromResult<IActionResult>(ServerErrorResponse("An error occurred while testing camera connection"));
+            return ServerErrorResponse("An error occurred while testing camera connection");
+        }
+    }
+
+    /// <summary>
+    /// Gets FFmpeg availability and hardware acceleration capabilities.
+    /// </summary>
+    /// <returns>FFmpeg capability information</returns>
+    [HttpGet("ffmpeg/capabilities")]
+    [Authorize(Policy = Permissions.SystemConfig.Read)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
+    public async Task<IActionResult> GetFfmpegCapabilities()
+    {
+        try
+        {
+            var capabilities = await _ffmpegCapabilityService.GetCapabilitiesAsync(HttpContext.RequestAborted);
+            return SuccessResponse(new
+            {
+                capabilities.IsFfmpegAvailable,
+                capabilities.FfmpegPath,
+                capabilities.HardwareAccelerations,
+                capabilities.HasCuda,
+                capabilities.ErrorMessage,
+                capabilities.CheckedAt
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving FFmpeg capabilities");
+            return ServerErrorResponse("An error occurred while retrieving FFmpeg capabilities");
         }
     }
 
@@ -411,7 +463,6 @@ public class CamerasController : BaseController
     {
         try
         {
-            // TODO: Create StartCameraStreamCommand and Handler
             var camera = await _mediator.Send(new GetCameraByIdQuery { Id = id });
             
             if (camera == null)
@@ -419,12 +470,19 @@ public class CamerasController : BaseController
                 return NotFoundResponse("Camera", id);
             }
 
+            var started = await _cameraService.StartStreamAsync(id, HttpContext.RequestAborted);
+            var streamInfo = await _cameraService.GetStreamInfoAsync(id, HttpContext.RequestAborted);
+
             return SuccessResponse(new
             {
                 CameraId = id,
-                Success = true,
-                Message = "Stream functionality will be implemented with dedicated worker services",
-                StartedAt = DateTime.UtcNow
+                Success = started,
+                IsStreaming = streamInfo?.IsStreaming ?? false,
+                StreamInfo = streamInfo,
+                Message = started
+                    ? "Camera stream state started. FFmpeg frame capture is available; continuous inference workers are scheduled for the next pipeline phase."
+                    : "Camera stream could not be started because the camera is not operational.",
+                StartedAt = streamInfo?.StartedAt ?? DateTime.UtcNow
             });
         }
         catch (Exception ex)
@@ -448,7 +506,6 @@ public class CamerasController : BaseController
     {
         try
         {
-            // TODO: Create StopCameraStreamCommand and Handler
             var camera = await _mediator.Send(new GetCameraByIdQuery { Id = id });
             
             if (camera == null)
@@ -456,11 +513,13 @@ public class CamerasController : BaseController
                 return NotFoundResponse("Camera", id);
             }
 
+            var stopped = await _cameraService.StopStreamAsync(id, graceful, HttpContext.RequestAborted);
+
             return SuccessResponse(new
             {
                 CameraId = id,
-                Success = true,
-                Message = "Stream functionality will be implemented with dedicated worker services",
+                Success = stopped,
+                IsStreaming = false,
                 StoppedAt = DateTime.UtcNow,
                 Graceful = graceful
             });
@@ -485,7 +544,6 @@ public class CamerasController : BaseController
     {
         try
         {
-            // TODO: Create GetCameraStreamInfoQuery and Handler
             var camera = await _mediator.Send(new GetCameraByIdQuery { Id = id });
             
             if (camera == null)
@@ -493,11 +551,13 @@ public class CamerasController : BaseController
                 return NotFoundResponse("Camera", id);
             }
 
+            var streamInfo = await _cameraService.GetStreamInfoAsync(id, HttpContext.RequestAborted);
+
             return SuccessResponse(new
             {
                 CameraId = id,
-                IsStreaming = false,
-                Message = "Stream functionality will be implemented with dedicated worker services"
+                IsStreaming = streamInfo?.IsStreaming ?? false,
+                StreamInfo = streamInfo
             });
         }
         catch (Exception ex)
@@ -520,7 +580,6 @@ public class CamerasController : BaseController
     {
         try
         {
-            // TODO: Create PerformCameraHealthCheckCommand and Handler
             var camera = await _mediator.Send(new GetCameraByIdQuery { Id = id });
             
             if (camera == null)
@@ -528,21 +587,8 @@ public class CamerasController : BaseController
                 return NotFoundResponse("Camera", id);
             }
 
-            return SuccessResponse(new
-            {
-                CameraId = id,
-                CameraName = camera.Name,
-                IsHealthy = true,
-                Status = "Active",
-                PreviousStatus = (string?)null,
-                ErrorMessage = (string?)null,
-                ResponseTimeMs = 120,
-                CheckedAt = DateTime.UtcNow,
-                FailureCount = 0,
-                IsRecovery = false,
-                IsNewFailure = false,
-                HealthScore = 95.0
-            });
+            var result = await _cameraService.PerformHealthCheckAsync(id, HttpContext.RequestAborted);
+            return SuccessResponse(result);
         }
         catch (Exception ex)
         {
@@ -564,7 +610,6 @@ public class CamerasController : BaseController
     {
         try
         {
-            // TODO: Create CaptureCameraFrameCommand and Handler
             var camera = await _mediator.Send(new GetCameraByIdQuery { Id = id });
             
             if (camera == null)
@@ -572,13 +617,24 @@ public class CamerasController : BaseController
                 return NotFoundResponse("Camera", id);
             }
 
+            var result = await _cameraService.CaptureFrameDetailsAsync(id, HttpContext.RequestAborted);
+            if (!result.IsSuccess || result.FrameBytes == null)
+            {
+                return BadRequestResponse(result.ErrorMessage ?? "Frame capture failed");
+            }
+
             return SuccessResponse(new
             {
                 CameraId = id,
                 Success = true,
-                FrameSize = 1024000, // Placeholder frame size
-                CapturedAt = DateTime.UtcNow,
-                Message = "Frame capture functionality will be implemented with dedicated worker services"
+                result.ContentType,
+                FrameSize = result.FrameSizeBytes,
+                FrameBase64 = Convert.ToBase64String(result.FrameBytes),
+                result.CapturedAt,
+                result.ElapsedMs,
+                result.HardwareAcceleration,
+                result.UsedCpuFallback,
+                result.Details
             });
         }
         catch (Exception ex)
@@ -603,31 +659,18 @@ public class CamerasController : BaseController
     {
         try
         {
-            // TODO: Create PerformAllCamerasHealthCheckCommand and Handler
-            // For now, return placeholder response
-            var cameras = await _mediator.Send(new GetCamerasQuery { PageSize = 100, IsActive = true });
-            
-            var results = cameras.Items.Select(c => new
-            {
-                CameraId = c.Id,
-                CameraName = c.Name,
-                IsHealthy = true,
-                Status = "Active",
-                HealthScore = 95.0,
-                ResponseTimeMs = 120,
-                ErrorMessage = (string?)null
-            });
+            var results = (await _cameraService.PerformHealthCheckAllAsync(HttpContext.RequestAborted)).ToList();
 
             var summary = new Dictionary<string, int>
             {
-                ["Healthy"] = results.Count(),
-                ["Unhealthy"] = 0
+                ["Healthy"] = results.Count(r => r.IsHealthy),
+                ["Unhealthy"] = results.Count(r => !r.IsHealthy)
             };
 
             return SuccessResponse(new
             {
                 Summary = summary,
-                TotalCameras = results.Count(),
+                TotalCameras = results.Count,
                 CheckedAt = DateTime.UtcNow,
                 Results = results
             });

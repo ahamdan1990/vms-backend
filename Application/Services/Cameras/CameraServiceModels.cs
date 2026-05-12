@@ -130,6 +130,35 @@ public class CameraStreamInfo
 }
 
 /// <summary>
+/// Result of capturing one camera frame.
+/// </summary>
+public class CameraFrameCaptureResult
+{
+    public int CameraId { get; set; }
+    public bool IsSuccess { get; set; }
+    public byte[]? FrameBytes { get; set; }
+    public string ContentType { get; set; } = "image/jpeg";
+    public string? ErrorMessage { get; set; }
+    public int ElapsedMs { get; set; }
+    public DateTimeOffset CapturedAt { get; set; } = DateTimeOffset.UtcNow;
+    public string HardwareAcceleration { get; set; } = "Cpu";
+    public bool UsedCpuFallback { get; set; }
+    public Dictionary<string, object> Details { get; set; } = new();
+
+    public int FrameSizeBytes => FrameBytes?.Length ?? 0;
+
+    public static CameraFrameCaptureResult Failure(int cameraId, string errorMessage)
+    {
+        return new CameraFrameCaptureResult
+        {
+            CameraId = cameraId,
+            IsSuccess = false,
+            ErrorMessage = errorMessage
+        };
+    }
+}
+
+/// <summary>
 /// Result of a camera health check operation
 /// Provides comprehensive status information about camera health
 /// </summary>
@@ -223,9 +252,9 @@ public class CameraHealthCheckResult
         score -= Math.Min(FailureCount * 5, 30);
 
         // Reduce score based on response time
-        if (ResponseTimeMs > 1000) score -= 10;
+        if (ResponseTimeMs > 10000) score -= 30;
         else if (ResponseTimeMs > 5000) score -= 20;
-        else if (ResponseTimeMs > 10000) score -= 30;
+        else if (ResponseTimeMs > 1000) score -= 10;
 
         // Ensure score is within valid range
         HealthScore = Math.Max(0, Math.Min(100, score));

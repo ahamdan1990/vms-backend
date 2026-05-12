@@ -17,6 +17,7 @@ using VisitorManagementSystem.Api.Application.Services.Xlsx;
 using VisitorManagementSystem.Api.Application.Services.Users;
 using VisitorManagementSystem.Api.Application.Services.Visitors;
 using VisitorManagementSystem.Api.Application.Services.Capacity;
+using VisitorManagementSystem.Api.Application.Services.Cameras;
 using VisitorManagementSystem.Api.Configuration;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -38,6 +39,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.RateLimiting;
 using VisitorManagementSystem.Api.Application.Services.FileUploadService;
 using VisitorManagementSystem.Api.Application.Services.FaceDetection;
+using VisitorManagementSystem.Api.Application.Services.VideoProcessing;
 using VisitorManagementSystem.Api.Infrastructure.Caching;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Caching.Distributed;
@@ -82,6 +84,7 @@ public static class ServiceCollectionExtensions
     {
         // Register the dynamic configuration service
         services.AddScoped<IDynamicConfigurationService, DynamicConfigurationService>();
+        services.Configure<FfmpegOptions>(configuration.GetSection(FfmpegOptions.SectionName));
 
         // Note: All other configurations are now stored in database and accessed via IDynamicConfigurationService
 
@@ -125,6 +128,13 @@ public static class ServiceCollectionExtensions
 
         // Capacity management services
         services.AddScoped<ICapacityService, CapacityService>();
+
+        // Camera management services
+        services.AddScoped<ICameraService, CameraService>();
+        services.AddSingleton<IFfmpegToolLocator, FfmpegToolLocator>();
+        services.AddSingleton<IFfmpegProcessRunner, FfmpegProcessRunner>();
+        services.AddSingleton<IFfmpegCapabilityService, FfmpegCapabilityService>();
+        services.AddScoped<IFfmpegFrameGrabber, FfmpegFrameGrabber>();
 
         // File upload service
         services.AddScoped<IFileUploadService, FileUploadService>();
@@ -618,11 +628,15 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<ApplicationDbContext>(options =>
         {
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
-            
-            // Enable detailed errors in development
-            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+
+            var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+            if (configuration.GetValue("Database:EnableDetailedErrors", isDevelopment))
             {
                 options.EnableDetailedErrors();
+            }
+
+            if (configuration.GetValue<bool>("Database:EnableSensitiveDataLogging"))
+            {
                 options.EnableSensitiveDataLogging();
             }
         });

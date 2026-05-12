@@ -69,7 +69,7 @@ public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, C
             var configuration = UpdateCameraConfiguration(camera.GetConfiguration(), request.Configuration);
 
             // Apply updates to camera entity
-            await ApplyUpdatesToCamera(camera, request, configuration);
+            await ApplyUpdatesToCamera(camera, request, configuration, originalConnectionString, originalCameraType);
 
             // Validate updated configuration
             if (!camera.IsConfigurationValid(out var validationErrors))
@@ -168,6 +168,10 @@ public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, C
             ResolutionHeight = updates.ResolutionHeight ?? existing.ResolutionHeight,
             FrameRate = updates.FrameRate ?? existing.FrameRate,
             Quality = updates.Quality ?? existing.Quality,
+            Enabled = updates.Enabled,
+            CameraRole = updates.CameraRole,
+            PreferredEngine = updates.PreferredEngine,
+            WorkflowMode = updates.WorkflowMode,
             AutoStart = updates.AutoStart,
             MaxConnections = updates.MaxConnections > 0 ? updates.MaxConnections : existing.MaxConnections,
             ConnectionTimeoutSeconds = updates.ConnectionTimeoutSeconds > 0 ? updates.ConnectionTimeoutSeconds : existing.ConnectionTimeoutSeconds,
@@ -178,7 +182,39 @@ public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, C
             EnableRecording = updates.EnableRecording,
             RecordingDurationMinutes = updates.RecordingDurationMinutes ?? existing.RecordingDurationMinutes,
             EnableFacialRecognition = updates.EnableFacialRecognition,
+            DetectionEnabled = updates.DetectionEnabled,
+            TrackingEnabled = updates.TrackingEnabled,
+            RecognitionEnabled = updates.RecognitionEnabled,
+            CompreFaceFallbackEnabled = updates.CompreFaceFallbackEnabled,
             FacialRecognitionThreshold = updates.FacialRecognitionThreshold ?? existing.FacialRecognitionThreshold,
+            FaceDetectionThreshold = updates.FaceDetectionThreshold ?? existing.FaceDetectionThreshold,
+            UnknownFaceThreshold = updates.UnknownFaceThreshold ?? existing.UnknownFaceThreshold,
+            MinimumFaceSizePixels = updates.MinimumFaceSizePixels ?? existing.MinimumFaceSizePixels,
+            FaceQualityThreshold = updates.FaceQualityThreshold ?? existing.FaceQualityThreshold,
+            BlurThreshold = updates.BlurThreshold ?? existing.BlurThreshold,
+            YawLimitDegrees = updates.YawLimitDegrees ?? existing.YawLimitDegrees,
+            PitchLimitDegrees = updates.PitchLimitDegrees ?? existing.PitchLimitDegrees,
+            RollLimitDegrees = updates.RollLimitDegrees ?? existing.RollLimitDegrees,
+            MaxFacesPerFrame = updates.MaxFacesPerFrame > 0 ? updates.MaxFacesPerFrame : existing.MaxFacesPerFrame,
+            MaxConcurrentTracks = updates.MaxConcurrentTracks > 0 ? updates.MaxConcurrentTracks : existing.MaxConcurrentTracks,
+            CaptureFpsLimit = updates.CaptureFpsLimit ?? existing.CaptureFpsLimit,
+            InferenceFps = updates.InferenceFps ?? existing.InferenceFps,
+            FrameSamplingIntervalMs = updates.FrameSamplingIntervalMs > 0 ? updates.FrameSamplingIntervalMs : existing.FrameSamplingIntervalMs,
+            RecognitionIntervalPerTrackMs = updates.RecognitionIntervalPerTrackMs > 0 ? updates.RecognitionIntervalPerTrackMs : existing.RecognitionIntervalPerTrackMs,
+            TrackTimeoutMs = updates.TrackTimeoutMs > 0 ? updates.TrackTimeoutMs : existing.TrackTimeoutMs,
+            ReIdentificationTimeoutMs = updates.ReIdentificationTimeoutMs > 0 ? updates.ReIdentificationTimeoutMs : existing.ReIdentificationTimeoutMs,
+            AlertCooldownMs = updates.AlertCooldownMs >= 0 ? updates.AlertCooldownMs : existing.AlertCooldownMs,
+            KnownFaceCooldownMs = updates.KnownFaceCooldownMs >= 0 ? updates.KnownFaceCooldownMs : existing.KnownFaceCooldownMs,
+            UnknownFaceCooldownMs = updates.UnknownFaceCooldownMs >= 0 ? updates.UnknownFaceCooldownMs : existing.UnknownFaceCooldownMs,
+            SnapshotSavingEnabled = updates.SnapshotSavingEnabled,
+            StoreUnknownFaceSnapshots = updates.StoreUnknownFaceSnapshots,
+            StoreKnownFaceSnapshots = updates.StoreKnownFaceSnapshots,
+            UnknownSnapshotRetentionDays = updates.UnknownSnapshotRetentionDays > 0 ? updates.UnknownSnapshotRetentionDays : existing.UnknownSnapshotRetentionDays,
+            KnownAdditionalFaceLimit = updates.KnownAdditionalFaceLimit >= 0 ? updates.KnownAdditionalFaceLimit : existing.KnownAdditionalFaceLimit,
+            GpuDecodingEnabled = updates.GpuDecodingEnabled,
+            CpuFallbackEnabled = updates.CpuFallbackEnabled,
+            HardwareAcceleration = updates.HardwareAcceleration,
+            HealthCheckIntervalSeconds = updates.HealthCheckIntervalSeconds > 0 ? updates.HealthCheckIntervalSeconds : existing.HealthCheckIntervalSeconds,
             ExtendedConfiguration = updates.ExtendedConfiguration ?? existing.ExtendedConfiguration
         };
     }
@@ -186,7 +222,12 @@ public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, C
     /// <summary>
     /// Applies all updates to the camera entity with secure credential handling
     /// </summary>
-    private async Task ApplyUpdatesToCamera(Camera camera, UpdateCameraCommand request, CameraConfiguration configuration)
+    private async Task ApplyUpdatesToCamera(
+        Camera camera,
+        UpdateCameraCommand request,
+        CameraConfiguration configuration,
+        string originalConnectionString,
+        CameraType originalCameraType)
     {
         // Update basic properties
         camera.Name = request.Name.Trim();
@@ -237,7 +278,7 @@ public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, C
         }
 
         // Reset error state if configuration changed significantly
-        if (HasCriticalChanges(camera.ConnectionString, camera.CameraType, camera))
+        if (HasCriticalChanges(originalConnectionString, originalCameraType, camera))
         {
             camera.ResetErrorState(request.ModifiedBy);
         }

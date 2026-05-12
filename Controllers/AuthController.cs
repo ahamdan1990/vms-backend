@@ -1,12 +1,13 @@
 ﻿// Controllers/AuthController.cs
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MediatR;
 using VisitorManagementSystem.Api.Application.Commands.Auth;
-using VisitorManagementSystem.Api.Application.Queries.Auth;
 using VisitorManagementSystem.Api.Application.DTOs.Auth;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
+using VisitorManagementSystem.Api.Application.Queries.Auth;
 using VisitorManagementSystem.Api.Application.Services.Auth;
+using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Infrastructure.Utilities;
 
 namespace VisitorManagementSystem.Api.Controllers;
@@ -66,6 +67,8 @@ public class AuthController : BaseController
                 {
                     IsSuccess = true,
                     User = result.User,
+                    AccessTokenExpiry = result.AccessTokenExpiry,
+                    RefreshTokenExpiry = result.RefreshTokenExpiry,
                     RequiresPasswordChange = result.RequiresPasswordChange,
                     RequiresTwoFactor = result.RequiresTwoFactor,
                     DeviceFingerprint = result.DeviceFingerprint

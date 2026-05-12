@@ -347,7 +347,6 @@ public static class UserRoles
     /// For safety during migration, return a reasonable default set of essential admin permissions.
     /// This fallback should NEVER be hit once all users have RoleId set (via Fix #2 and Fix #7).
     /// </remarks>
-    [Obsolete("Use database-driven permissions via RoleId. This is only a fallback for users without RoleId.")]
     private static List<string> GetAdministratorPermissions()
     {
         // Essential administrator permissions for fallback only

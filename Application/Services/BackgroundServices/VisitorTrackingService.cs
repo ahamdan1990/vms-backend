@@ -47,7 +47,6 @@ public class VisitorTrackingService : BackgroundService
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation("Visitor Tracking Service is stopping");
                 break;
             }
             catch (Exception ex)

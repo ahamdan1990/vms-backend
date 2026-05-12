@@ -23,6 +23,7 @@ public interface ICapacityService
     /// <param name="dateTime">Date and time</param>
     /// <param name="locationId">Location ID (optional)</param>
     /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="endDateTime">Optional end date and time for range-based occupancy checks</param>
     /// <returns>Current occupancy count</returns>
     Task<int> GetCurrentOccupancyAsync(
         DateTime dateTime,

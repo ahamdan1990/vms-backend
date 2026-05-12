@@ -45,4 +45,6 @@ public class LoginResponseDto
     /// List of validation errors
     /// </summary>
     public List<string> Errors { get; set; } = new();
+    public DateTime? AccessTokenExpiry { get; internal set; }
+    public DateTime? RefreshTokenExpiry { get; internal set; }
 }

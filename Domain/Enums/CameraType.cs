@@ -23,5 +23,15 @@ public enum CameraType
     /// <summary>
     /// ONVIF-compliant network camera
     /// </summary>
-    ONVIF = 4
+    ONVIF = 4,
+
+    /// <summary>
+    /// HTTP or MJPEG stream camera
+    /// </summary>
+    HttpMjpeg = 5,
+
+    /// <summary>
+    /// Local video file used as a repeatable test source
+    /// </summary>
+    File = 6
 }

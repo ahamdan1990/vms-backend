@@ -48,7 +48,6 @@ public class NotificationDispatcherService : BackgroundService
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation("Notification Dispatcher Service is stopping");
                 break;
             }
             catch (Exception ex)

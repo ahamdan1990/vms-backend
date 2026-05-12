@@ -30,6 +30,7 @@ public class CapacityController : BaseController
     /// <param name="locationId">Location ID (optional)</param>
     /// <param name="timeSlotId">Time slot ID (optional)</param>
     /// <param name="dateTime">Date and time</param>
+    /// <param name="endDateTime">Optional end date and time for range-based validation</param>
     /// <param name="expectedVisitors">Expected number of visitors</param>
     /// <param name="isVipRequest">Whether this is a VIP request</param>
     /// <param name="excludeInvitationId">Invitation ID to exclude (for updates)</param>

@@ -20,6 +20,18 @@ public interface ICameraService
     Task<bool> TestConnectionAsync(int cameraId, bool updateStatus = true, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Tests a stored camera connection and returns the detailed test result.
+    /// </summary>
+    /// <param name="cameraId">Camera ID to test</param>
+    /// <param name="updateStatus">Whether to update camera status in database</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Detailed connection test result</returns>
+    Task<CameraConnectionTestResult> TestConnectionDetailsAsync(
+        int cameraId,
+        bool updateStatus = true,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Tests camera connection using provided connection parameters
     /// </summary>
     /// <param name="cameraType">Type of camera</param>
@@ -203,6 +215,14 @@ public interface ICameraService
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Captured frame data or null if failed</returns>
     Task<byte[]?> CaptureFrameAsync(int cameraId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Captures a single frame from the camera and returns detailed FFmpeg metadata.
+    /// </summary>
+    /// <param name="cameraId">Camera ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Detailed frame capture result</returns>
+    Task<CameraFrameCaptureResult> CaptureFrameDetailsAsync(int cameraId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Starts continuous frame capture for facial recognition processing

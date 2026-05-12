@@ -1,15 +1,14 @@
-﻿using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using System;
+using Serilog.Context;
 
 namespace VisitorManagementSystem.Api.Middleware
 {
     /// <summary>
-    /// Middleware that adds correlation ID and timestamp headers to each response
+    /// Middleware that adds correlation ID and timestamp headers to each response.
     /// </summary>
     public class ResponseMetadataMiddleware
     {
+        public const string CorrelationIdItemKey = "__VMS_CORRELATION_ID";
+
         private readonly RequestDelegate _next;
         private readonly ILogger<ResponseMetadataMiddleware> _logger;
 
@@ -21,13 +20,12 @@ namespace VisitorManagementSystem.Api.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // Get existing correlation ID or generate new one
-            var correlationId = context.TraceIdentifier ?? Guid.NewGuid().ToString();
+            var correlationId = ResolveCorrelationId(context);
 
-            // Store in context.Items for downstream retrieval (e.g. controllers)
+            context.TraceIdentifier = correlationId;
+            context.Items[CorrelationIdItemKey] = correlationId;
             context.Items["CorrelationId"] = correlationId;
 
-            // Hook into response starting event to add headers
             context.Response.OnStarting(() =>
             {
                 if (!context.Response.Headers.ContainsKey("X-Correlation-ID"))
@@ -37,7 +35,7 @@ namespace VisitorManagementSystem.Api.Middleware
 
                 if (!context.Response.Headers.ContainsKey("X-Timestamp"))
                 {
-                    context.Response.Headers["X-Timestamp"] = DateTime.UtcNow.ToString("o"); // ISO8601 UTC
+                    context.Response.Headers["X-Timestamp"] = DateTime.UtcNow.ToString("o");
                 }
 
                 return Task.CompletedTask;
@@ -45,13 +43,59 @@ namespace VisitorManagementSystem.Api.Middleware
 
             try
             {
-                await _next(context);
+                using (LogContext.PushProperty("CorrelationId", correlationId))
+                {
+                    await _next(context);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unhandled exception in ResponseMetadataMiddleware. CorrelationId: {CorrelationId}", correlationId);
                 throw;
             }
+        }
+
+        private static string ResolveCorrelationId(HttpContext context)
+        {
+            var incomingCorrelationId = context.Request.Headers["X-Correlation-ID"].FirstOrDefault();
+            var incomingRequestId = context.Request.Headers["X-Request-ID"].FirstOrDefault();
+            var existingCorrelationId = context.Items[CorrelationIdItemKey]?.ToString();
+            var legacyCorrelationId = context.Items["CorrelationId"]?.ToString();
+            var traceIdentifier = context.TraceIdentifier;
+
+            if (IsValidCorrelationId(incomingCorrelationId))
+            {
+                return incomingCorrelationId!;
+            }
+
+            if (IsValidCorrelationId(incomingRequestId))
+            {
+                return incomingRequestId!;
+            }
+
+            if (IsValidCorrelationId(existingCorrelationId))
+            {
+                return existingCorrelationId!;
+            }
+
+            if (IsValidCorrelationId(legacyCorrelationId))
+            {
+                return legacyCorrelationId!;
+            }
+
+            if (IsValidCorrelationId(traceIdentifier))
+            {
+                return traceIdentifier;
+            }
+
+            return Guid.NewGuid().ToString("D");
+        }
+
+        private static bool IsValidCorrelationId(string? value)
+        {
+            return !string.IsNullOrWhiteSpace(value) &&
+                   value.Length <= 128 &&
+                   !value.Any(char.IsControl);
         }
     }
 }

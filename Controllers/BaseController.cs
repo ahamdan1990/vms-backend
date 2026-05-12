@@ -157,7 +157,9 @@ public abstract class BaseController : ControllerBase
     /// </summary>
     protected string GetCorrelationId()
     {
-        return HttpContext.Items["CorrelationId"]?.ToString() ?? HttpContext.TraceIdentifier;
+        return HttpContext.Items[Middleware.ResponseMetadataMiddleware.CorrelationIdItemKey]?.ToString()
+            ?? HttpContext.Items["CorrelationId"]?.ToString()
+            ?? HttpContext.TraceIdentifier;
     }
 
     /// <summary>

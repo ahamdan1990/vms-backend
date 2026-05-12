@@ -3,7 +3,6 @@ using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Infrastructure.Data.Configurations;
 using VisitorManagementSystem.Api.Infrastructure.Data.Configurations.Notifications;
 using VisitorManagementSystem.Api.Domain.Interfaces.Services;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace VisitorManagementSystem.Api.Infrastructure.Data;
@@ -154,6 +153,8 @@ public class ApplicationDbContext : DbContext
         // Capacity management soft delete filters
         modelBuilder.Entity<TimeSlot>().HasQueryFilter(ts => !ts.IsDeleted);
         modelBuilder.Entity<TimeSlotBooking>().HasQueryFilter(b => !b.IsDeleted && !b.BookedByUser.IsDeleted);
+        modelBuilder.Entity<BlacklistOverrideRequest>()
+            .HasQueryFilter(r => !r.Visitor.IsDeleted && !r.RequestedByUser.IsDeleted);
 
         // Configure decimal precision globally
         foreach (var property in modelBuilder.Model.GetEntityTypes()
@@ -201,23 +202,7 @@ public class ApplicationDbContext : DbContext
     {
         base.OnConfiguring(optionsBuilder);
 
-        // Enable sensitive data logging in development
-        if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
-        {
-            optionsBuilder.EnableSensitiveDataLogging();
-            optionsBuilder.EnableDetailedErrors();
-        }
-        else
-        {
-            // Suppress MARS warnings in production
-            optionsBuilder.ConfigureWarnings(warnings =>
-                warnings.Ignore(SqlServerEventId.SavepointsDisabledBecauseOfMARS));
-        }
-
         // Configure query tracking behavior
-        optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll);
-
-        // Configure command timeout
         optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll);
     }
 
