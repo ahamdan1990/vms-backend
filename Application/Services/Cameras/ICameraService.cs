@@ -75,8 +75,13 @@ public interface ICameraService
     /// <param name="cameraId">Camera ID</param>
     /// <param name="graceful">Whether to stop gracefully or immediately</param>
     /// <param name="cancellationToken">Cancellation token</param>
+    /// <param name="pauseAutoStart">Whether this manual stop should prevent auto-start from restarting the stream until it is manually started again</param>
     /// <returns>True if stream stopped successfully</returns>
-    Task<bool> StopStreamAsync(int cameraId, bool graceful = true, CancellationToken cancellationToken = default);
+    Task<bool> StopStreamAsync(
+        int cameraId,
+        bool graceful = true,
+        CancellationToken cancellationToken = default,
+        bool pauseAutoStart = true);
 
     /// <summary>
     /// Checks if camera is currently streaming

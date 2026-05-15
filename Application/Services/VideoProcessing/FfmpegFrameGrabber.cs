@@ -3,6 +3,8 @@ using System.Globalization;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Options;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
@@ -18,19 +20,23 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
     private readonly IFfmpegProcessRunner _processRunner;
     private readonly FfmpegOptions _options;
     private readonly ILogger<FfmpegFrameGrabber> _logger;
+    private readonly IDataProtector _protector;
 
     public FfmpegFrameGrabber(
         IFfmpegCapabilityService capabilityService,
         IFfmpegToolLocator toolLocator,
         IFfmpegProcessRunner processRunner,
         IOptions<FfmpegOptions> options,
-        ILogger<FfmpegFrameGrabber> logger)
+        ILogger<FfmpegFrameGrabber> logger,
+        IDataProtectionProvider dataProtectionProvider)
     {
         _capabilityService = capabilityService;
         _toolLocator = toolLocator;
         _processRunner = processRunner;
         _options = options.Value;
         _logger = logger;
+        _protector = (dataProtectionProvider ?? throw new ArgumentNullException(nameof(dataProtectionProvider)))
+            .CreateProtector("CameraPasswords");
     }
 
     public async Task<FfmpegFrameCaptureResult> CaptureFrameAsync(
@@ -104,59 +110,93 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
     {
         var configuration = camera.GetConfiguration();
         var hardwareAcceleration = await ResolveHardwareAccelerationAsync(camera, configuration, cancellationToken);
-        var command = BuildCommand(camera, configuration, hardwareAcceleration, singleFrame: false);
-        using var process = StartStreamingProcess(command);
+        var accelerationAttempts = hardwareAcceleration != FfmpegHardwareAcceleration.Cpu && configuration.CpuFallbackEnabled
+            ? new[] { hardwareAcceleration, FfmpegHardwareAcceleration.Cpu }
+            : new[] { hardwareAcceleration };
 
-        var sequence = 0;
-        var buffer = new List<byte>(1024 * 1024);
-        var readBuffer = new byte[81920];
-        var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
-
-        try
+        foreach (var accelerationAttempt in accelerationAttempts)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            var command = BuildCommand(camera, configuration, accelerationAttempt, singleFrame: false);
+            _logger.LogInformation(
+                "Starting FFmpeg frame stream for camera {CameraId} with {HardwareAcceleration}. Command: {Arguments}",
+                camera.Id,
+                accelerationAttempt,
+                string.Join(" ", command.SafeArguments.Select(QuoteForDisplay)));
+            using var process = StartStreamingProcess(command);
+
+            var sequence = 0;
+            var emittedFrame = false;
+            // Pre-allocated 128 KB ring-style buffer; grows on demand up to MaxCapturedFrameBytes.
+            var frameBuffer = new MemoryStream(131072);
+            var windowStart = 0;
+            var readBuffer = new byte[81920];
+            var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
+
+            try
             {
-                var read = await process.StandardOutput.BaseStream.ReadAsync(readBuffer, cancellationToken);
-                if (read == 0)
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    break;
-                }
-
-                AppendBytes(buffer, readBuffer, read, _options.MaxCapturedFrameBytes);
-
-                while (TryExtractJpegFrame(buffer, out var frameBytes))
-                {
-                    sequence++;
-                    yield return new FfmpegFrame
+                    var read = await process.StandardOutput.BaseStream.ReadAsync(readBuffer, cancellationToken);
+                    if (read == 0)
                     {
-                        CameraId = camera.Id,
-                        SequenceNumber = sequence,
-                        ImageBytes = frameBytes,
-                        ContentType = JpegContentType,
-                        CapturedAt = DateTimeOffset.UtcNow,
-                        Metadata =
-                        {
-                            ["hardwareAcceleration"] = hardwareAcceleration.ToString(),
-                            ["inputKind"] = command.InputKind
-                        }
-                    };
-                }
-            }
+                        break;
+                    }
 
-            await process.WaitForExitAsync(cancellationToken);
-            var stderr = await stderrTask;
-            if (process.ExitCode != 0)
-            {
-                _logger.LogWarning(
-                    "FFmpeg frame stream exited for camera {CameraId} with code {ExitCode}: {Error}",
-                    camera.Id,
-                    process.ExitCode,
-                    Truncate(stderr, 1000));
+                    AppendToFrameBuffer(frameBuffer, ref windowStart, readBuffer, read, _options.MaxCapturedFrameBytes);
+
+                    while (TryExtractJpegFrame(frameBuffer, ref windowStart, out var frameBytes))
+                    {
+                        emittedFrame = true;
+                        sequence++;
+                        yield return new FfmpegFrame
+                        {
+                            CameraId = camera.Id,
+                            SequenceNumber = sequence,
+                            ImageBytes = frameBytes,
+                            ContentType = JpegContentType,
+                            CapturedAt = DateTimeOffset.UtcNow,
+                            Metadata =
+                            {
+                                ["hardwareAcceleration"] = accelerationAttempt.ToString(),
+                                ["inputKind"] = command.InputKind,
+                                ["arguments"] = string.Join(" ", command.SafeArguments.Select(QuoteForDisplay))
+                            }
+                        };
+                    }
+                }
+
+                await process.WaitForExitAsync(cancellationToken);
+                var stderr = await stderrTask;
+                if (process.ExitCode != 0)
+                {
+                    _logger.LogWarning(
+                        "FFmpeg frame stream exited for camera {CameraId} with code {ExitCode}: {Error}",
+                        camera.Id,
+                        process.ExitCode,
+                        Truncate(stderr, 1000));
+                }
+
+                if (emittedFrame || cancellationToken.IsCancellationRequested)
+                {
+                    yield break;
+                }
+
+                if (accelerationAttempt != FfmpegHardwareAcceleration.Cpu &&
+                    accelerationAttempts.Contains(FfmpegHardwareAcceleration.Cpu))
+                {
+                    _logger.LogWarning(
+                        "FFmpeg stream for camera {CameraId} ended before producing frames with {HardwareAcceleration}. Retrying with CPU fallback.",
+                        camera.Id,
+                        accelerationAttempt);
+                    continue;
+                }
+
+                yield break;
             }
-        }
-        finally
-        {
-            KillProcessTree(process);
+            finally
+            {
+                KillProcessTree(process);
+            }
         }
     }
 
@@ -309,7 +349,9 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
             inputKind);
     }
 
-    private static IEnumerable<string> BuildOutputArguments(CameraConfiguration configuration, bool singleFrame)
+    private static IEnumerable<string> BuildOutputArguments(
+        CameraConfiguration configuration,
+        bool singleFrame)
     {
         var args = new List<string>
         {
@@ -320,6 +362,7 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
         };
 
         var filters = new List<string>();
+
         if (!singleFrame && configuration.InferenceFps is > 0)
         {
             filters.Add($"fps={configuration.InferenceFps.Value.ToString(CultureInfo.InvariantCulture)}");
@@ -374,8 +417,6 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
                     "tcp",
                     "-timeout",
                     timeoutMicroseconds.ToString(CultureInfo.InvariantCulture),
-                    "-rw_timeout",
-                    timeoutMicroseconds.ToString(CultureInfo.InvariantCulture),
                     "-i",
                     input
                 });
@@ -384,8 +425,6 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
                     "-rtsp_transport",
                     "tcp",
                     "-timeout",
-                    timeoutMicroseconds.ToString(CultureInfo.InvariantCulture),
-                    "-rw_timeout",
                     timeoutMicroseconds.ToString(CultureInfo.InvariantCulture),
                     "-i",
                     safeInput
@@ -400,8 +439,6 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
                 var input = BuildAuthenticatedInput(camera, out var safeInput);
                 args.AddRange(new[]
                 {
-                    "-rw_timeout",
-                    timeoutMicroseconds.ToString(CultureInfo.InvariantCulture),
                     "-reconnect",
                     "1",
                     "-reconnect_streamed",
@@ -415,8 +452,6 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
                 });
                 safeArgs.AddRange(new[]
                 {
-                    "-rw_timeout",
-                    timeoutMicroseconds.ToString(CultureInfo.InvariantCulture),
                     "-reconnect",
                     "1",
                     "-reconnect_streamed",
@@ -577,59 +612,82 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
         };
     }
 
-    private static void AppendBytes(List<byte> destination, byte[] source, int count, int maxBytes)
+    private static void AppendToFrameBuffer(MemoryStream buffer, ref int windowStart, byte[] source, int count, int maxBytes)
     {
-        if (destination.Count + count > maxBytes)
+        var validBytes = (int)buffer.Length - windowStart;
+        if (validBytes + count > maxBytes)
         {
-            var removeCount = Math.Min(destination.Count, destination.Count + count - maxBytes);
-            if (removeCount > 0)
-            {
-                destination.RemoveRange(0, removeCount);
-            }
+            // Drop everything — a partial frame in progress will be skipped by the JPEG marker scanner.
+            buffer.SetLength(0);
+            windowStart = 0;
         }
 
-        for (var i = 0; i < count; i++)
+        buffer.Seek(0, SeekOrigin.End);
+        buffer.Write(source, 0, count);
+
+        // Compact when the consumed prefix exceeds 64 KB to keep the working set small.
+        if (windowStart > 65536)
         {
-            destination.Add(source[i]);
+            CompactFrameBuffer(buffer, ref windowStart);
         }
     }
 
-    private static bool TryExtractJpegFrame(List<byte> buffer, out byte[] frameBytes)
+    private static void CompactFrameBuffer(MemoryStream buffer, ref int windowStart)
+    {
+        var remaining = (int)buffer.Length - windowStart;
+        if (remaining <= 0)
+        {
+            buffer.SetLength(0);
+            windowStart = 0;
+            return;
+        }
+
+        var internalBuffer = buffer.GetBuffer();
+        Buffer.BlockCopy(internalBuffer, windowStart, internalBuffer, 0, remaining);
+        buffer.SetLength(remaining);
+        windowStart = 0;
+    }
+
+    private static bool TryExtractJpegFrame(MemoryStream buffer, ref int windowStart, out byte[] frameBytes)
     {
         frameBytes = Array.Empty<byte>();
-        var start = IndexOfMarker(buffer, 0xFF, 0xD8, 0);
-        if (start < 0)
-        {
-            if (buffer.Count > 1)
-            {
-                buffer.RemoveRange(0, buffer.Count - 1);
-            }
-
-            return false;
-        }
-
-        if (start > 0)
-        {
-            buffer.RemoveRange(0, start);
-        }
-
-        var end = IndexOfMarker(buffer, 0xFF, 0xD9, 2);
-        if (end < 0)
+        var validLen = (int)buffer.Length - windowStart;
+        if (validLen < 4)
         {
             return false;
         }
 
-        var length = end + 2;
-        frameBytes = buffer.GetRange(0, length).ToArray();
-        buffer.RemoveRange(0, length);
+        var internalBuffer = buffer.GetBuffer();
+        var span = internalBuffer.AsSpan(windowStart, validLen);
+
+        var soiOffset = IndexOfMarker(span, 0xFF, 0xD8, 0);
+        if (soiOffset < 0)
+        {
+            // Advance past all but the last byte (it could be 0xFF starting the next SOI).
+            windowStart += Math.Max(0, validLen - 1);
+            return false;
+        }
+
+        windowStart += soiOffset;
+        span = internalBuffer.AsSpan(windowStart, validLen - soiOffset);
+
+        var eoiOffset = IndexOfMarker(span, 0xFF, 0xD9, 2);
+        if (eoiOffset < 0)
+        {
+            return false;
+        }
+
+        var frameLen = eoiOffset + 2;
+        frameBytes = span.Slice(0, frameLen).ToArray();
+        windowStart += frameLen;
         return true;
     }
 
-    private static int IndexOfMarker(List<byte> buffer, byte first, byte second, int startIndex)
+    private static int IndexOfMarker(ReadOnlySpan<byte> span, byte first, byte second, int startIndex)
     {
-        for (var i = startIndex; i < buffer.Count - 1; i++)
+        for (var i = startIndex; i < span.Length - 1; i++)
         {
-            if (buffer[i] == first && buffer[i + 1] == second)
+            if (span[i] == first && span[i + 1] == second)
             {
                 return i;
             }
@@ -659,11 +717,11 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
         var trimmed = connectionString.Trim();
         if (trimmed.StartsWith("video=", StringComparison.OrdinalIgnoreCase))
         {
-            return trimmed;
+            var configuredDevice = trimmed["video=".Length..].Trim().Trim('"');
+            return $"video={configuredDevice}";
         }
 
-        var escaped = trimmed.Replace("\"", "\\\"");
-        return $"video=\"{escaped}\"";
+        return $"video={trimmed.Trim('"')}";
     }
 
     private static string ToFfmpegHardwareName(FfmpegHardwareAcceleration hardwareAcceleration)
@@ -682,20 +740,26 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
         };
     }
 
-    private static string? DecryptPassword(string? encryptedPassword)
+    private string? DecryptPassword(string? encryptedPassword)
     {
         if (string.IsNullOrEmpty(encryptedPassword))
-        {
             return null;
-        }
 
         try
         {
-            return System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encryptedPassword));
+            return _protector.Unprotect(encryptedPassword);
         }
         catch
         {
-            return encryptedPassword;
+            // Fall back for legacy passwords stored as plain Base64
+            try
+            {
+                return Encoding.UTF8.GetString(Convert.FromBase64String(encryptedPassword));
+            }
+            catch
+            {
+                return encryptedPassword;
+            }
         }
     }
 

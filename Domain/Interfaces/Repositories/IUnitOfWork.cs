@@ -74,6 +74,11 @@ public interface IUnitOfWork : IDisposable
     ICameraRepository Cameras { get; }
 
     /// <summary>
+    /// Camera face event repository
+    /// </summary>
+    ICameraFaceEventRepository FaceEvents { get; }
+
+    /// <summary>
     /// Invitation repository
     /// </summary>
     IInvitationRepository Invitations { get; }

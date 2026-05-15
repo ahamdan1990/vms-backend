@@ -137,7 +137,10 @@ public class NotificationsController : BaseController
             {
                 NotificationId = id,
                 Notes = request.Notes,
-                AcknowledgedBy = userId.Value
+                AcknowledgedBy = userId.Value,
+                CanAcknowledgeAll =
+                    HasPermission(Permissions.Notification.ReadAll) ||
+                    HasRole(UserRole.Administrator.ToString())
             };
 
             var result = await _mediator.Send(command);

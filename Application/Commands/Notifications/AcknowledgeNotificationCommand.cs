@@ -21,4 +21,9 @@ public class AcknowledgeNotificationCommand : IRequest<bool>
     /// User acknowledging the notification
     /// </summary>
     public int AcknowledgedBy { get; set; }
+
+    /// <summary>
+    /// Whether the acknowledging user has administrative access to acknowledge notifications outside their own target role/user.
+    /// </summary>
+    public bool CanAcknowledgeAll { get; set; }
 }

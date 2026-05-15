@@ -30,6 +30,7 @@ public class UnitOfWork : IUnitOfWork
     public IVisitPurposeRepository VisitPurposes { get; private set; }
     public ILocationRepository Locations { get; private set; }
     public ICameraRepository Cameras { get; private set; }
+    public ICameraFaceEventRepository FaceEvents { get; private set; }
     public IInvitationRepository Invitations { get; private set; }
 
     // Repository properties - Notification System
@@ -55,6 +56,7 @@ public class UnitOfWork : IUnitOfWork
                      IVisitPurposeRepository visitPurposeRepository,
                      ILocationRepository locationRepository,
                      ICameraRepository cameraRepository,
+                     ICameraFaceEventRepository cameraFaceEventRepository,
                      IInvitationRepository invitationRepository,
                      INotificationAlertRepository notificationAlertRepository,
                      IOperatorSessionRepository operatorSessionRepository,
@@ -82,6 +84,7 @@ public class UnitOfWork : IUnitOfWork
         VisitPurposes = visitPurposeRepository ?? throw new ArgumentNullException(nameof(visitPurposeRepository));
         Locations = locationRepository ?? throw new ArgumentNullException(nameof(locationRepository));
         Cameras = cameraRepository ?? throw new ArgumentNullException(nameof(cameraRepository));
+        FaceEvents = cameraFaceEventRepository ?? throw new ArgumentNullException(nameof(cameraFaceEventRepository));
         Invitations = invitationRepository ?? throw new ArgumentNullException(nameof(invitationRepository));
 
         // Initialize notification repositories

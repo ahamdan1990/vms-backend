@@ -151,13 +151,20 @@ public class CameraConfiguration
     /// Minimum accepted face size in pixels.
     /// </summary>
     [Range(20, 2000)]
-    public int? MinimumFaceSizePixels { get; set; } = 80;
+    public int? MinimumFaceSizePixels { get; set; } = 40;
+
+    /// <summary>
+    /// Maximum accepted face size in pixels. Faces larger than this are filtered out (e.g. partial faces too close to camera).
+    /// Null means no upper limit.
+    /// </summary>
+    [Range(20, 10000)]
+    public int? MaximumFaceSizePixels { get; set; }
 
     /// <summary>
     /// Minimum accepted face quality score (0-100).
     /// </summary>
     [Range(0, 100)]
-    public int? FaceQualityThreshold { get; set; } = 60;
+    public int? FaceQualityThreshold { get; set; } = 20;
 
     /// <summary>
     /// Blur rejection threshold (0-100), interpreted by the pipeline implementation.
@@ -331,8 +338,8 @@ public class CameraConfiguration
         FacialRecognitionThreshold = 80,
         FaceDetectionThreshold = 80,
         UnknownFaceThreshold = 70,
-        MinimumFaceSizePixels = 80,
-        FaceQualityThreshold = 60,
+        MinimumFaceSizePixels = 40,
+        FaceQualityThreshold = 20,
         YawLimitDegrees = 30,
         PitchLimitDegrees = 30,
         RollLimitDegrees = 45,

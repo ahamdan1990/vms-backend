@@ -52,6 +52,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<VisitorAccess> VisitorAccess { get; set; } = null!;
     public DbSet<VisitorDocument> VisitorDocuments { get; set; } = null!;
     public DbSet<VisitorNote> VisitorNotes { get; set; } = null!;
+    public DbSet<FaceTemplate> FaceTemplates { get; set; } = null!;
     public DbSet<EmergencyContact> EmergencyContacts { get; set; } = null!;
     public DbSet<VisitPurpose> VisitPurposes { get; set; } = null!;
     public DbSet<Location> Locations { get; set; } = null!;
@@ -80,6 +81,9 @@ public class ApplicationDbContext : DbContext
     // DbSets - Security
     public DbSet<BlacklistOverrideRequest> BlacklistOverrideRequests { get; set; } = null!;
 
+    // DbSets - Camera Face Events
+    public DbSet<CameraFaceEvent> CameraFaceEvents { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -106,6 +110,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new VisitorAccessConfiguration());
         modelBuilder.ApplyConfiguration(new VisitorDocumentConfiguration());
         modelBuilder.ApplyConfiguration(new VisitorNoteConfiguration());
+        modelBuilder.ApplyConfiguration(new FaceTemplateConfiguration());
         modelBuilder.ApplyConfiguration(new EmergencyContactConfiguration());
         modelBuilder.ApplyConfiguration(new VisitPurposeConfiguration());
         modelBuilder.ApplyConfiguration(new LocationConfiguration());
@@ -131,6 +136,7 @@ public class ApplicationDbContext : DbContext
         // Apply all configurations - Backup & Storage Management
         modelBuilder.ApplyConfiguration(new BackupRecordConfiguration());
         modelBuilder.ApplyConfiguration(new BlacklistOverrideRequestConfiguration());
+        modelBuilder.ApplyConfiguration(new CameraFaceEventConfiguration());
 
         // Global query filters for soft delete (standardized on IsDeleted pattern)
         modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
@@ -145,6 +151,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<VisitorAccess>().HasQueryFilter(va => !va.User.IsDeleted); // Filter by User soft-delete
         modelBuilder.Entity<VisitorDocument>().HasQueryFilter(d => !d.IsDeleted);
         modelBuilder.Entity<VisitorNote>().HasQueryFilter(n => !n.IsDeleted);
+        modelBuilder.Entity<FaceTemplate>().HasQueryFilter(t => !t.IsDeleted);
         modelBuilder.Entity<EmergencyContact>().HasQueryFilter(c => !c.IsDeleted);
         modelBuilder.Entity<VisitPurpose>().HasQueryFilter(p => !p.IsDeleted);
         modelBuilder.Entity<Location>().HasQueryFilter(l => !l.IsDeleted);
@@ -161,7 +168,10 @@ public class ApplicationDbContext : DbContext
             .SelectMany(t => t.GetProperties())
             .Where(p => p.ClrType == typeof(decimal) || p.ClrType == typeof(decimal?)))
         {
-            property.SetColumnType("decimal(18,2)");
+            if (property.GetColumnType() == null)
+            {
+                property.SetColumnType("decimal(18,2)");
+            }
         }
 
         // Configure datetime to be UTC

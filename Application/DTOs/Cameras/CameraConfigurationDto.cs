@@ -111,7 +111,7 @@ public class CameraConfigurationDto
     /// <summary>
     /// Whether to enable facial recognition processing for this camera
     /// </summary>
-    public bool EnableFacialRecognition { get; set; }
+    public bool EnableFacialRecognition { get; set; } = true;
 
     /// <summary>
     /// Whether face detection should run for this camera.
@@ -156,6 +156,12 @@ public class CameraConfigurationDto
     /// </summary>
     [Range(20, 2000)]
     public int? MinimumFaceSizePixels { get; set; }
+
+    /// <summary>
+    /// Maximum accepted face size in pixels. Null means no upper limit.
+    /// </summary>
+    [Range(20, 10000)]
+    public int? MaximumFaceSizePixels { get; set; }
 
     /// <summary>
     /// Minimum accepted face quality score (0-100).

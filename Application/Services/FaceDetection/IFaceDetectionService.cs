@@ -63,11 +63,24 @@ public interface IFaceDetectionService
     Task<bool> IsServiceAvailableAsync();
 
     /// <summary>
-    /// True when CompreFace is enabled AND the circuit breaker is closed (no recent failures).
-    /// Use this before calling any face detection method to decide whether to attempt the call
-    /// or skip it and fall back to QR / manual check-in without waiting for a timeout.
+    /// True when the engine is enabled and ready to process frames.
     /// </summary>
     bool IsAvailable { get; }
+
+    /// <summary>
+    /// Human-readable initialization/health status string (e.g. "available", "initializing", "error").
+    /// </summary>
+    string InitializationStatus => IsAvailable ? "available" : "unavailable";
+
+    /// <summary>
+    /// Human-readable error detail when initialization failed, or null when healthy.
+    /// </summary>
+    string? InitializationError => null;
+
+    /// <summary>
+    /// Last SDK/HTTP return code for diagnostics, or null when not applicable.
+    /// </summary>
+    int? LastReturnCode => null;
 
     /// <summary>
     /// Trims faces for a subject to at most maxFaces, deleting the oldest first (FIFO).
@@ -105,6 +118,11 @@ public class DetectedFace
     /// Detection confidence score (0-1)
     /// </summary>
     public double Confidence { get; set; }
+
+    /// <summary>
+    /// Composite quality score (0-100). Higher is better. Populated by Luxand; null from CompreFace.
+    /// </summary>
+    public double? QualityScore { get; set; }
 
     /// <summary>
     /// Age estimation (optional, if enabled in CompreFace)
@@ -218,4 +236,24 @@ public class CompreFaceSettings
     /// Maximum number of faces to detect in an image (default: 1)
     /// </summary>
     public int MaxFacesDetect { get; set; } = 1;
+
+    /// <summary>
+    /// HTTP timeout in seconds for CompreFace calls.
+    /// </summary>
+    public int TimeoutSeconds { get; set; } = 2;
+
+    /// <summary>
+    /// Retry count for transient CompreFace HTTP errors.
+    /// </summary>
+    public int MaxRetries { get; set; } = 0;
+
+    /// <summary>
+    /// Consecutive failures before CompreFace calls are skipped.
+    /// </summary>
+    public int CircuitBreakerFailureThreshold { get; set; } = 1;
+
+    /// <summary>
+    /// Seconds before allowing a single CompreFace recovery probe.
+    /// </summary>
+    public int CircuitBreakerRecoverySeconds { get; set; } = 60;
 }

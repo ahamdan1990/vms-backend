@@ -21,8 +21,6 @@ public class CompreFaceService : IFaceDetectionService
     private int _consecutiveFailures = 0;
     private DateTime _circuitOpenedAt = DateTime.MinValue;
     private readonly object _circuitLock = new object();
-    private const int FailureThreshold = 3;
-    private static readonly TimeSpan RecoveryWindow = TimeSpan.FromMinutes(5);
 
     /// <summary>
     /// True when CompreFace is enabled and the circuit breaker is closed.
@@ -51,9 +49,13 @@ public class CompreFaceService : IFaceDetectionService
         if (!string.IsNullOrEmpty(_settings.BaseUrl))
         {
             _httpClient.BaseAddress = new Uri(_settings.BaseUrl.TrimEnd('/'));
-            _httpClient.Timeout = TimeSpan.FromSeconds(30);
+            _httpClient.Timeout = TimeSpan.FromSeconds(Math.Clamp(_settings.TimeoutSeconds, 1, 30));
         }
     }
+
+    private int FailureThreshold => Math.Max(1, _settings.CircuitBreakerFailureThreshold);
+
+    private TimeSpan RecoveryWindow => TimeSpan.FromSeconds(Math.Clamp(_settings.CircuitBreakerRecoverySeconds, 10, 3600));
 
     private void RecordSuccess()
     {
@@ -75,7 +77,9 @@ public class CompreFaceService : IFaceDetectionService
             _consecutiveFailures++;
             _logger.LogWarning("CompreFace failure #{Count}: {Reason}", _consecutiveFailures, reason);
 
-            if (!_circuitOpen && _consecutiveFailures >= FailureThreshold)
+            var failureThreshold = FailureThreshold;
+            var recoveryWindow = RecoveryWindow;
+            if (!_circuitOpen && _consecutiveFailures >= failureThreshold)
             {
                 _circuitOpen = true;
                 _circuitOpenedAt = DateTime.UtcNow;
@@ -83,7 +87,8 @@ public class CompreFaceService : IFaceDetectionService
                     "CompreFace circuit breaker OPEN after {Threshold} consecutive failures. " +
                     "Face recognition disabled; check-in will fall back to QR/manual. " +
                     "Circuit will attempt recovery in {Minutes} minutes.",
-                    FailureThreshold, RecoveryWindow.TotalMinutes);
+                    failureThreshold,
+                    recoveryWindow.TotalMinutes);
             }
         }
     }
@@ -246,7 +251,7 @@ public class CompreFaceService : IFaceDetectionService
                     faces.Count, _settings.MinimumConfidence);
 
                 return faces;
-            }, "DetectFaces", maxRetries: 2, cancellationToken);
+            }, "DetectFaces", maxRetries: Math.Max(0, _settings.MaxRetries), cancellationToken);
         }
         catch (TaskCanceledException)
         {
@@ -530,66 +535,78 @@ public class CompreFaceService : IFaceDetectionService
                 return new List<RecognizedFace>();
             }
 
-            // Reset stream position
             if (imageStream.CanSeek)
             {
                 imageStream.Position = 0;
             }
 
-            // Create multipart form data
-            using var content = new MultipartFormDataContent();
-            using var streamContent = new StreamContent(imageStream);
-            streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
-            content.Add(streamContent, "file", "image.jpg");
-
-            // Call CompreFace recognition API
-            var endpoint = $"/api/v1/recognition/recognize?limit={_settings.MaxFacesDetect}&prediction_count=1&det_prob_threshold={_settings.MinimumConfidence}";
-
-            using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
-            request.Headers.Add("x-api-key", _settings.RecognitionApiKey);
-            request.Content = content;
-
-            var response = await _httpClient.SendAsync(request, cancellationToken);
-
-            if (!response.IsSuccessStatusCode)
+            byte[] imageBytes;
+            using (var memoryStream = new MemoryStream())
             {
-                var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogWarning("CompreFace recognition failed: {StatusCode} - {Error}",
-                    response.StatusCode, errorContent);
-                return new List<RecognizedFace>();
+                await imageStream.CopyToAsync(memoryStream, cancellationToken);
+                imageBytes = memoryStream.ToArray();
             }
 
-            var jsonResponse = await response.Content.ReadAsStringAsync(cancellationToken);
-            var result = JsonSerializer.Deserialize<CompreFaceRecognitionResponse>(jsonResponse, _jsonOptions);
-
-            if (result?.Result == null || result.Result.Count == 0)
+            return await ExecuteWithRetryAsync(async () =>
             {
-                _logger.LogDebug("No faces recognized in image");
-                return new List<RecognizedFace>();
-            }
+                using var content = new MultipartFormDataContent();
+                using var streamContent = new ByteArrayContent(imageBytes);
+                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
+                content.Add(streamContent, "file", "image.jpg");
 
-            // Convert to RecognizedFace objects
-            var recognizedFaces = result.Result
-                .Where(face => face.Subjects != null && face.Subjects.Count > 0)
-                .Select(face => new RecognizedFace
+                var endpoint = $"/api/v1/recognition/recognize?limit={_settings.MaxFacesDetect}&prediction_count=1&det_prob_threshold={_settings.MinimumConfidence}";
+
+                using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Add("x-api-key", _settings.RecognitionApiKey);
+                request.Content = content;
+
+                var response = await _httpClient.SendAsync(request, cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    SubjectId = face.Subjects![0].Subject ?? string.Empty,
-                    Similarity = face.Subjects[0].Similarity,
-                    Confidence = face.Box?.Probability ?? 0,
-                    BoundingBox = new DetectedFace
-                    {
-                        X = face.Box?.XMin ?? 0,
-                        Y = face.Box?.YMin ?? 0,
-                        Width = (face.Box?.XMax ?? 0) - (face.Box?.XMin ?? 0),
-                        Height = (face.Box?.YMax ?? 0) - (face.Box?.YMin ?? 0),
-                        Confidence = face.Box?.Probability ?? 0
-                    }
-                })
-                .Where(f => f.Similarity >= _settings.MinimumSimilarity)
-                .ToList();
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                    _logger.LogWarning("CompreFace recognition failed: {StatusCode} - {Error}",
+                        response.StatusCode, errorContent);
 
-            _logger.LogInformation("Recognized {Count} face(s) in image", recognizedFaces.Count);
-            return recognizedFaces;
+                    if ((int)response.StatusCode >= 500)
+                    {
+                        throw new HttpRequestException($"CompreFace server error: {response.StatusCode} - {errorContent}");
+                    }
+
+                    return new List<RecognizedFace>();
+                }
+
+                var jsonResponse = await response.Content.ReadAsStringAsync(cancellationToken);
+                var result = JsonSerializer.Deserialize<CompreFaceRecognitionResponse>(jsonResponse, _jsonOptions);
+
+                if (result?.Result == null || result.Result.Count == 0)
+                {
+                    _logger.LogDebug("No faces recognized in image");
+                    return new List<RecognizedFace>();
+                }
+
+                var recognizedFaces = result.Result
+                    .Where(face => face.Subjects != null && face.Subjects.Count > 0)
+                    .Select(face => new RecognizedFace
+                    {
+                        SubjectId = face.Subjects![0].Subject ?? string.Empty,
+                        Similarity = face.Subjects[0].Similarity,
+                        Confidence = face.Box?.Probability ?? 0,
+                        BoundingBox = new DetectedFace
+                        {
+                            X = face.Box?.XMin ?? 0,
+                            Y = face.Box?.YMin ?? 0,
+                            Width = (face.Box?.XMax ?? 0) - (face.Box?.XMin ?? 0),
+                            Height = (face.Box?.YMax ?? 0) - (face.Box?.YMin ?? 0),
+                            Confidence = face.Box?.Probability ?? 0
+                        }
+                    })
+                    .Where(f => f.Similarity >= _settings.MinimumSimilarity)
+                    .ToList();
+
+                _logger.LogInformation("Recognized {Count} face(s) in image", recognizedFaces.Count);
+                return recognizedFaces;
+            }, "RecognizeFaces", maxRetries: Math.Max(0, _settings.MaxRetries), cancellationToken);
         }
         catch (Exception ex)
         {

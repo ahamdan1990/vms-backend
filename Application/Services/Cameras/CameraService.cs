@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.DataProtection;
+using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Application.Services.VideoProcessing;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
@@ -24,22 +25,26 @@ public class CameraService : ICameraService
     private readonly IConfiguration _configuration;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IFfmpegFrameGrabber _ffmpegFrameGrabber;
-    private readonly Dictionary<int, CameraStreamInfo> _activeStreams = new();
-    private readonly Dictionary<int, bool> _activeFacialRecognition = new();
-    private readonly object _streamLock = new();
+    private readonly ICameraStreamRuntimeService _streamRuntime;
+    private readonly IDataProtector _protector;
 
     public CameraService(
         IUnitOfWork unitOfWork,
         ILogger<CameraService> logger,
         IConfiguration configuration,
         IHttpClientFactory httpClientFactory,
-        IFfmpegFrameGrabber ffmpegFrameGrabber)
+        IFfmpegFrameGrabber ffmpegFrameGrabber,
+        ICameraStreamRuntimeService streamRuntime,
+        IDataProtectionProvider dataProtectionProvider)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
         _ffmpegFrameGrabber = ffmpegFrameGrabber ?? throw new ArgumentNullException(nameof(ffmpegFrameGrabber));
+        _streamRuntime = streamRuntime ?? throw new ArgumentNullException(nameof(streamRuntime));
+        _protector = (dataProtectionProvider ?? throw new ArgumentNullException(nameof(dataProtectionProvider)))
+            .CreateProtector("CameraPasswords");
     }
 
     #region Connection Management
@@ -68,7 +73,7 @@ public class CameraService : ICameraService
                 camera.CameraType,
                 camera.ConnectionString,
                 camera.Username,
-                await DecryptPassword(camera.Password), // Decrypt password for testing
+                DecryptPassword(camera.Password), // Decrypt password for testing
                 camera.GetConfiguration().ConnectionTimeoutSeconds,
                 cancellationToken);
 
@@ -174,92 +179,28 @@ public class CameraService : ICameraService
 
     public async Task<bool> StartStreamAsync(int cameraId, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var camera = await _unitOfWork.Cameras.GetByIdAsync(cameraId, cancellationToken);
-            if (camera == null || !camera.IsOperational())
-            {
-                _logger.LogWarning("Cannot start stream for camera {CameraId}: not found or not operational", cameraId);
-                return false;
-            }
-
-            lock (_streamLock)
-            {
-                if (_activeStreams.ContainsKey(cameraId))
-                {
-                    _logger.LogInformation("Stream already active for camera {CameraId}", cameraId);
-                    return true;
-                }
-
-                // Create stream info (placeholder - actual implementation would start hardware stream)
-                var streamInfo = new CameraStreamInfo
-                {
-                    CameraId = cameraId,
-                    IsStreaming = true,
-                    StartedAt = DateTime.UtcNow,
-                    StreamUrl = GenerateStreamUrl(camera),
-                    ActiveConnections = 0
-                };
-
-                _activeStreams[cameraId] = streamInfo;
-            }
-
-            _logger.LogInformation("Started stream for camera {CameraName} (ID: {CameraId})", camera.Name, cameraId);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error starting stream for camera {CameraId}", cameraId);
-            return false;
-        }
+        return await _streamRuntime.StartStreamAsync(cameraId, cancellationToken);
     }
 
-    public Task<bool> StopStreamAsync(int cameraId, bool graceful = true, CancellationToken cancellationToken = default)
+    public async Task<bool> StopStreamAsync(
+        int cameraId,
+        bool graceful = true,
+        CancellationToken cancellationToken = default,
+        bool pauseAutoStart = true)
     {
-        try
-        {
-            lock (_streamLock)
-            {
-                if (_activeStreams.TryGetValue(cameraId, out var streamInfo))
-                {
-                    _activeStreams.Remove(cameraId);
-
-                    _logger.LogInformation("Stopped stream for camera {CameraId}. Duration: {Duration:F1} seconds",
-                        cameraId, streamInfo.DurationSeconds);
-
-                    return Task.FromResult(true);
-                }
-            }
-
-            _logger.LogDebug("No active stream found for camera {CameraId}", cameraId);
-            return Task.FromResult(true); // Not an error - stream wasn't active
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error stopping stream for camera {CameraId}", cameraId);
-            return Task.FromResult(false);
-        }
+        return await _streamRuntime.StopStreamAsync(cameraId, graceful, cancellationToken, pauseAutoStart);
     }
 
     public async Task<bool> IsStreamingAsync(int cameraId, CancellationToken cancellationToken = default)
     {
         await Task.CompletedTask; // Satisfy async signature
-        
-        lock (_streamLock)
-        {
-            return _activeStreams.ContainsKey(cameraId);
-        }
+        return _streamRuntime.IsStreaming(cameraId);
     }
 
     public async Task<CameraStreamInfo?> GetStreamInfoAsync(int cameraId, CancellationToken cancellationToken = default)
     {
         await Task.CompletedTask; // Satisfy async signature
-        
-        lock (_streamLock)
-        {
-            _activeStreams.TryGetValue(cameraId, out var streamInfo);
-            return streamInfo;
-        }
+        return _streamRuntime.GetStreamInfo(cameraId);
     }
 
     #endregion
@@ -268,8 +209,8 @@ public class CameraService : ICameraService
 
     public async Task<bool> HasActiveFacialRecognitionAsync(int cameraId, CancellationToken cancellationToken = default)
     {
-        await Task.CompletedTask; // Satisfy async signature
-        return _activeFacialRecognition.GetValueOrDefault(cameraId, false);
+        var camera = await _unitOfWork.Cameras.GetByIdAsync(cameraId, cancellationToken);
+        return camera != null && camera.EnableFacialRecognition && _streamRuntime.IsFacialRecognitionEnabled(cameraId);
     }
 
     public async Task<bool> StartFacialRecognitionAsync(int cameraId, CancellationToken cancellationToken = default)
@@ -283,11 +224,9 @@ public class CameraService : ICameraService
                 return false;
             }
 
-            _activeFacialRecognition[cameraId] = true;
-            
-            _logger.LogInformation("Started facial recognition for camera {CameraName} (ID: {CameraId})", 
+            _streamRuntime.SetFacialRecognitionEnabled(cameraId, true);
+            _logger.LogInformation("Started facial recognition for camera {CameraName} (ID: {CameraId})",
                 camera.Name, cameraId);
-            
             return true;
         }
         catch (Exception ex)
@@ -297,20 +236,17 @@ public class CameraService : ICameraService
         }
     }
 
-    public async Task<bool> StopFacialRecognitionAsync(int cameraId, CancellationToken cancellationToken = default)
+    public Task<bool> StopFacialRecognitionAsync(int cameraId, CancellationToken cancellationToken = default)
     {
-        await Task.CompletedTask; // Satisfy async signature
-        
-        _activeFacialRecognition.Remove(cameraId);
+        _streamRuntime.SetFacialRecognitionEnabled(cameraId, false);
         _logger.LogInformation("Stopped facial recognition for camera {CameraId}", cameraId);
-        
-        return true;
+        return Task.FromResult(true);
     }
 
-    public async Task CancelFacialRecognitionTasksAsync(int cameraId, CancellationToken cancellationToken = default)
+    public Task CancelFacialRecognitionTasksAsync(int cameraId, CancellationToken cancellationToken = default)
     {
-        await StopFacialRecognitionAsync(cameraId, cancellationToken);
-        // Additional cleanup would go here in a real implementation
+        _streamRuntime.SetFacialRecognitionEnabled(cameraId, false);
+        return Task.CompletedTask;
     }
 
     #endregion
@@ -332,7 +268,7 @@ public class CameraService : ICameraService
                 camera.CameraType,
                 camera.ConnectionString,
                 camera.Username,
-                await DecryptPassword(camera.Password),
+                DecryptPassword(camera.Password),
                 camera.GetConfiguration().ConnectionTimeoutSeconds,
                 cancellationToken);
 
@@ -467,6 +403,16 @@ public class CameraService : ICameraService
                 return CameraFrameCaptureResult.Failure(cameraId, "Camera is inactive");
             }
 
+            if (camera.CameraType == CameraType.USB)
+            {
+                var clientUsbResult = CameraFrameCaptureResult.Failure(
+                    cameraId,
+                    "USB cameras are client-side browser sources. Capture frames from the frontend and submit them to the recognition pipeline.");
+                clientUsbResult.Details["clientSide"] = true;
+                clientUsbResult.Details["source"] = camera.ConnectionString;
+                return clientUsbResult;
+            }
+
             var ffmpegResult = await _ffmpegFrameGrabber.CaptureFrameAsync(camera, cancellationToken);
             var result = new CameraFrameCaptureResult
             {
@@ -492,6 +438,7 @@ public class CameraService : ICameraService
             }
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+            _streamRuntime.RecordFrameCapture(result);
             return result;
         }
         catch (Exception ex)
@@ -637,43 +584,13 @@ public class CameraService : ICameraService
     private async Task<CameraConnectionTestResult> TestUsbCameraConnectionAsync(string connectionString, 
         int timeoutSeconds, CancellationToken cancellationToken)
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return File.Exists(connectionString)
-                ? CameraConnectionTestResult.Success()
-                : CameraConnectionTestResult.Failure("USB camera testing currently supports Windows DirectShow or an existing device path");
-        }
+        await Task.CompletedTask;
 
-        var ffmpegPath = ResolveFfmpegToolPath("ffmpeg");
-        if (string.IsNullOrWhiteSpace(ffmpegPath))
-        {
-            return CameraConnectionTestResult.Failure("ffmpeg was not found. Configure FFmpeg:FFmpegPath or place ffmpeg.exe in the backend ffmpeg folder.");
-        }
-
-        var deviceName = NormalizeDirectShowDeviceName(connectionString);
-        var processResult = await RunProcessAsync(
-            ffmpegPath,
-            new[]
-            {
-                "-hide_banner",
-                "-nostdin",
-                "-loglevel", "error",
-                "-f", "dshow",
-                "-i", deviceName,
-                "-frames:v", "1",
-                "-f", "null",
-                "-"
-            },
-            timeoutSeconds,
-            cancellationToken);
-
-        var result = processResult.ExitCode == 0
-            ? CameraConnectionTestResult.Success(processResult.ElapsedMs)
-            : CameraConnectionTestResult.Failure(GetProcessError(processResult, "USB camera frame probe failed"));
-
-        result.Details["tool"] = "ffmpeg";
-        result.Details["device"] = deviceName;
-        result.Details["stderr"] = Truncate(processResult.StdErr, 1000);
+        var result = CameraConnectionTestResult.Success();
+        result.Details["clientSide"] = true;
+        result.Details["probe"] = "browser-media-devices";
+        result.Details["source"] = connectionString;
+        result.Details["note"] = "USB cameras are attached to the client workstation and must be tested with browser getUserMedia.";
         return result;
     }
 
@@ -878,11 +795,11 @@ public class CameraService : ICameraService
         var trimmed = connectionString.Trim();
         if (trimmed.StartsWith("video=", StringComparison.OrdinalIgnoreCase))
         {
-            return trimmed;
+            var configuredDevice = trimmed["video=".Length..].Trim().Trim('"');
+            return $"video={configuredDevice}";
         }
 
-        var escaped = trimmed.Replace("\"", "\\\"");
-        return $"video=\"{escaped}\"";
+        return $"video={trimmed.Trim('"')}";
     }
 
     private static IEnumerable<string> BuildOnvifProbeUris(Uri uri)
@@ -1009,23 +926,26 @@ public class CameraService : ICameraService
         int ElapsedMs,
         bool TimedOut);
 
-    /// <summary>
-    /// Decrypts password (placeholder implementation)
-    /// </summary>
-    private async Task<string?> DecryptPassword(string? encryptedPassword)
+    private string? DecryptPassword(string? encryptedPassword)
     {
         if (string.IsNullOrEmpty(encryptedPassword))
             return null;
 
-        // TODO: Implement proper decryption
-        await Task.CompletedTask;
         try
         {
-            return System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encryptedPassword));
+            return _protector.Unprotect(encryptedPassword);
         }
         catch
         {
-            return null;
+            // Fall back for legacy passwords stored as plain Base64
+            try
+            {
+                return Encoding.UTF8.GetString(Convert.FromBase64String(encryptedPassword));
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 

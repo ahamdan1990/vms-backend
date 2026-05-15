@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using MediatR;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Application.DTOs.Cameras;
 using VisitorManagementSystem.Api.Application.Services;
+using VisitorManagementSystem.Api.Application.Services.Cameras;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -10,24 +12,27 @@ using VisitorManagementSystem.Api.Domain.ValueObjects;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Cameras;
 
-/// <summary>
-/// Handler for updating camera configuration with comprehensive validation and security
-/// Implements optimistic concurrency control and secure credential management
-/// </summary>
 public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, CameraDto>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<UpdateCameraCommandHandler> _logger;
+    private readonly IDataProtector _protector;
+    private readonly ICameraStreamRuntimeService _streamRuntime;
 
     public UpdateCameraCommandHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        ILogger<UpdateCameraCommandHandler> logger)
+        ILogger<UpdateCameraCommandHandler> logger,
+        IDataProtectionProvider dataProtectionProvider,
+        ICameraStreamRuntimeService streamRuntime)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _protector = (dataProtectionProvider ?? throw new ArgumentNullException(nameof(dataProtectionProvider)))
+            .CreateProtector("CameraPasswords");
+        _streamRuntime = streamRuntime ?? throw new ArgumentNullException(nameof(streamRuntime));
     }
 
     public async Task<CameraDto> Handle(UpdateCameraCommand request, CancellationToken cancellationToken)
@@ -55,6 +60,8 @@ public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, C
             var originalName = camera.Name;
             var originalConnectionString = camera.ConnectionString;
             var originalCameraType = camera.CameraType;
+            var originalConfig = camera.GetConfiguration();
+            var streamWasRunning = _streamRuntime.IsStreaming(request.Id);
 
             // Validate name uniqueness (exclude current camera)
             await ValidateCameraUniqueness(request, cancellationToken);
@@ -67,9 +74,10 @@ public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, C
 
             // Update camera configuration
             var configuration = UpdateCameraConfiguration(camera.GetConfiguration(), request.Configuration);
+            configuration.EnableFacialRecognition = request.EnableFacialRecognition;
 
             // Apply updates to camera entity
-            await ApplyUpdatesToCamera(camera, request, configuration, originalConnectionString, originalCameraType);
+            ApplyUpdatesToCamera(camera, request, configuration, originalConnectionString, originalCameraType);
 
             // Validate updated configuration
             if (!camera.IsConfigurationValid(out var validationErrors))
@@ -97,8 +105,24 @@ public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, C
             // Log significant configuration changes
             LogConfigurationChanges(originalName, originalConnectionString, originalCameraType, camera);
 
-            // Note: Connection testing will be handled by dedicated worker services
-            // as part of the camera management infrastructure
+            // If the stream was running and stream-relevant settings changed, restart the worker
+            // so it picks up the updated camera configuration from the database.
+            if (streamWasRunning && StreamSettingsChanged(originalConfig, camera, request))
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _streamRuntime.StopStreamAsync(request.Id, graceful: true, pauseAutoStart: false);
+                        await _streamRuntime.StartStreamAsync(request.Id);
+                        _logger.LogInformation("Camera stream restarted after config update for camera {CameraId}", request.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to restart stream after config update for camera {CameraId}", request.Id);
+                    }
+                });
+            }
 
             // Map to DTO and return
             var cameraDto = _mapper.Map<CameraDto>(camera);
@@ -190,6 +214,7 @@ public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, C
             FaceDetectionThreshold = updates.FaceDetectionThreshold ?? existing.FaceDetectionThreshold,
             UnknownFaceThreshold = updates.UnknownFaceThreshold ?? existing.UnknownFaceThreshold,
             MinimumFaceSizePixels = updates.MinimumFaceSizePixels ?? existing.MinimumFaceSizePixels,
+            MaximumFaceSizePixels = updates.MaximumFaceSizePixels ?? existing.MaximumFaceSizePixels,
             FaceQualityThreshold = updates.FaceQualityThreshold ?? existing.FaceQualityThreshold,
             BlurThreshold = updates.BlurThreshold ?? existing.BlurThreshold,
             YawLimitDegrees = updates.YawLimitDegrees ?? existing.YawLimitDegrees,
@@ -222,7 +247,7 @@ public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, C
     /// <summary>
     /// Applies all updates to the camera entity with secure credential handling
     /// </summary>
-    private async Task ApplyUpdatesToCamera(
+    private void ApplyUpdatesToCamera(
         Camera camera,
         UpdateCameraCommand request,
         CameraConfiguration configuration,
@@ -254,8 +279,7 @@ public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, C
             }
             else
             {
-                // Encrypt new password
-                camera.Password = await EncryptPassword(request.Password);
+                camera.Password = EncryptPassword(request.Password);
             }
         }
         // If Password is null, keep existing password unchanged
@@ -284,14 +308,7 @@ public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, C
         }
     }
 
-    /// <summary>
-    /// Encrypts password for secure storage (placeholder implementation)
-    /// </summary>
-    private async Task<string> EncryptPassword(string password)
-    {
-        // TODO: Implement proper encryption using IDataProtector or similar
-        return await Task.FromResult(Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(password)));
-    }
+    private string EncryptPassword(string password) => _protector.Protect(password);
 
     /// <summary>
     /// Determines if critical connection settings have changed
@@ -324,6 +341,19 @@ public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, C
             _logger.LogInformation("Camera {CameraId} configuration changes: {Changes}", 
                 updatedCamera.Id, string.Join("; ", changes));
         }
+    }
+
+    private static bool StreamSettingsChanged(
+        CameraConfiguration originalConfig,
+        Camera updatedCamera,
+        UpdateCameraCommand request)
+    {
+        // Restart if any setting that directly controls whether inference runs has changed.
+        var newConfig = updatedCamera.GetConfiguration();
+        return originalConfig.EnableFacialRecognition != newConfig.EnableFacialRecognition
+            || originalConfig.DetectionEnabled != newConfig.DetectionEnabled
+            || originalConfig.RecognitionEnabled != newConfig.RecognitionEnabled
+            || originalConfig.Enabled != newConfig.Enabled;
     }
 
     /// <summary>

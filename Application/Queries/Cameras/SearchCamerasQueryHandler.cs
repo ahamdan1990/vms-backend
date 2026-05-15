@@ -63,6 +63,7 @@ public class SearchCamerasQueryHandler : IRequestHandler<SearchCamerasQuery, Pag
             foreach (var camera in cameras)
             {
                 var dto = _mapper.Map<CameraListDto>(camera);
+                dto.Configuration = _mapper.Map<CameraConfigurationDto>(camera.GetConfiguration());
                 EnhanceCameraListDto(dto, camera);
                 cameraDtos.Add(dto);
             }

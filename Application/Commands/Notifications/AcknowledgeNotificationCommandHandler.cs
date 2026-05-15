@@ -38,6 +38,7 @@ public class AcknowledgeNotificationCommandHandler : IRequestHandler<Acknowledge
                    ?? throw new KeyNotFoundException($"User with ID {request.AcknowledgedBy} not found");
 
         var canAcknowledge =
+            request.CanAcknowledgeAll ||
             notification.TargetUserId == request.AcknowledgedBy ||
             (notification.TargetUserId == null && notification.TargetRole == null) ||
             (!string.IsNullOrWhiteSpace(notification.TargetRole) &&

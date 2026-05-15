@@ -44,6 +44,8 @@ using VisitorManagementSystem.Api.Infrastructure.Caching;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Caching.Distributed;
 using VisitorManagementSystem.Api.Application.Services.Common;
+using VisitorManagementSystem.Api.Infrastructure.Services;
+using VisitorManagementSystem.Api.Application.Mapping;
 
 namespace VisitorManagementSystem.Api.Extensions;
 
@@ -103,6 +105,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUrlResolverService, UrlResolverService>();
         services.AddScoped<ISystemTimeZoneService, SystemTimeZoneService>();
 
+        // AutoMapper custom value resolvers — must be in DI so AutoMapper can inject IUrlResolverService
+        services.AddScoped<VisitorProfilePhotoUrlResolver>();
+        services.AddScoped<VisitorListProfilePhotoUrlResolver>();
+        services.AddScoped<UserProfilePhotoUrlResolver>();
+
         // Auth services
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtService, JwtService>();
@@ -131,10 +138,14 @@ public static class ServiceCollectionExtensions
 
         // Camera management services
         services.AddScoped<ICameraService, CameraService>();
+        services.AddScoped<ICameraFrameRecognitionService, CameraFrameRecognitionService>();
+        services.AddScoped<ICameraFaceEventService, CameraFaceEventService>();
+        services.AddSingleton<ICameraStreamRuntimeService, CameraStreamRuntimeService>();
         services.AddSingleton<IFfmpegToolLocator, FfmpegToolLocator>();
         services.AddSingleton<IFfmpegProcessRunner, FfmpegProcessRunner>();
         services.AddSingleton<IFfmpegCapabilityService, FfmpegCapabilityService>();
         services.AddScoped<IFfmpegFrameGrabber, FfmpegFrameGrabber>();
+        services.AddSingleton<IFaceSnapshotService, FileSystemFaceSnapshotService>();
 
         // File upload service
         services.AddScoped<IFileUploadService, FileUploadService>();
@@ -213,13 +224,93 @@ public static class ServiceCollectionExtensions
     /// </summary>
     private static IServiceCollection RegisterCompreFaceServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Configure CompreFace settings
         services.Configure<CompreFaceSettings>(configuration.GetSection("CompreFace"));
 
-        // Register HttpClient for CompreFace with no base address (set per request)
-        services.AddHttpClient<IFaceDetectionService, CompreFaceService>();
+        // Register a named HttpClient for CompreFace so CompreFaceService can be a singleton.
+        // CompreFaceService configures BaseAddress/Timeout itself in the constructor.
+        services.AddHttpClient("CompreFace");
+        services.AddSingleton<CompreFaceService>(sp =>
+        {
+            var factory = sp.GetRequiredService<IHttpClientFactory>();
+            var client = factory.CreateClient("CompreFace");
+            var settings = sp.GetRequiredService<IOptions<CompreFaceSettings>>();
+            var logger = sp.GetRequiredService<ILogger<CompreFaceService>>();
+            return new CompreFaceService(client, settings, logger);
+        });
+
+        services.Configure<LuxandFaceSettings>(configuration.GetSection(LuxandFaceSettings.SectionName));
+        services.PostConfigure<LuxandFaceSettings>(options =>
+        {
+            if (string.IsNullOrWhiteSpace(options.LicenseKey))
+            {
+                options.LicenseKey = Environment.GetEnvironmentVariable("LUXAND_FACESDK_LICENSE")
+                    ?? Environment.GetEnvironmentVariable("LuxandFaceSDK__LicenseKey")
+                    ?? ReadDotEnvValue("LUXAND_FACESDK_LICENSE")
+                    ?? ReadDotEnvValue("LuxandFaceSDK__LicenseKey")
+                    ?? string.Empty;
+            }
+        });
+
+        services.AddSingleton<LuxandFaceService>();
+        services.AddSingleton<IFaceTrackerService>(sp => sp.GetRequiredService<LuxandFaceService>());
+        services.AddSingleton<IFaceDetectionService, HybridFaceService>();
+
+        // Keyed registrations allow CameraFrameRecognitionService and CamerasController to select engines
+        services.AddKeyedSingleton<IFaceDetectionService>("luxand",
+            (sp, _) => (IFaceDetectionService)sp.GetRequiredService<LuxandFaceService>());
+        services.AddKeyedSingleton<IFaceDetectionService>("compreface",
+            (sp, _) => (IFaceDetectionService)sp.GetRequiredService<CompreFaceService>());
+        services.AddScoped<IFaceTemplateEnrollmentService, FaceTemplateEnrollmentService>();
 
         return services;
+    }
+
+    private static string? ReadDotEnvValue(string key)
+    {
+        var candidatePaths = EnumerateDotEnvPaths(Directory.GetCurrentDirectory())
+            .Concat(EnumerateDotEnvPaths(AppContext.BaseDirectory));
+
+        foreach (var path in candidatePaths.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            if (!File.Exists(path))
+            {
+                continue;
+            }
+
+            foreach (var line in File.ReadLines(path))
+            {
+                var trimmed = line.Trim();
+                if (string.IsNullOrWhiteSpace(trimmed) || trimmed.StartsWith('#'))
+                {
+                    continue;
+                }
+
+                var separatorIndex = trimmed.IndexOf('=');
+                if (separatorIndex <= 0)
+                {
+                    continue;
+                }
+
+                var name = trimmed[..separatorIndex].Trim();
+                if (!string.Equals(name, key, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                return trimmed[(separatorIndex + 1)..].Trim().Trim('"');
+            }
+        }
+
+        return null;
+    }
+
+    private static IEnumerable<string> EnumerateDotEnvPaths(string startPath)
+    {
+        var directory = new DirectoryInfo(startPath);
+        for (var i = 0; i < 5 && directory != null; i++, directory = directory.Parent)
+        {
+            yield return Path.Combine(directory.FullName, ".env");
+        }
     }
 
     /// <summary>
@@ -236,6 +327,8 @@ public static class ServiceCollectionExtensions
         // Notification & FR processing services
 
         //services.AddHostedService<FREventProcessorService>();
+        services.AddHostedService<FaceEngineWarmupService>();
+        services.AddHostedService<CameraStreamHostedService>();
         services.AddHostedService<NotificationDispatcherService>();
         services.AddHostedService<VisitorTrackingService>();
         services.AddHostedService<VisitorMonitoringService>();
@@ -245,6 +338,7 @@ public static class ServiceCollectionExtensions
         services.AddHostedService<StorageAlertBackgroundService>();
         services.AddHostedService<DataRetentionBackgroundService>();
         services.AddHostedService<LogCleanupBackgroundService>();
+        services.AddHostedService<FaceEventRetentionHostedService>();
 
         return services;
     }
@@ -357,6 +451,7 @@ public static class ServiceCollectionExtensions
 
         // Camera repositories
         services.AddScoped<ICameraRepository, CameraRepository>();
+        services.AddScoped<ICameraFaceEventRepository, CameraFaceEventRepository>();
 
         // Notification repositories
         services.AddScoped<INotificationAlertRepository, NotificationAlertRepository>();

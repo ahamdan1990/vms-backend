@@ -3,6 +3,7 @@ using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
 using VisitorManagementSystem.Api.Application.Services.FaceDetection;
 using VisitorManagementSystem.Api.Application.Services.Notifications;
+using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Visitors;
@@ -62,7 +63,14 @@ public class RecognizeAndClassifyVisitorCommandHandler
         var best = recognized.OrderByDescending(f => f.Similarity).First();
 
         // ── 2. Look up visitor in DB ───────────────────────────────────────────
-        var visitor = await _unitOfWork.Visitors.GetByEmailAsync(best.SubjectId, cancellationToken);
+        Visitor? visitor = null;
+
+        if (TryParseVisitorSubject(best.SubjectId, out var visitorId))
+        {
+            visitor = await _unitOfWork.Visitors.GetByIdAsync(visitorId, cancellationToken);
+        }
+
+        visitor ??= await _unitOfWork.Visitors.GetByEmailAsync(best.SubjectId, cancellationToken);
 
         if (visitor == null)
         {
@@ -146,5 +154,14 @@ public class RecognizeAndClassifyVisitorCommandHandler
             visitor.Id, visitor.FullName, visitor.IsVip, visitor.IsBlacklisted, result.AlertTriggered);
 
         return result;
+    }
+
+    private static bool TryParseVisitorSubject(string subjectId, out int visitorId)
+    {
+        visitorId = 0;
+        var parts = subjectId.Split(':', 2, StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length == 2 &&
+               parts[0].Equals("visitor", StringComparison.OrdinalIgnoreCase) &&
+               int.TryParse(parts[1], out visitorId);
     }
 }

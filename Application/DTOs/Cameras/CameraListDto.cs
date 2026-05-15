@@ -84,6 +84,11 @@ public class CameraListDto
     public string HealthStatus { get; set; } = "Unknown";
 
     /// <summary>
+    /// Camera runtime/processing configuration summary.
+    /// </summary>
+    public CameraConfigurationDto? Configuration { get; set; }
+
+    /// <summary>
     /// Last modification timestamp
     /// </summary>
     public DateTime? ModifiedOn { get; set; }

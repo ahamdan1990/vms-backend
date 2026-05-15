@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using VisitorManagementSystem.Api.Domain.Enums;
 
 namespace VisitorManagementSystem.Api.Infrastructure.Security.Authorization;
@@ -27,8 +28,9 @@ public class RoleHandler : AuthorizationHandler<RoleRequirement>
                 return Task.CompletedTask;
             }
 
-            // Get user's role
-            var userRoleClaim = context.User.FindFirst("role")?.Value;
+            // Get user's role (JWT stores it under ClaimTypes.Role; fall back to short "role" claim)
+            var userRoleClaim = context.User.FindFirst(ClaimTypes.Role)?.Value
+                ?? context.User.FindFirst("role")?.Value;
             if (string.IsNullOrEmpty(userRoleClaim))
             {
                 _logger.LogWarning("User has no role claim");
@@ -127,7 +129,8 @@ public class MultipleRolesHandler : AuthorizationHandler<MultipleRolesRequiremen
                 return Task.CompletedTask;
             }
 
-            var userRoleClaim = context.User.FindFirst("role")?.Value;
+            var userRoleClaim = context.User.FindFirst(ClaimTypes.Role)?.Value
+                ?? context.User.FindFirst("role")?.Value;
             if (string.IsNullOrEmpty(userRoleClaim))
             {
                 context.Fail();

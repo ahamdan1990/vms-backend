@@ -113,6 +113,12 @@ public class CreateInvitationDto : IValidatableObject
     public bool SubmitForApproval { get; set; } = false;
 
     /// <summary>
+    /// Links this invitation to a face recognition event (for audit purposes).
+    /// When set, the face event will be automatically marked as Matched after check-in.
+    /// </summary>
+    public int? FaceEventId { get; set; }
+
+    /// <summary>
     /// Custom validation logic
     /// </summary>
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

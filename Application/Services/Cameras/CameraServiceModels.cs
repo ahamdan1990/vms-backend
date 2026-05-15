@@ -127,6 +127,48 @@ public class CameraStreamInfo
     /// Additional stream metadata
     /// </summary>
     public Dictionary<string, object> Metadata { get; set; } = new();
+
+    /// <summary>
+    /// Runtime worker state: starting, running, reconnecting, stopped, or failed.
+    /// </summary>
+    public string RuntimeState { get; set; } = "stopped";
+
+    /// <summary>
+    /// Whether the backend FFmpeg worker is actively grabbing frames.
+    /// USB cameras are browser-side and do not use backend FFmpeg workers.
+    /// </summary>
+    public bool IsFrameGrabberActive { get; set; }
+
+    /// <summary>
+    /// Whether frames are currently entering the recognition pipeline.
+    /// </summary>
+    public bool IsInferenceRunning { get; set; }
+
+    public DateTime? LastFrameGrabbedAt { get; set; }
+    public int LastFrameSequenceNumber { get; set; }
+    public long GrabbedFrameCount { get; set; }
+    public int? LastFrameSizeBytes { get; set; }
+    public string? LastFrameHardwareAcceleration { get; set; }
+    public string? LastFrameInputKind { get; set; }
+    public string? LastFfmpegArguments { get; set; }
+
+    public DateTime? LastInferenceStartedAt { get; set; }
+    public DateTime? LastInferenceCompletedAt { get; set; }
+    public long InferenceFrameCount { get; set; }
+    public string? LastInferenceEngine { get; set; }
+    public bool LastInferenceFallbackUsed { get; set; }
+    public bool LastInferenceSkipped { get; set; }
+    public string? LastInferenceSkipReason { get; set; }
+    public int LastDetectedFaceCount { get; set; }
+    public int LastRecognizedFaceCount { get; set; }
+    public int LastKnownFaceCount { get; set; }
+    public int LastUnknownFaceCount { get; set; }
+    public int LastPublishedEventCount { get; set; }
+
+    public DateTime? LastErrorAt { get; set; }
+    public string? LastErrorMessage { get; set; }
+    public int FailureCount { get; set; }
+    public DateTime? NextReconnectAt { get; set; }
 }
 
 /// <summary>

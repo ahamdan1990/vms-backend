@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MediatR;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Application.DTOs.Cameras;
 using VisitorManagementSystem.Api.Application.Services;
@@ -10,24 +11,24 @@ using VisitorManagementSystem.Api.Domain.ValueObjects;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Cameras;
 
-/// <summary>
-/// Handler for creating a new camera with comprehensive validation and configuration
-/// Implements security best practices for credential handling and connection validation
-/// </summary>
 public class CreateCameraCommandHandler : IRequestHandler<CreateCameraCommand, CameraDto>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly ILogger<CreateCameraCommandHandler> _logger;
+    private readonly IDataProtector _protector;
 
     public CreateCameraCommandHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        ILogger<CreateCameraCommandHandler> logger)
+        ILogger<CreateCameraCommandHandler> logger,
+        IDataProtectionProvider dataProtectionProvider)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _protector = (dataProtectionProvider ?? throw new ArgumentNullException(nameof(dataProtectionProvider)))
+            .CreateProtector("CameraPasswords");
     }
 
     public async Task<CameraDto> Handle(CreateCameraCommand request, CancellationToken cancellationToken)
@@ -47,6 +48,7 @@ public class CreateCameraCommandHandler : IRequestHandler<CreateCameraCommand, C
 
             // Create camera configuration
             var configuration = CreateCameraConfiguration(request.Configuration);
+            configuration.EnableFacialRecognition = request.EnableFacialRecognition;
 
             // Create camera entity with secure credential handling
             var camera = new Camera
@@ -56,7 +58,7 @@ public class CreateCameraCommandHandler : IRequestHandler<CreateCameraCommand, C
                 CameraType = request.CameraType,
                 ConnectionString = request.ConnectionString.Trim(),
                 Username = request.Username?.Trim(),
-                Password = await EncryptPassword(request.Password), // Encrypt sensitive data
+                Password = EncryptPassword(request.Password),
                 LocationId = request.LocationId,
                 Status = CameraStatus.Inactive, // Start in inactive state
                 EnableFacialRecognition = request.EnableFacialRecognition,
@@ -180,6 +182,7 @@ public class CreateCameraCommandHandler : IRequestHandler<CreateCameraCommand, C
             FaceDetectionThreshold = configDto.FaceDetectionThreshold ?? CameraConfiguration.Default.FaceDetectionThreshold,
             UnknownFaceThreshold = configDto.UnknownFaceThreshold ?? CameraConfiguration.Default.UnknownFaceThreshold,
             MinimumFaceSizePixels = configDto.MinimumFaceSizePixels ?? CameraConfiguration.Default.MinimumFaceSizePixels,
+            MaximumFaceSizePixels = configDto.MaximumFaceSizePixels ?? CameraConfiguration.Default.MaximumFaceSizePixels,
             FaceQualityThreshold = configDto.FaceQualityThreshold ?? CameraConfiguration.Default.FaceQualityThreshold,
             BlurThreshold = configDto.BlurThreshold,
             YawLimitDegrees = configDto.YawLimitDegrees ?? CameraConfiguration.Default.YawLimitDegrees,
@@ -209,18 +212,12 @@ public class CreateCameraCommandHandler : IRequestHandler<CreateCameraCommand, C
         };
     }
 
-    /// <summary>
-    /// Encrypts password for secure storage (placeholder for actual encryption)
-    /// In production, use proper encryption/hashing mechanisms
-    /// </summary>
-    private async Task<string?> EncryptPassword(string? password)
+    private string? EncryptPassword(string? password)
     {
         if (string.IsNullOrEmpty(password))
             return null;
 
-        // TODO: Implement proper encryption using IDataProtector or similar
-        // This is a placeholder - in production, use proper encryption
-        return await Task.FromResult(Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(password)));
+        return _protector.Protect(password);
     }
 
     /// <summary>

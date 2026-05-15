@@ -792,6 +792,137 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.CameraFaceEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AlertId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("BoundingBoxHeight")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("BoundingBoxWidth")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("BoundingBoxX")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("BoundingBoxY")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CameraId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CameraName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CapturedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<float?>("Confidence")
+                        .HasColumnType("real");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EventId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsKnown")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsKnownCandidate")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("LocationId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("PersonId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PersonType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("ReviewNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("ReviewStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ReviewedById")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<float?>("Similarity")
+                        .HasColumnType("real");
+
+                    b.Property<string>("SnapshotPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("SubjectId")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("SuggestedAction")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_CameraFaceEvents_EventId");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("IX_CameraFaceEvents_ExpiresAt")
+                        .HasFilter("[ExpiresAt] IS NOT NULL");
+
+                    b.HasIndex("CameraId", "CapturedAt")
+                        .HasDatabaseName("IX_CameraFaceEvents_CameraId_CapturedAt");
+
+                    b.HasIndex("ReviewStatus", "CapturedAt")
+                        .HasDatabaseName("IX_CameraFaceEvents_ReviewStatus_CapturedAt");
+
+                    b.HasIndex("PersonId", "PersonType", "IsKnownCandidate")
+                        .HasDatabaseName("IX_CameraFaceEvents_KnownCandidates")
+                        .HasFilter("[PersonId] IS NOT NULL AND [IsKnownCandidate] = 1");
+
+                    b.ToTable("CameraFaceEvents", (string)null);
+                });
+
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Company", b =>
                 {
                     b.Property<int>("Id")
@@ -1312,6 +1443,152 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         .HasDatabaseName("IX_EmergencyContact_IsActive_CreatedOn");
 
                     b.ToTable("EmergencyContacts", (string)null);
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.FaceTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Engine")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<string>("ExternalImageId")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastMatchedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MatchCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Metadata")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PersonId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PersonType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<decimal?>("QualityScore")
+                        .HasColumnType("decimal(6,3)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("SourceImagePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("SubjectId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<byte[]>("TemplateData")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<int>("TemplateSize")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("VisitorId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("IX_FaceTemplate_CreatedBy");
+
+                    b.HasIndex("CreatedOn")
+                        .HasDatabaseName("IX_FaceTemplate_CreatedOn");
+
+                    b.HasIndex("DeletedBy")
+                        .HasDatabaseName("IX_FaceTemplate_DeletedBy");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_FaceTemplate_IsActive");
+
+                    b.HasIndex("IsDeleted")
+                        .HasDatabaseName("IX_FaceTemplate_IsDeleted");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("IX_FaceTemplate_ModifiedBy");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_FaceTemplates_UserId");
+
+                    b.HasIndex("VisitorId")
+                        .HasDatabaseName("IX_FaceTemplates_VisitorId");
+
+                    b.HasIndex("IsActive", "CreatedOn")
+                        .HasDatabaseName("IX_FaceTemplate_IsActive_CreatedOn");
+
+                    b.HasIndex("IsDeleted", "DeletedOn")
+                        .HasDatabaseName("IX_FaceTemplate_IsDeleted_DeletedOn");
+
+                    b.HasIndex("Engine", "IsActive", "IsDeleted")
+                        .HasDatabaseName("IX_FaceTemplates_Engine_Active");
+
+                    b.HasIndex("SubjectId", "Engine", "IsDeleted")
+                        .HasDatabaseName("IX_FaceTemplates_Subject_Engine");
+
+                    b.HasIndex("PersonType", "PersonId", "Engine", "IsDeleted")
+                        .HasDatabaseName("IX_FaceTemplates_Identity_Engine");
+
+                    b.ToTable("FaceTemplates", (string)null);
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Invitation", b =>
@@ -4146,6 +4423,17 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.Navigation("ModifiedByUser");
                 });
 
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.CameraFaceEvent", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Camera", "Camera")
+                        .WithMany()
+                        .HasForeignKey("CameraId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Camera");
+                });
+
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.Company", b =>
                 {
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", null)
@@ -4627,6 +4915,49 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
 
                     b.Navigation("PhoneNumber")
                         .IsRequired();
+
+                    b.Navigation("Visitor");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.FaceTemplate", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_FaceTemplate_CreatedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "DeletedByUser")
+                        .WithMany()
+                        .HasForeignKey("DeletedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_FaceTemplate_DeletedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_FaceTemplate_ModifiedBy_User");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_FaceTemplates_Users_UserId");
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Visitor", "Visitor")
+                        .WithMany()
+                        .HasForeignKey("VisitorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_FaceTemplates_Visitors_VisitorId");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("DeletedByUser");
+
+                    b.Navigation("ModifiedByUser");
+
+                    b.Navigation("User");
 
                     b.Navigation("Visitor");
                 });

@@ -635,8 +635,8 @@ public class VisitorsController : BaseController
                 File = file
             };
 
-            var photoUrl = await _mediator.Send(command);
-            return SuccessResponse(new { photoUrl });
+            var result = await _mediator.Send(command);
+            return SuccessResponse(result);
         }
         catch (ArgumentException ex)
         {
@@ -704,8 +704,9 @@ public class VisitorsController : BaseController
     /// </summary>
     [HttpPost("recognize")]
     [Authorize(Policy = Permissions.CheckIn.PhotoCapture)]
+    [Consumes("multipart/form-data")]
     public async Task<IActionResult> RecognizeAndClassify(
-        [FromForm] IFormFile photo,
+        IFormFile photo,
         [FromForm] string? location = "Reception",
         CancellationToken cancellationToken = default)
     {

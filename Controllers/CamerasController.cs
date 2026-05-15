@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using VisitorManagementSystem.Api.Application.Commands.Cameras;
 using VisitorManagementSystem.Api.Application.DTOs.Cameras;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
+using VisitorManagementSystem.Api.Application.DTOs.FaceDetection;
 using VisitorManagementSystem.Api.Application.Queries.Cameras;
 using VisitorManagementSystem.Api.Application.Services;
 using VisitorManagementSystem.Api.Application.Services.Cameras;
@@ -27,20 +28,38 @@ public class CamerasController : BaseController
     private readonly ILogger<CamerasController> _logger;
     private readonly IFaceDetectionService _faceDetectionService;
     private readonly ICameraService _cameraService;
+    private readonly ICameraFrameRecognitionService _cameraFrameRecognitionService;
+    private readonly ICameraFaceEventService _cameraFaceEventService;
+    private readonly ICameraStreamRuntimeService _cameraStreamRuntimeService;
     private readonly IFfmpegCapabilityService _ffmpegCapabilityService;
+    private readonly IFaceDetectionService _luxandService;
+    private readonly IFaceDetectionService _compreFaceService;
+    private readonly IFaceTemplateEnrollmentService _faceTemplateEnrollmentService;
 
     public CamerasController(
         IMediator mediator,
         ILogger<CamerasController> logger,
         IFaceDetectionService faceDetectionService,
         ICameraService cameraService,
-        IFfmpegCapabilityService ffmpegCapabilityService)
+        ICameraFrameRecognitionService cameraFrameRecognitionService,
+        ICameraFaceEventService cameraFaceEventService,
+        ICameraStreamRuntimeService cameraStreamRuntimeService,
+        IFfmpegCapabilityService ffmpegCapabilityService,
+        [Microsoft.Extensions.DependencyInjection.FromKeyedServices("luxand")] IFaceDetectionService luxandService,
+        [Microsoft.Extensions.DependencyInjection.FromKeyedServices("compreface")] IFaceDetectionService compreFaceService,
+        IFaceTemplateEnrollmentService faceTemplateEnrollmentService)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _faceDetectionService = faceDetectionService ?? throw new ArgumentNullException(nameof(faceDetectionService));
         _cameraService = cameraService ?? throw new ArgumentNullException(nameof(cameraService));
+        _cameraFrameRecognitionService = cameraFrameRecognitionService ?? throw new ArgumentNullException(nameof(cameraFrameRecognitionService));
+        _cameraFaceEventService = cameraFaceEventService ?? throw new ArgumentNullException(nameof(cameraFaceEventService));
+        _cameraStreamRuntimeService = cameraStreamRuntimeService ?? throw new ArgumentNullException(nameof(cameraStreamRuntimeService));
         _ffmpegCapabilityService = ffmpegCapabilityService ?? throw new ArgumentNullException(nameof(ffmpegCapabilityService));
+        _luxandService = luxandService ?? throw new ArgumentNullException(nameof(luxandService));
+        _compreFaceService = compreFaceService ?? throw new ArgumentNullException(nameof(compreFaceService));
+        _faceTemplateEnrollmentService = faceTemplateEnrollmentService ?? throw new ArgumentNullException(nameof(faceTemplateEnrollmentService));
     }
 
     #region CRUD Operations
@@ -451,6 +470,75 @@ public class CamerasController : BaseController
     }
 
     /// <summary>
+    /// Gets current local/fallback face engine availability and initialization diagnostics.
+    /// </summary>
+    /// <returns>Face engine status information</returns>
+    [HttpGet("face-engines/status")]
+    [Authorize(Policy = Permissions.SystemConfig.Read)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
+    public async Task<IActionResult> GetFaceEngineStatus()
+    {
+        try
+        {
+            var compreFaceReachable = _compreFaceService.IsAvailable &&
+                await _compreFaceService.IsServiceAvailableAsync();
+
+            return SuccessResponse(new
+            {
+                luxand = new
+                {
+                    available = _luxandService.IsAvailable,
+                    status = _luxandService.InitializationStatus,
+                    returnCode = _luxandService.LastReturnCode,
+                    error = _luxandService.InitializationError
+                },
+                compreFace = new
+                {
+                    available = _compreFaceService.IsAvailable,
+                    reachable = compreFaceReachable
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving face engine status");
+            return ServerErrorResponse("An error occurred while retrieving face engine status");
+        }
+    }
+
+    /// <summary>
+    /// Enrolls Luxand face templates from existing visitor and staff/user profile photos.
+    /// </summary>
+    /// <param name="includeVisitors">Whether visitor profile photos should be scanned.</param>
+    /// <param name="includeUsers">Whether staff/user profile photos should be scanned.</param>
+    /// <param name="force">When true, adds a new template even if the identity already has one.</param>
+    /// <returns>Enrollment summary and per-identity results.</returns>
+    [HttpPost("face-templates/enroll-existing")]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
+    [ProducesResponseType(typeof(ApiResponseDto<FaceTemplateEnrollmentBatchResultDto>), 200)]
+    public async Task<IActionResult> EnrollExistingFaceTemplates(
+        [FromQuery] bool includeVisitors = true,
+        [FromQuery] bool includeUsers = true,
+        [FromQuery] bool force = false)
+    {
+        try
+        {
+            var result = await _faceTemplateEnrollmentService.EnrollExistingProfilePhotosAsync(
+                includeVisitors,
+                includeUsers,
+                force,
+                HttpContext.RequestAborted);
+
+            return SuccessResponse(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error enrolling existing face templates");
+            return ServerErrorResponse("An error occurred while enrolling face templates");
+        }
+    }
+
+    /// <summary>
     /// Starts camera stream
     /// </summary>
     /// <param name="id">Camera ID</param>
@@ -478,9 +566,10 @@ public class CamerasController : BaseController
                 CameraId = id,
                 Success = started,
                 IsStreaming = streamInfo?.IsStreaming ?? false,
+                AutoStartPaused = false,
                 StreamInfo = streamInfo,
                 Message = started
-                    ? "Camera stream state started. FFmpeg frame capture is available; continuous inference workers are scheduled for the next pipeline phase."
+                    ? "Camera stream worker started. FFmpeg grabbing and inference status are available in streamInfo."
                     : "Camera stream could not be started because the camera is not operational.",
                 StartedAt = streamInfo?.StartedAt ?? DateTime.UtcNow
             });
@@ -520,6 +609,7 @@ public class CamerasController : BaseController
                 CameraId = id,
                 Success = stopped,
                 IsStreaming = false,
+                AutoStartPaused = true,
                 StoppedAt = DateTime.UtcNow,
                 Graceful = graceful
             });
@@ -598,6 +688,45 @@ public class CamerasController : BaseController
     }
 
     /// <summary>
+    /// Returns the most recently grabbed frame with face detection overlay data for live debug inspection.
+    /// Runs raw detection (no cooldowns or event publishing) and annotates which faces pass the current filter thresholds.
+    /// </summary>
+    [HttpGet("{id:int}/debug-frame")]
+    [Authorize(Policy = Permissions.SystemConfig.Read)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
+    public async Task<IActionResult> GetDebugFrame(int id)
+    {
+        try
+        {
+            var camera = await _mediator.Send(new GetCameraByIdQuery { Id = id });
+            if (camera == null)
+            {
+                return NotFoundResponse("Camera", id);
+            }
+
+            var (bytes, capturedAt) = _cameraStreamRuntimeService.GetLastFrameSnapshot(id);
+            if (bytes == null)
+            {
+                return Ok(new
+                {
+                    HasFrame = false,
+                    ErrorMessage = "No frame captured yet — make sure the camera stream is running."
+                });
+            }
+
+            var result = await _cameraFrameRecognitionService.InspectFrameAsync(id, bytes, HttpContext.RequestAborted);
+            result.FrameCapturedAt = capturedAt;
+            return SuccessResponse(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting debug frame for camera {CameraId}", id);
+            return ServerErrorResponse("An error occurred while getting debug frame");
+        }
+    }
+
+    /// <summary>
     /// Captures a single frame from the camera
     /// </summary>
     /// <param name="id">Camera ID</param>
@@ -641,6 +770,69 @@ public class CamerasController : BaseController
         {
             _logger.LogError(ex, "Error capturing frame for camera {CameraId}", id);
             return ServerErrorResponse("An error occurred while capturing frame");
+        }
+    }
+
+    /// <summary>
+    /// Processes a client-captured frame through the configured camera recognition path.
+    /// USB cameras use this endpoint because their video device is attached to the browser workstation.
+    /// </summary>
+    /// <param name="id">Camera ID</param>
+    /// <param name="request">Multipart frame payload and optional client metadata</param>
+    /// <returns>Structured known/unknown face recognition result</returns>
+    [HttpPost("{id:int}/process-frame")]
+    [Authorize(Policy = Permissions.SystemConfig.Read)]
+    [RequestSizeLimit(5_242_880)]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(ApiResponseDto<CameraFrameRecognitionResultDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
+    public async Task<IActionResult> ProcessFrame(int id, [FromForm] CameraFrameProcessingRequestDto request)
+    {
+        try
+        {
+            var result = await _cameraFrameRecognitionService.ProcessFrameAsync(
+                id,
+                request,
+                GetCurrentUserId(),
+                GetClientIpAddress(),
+                HttpContext.RequestAborted);
+
+            if (!result.Success && result.ErrorCode == "CameraNotFound")
+            {
+                return NotFoundResponse("Camera", id);
+            }
+
+            if (!result.Success)
+            {
+                return BadRequestResponse(result.ErrorMessage ?? "Frame processing failed");
+            }
+
+            try
+            {
+                var events = await _cameraFaceEventService.PublishFrameEventsAsync(
+                    result,
+                    GetCurrentUserId(),
+                    HttpContext.RequestAborted);
+
+                result.Events = events.ToList();
+            }
+            catch (Exception eventEx)
+            {
+                _logger.LogError(
+                    eventEx,
+                    "Frame was processed but camera face event publication failed for camera {CameraId}",
+                    id);
+            }
+
+            _cameraStreamRuntimeService.RecordInferenceResult(result);
+
+            return SuccessResponse(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing camera frame for camera {CameraId}", id);
+            return ServerErrorResponse("An error occurred while processing camera frame");
         }
     }
 
