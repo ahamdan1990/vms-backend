@@ -84,6 +84,10 @@ public class ApplicationDbContext : DbContext
     // DbSets - Camera Face Events
     public DbSet<CameraFaceEvent> CameraFaceEvents { get; set; } = null!;
 
+    // DbSets - Civil Defense
+    public DbSet<StaffPresence> StaffPresences { get; set; } = null!;
+    public DbSet<TemporaryLeave> TemporaryLeaves { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -137,6 +141,10 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new BackupRecordConfiguration());
         modelBuilder.ApplyConfiguration(new BlacklistOverrideRequestConfiguration());
         modelBuilder.ApplyConfiguration(new CameraFaceEventConfiguration());
+
+        // Apply all configurations - Civil Defense
+        modelBuilder.ApplyConfiguration(new StaffPresenceConfiguration());
+        modelBuilder.ApplyConfiguration(new TemporaryLeaveConfiguration());
 
         // Global query filters for soft delete (standardized on IsDeleted pattern)
         modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);

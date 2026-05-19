@@ -128,7 +128,7 @@ public class UserConfiguration : AuditableEntityConfiguration<User>
         builder.Property(u => u.Role)
             .IsRequired()
             .HasConversion<string>()
-            .HasMaxLength(20);
+            .HasMaxLength(50);
 
         builder.Property(u => u.Status)
             .IsRequired()

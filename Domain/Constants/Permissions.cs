@@ -443,6 +443,20 @@ public static class Permissions
     }
 
     /// <summary>
+    /// Civil Defense module permissions
+    /// </summary>
+    public static class CivilDefense
+    {
+        public const string ViewPresence     = "CivilDefense.ViewPresence";
+        public const string CheckInStaff    = "CivilDefense.CheckInStaff";
+        public const string CheckOutStaff   = "CivilDefense.CheckOutStaff";
+        public const string RegisterVisitor = "CivilDefense.RegisterVisitor";
+        public const string CheckOutVisitor = "CivilDefense.CheckOutVisitor";
+        public const string ViewReports     = "CivilDefense.ViewReports";
+        public const string ExportReports   = "CivilDefense.ExportReports";
+    }
+
+    /// <summary>
     /// Gets all permissions as a flat list
     /// </summary>
     /// <returns>List of all permission strings</returns>

@@ -208,6 +208,7 @@ public class CreateCameraCommandHandler : IRequestHandler<CreateCameraCommand, C
             CpuFallbackEnabled = configDto.CpuFallbackEnabled,
             HardwareAcceleration = configDto.HardwareAcceleration,
             HealthCheckIntervalSeconds = configDto.HealthCheckIntervalSeconds > 0 ? configDto.HealthCheckIntervalSeconds : CameraConfiguration.Default.HealthCheckIntervalSeconds,
+            IsCivilDefenseCamera = configDto.IsCivilDefenseCamera,
             ExtendedConfiguration = configDto.ExtendedConfiguration
         };
     }

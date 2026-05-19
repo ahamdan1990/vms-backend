@@ -32,6 +32,7 @@ public static class RolePermissionSeeder
             Console.WriteLine("   Applying additive sync for new system permissions only.");
             await EnsureBuiltInRoleCompanyPermissionsAsync(context);
             await EnsureNewSystemPermissionsAsync(context);
+            await EnsureCivilDefenseRolePermissionsAsync(context);
             return;
         }
 
@@ -42,6 +43,8 @@ public static class RolePermissionSeeder
         var staffRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Staff");
         var receptionistRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Receptionist");
         var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Administrator");
+        var cdReceptionistRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "CivilDefense_Receptionist");
+        var cdManagerRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "CivilDefense_Manager");
 
         if (staffRole == null || receptionistRole == null || adminRole == null)
         {
@@ -293,6 +296,70 @@ public static class RolePermissionSeeder
                     GrantedAt = DateTime.UtcNow,
                     GrantedBy = null // System seeded, no specific user
                 });
+            }
+        }
+
+        // Civil Defense Receptionist permissions
+        var cdReceptionistPermissions = new[]
+        {
+            Permissions.CivilDefense.ViewPresence,
+            Permissions.CivilDefense.CheckInStaff,
+            Permissions.CivilDefense.CheckOutStaff,
+            Permissions.CivilDefense.RegisterVisitor,
+            Permissions.CivilDefense.CheckOutVisitor,
+            Permissions.Profile.ViewOwn,
+            Permissions.Profile.UpdateOwn,
+            Permissions.Profile.ChangePassword,
+            Permissions.Notification.ReadOwn,
+            Permissions.Notification.Receive,
+            Permissions.Notification.Acknowledge
+        };
+
+        // Civil Defense Manager permissions
+        var cdManagerPermissions = new[]
+        {
+            Permissions.CivilDefense.ViewPresence,
+            Permissions.CivilDefense.ViewReports,
+            Permissions.CivilDefense.ExportReports,
+            Permissions.Profile.ViewOwn,
+            Permissions.Profile.UpdateOwn,
+            Permissions.Profile.ChangePassword,
+            Permissions.Notification.ReadOwn,
+            Permissions.Notification.Receive,
+            Permissions.Notification.Acknowledge
+        };
+
+        if (cdReceptionistRole != null)
+        {
+            foreach (var permissionName in cdReceptionistPermissions)
+            {
+                if (allPermissions.TryGetValue(permissionName, out var permissionId))
+                {
+                    rolePermissions.Add(new RolePermission
+                    {
+                        RoleId = cdReceptionistRole.Id,
+                        PermissionId = permissionId,
+                        GrantedAt = DateTime.UtcNow,
+                        GrantedBy = null
+                    });
+                }
+            }
+        }
+
+        if (cdManagerRole != null)
+        {
+            foreach (var permissionName in cdManagerPermissions)
+            {
+                if (allPermissions.TryGetValue(permissionName, out var permissionId))
+                {
+                    rolePermissions.Add(new RolePermission
+                    {
+                        RoleId = cdManagerRole.Id,
+                        PermissionId = permissionId,
+                        GrantedAt = DateTime.UtcNow,
+                        GrantedBy = null
+                    });
+                }
             }
         }
 
@@ -576,5 +643,97 @@ public static class RolePermissionSeeder
         await context.RolePermissions.AddRangeAsync(toAdd);
         await context.SaveChangesAsync();
         Console.WriteLine($"Patched {toAdd.Count} new system permissions across roles.");
+    }
+
+    /// <summary>
+    /// Additively ensures Civil Defense roles have their required permissions.
+    /// Safe to run on every startup — skips already-assigned permissions.
+    /// </summary>
+    public static async Task EnsureCivilDefenseRolePermissionsAsync(ApplicationDbContext context)
+    {
+        var cdRoleMappings = new Dictionary<string, string[]>
+        {
+            ["CivilDefense_Receptionist"] = new[]
+            {
+                Permissions.CivilDefense.ViewPresence,
+                Permissions.CivilDefense.CheckInStaff,
+                Permissions.CivilDefense.CheckOutStaff,
+                Permissions.CivilDefense.RegisterVisitor,
+                Permissions.CivilDefense.CheckOutVisitor,
+                Permissions.VisitPurpose.Read,
+                Permissions.Profile.ViewOwn,
+                Permissions.Profile.UpdateOwn,
+                Permissions.Profile.ChangePassword,
+                Permissions.Notification.ReadOwn,
+                Permissions.Notification.Receive,
+                Permissions.Notification.Acknowledge
+            },
+            ["CivilDefense_Manager"] = new[]
+            {
+                Permissions.CivilDefense.ViewPresence,
+                Permissions.CivilDefense.ViewReports,
+                Permissions.CivilDefense.ExportReports,
+                Permissions.Profile.ViewOwn,
+                Permissions.Profile.UpdateOwn,
+                Permissions.Profile.ChangePassword,
+                Permissions.Notification.ReadOwn,
+                Permissions.Notification.Receive,
+                Permissions.Notification.Acknowledge
+            }
+        };
+
+        var roleNames = cdRoleMappings.Keys.ToArray();
+        var roles = await context.Roles
+            .Where(r => roleNames.Contains(r.Name))
+            .ToDictionaryAsync(r => r.Name!, r => r.Id);
+
+        if (!roles.Any())
+        {
+            Console.WriteLine("Civil Defense roles not found — skipping CD permission sync.");
+            return;
+        }
+
+        var allPermissionNames = cdRoleMappings.Values.SelectMany(p => p).Distinct().ToList();
+        var permissionLookup = await context.Permissions
+            .Where(p => allPermissionNames.Contains(p.Name))
+            .ToDictionaryAsync(p => p.Name, p => p.Id);
+
+        var toAdd = new List<RolePermission>();
+
+        foreach (var (roleName, permNames) in cdRoleMappings)
+        {
+            if (!roles.TryGetValue(roleName, out var roleId)) continue;
+
+            var permIds = permNames
+                .Where(n => permissionLookup.ContainsKey(n))
+                .Select(n => permissionLookup[n])
+                .ToList();
+
+            var existing = (await context.RolePermissions
+                .Where(rp => rp.RoleId == roleId && permIds.Contains(rp.PermissionId))
+                .Select(rp => rp.PermissionId)
+                .ToListAsync())
+                .ToHashSet();
+
+            toAdd.AddRange(permNames
+                .Where(n => permissionLookup.TryGetValue(n, out var pid) && !existing.Contains(pid))
+                .Select(n => new RolePermission
+                {
+                    RoleId = roleId,
+                    PermissionId = permissionLookup[n],
+                    GrantedAt = DateTime.UtcNow,
+                    GrantedBy = null
+                }));
+        }
+
+        if (!toAdd.Any())
+        {
+            Console.WriteLine("Civil Defense permission sync complete. No additions required.");
+            return;
+        }
+
+        await context.RolePermissions.AddRangeAsync(toAdd);
+        await context.SaveChangesAsync();
+        Console.WriteLine($"Assigned {toAdd.Count} permissions to Civil Defense roles.");
     }
 }

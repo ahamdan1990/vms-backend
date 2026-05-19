@@ -142,6 +142,14 @@ public class InvitationConfiguration : IEntityTypeConfiguration<Invitation>
             .HasForeignKey(e => e.InvitationId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // Civil Defense fields
+        builder.Property(i => i.IsCivilian)
+            .IsRequired(false);
+
+        builder.Property(i => i.AffiliatedOrganization)
+            .HasMaxLength(200)
+            .IsRequired(false);
+
         // Configure soft delete
         builder.HasQueryFilter(i => !i.IsDeleted);
 

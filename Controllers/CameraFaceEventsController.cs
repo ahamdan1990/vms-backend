@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Application.DTOs.Cameras;
 using VisitorManagementSystem.Api.Application.Services.Cameras;
 using VisitorManagementSystem.Api.Application.Services.Common;
@@ -206,7 +207,17 @@ public class CameraFaceEventsController : BaseController
             .ToList();
 
         var activeVisit = allInvitations.FirstOrDefault(i => i.Status == InvitationStatus.Active);
-        var isInside = activeVisit != null;
+
+        var isTempAway = false;
+        if (activeVisit != null)
+        {
+            isTempAway = await _unitOfWork.Repository<TemporaryLeave>()
+                .GetQueryable()
+                .AsNoTracking()
+                .AnyAsync(tl => tl.InvitationId == activeVisit.Id && tl.IsActive, ct);
+        }
+
+        var isInside = activeVisit != null && !isTempAway;
 
         return new PersonContextDto
         {
@@ -224,6 +235,7 @@ public class CameraFaceEventsController : BaseController
             BlacklistReason = visitor.BlacklistReason,
             HasFaceEnrollment = hasFaceTemplate,
             IsInsideBuilding = isInside,
+            IsTempAway = isTempAway,
             ActiveVisit = activeVisit != null ? MapInvitationSummary(activeVisit) : null,
             TodaysInvitations = todayInvitations
         };

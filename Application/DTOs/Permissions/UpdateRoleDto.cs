@@ -41,4 +41,10 @@ public class UpdateRoleDto
     /// Whether the role is active
     /// </summary>
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Frontend route to redirect to after login. Null defaults to /dashboard.
+    /// </summary>
+    [StringLength(200, ErrorMessage = "Dashboard route cannot exceed 200 characters")]
+    public string? DashboardRoute { get; set; }
 }

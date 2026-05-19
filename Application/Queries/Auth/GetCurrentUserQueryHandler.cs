@@ -35,7 +35,7 @@ namespace VisitorManagementSystem.Api.Application.Queries.Auth
             {
                 _logger.LogDebug("Processing get current user query for UserId: {UserId}", request.UserId);
 
-                var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, cancellationToken);
+                var user = await _unitOfWork.Users.GetByIdAsync(request.UserId, u => u.RoleEntity!);
                 if (user == null)
                 {
                     _logger.LogWarning("User not found: {UserId}", request.UserId);
@@ -58,7 +58,8 @@ namespace VisitorManagementSystem.Api.Application.Queries.Auth
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     FullName = user.FullName,
-                    Role = user.Role.ToString(),
+                    Role = user.RoleEntity?.Name ?? user.Role.ToString(),
+                    DashboardRoute = user.RoleEntity?.DashboardRoute,
                     Status = user.Status.ToString(),
                     Department = user.Department,
                     JobTitle = user.JobTitle,

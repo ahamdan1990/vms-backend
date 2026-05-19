@@ -23,6 +23,16 @@ public static class UserRoles
     public const string Administrator = "Administrator";
 
     /// <summary>
+    /// Civil Defense receptionist role name
+    /// </summary>
+    public const string CivilDefense_Receptionist = "CivilDefense_Receptionist";
+
+    /// <summary>
+    /// Civil Defense manager role name
+    /// </summary>
+    public const string CivilDefense_Manager = "CivilDefense_Manager";
+
+    /// <summary>
     /// Super administrator role (system level)
     /// </summary>
     public const string SuperAdministrator = "SuperAdministrator";
@@ -48,6 +58,8 @@ public static class UserRoles
             Staff,
             Receptionist,
             Administrator,
+            CivilDefense_Receptionist,
+            CivilDefense_Manager,
             SuperAdministrator,
             System,
             Guest
@@ -64,7 +76,9 @@ public static class UserRoles
         {
             Staff,
             Receptionist,
-            Administrator
+            Administrator,
+            CivilDefense_Receptionist,
+            CivilDefense_Manager
         };
     }
 
@@ -81,8 +95,10 @@ public static class UserRoles
             Staff => 1,
             Receptionist => 2,
             Administrator => 3,
-            SuperAdministrator => 4,
-            System => 5,
+            CivilDefense_Receptionist => 4,
+            CivilDefense_Manager => 5,
+            SuperAdministrator => 6,
+            System => 7,
             _ => 0
         };
     }
@@ -114,9 +130,10 @@ public static class UserRoles
         if (managerRole == SuperAdministrator)
             return targetRole != System;
 
-        // Administrators can manage staff and receptionists
+        // Administrators can manage staff, receptionists, and civil defense roles
         if (managerRole == Administrator)
-            return targetRole == Staff || targetRole == Receptionist || targetRole == Guest;
+            return targetRole == Staff || targetRole == Receptionist || targetRole == Guest
+                || targetRole == CivilDefense_Receptionist || targetRole == CivilDefense_Manager;
 
         // Other roles cannot manage roles
         return false;
@@ -134,6 +151,8 @@ public static class UserRoles
             Staff => GetStaffPermissions(),
             Receptionist => GetReceptionistPermissions(),
             Administrator => GetAdministratorPermissions(),
+            CivilDefense_Receptionist => new List<string>(), // assigned via admin UI
+            CivilDefense_Manager => new List<string>(),      // assigned via admin UI
             SuperAdministrator => GetSuperAdministratorPermissions(),
             System => GetSystemPermissions(),
             Guest => GetGuestPermissions(),
@@ -473,15 +492,17 @@ public static class UserRoles
             UserRole.Staff => Staff,
             UserRole.Receptionist => Receptionist,
             UserRole.Administrator => Administrator,
+            UserRole.CivilDefense_Receptionist => CivilDefense_Receptionist,
+            UserRole.CivilDefense_Manager => CivilDefense_Manager,
             _ => Guest
         };
     }
 
     /// <summary>
-    /// Converts role string to UserRole enum
+    /// Converts role string to UserRole enum. Returns Unknown for DB-only dynamic roles.
     /// </summary>
     /// <param name="roleName">Role name string</param>
-    /// <returns>UserRole enum value</returns>
+    /// <returns>UserRole enum value, or Unknown for dynamic roles</returns>
     public static UserRole GetUserRole(string roleName)
     {
         return roleName switch
@@ -489,7 +510,9 @@ public static class UserRoles
             Staff => UserRole.Staff,
             Receptionist => UserRole.Receptionist,
             Administrator => UserRole.Administrator,
-            _ => throw new ArgumentException($"Invalid role name: {roleName}")
+            CivilDefense_Receptionist => UserRole.CivilDefense_Receptionist,
+            CivilDefense_Manager => UserRole.CivilDefense_Manager,
+            _ => UserRole.Unknown
         };
     }
 
@@ -505,6 +528,8 @@ public static class UserRoles
             Staff => "Staff members who can create and manage their own invitations",
             Receptionist => "Receptionists who handle check-in/check-out operations, walk-ins, and visitor flow management",
             Administrator => "Administrators with full system access and user management capabilities",
+            CivilDefense_Receptionist => "Civil Defense receptionists handling specialized visitor check-in and security operations",
+            CivilDefense_Manager => "Civil Defense managers with oversight, reporting, and staff management capabilities",
             SuperAdministrator => "Super administrators with complete system control",
             System => "System role for internal operations and automated processes",
             Guest => "Guest users with very limited access",

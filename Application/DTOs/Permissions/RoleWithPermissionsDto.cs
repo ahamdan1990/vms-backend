@@ -51,6 +51,11 @@ public class RoleWithPermissionsDto
     public string? Icon { get; set; }
 
     /// <summary>
+    /// Dashboard route this role lands on after login
+    /// </summary>
+    public string? DashboardRoute { get; set; }
+
+    /// <summary>
     /// List of permissions assigned to this role
     /// </summary>
     public List<PermissionDto> Permissions { get; set; } = new();

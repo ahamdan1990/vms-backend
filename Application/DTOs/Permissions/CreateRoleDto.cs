@@ -51,6 +51,12 @@ public class CreateRoleDto
     public string? Icon { get; set; }
 
     /// <summary>
+    /// Frontend route to redirect to after login (e.g. "/civil-defense/manager"). Null defaults to /dashboard.
+    /// </summary>
+    [StringLength(200, ErrorMessage = "Dashboard route cannot exceed 200 characters")]
+    public string? DashboardRoute { get; set; }
+
+    /// <summary>
     /// Permission IDs to assign to this role
     /// </summary>
     public List<int> PermissionIds { get; set; } = new();

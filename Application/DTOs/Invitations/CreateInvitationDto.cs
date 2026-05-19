@@ -118,6 +118,12 @@ public class CreateInvitationDto : IValidatableObject
     /// </summary>
     public int? FaceEventId { get; set; }
 
+    // Civil Defense fields
+    public bool? IsCivilian { get; set; }
+
+    [MaxLength(200)]
+    public string? AffiliatedOrganization { get; set; }
+
     /// <summary>
     /// Custom validation logic
     /// </summary>

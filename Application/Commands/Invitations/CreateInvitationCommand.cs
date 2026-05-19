@@ -119,4 +119,10 @@ public class CreateInvitationCommand : IRequest<InvitationDto>
     /// User creating the invitation
     /// </summary>
     public int CreatedBy { get; set; }
+
+    // Civil Defense fields
+    public bool? IsCivilian { get; set; }
+
+    [MaxLength(200)]
+    public string? AffiliatedOrganization { get; set; }
 }

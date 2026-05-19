@@ -8,6 +8,7 @@ using VisitorManagementSystem.Api.Application.DTOs.Common;
 using VisitorManagementSystem.Api.Application.Queries.Auth;
 using VisitorManagementSystem.Api.Application.Services.Auth;
 using VisitorManagementSystem.Api.Domain.Entities;
+using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Infrastructure.Utilities;
 
 namespace VisitorManagementSystem.Api.Controllers;
@@ -460,7 +461,7 @@ public class AuthController : BaseController
     /// POST /api/Auth/signup
     /// </summary>
     [HttpPost("signup")]
-    [AllowAnonymous]
+    [Authorize(Policy = Permissions.User.Create)]
     public async Task<IActionResult> Signup([FromBody] SignupCommand command, CancellationToken cancellationToken = default)
     {
         try

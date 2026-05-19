@@ -36,6 +36,11 @@ public class CurrentUserDto
     public string Role { get; set; } = string.Empty;
 
     /// <summary>
+    /// Frontend route to redirect to after login. Null falls back to /dashboard.
+    /// </summary>
+    public string? DashboardRoute { get; set; }
+
+    /// <summary>
     /// User status
     /// </summary>
     public string Status { get; set; } = string.Empty;

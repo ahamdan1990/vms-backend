@@ -242,7 +242,7 @@ public class ImportUsersCommandHandler : IRequestHandler<ImportUsersCommand, Imp
             FirstName = row.FirstName!.Trim(),
             LastName  = row.LastName!.Trim(),
             Email     = row.Email!.Trim().ToLowerInvariant(),
-            Role      = role,
+            RoleName  = role.ToString(),
 
             PhoneNumber     = row.PhoneNumber?.Trim(),
             PhoneCountryCode = row.PhoneCountryCode?.Trim(),

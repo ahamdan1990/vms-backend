@@ -27,6 +27,8 @@ public class PersonContextDto
     /// true = currently inside, false = not inside
     /// </summary>
     public bool? IsInsideBuilding { get; set; }
+    /// <summary>true when person has an active TemporaryLeave record (went out temporarily)</summary>
+    public bool IsTempAway { get; set; }
     public InvitationSummaryDto? ActiveVisit { get; set; }
     public List<InvitationSummaryDto> TodaysInvitations { get; set; } = new();
 }

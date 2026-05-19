@@ -108,16 +108,16 @@ public class UserMappingProfile : Profile
     {
         // CreateUserDto -> CreateUserCommand
         CreateMap<CreateUserDto, CreateUserCommand>()
-            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => Enum.Parse<UserRole>(src.Role)))
-            .ForMember(dest => dest.TemporaryPassword, opt => opt.Ignore()) // Not used from DTO
-            .ForMember(dest => dest.CreatedBy, opt => opt.Ignore()); // Set manually
+            .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role))
+            .ForMember(dest => dest.TemporaryPassword, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedBy, opt => opt.Ignore());
 
-        // UpdateUserDto -> UpdateUserCommand  
+        // UpdateUserDto -> UpdateUserCommand
         CreateMap<UpdateUserDto, UpdateUserCommand>()
-            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => Enum.Parse<UserRole>(src.Role)))
+            .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Enum.Parse<UserStatus>(src.Status)))
-            .ForMember(dest => dest.Id, opt => opt.Ignore()) // Set from route
-            .ForMember(dest => dest.ModifiedBy, opt => opt.Ignore()); // Set manually
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.ModifiedBy, opt => opt.Ignore());
 
         // UpdateUserProfileDto -> UpdateUserProfileCommand
         CreateMap<UpdateUserProfileDto, UpdateUserProfileCommand>()

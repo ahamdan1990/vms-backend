@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
+using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
 
@@ -32,7 +33,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 _logger.LogDebug("Processing update user command for user: {UserId}", request.Id);
 
                 // Get existing user
-                var user = await _unitOfWork.Users.GetByIdAsync(request.Id, cancellationToken);
+                var user = await _unitOfWork.Users.GetByIdAsync(request.Id, u => u.RoleEntity!);
                 if (user == null)
                 {
                     _logger.LogWarning("Attempt to update non-existent user: {UserId}", request.Id);
@@ -40,7 +41,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 }
 
                 var originalEmail = user.Email.Value;
-                var originalRole = user.Role;
+                var originalRole = user.RoleEntity?.Name ?? user.Role.ToString();
 
                 // Validate email uniqueness if email is being changed
                 if (!user.Email.Value.Equals(request.Email, StringComparison.OrdinalIgnoreCase))
@@ -70,27 +71,20 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 user.Email = new Email(request.Email.Trim().ToLowerInvariant());
                 user.NormalizedEmail = request.Email.Trim().ToUpperInvariant();
 
-                // CRITICAL: Update BOTH Role (deprecated) AND RoleId (active) to prevent mismatch
-                var roleChanged = user.Role != request.Role;
-                user.Role = request.Role;
-
-                // Synchronize RoleId with Role string to ensure permission system works correctly
-                if (roleChanged)
+                // Resolve role by name — works for both enum-backed and fully-dynamic roles
+                var role = await _unitOfWork.Roles.GetByNameAsync(request.RoleName, cancellationToken);
+                if (role == null)
                 {
-                    var roleName = request.Role.ToString();
-                    var role = await _unitOfWork.Roles.GetByNameAsync(roleName, cancellationToken);
-                    if (role != null)
-                    {
-                        user.RoleId = role.Id;
-                        _logger.LogInformation("Updated RoleId to {RoleId} ({RoleName}) for user {UserId} due to role change",
-                            role.Id, roleName, user.Id);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Role '{RoleName}' not found in database for user {UserId}. RoleId not updated.",
-                            roleName, user.Id);
-                    }
+                    _logger.LogWarning("Role '{RoleName}' not found in database for user {UserId}.", request.RoleName, user.Id);
+                    throw new InvalidOperationException($"Role '{request.RoleName}' does not exist.");
                 }
+
+                // Map to legacy enum for backward compatibility; Unknown for fully-dynamic roles
+                Enum.TryParse<UserRole>(request.RoleName, out var legacyRole);
+                user.Role = legacyRole;
+                user.RoleId = role.Id;
+                _logger.LogInformation("Updated Role={RoleName}, RoleId={RoleId} for user {UserId}",
+                    role.Name, role.Id, user.Id);
 
                 user.Status = request.Status;
                 user.Department = request.Department?.Trim();
@@ -141,11 +135,11 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                     theme: request.Theme);
 
                 // Update security stamp if requested or if role changed
-                if (request.UpdateSecurityStamp || originalRole != request.Role)
+                if (request.UpdateSecurityStamp || originalRole != request.RoleName)
                 {
                     user.UpdateSecurityStamp();
                     _logger.LogInformation("Security stamp updated for user: {UserId} due to {Reason}",
-                        request.Id, originalRole != request.Role ? "role change" : "manual request");
+                        request.Id, originalRole != request.RoleName ? "role change" : "manual request");
                 }
 
                 // Set audit information
@@ -156,7 +150,7 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
 
                 _logger.LogInformation("User updated successfully: {UserId} by {ModifiedBy}. Email: {OriginalEmail} -> {NewEmail}, Role: {OriginalRole} -> {NewRole}",
-                    user.Id, request.ModifiedBy, originalEmail, user.Email.Value, originalRole, user.Role);
+                    user.Id, request.ModifiedBy, originalEmail, user.Email.Value, originalRole, request.RoleName);
 
                 // Map to DTO
                 var userDto = _mapper.Map<UserDto>(user);

@@ -8,6 +8,13 @@ namespace VisitorManagementSystem.Api.Domain.Enums;
 public enum UserRole
 {
     /// <summary>
+    /// Catch-all for dynamically-created roles that have no enum counterpart.
+    /// These roles are fully managed via the Role entity in the database.
+    /// </summary>
+    [Description("Unknown")]
+    Unknown = 0,
+
+    /// <summary>
     /// Staff member (Host) who can create and manage their own invitations
     /// </summary>
     [Description("Staff")]
@@ -23,7 +30,19 @@ public enum UserRole
     /// Administrator with full system access
     /// </summary>
     [Description("Administrator")]
-    Administrator = 3
+    Administrator = 3,
+
+    /// <summary>
+    /// Civil Defense receptionist with specialized check-in operations
+    /// </summary>
+    [Description("CivilDefense_Receptionist")]
+    CivilDefense_Receptionist = 4,
+
+    /// <summary>
+    /// Civil Defense manager with oversight and reporting capabilities
+    /// </summary>
+    [Description("CivilDefense_Manager")]
+    CivilDefense_Manager = 5
 }
 
 /// <summary>
@@ -56,6 +75,8 @@ public static class UserRoleExtensions
             UserRole.Staff => 1,
             UserRole.Receptionist => 2,
             UserRole.Administrator => 3,
+            UserRole.CivilDefense_Receptionist => 4,
+            UserRole.CivilDefense_Manager => 5,
             _ => 0
         };
     }
@@ -296,6 +317,8 @@ public static class UserRoleExtensions
             UserRole.Staff => 1,
             UserRole.Receptionist => 2,
             UserRole.Administrator => 3,
+            UserRole.CivilDefense_Receptionist => 4,
+            UserRole.CivilDefense_Manager => 5,
             _ => 0
         };
     }

@@ -180,6 +180,18 @@ public class Invitation : SoftDeleteEntity
     /// </summary>
     public int? TimeSlotId { get; set; }
 
+    // Civil Defense fields
+    /// <summary>
+    /// Whether the visitor is a civilian (Civil Defense context)
+    /// </summary>
+    public bool? IsCivilian { get; set; }
+
+    /// <summary>
+    /// Organization the visitor is affiliated with (Civil Defense context)
+    /// </summary>
+    [MaxLength(200)]
+    public string? AffiliatedOrganization { get; set; }
+
     // Navigation Properties
     /// <summary>
     /// Navigation property for the visitor

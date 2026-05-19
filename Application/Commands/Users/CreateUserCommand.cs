@@ -1,6 +1,5 @@
 ﻿// Application/Commands/Users/CreateUserCommand.cs
 using MediatR;
-using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Users;
@@ -16,7 +15,7 @@ public class CreateUserCommand : IRequest<UserDto>
     public string? PhoneCountryCode { get; set; }
     public string? PhoneType { get; set; } = "Mobile";
 
-    public UserRole Role { get; set; }
+    public string RoleName { get; set; } = string.Empty;
     public string? Department { get; set; }
     public string? JobTitle { get; set; }
     public string? EmployeeId { get; set; }

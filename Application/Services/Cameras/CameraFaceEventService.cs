@@ -93,7 +93,7 @@ public class CameraFaceEventService : ICameraFaceEventService
                 continue;
             }
 
-            var payload = CreatePayload(recognitionResult, face, eventDto);
+            var payload = CreatePayload(recognitionResult, face, eventDto, config.IsCivilDefenseCamera);
             var alert = CreateAlert(payload, recognitionResult, face, processedByUserId);
 
             // Persist durable face event with snapshot before saving alert (gets Id after save).
@@ -274,7 +274,8 @@ public class CameraFaceEventService : ICameraFaceEventService
     private static CameraFaceEventPayload CreatePayload(
         CameraFrameRecognitionResultDto result,
         CameraFrameFaceResultDto face,
-        CameraFrameFaceEventDto eventDto)
+        CameraFrameFaceEventDto eventDto,
+        bool isCivilDefenseCamera = false)
     {
         return new CameraFaceEventPayload
         {
@@ -295,6 +296,7 @@ public class CameraFaceEventService : ICameraFaceEventService
             CameraType = result.CameraType.ToString(),
             CameraRole = result.CameraRole.ToString(),
             WorkflowMode = result.WorkflowMode.ToString(),
+            IsCivilDefenseCamera = isCivilDefenseCamera,
             CapturedAt = result.CapturedAt,
             ProcessedAt = result.ProcessedAt,
             EngineUsed = result.EngineUsed,
@@ -763,6 +765,7 @@ public class CameraFaceEventService : ICameraFaceEventService
         public string CameraType { get; set; } = string.Empty;
         public string CameraRole { get; set; } = string.Empty;
         public string WorkflowMode { get; set; } = string.Empty;
+        public bool IsCivilDefenseCamera { get; set; }
         public DateTime CapturedAt { get; set; }
         public DateTime ProcessedAt { get; set; }
         public string EngineUsed { get; set; } = string.Empty;

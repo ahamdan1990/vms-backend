@@ -57,6 +57,14 @@ public class Role
     public int DisplayOrder { get; set; }
 
     /// <summary>
+    /// Frontend route path users of this role are redirected to after login.
+    /// Null falls back to "/dashboard". Set by admin via Role Management UI.
+    /// Example: "/civil-defense/manager"
+    /// </summary>
+    [MaxLength(200)]
+    public string? DashboardRoute { get; set; }
+
+    /// <summary>
     /// Color code for UI badges (hex format, e.g., "#3B82F6")
     /// </summary>
     [MaxLength(20)]

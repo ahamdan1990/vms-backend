@@ -84,7 +84,7 @@ public class VisitorFilterSpecification : BaseSpecification<Visitor>
             criteria = CombineWithAnd(criteria, v => v.IsActive == isActive.Value);
         }
 
-        // Search term (name, email, company)
+        // Search term (name, email, company, phone)
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             var term = searchTerm.ToLower().Trim();
@@ -92,7 +92,8 @@ public class VisitorFilterSpecification : BaseSpecification<Visitor>
                 v.FirstName.ToLower().Contains(term) ||
                 v.LastName.ToLower().Contains(term) ||
                 v.Email.Value.ToLower().Contains(term) ||
-                (v.Company != null && v.Company.ToLower().Contains(term)));
+                (v.Company != null && v.Company.ToLower().Contains(term)) ||
+                (v.PhoneNumber != null && v.PhoneNumber.Value.Contains(term)));
         }
 
         // Company filter

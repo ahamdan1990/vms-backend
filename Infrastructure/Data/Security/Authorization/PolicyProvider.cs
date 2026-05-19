@@ -186,7 +186,12 @@ public class PolicyProvider : IAuthorizationPolicyProvider
             switch (policyName)
             {
                 case "Composite.AdminOrReceptionist":
-                    policyBuilder.AddRequirements(new MultipleRolesRequirement(new[] { UserRole.Administrator, UserRole.Receptionist }));
+                    policyBuilder.AddRequirements(new MultipleRolesRequirement(new[] {
+                        UserRole.Administrator,
+                        UserRole.Receptionist,
+                        UserRole.CivilDefense_Receptionist,
+                        UserRole.CivilDefense_Manager
+                    }));
                     break;
 
                 case "Composite.InvitationManager":

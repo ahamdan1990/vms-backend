@@ -61,6 +61,11 @@ public class RoleDto
     public DateTime CreatedAt { get; set; }
 
     /// <summary>
+    /// Frontend route to redirect to after login. Null falls back to /dashboard.
+    /// </summary>
+    public string? DashboardRoute { get; set; }
+
+    /// <summary>
     /// Number of permissions assigned to this role
     /// </summary>
     public int PermissionCount { get; set; }

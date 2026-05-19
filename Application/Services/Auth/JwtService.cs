@@ -997,7 +997,7 @@ public class JwtService : IJwtService
 
         new(ClaimTypes.Email, user.Email.Value),
 
-        new(ClaimTypes.Role, user.Role.ToString()),
+        new(ClaimTypes.Role, user.RoleEntity?.Name ?? user.Role.ToString()),
 
         new("status", user.Status.ToString()),
 

@@ -275,11 +275,11 @@ public class LdapSettingsController : BaseController
                 LastName = ldapUser.LastName ?? string.Empty,
                 Email = ldapUser.Email ?? string.Empty,
                 PhoneNumber = ldapUser.Phone,
-                Role = request.Role,
+                RoleName = request.Role.ToString(),
                 Department = ldapUser.Department,
                 JobTitle = ldapUser.JobTitle,
-                MustChangePassword = false, // LDAP users don't need to change password
-                SendWelcomeEmail = false, // Don't send welcome email for LDAP users
+                MustChangePassword = false,
+                SendWelcomeEmail = false,
                 CreatedBy = currentUserId.Value
             };
 
@@ -371,7 +371,7 @@ public class LdapSettingsController : BaseController
                         LastName = ldapUser.LastName ?? string.Empty,
                         Email = ldapUser.Email ?? string.Empty,
                         PhoneNumber = ldapUser.Phone,
-                        Role = request.Role,
+                        RoleName = request.Role.ToString(),
                         Department = ldapUser.Department,
                         JobTitle = ldapUser.JobTitle,
                         MustChangePassword = false,
@@ -486,7 +486,7 @@ public class LdapSettingsController : BaseController
                         LastName = ldapUser.LastName ?? string.Empty,
                         Email = ldapUser.Email ?? string.Empty,
                         PhoneNumber = ldapUser.Phone,
-                        Role = userItem.Role,
+                        RoleName = userItem.Role.ToString(),
                         Department = ldapUser.Department,
                         JobTitle = ldapUser.JobTitle,
                         MustChangePassword = false,

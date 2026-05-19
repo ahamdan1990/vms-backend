@@ -29,8 +29,11 @@ public class OperatorHub : BaseHub
             return;
         }
 
-        // Check operator permissions
-        if (!HasPermission(Permissions.CheckIn.Process))
+        // Check operator permissions — CD roles are allowed even without CheckIn.Process
+        var role = GetCurrentUserRole() ?? string.Empty;
+        var isCdRole = role.Equals(UserRoles.CivilDefense_Receptionist, StringComparison.OrdinalIgnoreCase)
+                    || role.Equals(UserRoles.CivilDefense_Manager, StringComparison.OrdinalIgnoreCase);
+        if (!HasPermission(Permissions.CheckIn.Process) && !isCdRole)
         {
             await Clients.Caller.SendAsync("Error", "Insufficient permissions");
             return;

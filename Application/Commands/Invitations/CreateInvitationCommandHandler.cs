@@ -209,7 +209,9 @@ public class CreateInvitationCommandHandler : IRequestHandler<CreateInvitationCo
                 RequiresBadge = request.RequiresBadge,
                 NeedsParking = request.NeedsParking,
                 ParkingInstructions = request.ParkingInstructions?.Trim(),
-                Status = effectiveRequiresApproval ? InvitationStatus.Submitted : InvitationStatus.Approved
+                Status = effectiveRequiresApproval ? InvitationStatus.Submitted : InvitationStatus.Approved,
+                IsCivilian = request.IsCivilian,
+                AffiliatedOrganization = request.AffiliatedOrganization?.Trim()
             };
 
             // Generate QR code only for auto-approved invitations.

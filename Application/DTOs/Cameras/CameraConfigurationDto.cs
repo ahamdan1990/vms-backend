@@ -58,6 +58,11 @@ public class CameraConfigurationDto
     public CameraWorkflowMode WorkflowMode { get; set; } = CameraWorkflowMode.Manual;
 
     /// <summary>
+    /// When true, this camera feeds the Civil Defense entry/exit recognition panel.
+    /// </summary>
+    public bool IsCivilDefenseCamera { get; set; } = false;
+
+    /// <summary>
     /// Whether the camera should automatically start streaming on system startup
     /// </summary>
     public bool AutoStart { get; set; }

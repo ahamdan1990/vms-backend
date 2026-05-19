@@ -220,4 +220,8 @@ public class InvitationDto
     /// Whether invitation is expired
     /// </summary>
     public bool IsExpired { get; set; }
+
+    // Civil Defense fields
+    public bool? IsCivilian { get; set; }
+    public string? AffiliatedOrganization { get; set; }
 }

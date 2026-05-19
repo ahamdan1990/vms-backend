@@ -218,6 +218,52 @@ public class FaceTemplateEnrollmentService : IFaceTemplateEnrollmentService
             : null;
     }
 
+    public async Task<FaceTemplateEnrollmentItemResultDto> EnrollVisitorPhotoAsync(
+        int visitorId,
+        byte[] imageBytes,
+        string originalFileName,
+        CancellationToken cancellationToken = default)
+    {
+        var visitor = await _unitOfWork.Visitors.GetByIdAsync(visitorId, cancellationToken);
+        if (visitor == null)
+            return new FaceTemplateEnrollmentItemResultDto
+            {
+                PersonType = "Visitor", PersonId = visitorId,
+                Success = false, Message = $"Visitor {visitorId} not found."
+            };
+
+        // Save image to disk
+        var webRoot = _environment.WebRootPath
+            ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
+        var uploadDir = Path.Combine(webRoot, "uploads", "visitors", visitorId.ToString());
+        Directory.CreateDirectory(uploadDir);
+
+        var ext = Path.GetExtension(originalFileName).ToLowerInvariant();
+        if (string.IsNullOrEmpty(ext) || ext is not (".jpg" or ".jpeg" or ".png" or ".webp"))
+            ext = ".jpg";
+
+        var fileName = $"visitor_{visitorId}_{Guid.NewGuid()}{ext}";
+        var filePath = Path.Combine(uploadDir, fileName);
+        var relativePath = $"uploads/visitors/{visitorId}/{fileName}";
+
+        await File.WriteAllBytesAsync(filePath, imageBytes, cancellationToken);
+
+        // Update Visitor.ProfilePhotoPath
+        visitor.ProfilePhotoPath = relativePath;
+        visitor.UpdateModifiedOn();
+        _unitOfWork.Visitors.Update(visitor);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Enroll face
+        return await EnrollIdentityAsync(
+            "Visitor",
+            visitorId,
+            $"visitor:{visitorId}",
+            relativePath,
+            force: true,
+            cancellationToken);
+    }
+
     private static void AddItem(
         FaceTemplateEnrollmentBatchResultDto result,
         FaceTemplateEnrollmentItemResultDto item)

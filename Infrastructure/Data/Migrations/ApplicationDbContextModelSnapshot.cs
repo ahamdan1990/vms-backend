@@ -1599,6 +1599,10 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AffiliatedOrganization")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<string>("ApprovalComments")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -1655,6 +1659,9 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         .HasColumnType("nvarchar(40)");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool?>("IsCivilian")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
@@ -2878,6 +2885,10 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
+                    b.Property<string>("DashboardRoute")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -2973,6 +2984,76 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         .HasDatabaseName("IX_RolePermissions_RoleId_PermissionId");
 
                     b.ToTable("RolePermissions", (string)null);
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.StaffPresence", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CheckedInAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CheckedInById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CheckedOutAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CheckedOutById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("LocationId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CheckedInAt")
+                        .HasDatabaseName("IX_StaffPresences_CheckedInAt");
+
+                    b.HasIndex("CheckedInById");
+
+                    b.HasIndex("CheckedOutById");
+
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_StaffPresences_Status");
+
+                    b.HasIndex("UserId", "Status")
+                        .HasDatabaseName("IX_StaffPresences_UserId_Status");
+
+                    b.ToTable("StaffPresences", (string)null);
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration", b =>
@@ -3096,6 +3177,74 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         .HasDatabaseName("IX_SystemConfigurations_Category_Key");
 
                     b.ToTable("SystemConfigurations", (string)null);
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.TemporaryLeave", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("InvitationId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LeftAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ModifiedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PersonType")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("RecordedById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ReturnedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ReturnedById")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int?>("StaffPresenceId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvitationId")
+                        .HasDatabaseName("IX_TemporaryLeaves_InvitationId");
+
+                    b.HasIndex("RecordedById");
+
+                    b.HasIndex("ReturnedById");
+
+                    b.HasIndex("StaffPresenceId")
+                        .HasDatabaseName("IX_TemporaryLeaves_StaffPresenceId");
+
+                    b.HasIndex("PersonType", "IsActive")
+                        .HasDatabaseName("IX_TemporaryLeaves_PersonType_IsActive");
+
+                    b.ToTable("TemporaryLeaves", (string)null);
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.TimeSlot", b =>
@@ -3498,8 +3647,8 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int?>("RoleId")
                         .HasColumnType("int");
@@ -5356,6 +5505,39 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.StaffPresence", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CheckedInByUser")
+                        .WithMany()
+                        .HasForeignKey("CheckedInById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CheckedOutByUser")
+                        .WithMany()
+                        .HasForeignKey("CheckedOutById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Location", "Location")
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CheckedInByUser");
+
+                    b.Navigation("CheckedOutByUser");
+
+                    b.Navigation("Location");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.SystemConfiguration", b =>
                 {
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CreatedByUser")
@@ -5371,6 +5553,38 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("ModifiedByUser");
+                });
+
+            modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.TemporaryLeave", b =>
+                {
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Invitation", "Invitation")
+                        .WithMany()
+                        .HasForeignKey("InvitationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "RecordedByUser")
+                        .WithMany()
+                        .HasForeignKey("RecordedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ReturnedByUser")
+                        .WithMany()
+                        .HasForeignKey("ReturnedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("VisitorManagementSystem.Api.Domain.Entities.StaffPresence", "StaffPresence")
+                        .WithMany()
+                        .HasForeignKey("StaffPresenceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Invitation");
+
+                    b.Navigation("RecordedByUser");
+
+                    b.Navigation("ReturnedByUser");
+
+                    b.Navigation("StaffPresence");
                 });
 
             modelBuilder.Entity("VisitorManagementSystem.Api.Domain.Entities.TimeSlot", b =>

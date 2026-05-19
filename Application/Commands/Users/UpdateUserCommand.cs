@@ -1,9 +1,5 @@
 ﻿using MediatR;
-using AutoMapper;
-using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
-using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
-using VisitorManagementSystem.Api.Domain.ValueObjects;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Users;
@@ -23,7 +19,7 @@ public class UpdateUserCommand : IRequest<UserDto>
     public string? PhoneCountryCode { get; set; }
     public string? PhoneType { get; set; }
     
-    public UserRole Role { get; set; }
+    public string RoleName { get; set; } = string.Empty;
     public UserStatus Status { get; set; }
     public string? Department { get; set; }
     public string? JobTitle { get; set; }

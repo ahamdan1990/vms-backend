@@ -47,6 +47,7 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, RoleD
                 role.Color = request.UpdateRoleDto.Color;
                 role.Icon = request.UpdateRoleDto.Icon;
                 role.DisplayOrder = request.UpdateRoleDto.DisplayOrder;
+                role.DashboardRoute = request.UpdateRoleDto.DashboardRoute;
             }
             else
             {

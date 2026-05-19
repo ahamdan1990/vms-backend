@@ -240,6 +240,7 @@ public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, C
             CpuFallbackEnabled = updates.CpuFallbackEnabled,
             HardwareAcceleration = updates.HardwareAcceleration,
             HealthCheckIntervalSeconds = updates.HealthCheckIntervalSeconds > 0 ? updates.HealthCheckIntervalSeconds : existing.HealthCheckIntervalSeconds,
+            IsCivilDefenseCamera = updates.IsCivilDefenseCamera,
             ExtendedConfiguration = updates.ExtendedConfiguration ?? existing.ExtendedConfiguration
         };
     }

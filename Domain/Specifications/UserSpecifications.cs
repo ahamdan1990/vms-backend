@@ -50,6 +50,7 @@ public class UserByEmailSpecification : BaseSpecification<User>
     {
         Criteria = u => u.Email.Value.ToLower() == email.ToLower() && !u.IsDeleted;
         AddInclude(u => u.RefreshTokens);
+        AddInclude(u => u.RoleEntity!);
     }
 }
 

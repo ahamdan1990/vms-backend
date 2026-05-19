@@ -69,12 +69,14 @@ public class RoleHandler : AuthorizationHandler<RoleRequirement>
 
     private static bool HasRequiredRoleOrHigher(UserRole userRole, UserRole requiredRole)
     {
-        // Define role hierarchy: Staff < Operator < Administrator
         var roleHierarchy = new Dictionary<UserRole, int>
         {
+            { UserRole.Unknown, 0 },
             { UserRole.Staff, 1 },
             { UserRole.Receptionist, 2 },
-            { UserRole.Administrator, 3 }
+            { UserRole.Administrator, 3 },
+            { UserRole.CivilDefense_Receptionist, 4 },
+            { UserRole.CivilDefense_Manager, 5 }
         };
 
         return roleHierarchy.GetValueOrDefault(userRole, 0) >= roleHierarchy.GetValueOrDefault(requiredRole, 0);

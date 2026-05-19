@@ -41,6 +41,10 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
         builder.Property(r => r.DisplayOrder)
             .HasDefaultValue(0);
 
+        builder.Property(r => r.DashboardRoute)
+            .HasMaxLength(200)
+            .IsRequired(false);
+
         builder.Property(r => r.Color)
             .HasMaxLength(20);
 
