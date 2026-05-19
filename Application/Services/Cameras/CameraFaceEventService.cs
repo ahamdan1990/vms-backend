@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
@@ -22,6 +24,8 @@ public class CameraFaceEventService : ICameraFaceEventService
 {
     private const string SignalREventName = "CameraFaceEvent";
     private const double UnknownTrackIouThreshold = 0.25;
+    private const double UnknownPendingSimilarityThreshold = 0.65;
+    private const int MaxSubjectIdLength = 200;
 
     private static readonly JsonSerializerOptions PayloadJsonOptions = new()
     {
@@ -93,12 +97,43 @@ public class CameraFaceEventService : ICameraFaceEventService
                 continue;
             }
 
+            var pendingDuplicate = await FindPendingDuplicateAsync(
+                recognitionResult,
+                face,
+                cooldownDecision,
+                cancellationToken);
+
+            if (pendingDuplicate != null)
+            {
+                eventDto.Emitted = false;
+                eventDto.SuppressedReason = "pendingReviewExists";
+                eventDto.FaceEventDbId = pendingDuplicate.Id;
+                eventDto.AlertId = pendingDuplicate.AlertId;
+                MarkCooldownEmitted(recognitionResult, face, config, cooldownDecision.Cooldown);
+                events.Add(eventDto);
+
+                _logger.LogInformation(
+                    "Suppressed duplicate camera face event because an unresolved pending event already exists. ExistingFaceEventId={ExistingFaceEventId}, CameraId={CameraId}, PersonType={PersonType}, PersonId={PersonId}, IsKnown={IsKnown}",
+                    pendingDuplicate.Id,
+                    recognitionResult.CameraId,
+                    face.PersonType,
+                    face.PersonId,
+                    face.IsKnown);
+
+                continue;
+            }
+
             var payload = CreatePayload(recognitionResult, face, eventDto, config.IsCivilDefenseCamera);
             var alert = CreateAlert(payload, recognitionResult, face, processedByUserId);
 
             // Persist durable face event with snapshot before saving alert (gets Id after save).
             var faceEvent = await CreateFaceEventRecordAsync(
-                recognitionResult, face, eventDto.EventId, recognitionResult.FrameBytes, cancellationToken);
+                recognitionResult,
+                face,
+                eventDto.EventId,
+                recognitionResult.FrameBytes,
+                cooldownDecision.PendingDedupeSubjectId,
+                cancellationToken);
 
             await _unitOfWork.Repository<NotificationAlert>().AddAsync(alert, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -149,9 +184,9 @@ public class CameraFaceEventService : ICameraFaceEventService
         CameraConfiguration config)
     {
         var now = DateTime.UtcNow;
-        var identityKey = BuildIdentityKey(result, face, config, now);
-        var activeKey = $"camera-face:active:{identityKey}";
-        var cooldownKey = $"camera-face:cooldown:{identityKey}";
+        var identity = BuildIdentityKey(result, face, config, now);
+        var activeKey = $"camera-face:active:{identity.IdentityKey}";
+        var cooldownKey = $"camera-face:cooldown:{identity.IdentityKey}";
         var trackWindow = GetTrackWindow(config);
         var cooldown = GetEventCooldown(config, face);
 
@@ -166,7 +201,8 @@ public class CameraFaceEventService : ICameraFaceEventService
                 ShouldEmit: false,
                 Reason: "activeTrackCooldown",
                 NextAllowedAt: now.Add(trackWindow),
-                Cooldown: cooldown);
+                Cooldown: cooldown,
+                PendingDedupeSubjectId: identity.PendingDedupeSubjectId);
         }
 
         if (_memoryCache.TryGetValue<DateTime>(cooldownKey, out var nextAllowedAt) &&
@@ -178,7 +214,8 @@ public class CameraFaceEventService : ICameraFaceEventService
                 ShouldEmit: false,
                 Reason: "alertCooldown",
                 NextAllowedAt: nextAllowedAt,
-                Cooldown: cooldown);
+                Cooldown: cooldown,
+                PendingDedupeSubjectId: identity.PendingDedupeSubjectId);
         }
 
         _memoryCache.Set(activeKey, new FaceActiveState(now), trackWindow);
@@ -187,7 +224,8 @@ public class CameraFaceEventService : ICameraFaceEventService
             ShouldEmit: true,
             Reason: null,
             NextAllowedAt: null,
-            Cooldown: cooldown);
+            Cooldown: cooldown,
+            PendingDedupeSubjectId: identity.PendingDedupeSubjectId);
     }
 
     private void MarkCooldownEmitted(
@@ -196,13 +234,13 @@ public class CameraFaceEventService : ICameraFaceEventService
         CameraConfiguration config,
         TimeSpan cooldown)
     {
-        var identityKey = BuildIdentityKey(result, face, config, DateTime.UtcNow);
-        var cooldownKey = $"camera-face:cooldown:{identityKey}";
+        var identity = BuildIdentityKey(result, face, config, DateTime.UtcNow);
+        var cooldownKey = $"camera-face:cooldown:{identity.IdentityKey}";
         var nextAllowedAt = DateTime.UtcNow.Add(cooldown);
 
         _memoryCache.Set(cooldownKey, nextAllowedAt, cooldown);
         _memoryCache.Set(
-            $"camera-face:active:{identityKey}",
+            $"camera-face:active:{identity.IdentityKey}",
             new FaceActiveState(DateTime.UtcNow),
             GetTrackWindow(config));
     }
@@ -478,17 +516,78 @@ public class CameraFaceEventService : ICameraFaceEventService
         return face.IsKnown ? "known_face" : "unknown_face";
     }
 
-    private string BuildIdentityKey(
+    private async Task<CameraFaceEvent?> FindPendingDuplicateAsync(
+        CameraFrameRecognitionResultDto result,
+        CameraFrameFaceResultDto face,
+        CooldownDecision cooldownDecision,
+        CancellationToken cancellationToken)
+    {
+        if (face.IsKnown && face.PersonId.HasValue)
+        {
+            return await _unitOfWork.FaceEvents.GetPendingKnownEventAsync(
+                face.PersonType,
+                face.PersonId.Value,
+                cancellationToken);
+        }
+
+        if (face.IsKnown)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(cooldownDecision.PendingDedupeSubjectId))
+        {
+            var existingBySubject = await _unitOfWork.FaceEvents.GetPendingUnknownEventBySubjectAsync(
+                result.CameraId,
+                cooldownDecision.PendingDedupeSubjectId,
+                cancellationToken);
+
+            if (existingBySubject != null)
+            {
+                return existingBySubject;
+            }
+        }
+
+        if (face.BoundingBox == null)
+        {
+            return null;
+        }
+
+        var pendingUnknownEvents = await _unitOfWork.FaceEvents.GetPendingUnknownEventsAsync(
+            result.CameraId,
+            cancellationToken);
+
+        return pendingUnknownEvents
+            .Select(ev => new
+            {
+                Event = ev,
+                Similarity = CalculatePendingUnknownSimilarity(ev, face.BoundingBox)
+            })
+            .Where(match => match.Similarity >= UnknownPendingSimilarityThreshold)
+            .OrderByDescending(match => match.Similarity)
+            .ThenByDescending(match => match.Event.CapturedAt)
+            .Select(match => match.Event)
+            .FirstOrDefault();
+    }
+
+    private IdentityKeyInfo BuildIdentityKey(
         CameraFrameRecognitionResultDto result,
         CameraFrameFaceResultDto face,
         CameraConfiguration config,
         DateTime now)
     {
-        var personKey = face.IsKnown
-            ? $"{face.PersonType}:{face.PersonId?.ToString() ?? face.SubjectId ?? face.FullName ?? face.Index.ToString()}"
-            : $"unknown:{ResolveUnknownTrackId(result, face, config, now)}";
+        if (face.IsKnown)
+        {
+            var personKey = $"{face.PersonType}:{face.PersonId?.ToString() ?? face.SubjectId ?? face.FullName ?? face.Index.ToString()}";
+            return new IdentityKeyInfo($"{result.CameraId}:{personKey}".ToLowerInvariant(), null);
+        }
 
-        return $"{result.CameraId}:{personKey}".ToLowerInvariant();
+        var unknownTrackId = ResolveUnknownTrackId(result, face, config, now);
+        var pendingSubjectId = BuildUnknownSubjectId(unknownTrackId);
+
+        return new IdentityKeyInfo(
+            $"{result.CameraId}:{pendingSubjectId}".ToLowerInvariant(),
+            pendingSubjectId);
     }
 
     private string ResolveUnknownTrackId(
@@ -621,6 +720,42 @@ public class CameraFaceEventService : ICameraFaceEventService
         return unionArea <= 0 ? 0d : (double)intersectionArea / unionArea;
     }
 
+    private static double CalculatePendingUnknownSimilarity(
+        CameraFaceEvent faceEvent,
+        CameraFrameFaceBoxDto currentBox)
+    {
+        if (!faceEvent.BoundingBoxX.HasValue ||
+            !faceEvent.BoundingBoxY.HasValue ||
+            !faceEvent.BoundingBoxWidth.HasValue ||
+            !faceEvent.BoundingBoxHeight.HasValue)
+        {
+            return 0d;
+        }
+
+        var previousBox = new CameraFrameFaceBoxDto
+        {
+            X = faceEvent.BoundingBoxX.Value,
+            Y = faceEvent.BoundingBoxY.Value,
+            Width = faceEvent.BoundingBoxWidth.Value,
+            Height = faceEvent.BoundingBoxHeight.Value,
+            Confidence = faceEvent.Confidence ?? 0
+        };
+
+        return CalculateUnknownTrackSimilarity(previousBox, currentBox);
+    }
+
+    private static string BuildUnknownSubjectId(string unknownTrackId)
+    {
+        var subjectId = $"unknown:{unknownTrackId}";
+        if (subjectId.Length <= MaxSubjectIdLength)
+        {
+            return subjectId;
+        }
+
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(subjectId));
+        return $"unknown:{Convert.ToHexString(hash).ToLowerInvariant()}";
+    }
+
     private static TimeSpan GetTrackWindow(CameraConfiguration config)
     {
         var milliseconds = Math.Max(1000, Math.Max(config.TrackTimeoutMs, config.RecognitionIntervalPerTrackMs));
@@ -645,6 +780,7 @@ public class CameraFaceEventService : ICameraFaceEventService
         CameraFrameFaceResultDto face,
         string eventId,
         byte[]? frameBytes,
+        string? pendingDedupeSubjectId,
         CancellationToken cancellationToken)
     {
         try
@@ -690,7 +826,9 @@ public class CameraFaceEventService : ICameraFaceEventService
                 IsKnown = face.IsKnown,
                 PersonType = face.PersonType,
                 PersonId = face.PersonId,
-                SubjectId = face.SubjectId,
+                SubjectId = !string.IsNullOrWhiteSpace(face.SubjectId)
+                    ? face.SubjectId
+                    : pendingDedupeSubjectId,
                 Similarity = face.Similarity > 0 ? (float?)face.Similarity : null,
                 Confidence = face.Confidence > 0 ? (float?)face.Confidence : null,
                 SnapshotPath = snapshotPath,
@@ -742,7 +880,12 @@ public class CameraFaceEventService : ICameraFaceEventService
         bool ShouldEmit,
         string? Reason,
         DateTime? NextAllowedAt,
-        TimeSpan Cooldown);
+        TimeSpan Cooldown,
+        string? PendingDedupeSubjectId);
+
+    private sealed record IdentityKeyInfo(
+        string IdentityKey,
+        string? PendingDedupeSubjectId);
 
     private sealed class CameraFaceEventPayload
     {

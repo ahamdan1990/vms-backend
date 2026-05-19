@@ -19,6 +19,20 @@ public interface ICameraFaceEventRepository : IGenericRepository<CameraFaceEvent
         string eventId,
         CancellationToken cancellationToken = default);
 
+    Task<CameraFaceEvent?> GetPendingKnownEventAsync(
+        string personType,
+        int personId,
+        CancellationToken cancellationToken = default);
+
+    Task<CameraFaceEvent?> GetPendingUnknownEventBySubjectAsync(
+        int cameraId,
+        string subjectId,
+        CancellationToken cancellationToken = default);
+
+    Task<List<CameraFaceEvent>> GetPendingUnknownEventsAsync(
+        int cameraId,
+        CancellationToken cancellationToken = default);
+
     Task<int> GetKnownCandidateCountAsync(
         int personId,
         string personType,

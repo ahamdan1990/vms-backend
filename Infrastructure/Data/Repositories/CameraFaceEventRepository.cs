@@ -59,6 +59,46 @@ public class CameraFaceEventRepository : BaseRepository<CameraFaceEvent>, ICamer
             .FirstOrDefaultAsync(e => e.EventId == eventId, cancellationToken);
     }
 
+    public async Task<CameraFaceEvent?> GetPendingKnownEventAsync(
+        string personType,
+        int personId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _ctx.CameraFaceEvents
+            .Where(e => e.IsKnown &&
+                        e.PersonId == personId &&
+                        e.PersonType == personType &&
+                        e.ReviewStatus == FaceEventReviewStatus.Pending)
+            .OrderByDescending(e => e.CapturedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<CameraFaceEvent?> GetPendingUnknownEventBySubjectAsync(
+        int cameraId,
+        string subjectId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _ctx.CameraFaceEvents
+            .Where(e => e.CameraId == cameraId &&
+                        !e.IsKnown &&
+                        e.SubjectId == subjectId &&
+                        e.ReviewStatus == FaceEventReviewStatus.Pending)
+            .OrderByDescending(e => e.CapturedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<List<CameraFaceEvent>> GetPendingUnknownEventsAsync(
+        int cameraId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _ctx.CameraFaceEvents
+            .Where(e => e.CameraId == cameraId &&
+                        !e.IsKnown &&
+                        e.ReviewStatus == FaceEventReviewStatus.Pending)
+            .OrderByDescending(e => e.CapturedAt)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<int> GetKnownCandidateCountAsync(
         int personId,
         string personType,

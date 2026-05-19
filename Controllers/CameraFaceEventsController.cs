@@ -61,10 +61,11 @@ public class CameraFaceEventsController : BaseController
 
         var (events, total) = await _unitOfWork.FaceEvents.GetPagedAsync(
             cameraId, isKnown, reviewStatus, from, to, page, pageSize, cancellationToken);
+        var personNames = await BuildPersonNameLookupAsync(events, cancellationToken);
 
         return Ok(new CameraFaceEventPagedDto
         {
-            Events = events.Select(MapToDto).ToList(),
+            Events = events.Select(ev => MapToDto(ev, personNames)).ToList(),
             Total = total,
             Page = page,
             PageSize = pageSize
@@ -84,7 +85,7 @@ public class CameraFaceEventsController : BaseController
         if (ev == null)
             return NotFound();
 
-        return Ok(MapToDto(ev));
+        return Ok(await MapToDtoAsync(ev, cancellationToken));
     }
 
     /// <summary>
@@ -100,7 +101,7 @@ public class CameraFaceEventsController : BaseController
         if (ev == null)
             return NotFound();
 
-        return Ok(MapToDto(ev));
+        return Ok(await MapToDtoAsync(ev, cancellationToken));
     }
 
     /// <summary>
@@ -128,7 +129,7 @@ public class CameraFaceEventsController : BaseController
             "Face event {EventId} reviewed. Status={Status}, ReviewedBy={UserId}",
             ev.EventId, request.Status, ev.ReviewedById);
 
-        return Ok(MapToDto(ev));
+        return Ok(await MapToDtoAsync(ev, cancellationToken));
     }
 
     /// <summary>
@@ -187,13 +188,18 @@ public class CameraFaceEventsController : BaseController
         if (ev == null)
             return NotFound();
 
-        var result = new CameraFaceEventContextDto { FaceEvent = MapToDto(ev) };
+        var result = new CameraFaceEventContextDto { FaceEvent = await MapToDtoAsync(ev, cancellationToken) };
 
         if (ev.IsKnown && ev.PersonId.HasValue)
         {
             result.Person = ev.PersonType == "Staff"
                 ? await BuildStaffContextAsync(ev.PersonId.Value, cancellationToken)
                 : await BuildVisitorContextAsync(ev.PersonId.Value, cancellationToken);
+
+            if (result.Person != null)
+            {
+                result.FaceEvent.FullName = result.Person.FullName;
+            }
         }
 
         return Ok(result);
@@ -369,8 +375,95 @@ public class CameraFaceEventsController : BaseController
             HostName = inv.Host != null ? $"{inv.Host.FirstName} {inv.Host.LastName}".Trim() : null
         };
 
-    private CameraFaceEventDto MapToDto(Domain.Entities.CameraFaceEvent ev)
+    private async Task<CameraFaceEventDto> MapToDtoAsync(
+        Domain.Entities.CameraFaceEvent ev,
+        CancellationToken cancellationToken)
     {
+        var personNames = await BuildPersonNameLookupAsync(new[] { ev }, cancellationToken);
+        return MapToDto(ev, personNames);
+    }
+
+    private async Task<Dictionary<(string PersonType, int PersonId), string>> BuildPersonNameLookupAsync(
+        IEnumerable<Domain.Entities.CameraFaceEvent> events,
+        CancellationToken cancellationToken)
+    {
+        var knownEvents = events
+            .Where(ev => ev.IsKnown && ev.PersonId.HasValue)
+            .ToList();
+
+        var result = new Dictionary<(string PersonType, int PersonId), string>();
+        if (knownEvents.Count == 0)
+        {
+            return result;
+        }
+
+        var visitorIds = knownEvents
+            .Where(ev => ev.PersonType.Equals("Visitor", StringComparison.OrdinalIgnoreCase))
+            .Select(ev => ev.PersonId!.Value)
+            .Distinct()
+            .ToList();
+
+        if (visitorIds.Count > 0)
+        {
+            var visitors = await _unitOfWork.Repository<Visitor>()
+                .GetQueryable()
+                .AsNoTracking()
+                .Where(visitor => visitorIds.Contains(visitor.Id))
+                .Select(visitor => new
+                {
+                    visitor.Id,
+                    visitor.FirstName,
+                    visitor.LastName
+                })
+                .ToListAsync(cancellationToken);
+
+            foreach (var visitor in visitors)
+            {
+                result[("Visitor", visitor.Id)] = BuildDisplayName(visitor.FirstName, visitor.LastName);
+            }
+        }
+
+        var staffIds = knownEvents
+            .Where(ev => ev.PersonType.Equals("Staff", StringComparison.OrdinalIgnoreCase) ||
+                         ev.PersonType.Equals("User", StringComparison.OrdinalIgnoreCase))
+            .Select(ev => ev.PersonId!.Value)
+            .Distinct()
+            .ToList();
+
+        if (staffIds.Count > 0)
+        {
+            var users = await _unitOfWork.Repository<User>()
+                .GetQueryable()
+                .AsNoTracking()
+                .Where(user => staffIds.Contains(user.Id))
+                .Select(user => new
+                {
+                    user.Id,
+                    user.FirstName,
+                    user.LastName
+                })
+                .ToListAsync(cancellationToken);
+
+            foreach (var user in users)
+            {
+                result[("Staff", user.Id)] = BuildDisplayName(user.FirstName, user.LastName);
+            }
+        }
+
+        return result;
+    }
+
+    private CameraFaceEventDto MapToDto(
+        Domain.Entities.CameraFaceEvent ev,
+        IReadOnlyDictionary<(string PersonType, int PersonId), string>? personNames = null)
+    {
+        var normalizedPersonType = ev.PersonType.Equals("User", StringComparison.OrdinalIgnoreCase)
+            ? "Staff"
+            : ev.PersonType;
+        var fullName = ev.PersonId.HasValue && personNames != null
+            ? personNames.GetValueOrDefault((normalizedPersonType, ev.PersonId.Value))
+            : null;
+
         return new CameraFaceEventDto
         {
             Id = ev.Id,
@@ -383,6 +476,7 @@ public class CameraFaceEventsController : BaseController
             PersonType = ev.PersonType,
             PersonId = ev.PersonId,
             SubjectId = ev.SubjectId,
+            FullName = fullName,
             Similarity = ev.Similarity,
             Confidence = ev.Confidence,
             SnapshotUrl = ev.SnapshotPath != null ? _snapshotService.GetSnapshotUrl(ev.SnapshotPath) : null,
@@ -399,6 +493,11 @@ public class CameraFaceEventsController : BaseController
             ExpiresAt = ev.ExpiresAt,
             AlertId = ev.AlertId
         };
+    }
+
+    private static string BuildDisplayName(string? firstName, string? lastName)
+    {
+        return $"{firstName ?? string.Empty} {lastName ?? string.Empty}".Trim();
     }
 
 }
