@@ -480,6 +480,7 @@ public class VisitorService : IVisitorService
                     var addFaceResult = await _faceDetectionService.AddFaceToCollectionAsync(
                         imageBytes,
                         subjectId,
+                        sourcePath: relativePath,
                         cancellationToken);
 
                     if (addFaceResult.Success)
@@ -487,9 +488,6 @@ public class VisitorService : IVisitorService
                         _logger.LogInformation("Face added to recognition collection for visitor {VisitorId} ({VisitorName}), image_id: {ImageId}",
                             visitorId, subjectId, addFaceResult.ImageId);
                         faceRecognitionEnabled = true;
-
-                        // FIFO: keep the primary profile template plus five additional examples.
-                        await _faceDetectionService.TrimFacesToMaxAsync(subjectId, 6, cancellationToken);
                     }
                     else
                     {

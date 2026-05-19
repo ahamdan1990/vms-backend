@@ -159,6 +159,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
     public async Task<FaceRecognitionResult> AddFaceToCollectionAsync(
         byte[] imageBytes,
         string subjectId,
+        string? sourcePath = null,
         CancellationToken cancellationToken = default)
     {
         if (!IsAvailable)
@@ -181,7 +182,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             return Fail("No face template could be extracted from the image.");
         }
 
-        var storedTemplate = await StoreTemplateAsync(identity, extraction, cancellationToken);
+        var storedTemplate = await StoreTemplateAsync(identity, extraction, sourcePath, cancellationToken);
 
         return new FaceRecognitionResult
         {
@@ -450,6 +451,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
     private async Task<FaceTemplate> StoreTemplateAsync(
         ResolvedFaceSubject identity,
         ExtractedTemplate extraction,
+        string? sourcePath,
         CancellationToken cancellationToken)
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
@@ -475,6 +477,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             TemplateSize = extraction.Template.Length,
             IsPrimary = existing.All(t => !t.IsPrimary),
             QualityScore = (decimal)extraction.QualityScore,
+            SourceImagePath = sourcePath,
             Source = "Enrollment",
             CreatedOn = DateTime.UtcNow,
             IsActive = true
@@ -782,7 +785,8 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
                     Y = Math.Max(0, position.yc - half),
                     Width = position.w,
                     Height = position.w,
-                    Confidence = 1.0
+                    Confidence = 1.0,
+                    Roll = (float?)position.angle
                 };
                 face.QualityScore = qualityScore = CalculateQualityScore(face, imageWidth, imageHeight);
 

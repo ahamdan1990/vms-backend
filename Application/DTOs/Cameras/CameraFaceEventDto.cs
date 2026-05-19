@@ -56,3 +56,33 @@ public class ReviewFaceEventRequestDto
     /// </summary>
     public string? MatchedPersonKey { get; set; }
 }
+
+public class EnrollFromEventResultDto
+{
+    public bool Success { get; set; }
+    public string? Message { get; set; }
+    public int? TemplateId { get; set; }
+    public decimal? NewTemplateQuality { get; set; }
+    public decimal? PrimaryTemplateQuality { get; set; }
+    public bool SuggestPromoteToPrimary { get; set; }
+}
+
+public class AssignFaceEventRequestDto
+{
+    /// <summary>"Visitor" or "Staff"</summary>
+    public string PersonType { get; set; } = string.Empty;
+    public int PersonId { get; set; }
+    public bool EnrollSnapshot { get; set; }
+    public string? Notes { get; set; }
+}
+
+public class AssignFaceEventResultDto
+{
+    public bool Success { get; set; }
+    public string? Message { get; set; }
+    public int? TemplateId { get; set; }
+    public decimal? NewTemplateQuality { get; set; }
+    public decimal? PrimaryTemplateQuality { get; set; }
+    public bool SuggestPromoteToPrimary { get; set; }
+}
+

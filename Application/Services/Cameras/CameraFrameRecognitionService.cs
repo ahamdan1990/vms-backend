@@ -447,6 +447,7 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
         var qualityThreshold = config.FaceQualityThreshold ?? 0;
         var maximumFaceSize = config.MaximumFaceSizePixels ?? 0;
         var blurThreshold = config.BlurThreshold ?? 0;
+        var rollLimit = config.RollLimitDegrees ?? 0;
 
         foreach (var engine in GetEngineOrder(config))
         {
@@ -474,6 +475,7 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
                         .Where(face => maximumFaceSize <= 0 || face.Width <= maximumFaceSize || face.Height <= maximumFaceSize)
                         .Where(face => qualityThreshold <= 0 || !face.QualityScore.HasValue || face.QualityScore.Value >= qualityThreshold)
                         .Where(face => blurThreshold <= 0 || blurImage == null || ComputeBlurScoreFromDecodedImage(blurImage, face) >= blurThreshold)
+                        .Where(face => rollLimit <= 0 || !face.Roll.HasValue || Math.Abs(face.Roll.Value) <= rollLimit)
                         .OrderByDescending(face => face.Confidence)
                         .Take(Math.Max(1, config.MaxFacesPerFrame))
                         .ToList();

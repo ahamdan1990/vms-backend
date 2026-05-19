@@ -10,6 +10,7 @@ namespace VisitorManagementSystem.Api.Application.DTOs.Users
         public new string? PhoneType { get; set; }
         
         public string? ProfilePhotoPath { get; set; }
+        public string? ProfilePhotoUrl { get; set; }
         public DateTime? LockoutEnd { get; set; }
         public bool MustChangePassword { get; set; }
         public DateTime? PasswordChangedDate { get; set; }

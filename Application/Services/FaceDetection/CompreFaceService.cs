@@ -348,6 +348,7 @@ public class CompreFaceService : IFaceDetectionService
     public async Task<FaceRecognitionResult> AddFaceToCollectionAsync(
         byte[] imageBytes,
         string subjectId,
+        string? sourcePath = null,
         CancellationToken cancellationToken = default)
     {
         try

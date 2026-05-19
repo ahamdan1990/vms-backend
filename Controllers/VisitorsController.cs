@@ -6,10 +6,13 @@ using System.Linq;
 using System.Text.Json;
 using VisitorManagementSystem.Api.Application.Commands.Visitors;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
+using VisitorManagementSystem.Api.Application.DTOs.FaceDetection;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
 using VisitorManagementSystem.Api.Application.Queries.Visitors;
+using VisitorManagementSystem.Api.Application.Services.Common;
 using VisitorManagementSystem.Api.Application.Services.FaceDetection;
 using VisitorManagementSystem.Api.Domain.Constants;
+using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
 
@@ -28,19 +31,25 @@ public class VisitorsController : BaseController
     private readonly IWebHostEnvironment _environment;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IFaceDetectionService _faceDetectionService;
+    private readonly IFaceTemplateEnrollmentService _enrollmentService;
+    private readonly IUrlResolverService _urlResolver;
 
     public VisitorsController(
         IMediator mediator,
         ILogger<VisitorsController> logger,
         IWebHostEnvironment environment,
         IUnitOfWork unitOfWork,
-        IFaceDetectionService faceDetectionService)
+        IFaceDetectionService faceDetectionService,
+        IFaceTemplateEnrollmentService enrollmentService,
+        IUrlResolverService urlResolver)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _environment = environment ?? throw new ArgumentNullException(nameof(environment));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _faceDetectionService = faceDetectionService ?? throw new ArgumentNullException(nameof(faceDetectionService));
+        _enrollmentService = enrollmentService ?? throw new ArgumentNullException(nameof(enrollmentService));
+        _urlResolver = urlResolver ?? throw new ArgumentNullException(nameof(urlResolver));
     }
 
     /// <summary>
@@ -769,4 +778,106 @@ public class VisitorsController : BaseController
             return BadRequest(new { error = ex.Message });
         }
     }
+
+    // ── Face Template Management ──────────────────────────────────────────────
+
+    /// <summary>GET /api/visitors/{id}/face-templates</summary>
+    [HttpGet("{id:int}/face-templates")]
+    [Authorize(Policy = Permissions.Visitor.Read)]
+    public async Task<ActionResult<List<FaceTemplateDto>>> GetVisitorFaceTemplates(
+        int id, CancellationToken cancellationToken = default)
+    {
+        var templates = await _unitOfWork.Repository<FaceTemplate>().GetAsync(
+            t => t.VisitorId == id && !t.IsDeleted,
+            cancellationToken);
+
+        return Ok(templates.Select(MapTemplateDto).ToList());
+    }
+
+    /// <summary>POST /api/visitors/{id}/face-templates — enroll without changing profile photo</summary>
+    [HttpPost("{id:int}/face-templates")]
+    [Authorize(Policy = Permissions.Visitor.Update)]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<FaceTemplateEnrollmentItemResultDto>> AddVisitorFaceTemplate(
+        int id,
+        IFormFile file,
+        CancellationToken cancellationToken = default)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { message = "No file provided." });
+
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms, cancellationToken);
+        var bytes = ms.ToArray();
+
+        var result = await _enrollmentService.EnrollAdditionalFaceAsync(
+            "Visitor", id, bytes, source: "Upload", cancellationToken: cancellationToken);
+
+        if (!result.Success && !result.Skipped)
+            return BadRequest(new { message = result.Message });
+
+        return Ok(result);
+    }
+
+    /// <summary>DELETE /api/visitors/{id}/face-templates/{templateId}</summary>
+    [HttpDelete("{id:int}/face-templates/{templateId:int}")]
+    [Authorize(Policy = Permissions.Visitor.Update)]
+    public async Task<IActionResult> DeleteVisitorFaceTemplate(
+        int id, int templateId, CancellationToken cancellationToken = default)
+    {
+        var template = await _unitOfWork.Repository<FaceTemplate>()
+            .GetByIdAsync(templateId, cancellationToken);
+
+        if (template == null || template.VisitorId != id || template.IsDeleted)
+            return NotFound(new { message = $"Face template {templateId} not found for visitor {id}." });
+
+        template.SoftDelete(GetCurrentUserId() ?? 0);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return NoContent();
+    }
+
+    /// <summary>PUT /api/visitors/{id}/face-templates/{templateId}/set-primary</summary>
+    [HttpPut("{id:int}/face-templates/{templateId:int}/set-primary")]
+    [Authorize(Policy = Permissions.Visitor.Update)]
+    public async Task<IActionResult> SetPrimaryVisitorFaceTemplate(
+        int id, int templateId, CancellationToken cancellationToken = default)
+    {
+        var target = await _unitOfWork.Repository<FaceTemplate>()
+            .GetByIdAsync(templateId, cancellationToken);
+
+        if (target == null || target.VisitorId != id || target.IsDeleted)
+            return NotFound(new { message = $"Face template {templateId} not found for visitor {id}." });
+
+        var allTemplates = await _unitOfWork.Repository<FaceTemplate>().GetAsync(
+            t => t.VisitorId == id && t.Engine == target.Engine && !t.IsDeleted,
+            cancellationToken);
+
+        foreach (var t in allTemplates)
+            t.IsPrimary = t.Id == templateId;
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return NoContent();
+    }
+
+    private FaceTemplateDto MapTemplateDto(FaceTemplate t) =>
+        new()
+        {
+            Id = t.Id,
+            PersonType = t.PersonType,
+            PersonId = t.PersonId,
+            Engine = t.Engine,
+            IsPrimary = t.IsPrimary,
+            QualityScore = t.QualityScore,
+            SourceImagePath = t.SourceImagePath,
+            SourceImageUrl = !string.IsNullOrEmpty(t.SourceImagePath)
+                ? _urlResolver.GetAbsoluteUrl(t.SourceImagePath)
+                : null,
+            Source = t.Source,
+            LastMatchedAt = t.LastMatchedAt,
+            MatchCount = t.MatchCount,
+            CreatedOn = t.CreatedOn,
+            IsActive = t.IsActive
+        };
 }

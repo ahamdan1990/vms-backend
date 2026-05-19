@@ -135,6 +135,7 @@ public class FaceTemplateEnrollmentService : IFaceTemplateEnrollmentService
             var enrollment = await _faceDetectionService.AddFaceToCollectionAsync(
                 imageBytes,
                 subjectId,
+                sourcePath: profilePhotoPath,
                 cancellationToken);
 
             if (!enrollment.Success)
@@ -143,8 +144,6 @@ public class FaceTemplateEnrollmentService : IFaceTemplateEnrollmentService
                 item.Message = enrollment.ErrorMessage ?? "Face enrollment failed.";
                 return item;
             }
-
-            await _faceDetectionService.TrimFacesToMaxAsync(subjectId, 6, cancellationToken);
 
             item.Success = true;
             item.ImageId = enrollment.ImageId;
@@ -261,6 +260,183 @@ public class FaceTemplateEnrollmentService : IFaceTemplateEnrollmentService
             $"visitor:{visitorId}",
             relativePath,
             force: true,
+            cancellationToken);
+    }
+
+    public async Task<FaceTemplateEnrollmentItemResultDto> EnrollUserPhotoAsync(
+        int userId,
+        byte[] imageBytes,
+        string originalFileName,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId, cancellationToken);
+        if (user == null)
+            return new FaceTemplateEnrollmentItemResultDto
+            {
+                PersonType = "Staff", PersonId = userId,
+                Success = false, Message = $"User {userId} not found."
+            };
+
+        var webRoot = _environment.WebRootPath
+            ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
+        var uploadDir = Path.Combine(webRoot, "uploads", "users", userId.ToString());
+        Directory.CreateDirectory(uploadDir);
+
+        var ext = Path.GetExtension(originalFileName).ToLowerInvariant();
+        if (string.IsNullOrEmpty(ext) || ext is not (".jpg" or ".jpeg" or ".png" or ".webp"))
+            ext = ".jpg";
+
+        var fileName = $"user_{userId}_{Guid.NewGuid()}{ext}";
+        var filePath = Path.Combine(uploadDir, fileName);
+        var relativePath = $"uploads/users/{userId}/{fileName}";
+
+        await File.WriteAllBytesAsync(filePath, imageBytes, cancellationToken);
+
+        user.ProfilePhotoPath = relativePath;
+        user.UpdateModifiedOn();
+        _unitOfWork.Users.Update(user);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return await EnrollIdentityAsync(
+            "Staff",
+            userId,
+            $"user:{userId}",
+            relativePath,
+            force: true,
+            cancellationToken);
+    }
+
+    public async Task<FaceTemplateEnrollmentItemResultDto> EnrollAdditionalFaceAsync(
+        string personType,
+        int personId,
+        byte[] imageBytes,
+        string? sourcePath = null,
+        string source = "Detection",
+        CancellationToken cancellationToken = default)
+    {
+        var subjectId = personType == "Staff" ? $"staff:{personId}" : $"visitor:{personId}";
+        var item = new FaceTemplateEnrollmentItemResultDto
+        {
+            PersonType = personType,
+            PersonId = personId,
+            SubjectId = subjectId,
+            PhotoPath = sourcePath
+        };
+
+        try
+        {
+            if (!await _faceDetectionService.IsServiceAvailableAsync())
+            {
+                item.Skipped = true;
+                item.Message = "No face recognition engine is available.";
+                return item;
+            }
+
+            var enrollment = await _faceDetectionService.AddFaceToCollectionAsync(
+                imageBytes,
+                subjectId,
+                sourcePath: sourcePath,
+                cancellationToken);
+
+            if (!enrollment.Success)
+            {
+                item.Success = false;
+                item.Message = enrollment.ErrorMessage ?? "Face enrollment failed.";
+                return item;
+            }
+
+            if (int.TryParse(enrollment.ImageId, out var templateId))
+            {
+                item.TemplateId = templateId;
+            }
+
+            // Check whether this new template has higher quality than the current primary.
+            var primary = await _unitOfWork.Repository<FaceTemplate>().GetAsync(
+                t => t.PersonType == personType &&
+                     t.PersonId == personId &&
+                     t.Engine == LuxandEngine &&
+                     t.IsPrimary &&
+                     t.IsActive &&
+                     !t.IsDeleted,
+                cancellationToken);
+
+            var newTemplate = item.TemplateId.HasValue
+                ? await _unitOfWork.Repository<FaceTemplate>()
+                    .GetByIdAsync(item.TemplateId.Value, cancellationToken)
+                : null;
+
+            if (newTemplate != null)
+            {
+                item.NewTemplateQuality = newTemplate.QualityScore;
+            }
+
+            var currentPrimary = primary.FirstOrDefault();
+            if (currentPrimary != null)
+            {
+                item.PrimaryTemplateQuality = currentPrimary.QualityScore;
+                item.SuggestPromoteToPrimary =
+                    newTemplate?.QualityScore > currentPrimary.QualityScore;
+            }
+
+            item.Success = true;
+            item.ImageId = enrollment.ImageId;
+            item.Message = "Additional face template enrolled.";
+            return item;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to enroll additional face for {PersonType} {PersonId}", personType, personId);
+            item.Success = false;
+            item.Message = ex.Message;
+            return item;
+        }
+    }
+
+    public async Task<FaceTemplateEnrollmentItemResultDto> EnrollFromFaceEventSnapshotAsync(
+        int faceEventId,
+        CancellationToken cancellationToken = default)
+    {
+        var faceEvent = await _unitOfWork.FaceEvents.GetByIdAsync(faceEventId, cancellationToken);
+
+        if (faceEvent == null)
+            return new FaceTemplateEnrollmentItemResultDto
+            {
+                Success = false, Message = $"Face event {faceEventId} not found."
+            };
+
+        if (!faceEvent.IsKnown || !faceEvent.PersonId.HasValue)
+            return new FaceTemplateEnrollmentItemResultDto
+            {
+                Success = false, Message = "Face event is not linked to a known person."
+            };
+
+        if (string.IsNullOrEmpty(faceEvent.SnapshotPath))
+            return new FaceTemplateEnrollmentItemResultDto
+            {
+                PersonType = faceEvent.PersonType,
+                PersonId = faceEvent.PersonId.Value,
+                Success = false,
+                Message = "Face event has no snapshot to enroll."
+            };
+
+        var localPath = ResolveLocalPhotoPath(faceEvent.SnapshotPath);
+        if (localPath == null || !File.Exists(localPath))
+            return new FaceTemplateEnrollmentItemResultDto
+            {
+                PersonType = faceEvent.PersonType,
+                PersonId = faceEvent.PersonId.Value,
+                Success = false,
+                Message = "Snapshot file not found on disk."
+            };
+
+        var imageBytes = await File.ReadAllBytesAsync(localPath, cancellationToken);
+
+        return await EnrollAdditionalFaceAsync(
+            faceEvent.PersonType,
+            faceEvent.PersonId.Value,
+            imageBytes,
+            sourcePath: faceEvent.SnapshotPath,
+            source: "EventSnapshot",
             cancellationToken);
     }
 

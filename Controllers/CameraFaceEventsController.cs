@@ -1,9 +1,12 @@
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using VisitorManagementSystem.Api.Application.Commands.FaceEvents;
 using VisitorManagementSystem.Api.Application.DTOs.Cameras;
 using VisitorManagementSystem.Api.Application.Services.Cameras;
 using VisitorManagementSystem.Api.Application.Services.Common;
+using VisitorManagementSystem.Api.Application.Services.FaceDetection;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -19,17 +22,23 @@ public class CameraFaceEventsController : BaseController
     private readonly IUnitOfWork _unitOfWork;
     private readonly IFaceSnapshotService _snapshotService;
     private readonly IUrlResolverService _urlResolver;
+    private readonly IFaceTemplateEnrollmentService _enrollmentService;
+    private readonly IMediator _mediator;
     private readonly ILogger<CameraFaceEventsController> _logger;
 
     public CameraFaceEventsController(
         IUnitOfWork unitOfWork,
         IFaceSnapshotService snapshotService,
         IUrlResolverService urlResolver,
+        IFaceTemplateEnrollmentService enrollmentService,
+        IMediator mediator,
         ILogger<CameraFaceEventsController> logger)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _snapshotService = snapshotService ?? throw new ArgumentNullException(nameof(snapshotService));
         _urlResolver = urlResolver ?? throw new ArgumentNullException(nameof(urlResolver));
+        _enrollmentService = enrollmentService ?? throw new ArgumentNullException(nameof(enrollmentService));
+        _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -188,6 +197,85 @@ public class CameraFaceEventsController : BaseController
         }
 
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Enrolls the snapshot from a known face event as an additional face template for
+    /// the matched person. The person's profile photo is never changed.
+    /// Returns SuggestPromoteToPrimary=true when the snapshot quality exceeds the primary template.
+    /// </summary>
+    [HttpPost("{id:int}/enroll-as-template")]
+    [Authorize(Policy = "Composite.AdminOrReceptionist")]
+    public async Task<ActionResult<EnrollFromEventResultDto>> EnrollAsTemplate(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _enrollmentService.EnrollFromFaceEventSnapshotAsync(id, cancellationToken);
+
+        if (!result.Success && !result.Skipped)
+            return BadRequest(new EnrollFromEventResultDto
+            {
+                Success = false,
+                Message = result.Message
+            });
+
+        if (result.Success)
+        {
+            _logger.LogInformation(
+                "Snapshot from face event {EventId} enrolled as additional template for {PersonType} {PersonId}. TemplateId={TemplateId}",
+                id, result.PersonType, result.PersonId, result.TemplateId);
+        }
+
+        return Ok(new EnrollFromEventResultDto
+        {
+            Success = result.Success,
+            Message = result.Message,
+            TemplateId = result.TemplateId,
+            NewTemplateQuality = result.NewTemplateQuality,
+            PrimaryTemplateQuality = result.PrimaryTemplateQuality,
+            SuggestPromoteToPrimary = result.SuggestPromoteToPrimary
+        });
+    }
+
+    /// <summary>
+    /// Manually assigns an unknown face event to an existing visitor or staff member.
+    /// Optionally enrolls the event snapshot as an additional face template for the matched person.
+    /// </summary>
+    [HttpPost("{id:int}/assign")]
+    [Authorize(Policy = "Composite.AdminOrReceptionist")]
+    public async Task<ActionResult<AssignFaceEventResultDto>> AssignToPerson(
+        int id,
+        [FromBody] AssignFaceEventRequestDto request,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new AssignFaceEventToPersonCommand
+        {
+            FaceEventId = id,
+            PersonType = request.PersonType,
+            PersonId = request.PersonId,
+            EnrollSnapshot = request.EnrollSnapshot,
+            Notes = request.Notes,
+            ReviewedById = GetCurrentUserId() ?? 0
+        };
+
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (!result.Success)
+            return BadRequest(new AssignFaceEventResultDto
+            {
+                Success = false,
+                Message = result.Message
+            });
+
+        return Ok(new AssignFaceEventResultDto
+        {
+            Success = result.Success,
+            Message = result.Message,
+            TemplateId = result.TemplateId,
+            NewTemplateQuality = result.NewTemplateQuality,
+            PrimaryTemplateQuality = result.PrimaryTemplateQuality,
+            SuggestPromoteToPrimary = result.SuggestPromoteToPrimary
+        });
     }
 
     private async Task<PersonContextDto?> BuildVisitorContextAsync(int visitorId, CancellationToken ct)

@@ -23,13 +23,14 @@ public interface IFaceDetectionService
     Task<byte[]?> DetectAndCropFaceAsync(Stream imageStream, int marginPercent = 20, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Adds a face to the CompreFace recognition collection for later identification
+    /// Adds a face to the recognition collection for later identification
     /// </summary>
     /// <param name="imageBytes">Image bytes</param>
     /// <param name="subjectId">Subject identifier (e.g., visitor ID)</param>
+    /// <param name="sourcePath">Relative path to the source image on disk (stored in FaceTemplate.SourceImagePath)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Result of adding face to collection</returns>
-    Task<FaceRecognitionResult> AddFaceToCollectionAsync(byte[] imageBytes, string subjectId, CancellationToken cancellationToken = default);
+    Task<FaceRecognitionResult> AddFaceToCollectionAsync(byte[] imageBytes, string subjectId, string? sourcePath = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Removes all face examples for a subject from the recognition collection
@@ -133,6 +134,12 @@ public class DetectedFace
     /// Gender prediction (optional, if enabled in CompreFace)
     /// </summary>
     public string? Gender { get; set; }
+
+    /// <summary>
+    /// In-plane face rotation in degrees (-180 to 180). Populated by Luxand; null from CompreFace.
+    /// Corresponds to RollLimitDegrees filter.
+    /// </summary>
+    public float? Roll { get; set; }
 }
 
 /// <summary>

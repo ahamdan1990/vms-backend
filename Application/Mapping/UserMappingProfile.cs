@@ -62,6 +62,7 @@ public class UserMappingProfile : Profile
         CreateMap<User, UserDetailDto>()
             .IncludeBase<User, UserListDto>() // Include base mappings
             .ForMember(dest => dest.ProfilePhotoPath, opt => opt.MapFrom(src => src.ProfilePhotoPath))
+            .ForMember(dest => dest.ProfilePhotoUrl, opt => opt.MapFrom<UserProfilePhotoUrlResolver>())
             .ForMember(dest => dest.LockoutEnd, opt => opt.MapFrom(src => src.LockoutEnd))
             // Enhanced address mappings for detail view
             .ForMember(dest => dest.AddressType, opt => opt.MapFrom(src => src.Address != null ? src.Address.AddressType : null))

@@ -1,5 +1,22 @@
 namespace VisitorManagementSystem.Api.Application.DTOs.FaceDetection;
 
+public class FaceTemplateDto
+{
+    public int Id { get; set; }
+    public string PersonType { get; set; } = string.Empty;
+    public int PersonId { get; set; }
+    public string Engine { get; set; } = string.Empty;
+    public bool IsPrimary { get; set; }
+    public decimal? QualityScore { get; set; }
+    public string? SourceImagePath { get; set; }
+    public string? SourceImageUrl { get; set; }
+    public string? Source { get; set; }
+    public DateTime? LastMatchedAt { get; set; }
+    public int MatchCount { get; set; }
+    public DateTime CreatedOn { get; set; }
+    public bool IsActive { get; set; }
+}
+
 public class FaceTemplateEnrollmentBatchResultDto
 {
     public int VisitorsScanned { get; set; }
@@ -21,4 +38,8 @@ public class FaceTemplateEnrollmentItemResultDto
     public bool Skipped { get; set; }
     public string? Message { get; set; }
     public string? ImageId { get; set; }
+    public int? TemplateId { get; set; }
+    public decimal? NewTemplateQuality { get; set; }
+    public decimal? PrimaryTemplateQuality { get; set; }
+    public bool SuggestPromoteToPrimary { get; set; }
 }

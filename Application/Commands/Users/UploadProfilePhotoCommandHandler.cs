@@ -47,7 +47,7 @@ public class UploadProfilePhotoCommandHandler : IRequestHandler<UploadProfilePho
             }
 
             var filePath = await _fileUploadService.UploadProfilePhotoAsync(request.UserId, request.File);
-            await TryEnrollUserFaceAsync(request.UserId, imageBytes, cancellationToken);
+            await TryEnrollUserFaceAsync(request.UserId, imageBytes, filePath, cancellationToken);
 
             _logger.LogInformation("Profile photo uploaded successfully for user: {UserId}", request.UserId);
 
@@ -63,6 +63,7 @@ public class UploadProfilePhotoCommandHandler : IRequestHandler<UploadProfilePho
     private async Task TryEnrollUserFaceAsync(
         int userId,
         byte[] imageBytes,
+        string? sourcePath,
         CancellationToken cancellationToken)
     {
         try
@@ -77,6 +78,7 @@ public class UploadProfilePhotoCommandHandler : IRequestHandler<UploadProfilePho
             var result = await _faceDetectionService.AddFaceToCollectionAsync(
                 imageBytes,
                 subjectId,
+                sourcePath: sourcePath,
                 cancellationToken);
 
             if (!result.Success)
@@ -88,7 +90,6 @@ public class UploadProfilePhotoCommandHandler : IRequestHandler<UploadProfilePho
                 return;
             }
 
-            await _faceDetectionService.TrimFacesToMaxAsync(subjectId, 6, cancellationToken);
             _logger.LogInformation(
                 "Face enrolled for staff/user {UserId}, template/image id {ImageId}",
                 userId,

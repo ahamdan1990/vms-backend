@@ -60,18 +60,19 @@ public class HybridFaceService : IFaceDetectionService
     public async Task<FaceRecognitionResult> AddFaceToCollectionAsync(
         byte[] imageBytes,
         string subjectId,
+        string? sourcePath = null,
         CancellationToken cancellationToken = default)
     {
         FaceRecognitionResult? luxandResult = null;
         if (_luxand.IsAvailable)
         {
-            luxandResult = await _luxand.AddFaceToCollectionAsync(imageBytes, subjectId, cancellationToken);
+            luxandResult = await _luxand.AddFaceToCollectionAsync(imageBytes, subjectId, sourcePath, cancellationToken);
         }
 
         FaceRecognitionResult? compreFaceResult = null;
         if (_compreFace.IsAvailable)
         {
-            compreFaceResult = await _compreFace.AddFaceToCollectionAsync(imageBytes, subjectId, cancellationToken);
+            compreFaceResult = await _compreFace.AddFaceToCollectionAsync(imageBytes, subjectId, sourcePath, cancellationToken);
         }
 
         return luxandResult?.Success == true

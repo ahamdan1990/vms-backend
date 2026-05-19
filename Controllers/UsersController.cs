@@ -4,12 +4,17 @@ using Microsoft.AspNetCore.Mvc;
 using MediatR;
 using VisitorManagementSystem.Api.Application.Commands.Users;
 using VisitorManagementSystem.Api.Application.Queries.Users;
+using VisitorManagementSystem.Api.Application.DTOs.FaceDetection;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
+using VisitorManagementSystem.Api.Application.Services.Common;
 using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Domain.Enums;
+using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Application.DTOs.Auth;
 using VisitorManagementSystem.Api.Application.Services.Users;
+using VisitorManagementSystem.Api.Application.Services.FaceDetection;
+using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 namespace VisitorManagementSystem.Api.Controllers;
 
@@ -25,15 +30,24 @@ public class UsersController : BaseController
     private readonly IMediator _mediator;
     private readonly ILogger<UsersController> _logger;
     private readonly IUserImportService _userImportService;
+    private readonly IFaceTemplateEnrollmentService _enrollmentService;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IUrlResolverService _urlResolver;
 
     public UsersController(
         IMediator mediator,
         ILogger<UsersController> logger,
-        IUserImportService userImportService)
+        IUserImportService userImportService,
+        IFaceTemplateEnrollmentService enrollmentService,
+        IUnitOfWork unitOfWork,
+        IUrlResolverService urlResolver)
     {
         _mediator = mediator;
         _logger = logger;
         _userImportService = userImportService;
+        _enrollmentService = enrollmentService;
+        _unitOfWork = unitOfWork;
+        _urlResolver = urlResolver;
     }
 
     /// <summary>
@@ -968,4 +982,198 @@ public class UsersController : BaseController
             return ServerErrorResponse("An error occurred during the import");
         }
     }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // FACE ENROLLMENT ENDPOINTS
+    // ══════════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Uploads a profile photo for a user and enrolls the face as their primary template.
+    /// POST /api/users/{id}/photo
+    /// </summary>
+    [HttpPost("{id:int}/photo")]
+    [Authorize(Policy = Permissions.User.Update)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
+    public async Task<IActionResult> UploadUserPhoto(
+        int id,
+        IFormFile file,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (file == null || file.Length == 0)
+                return BadRequestResponse("No file provided.");
+
+            const long maxBytes = 10 * 1024 * 1024;
+            if (file.Length > maxBytes)
+                return BadRequestResponse("File exceeds the 10 MB limit.");
+
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (ext is not (".jpg" or ".jpeg" or ".png" or ".webp"))
+                return BadRequestResponse("Only JPG, PNG, and WebP images are accepted.");
+
+            byte[] imageBytes;
+            await using (var ms = new MemoryStream())
+            {
+                await file.CopyToAsync(ms, cancellationToken);
+                imageBytes = ms.ToArray();
+            }
+
+            var result = await _enrollmentService.EnrollUserPhotoAsync(
+                id, imageBytes, file.FileName, cancellationToken);
+
+            if (result.Message?.Contains("not found") == true)
+                return NotFoundResponse($"User {id} not found.");
+
+            if (!result.Success && !result.Skipped)
+                return BadRequestResponse(result.Message ?? "Photo upload failed.");
+
+            _logger.LogInformation(
+                "Profile photo uploaded for user {UserId}. FaceDetected={FaceDetected}",
+                id, result.Success);
+
+            return SuccessResponse(new
+            {
+                faceDetected = result.Success,
+                faceRecognitionEnabled = result.Success,
+                message = result.Message
+            }, "Profile photo uploaded successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading photo for user {UserId}", id);
+            return ServerErrorResponse("An error occurred while uploading the photo.");
+        }
+    }
+
+    /// <summary>
+    /// Removes the profile photo for a user and deactivates their face templates.
+    /// DELETE /api/users/{id}/photo
+    /// </summary>
+    [HttpDelete("{id:int}/photo")]
+    [Authorize(Policy = Permissions.User.Update)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 200)]
+    [ProducesResponseType(typeof(ApiResponseDto<object>), 404)]
+    public async Task<IActionResult> RemoveUserPhoto(
+        int id,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var command = new RemoveProfilePhotoCommand { UserId = id };
+            await _mediator.Send(command, cancellationToken);
+
+            _logger.LogInformation("Profile photo removed for user {UserId}", id);
+            return SuccessResponse("Profile photo removed.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error removing photo for user {UserId}", id);
+            return ServerErrorResponse("An error occurred while removing the photo.");
+        }
+    }
+
+    // ── Face Template Management ──────────────────────────────────────────────
+
+    /// <summary>GET /api/users/{id}/face-templates</summary>
+    [HttpGet("{id:int}/face-templates")]
+    [Authorize(Policy = Permissions.User.Read)]
+    public async Task<ActionResult<List<FaceTemplateDto>>> GetUserFaceTemplates(
+        int id, CancellationToken cancellationToken = default)
+    {
+        var templates = await _unitOfWork.Repository<FaceTemplate>().GetAsync(
+            t => t.UserId == id && !t.IsDeleted,
+            cancellationToken);
+
+        return Ok(templates.Select(MapTemplateDto).ToList());
+    }
+
+    /// <summary>POST /api/users/{id}/face-templates — enroll without changing profile photo</summary>
+    [HttpPost("{id:int}/face-templates")]
+    [Authorize(Policy = Permissions.User.Update)]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<FaceTemplateEnrollmentItemResultDto>> AddUserFaceTemplate(
+        int id,
+        IFormFile file,
+        CancellationToken cancellationToken = default)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { message = "No file provided." });
+
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms, cancellationToken);
+        var bytes = ms.ToArray();
+
+        var result = await _enrollmentService.EnrollAdditionalFaceAsync(
+            "Staff", id, bytes, source: "Upload", cancellationToken: cancellationToken);
+
+        if (!result.Success && !result.Skipped)
+            return BadRequest(new { message = result.Message });
+
+        return Ok(result);
+    }
+
+    /// <summary>DELETE /api/users/{id}/face-templates/{templateId}</summary>
+    [HttpDelete("{id:int}/face-templates/{templateId:int}")]
+    [Authorize(Policy = Permissions.User.Update)]
+    public async Task<IActionResult> DeleteUserFaceTemplate(
+        int id, int templateId, CancellationToken cancellationToken = default)
+    {
+        var template = await _unitOfWork.Repository<FaceTemplate>()
+            .GetByIdAsync(templateId, cancellationToken);
+
+        if (template == null || template.UserId != id || template.IsDeleted)
+            return NotFound(new { message = $"Face template {templateId} not found for user {id}." });
+
+        template.SoftDelete(GetCurrentUserId() ?? 0);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return NoContent();
+    }
+
+    /// <summary>PUT /api/users/{id}/face-templates/{templateId}/set-primary</summary>
+    [HttpPut("{id:int}/face-templates/{templateId:int}/set-primary")]
+    [Authorize(Policy = Permissions.User.Update)]
+    public async Task<IActionResult> SetPrimaryUserFaceTemplate(
+        int id, int templateId, CancellationToken cancellationToken = default)
+    {
+        var target = await _unitOfWork.Repository<FaceTemplate>()
+            .GetByIdAsync(templateId, cancellationToken);
+
+        if (target == null || target.UserId != id || target.IsDeleted)
+            return NotFound(new { message = $"Face template {templateId} not found for user {id}." });
+
+        var allTemplates = await _unitOfWork.Repository<FaceTemplate>().GetAsync(
+            t => t.UserId == id && t.Engine == target.Engine && !t.IsDeleted,
+            cancellationToken);
+
+        foreach (var t in allTemplates)
+            t.IsPrimary = t.Id == templateId;
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return NoContent();
+    }
+
+    private FaceTemplateDto MapTemplateDto(FaceTemplate t) =>
+        new()
+        {
+            Id = t.Id,
+            PersonType = t.PersonType,
+            PersonId = t.PersonId,
+            Engine = t.Engine,
+            IsPrimary = t.IsPrimary,
+            QualityScore = t.QualityScore,
+            SourceImagePath = t.SourceImagePath,
+            SourceImageUrl = !string.IsNullOrEmpty(t.SourceImagePath)
+                ? _urlResolver.GetAbsoluteUrl(t.SourceImagePath)
+                : null,
+            Source = t.Source,
+            LastMatchedAt = t.LastMatchedAt,
+            MatchCount = t.MatchCount,
+            CreatedOn = t.CreatedOn,
+            IsActive = t.IsActive
+        };
 }
