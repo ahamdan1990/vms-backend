@@ -39,6 +39,9 @@ public sealed class FileSystemFaceSnapshotService : IFaceSnapshotService
         if (frameBytes is not { Length: > 0 })
             return null;
 
+        if (width < 20 || height < 20)
+            return null;
+
         try
         {
             using var image = Image.Load(frameBytes);

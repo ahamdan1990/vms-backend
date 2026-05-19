@@ -169,7 +169,7 @@ public class CameraConfiguration
     /// Minimum accepted face quality score (0-100).
     /// </summary>
     [Range(0, 100)]
-    public int? FaceQualityThreshold { get; set; } = 20;
+    public int? FaceQualityThreshold { get; set; } = 40;
 
     /// <summary>
     /// Blur rejection threshold (0-100), interpreted by the pipeline implementation.

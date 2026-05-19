@@ -120,6 +120,12 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
         result.FrameSizeBytes = frameBytes.Length;
         result.FrameBytes = frameBytes;
 
+        if (!IsFrameUsable(frameBytes))
+        {
+            MarkSkipped(result, "Frame rejected: too dark or uniform (stream artifact)");
+            return result;
+        }
+
         var maxFaces = Math.Max(1, config.MaxFacesPerFrame);
 
         // For Luxand/Hybrid cameras: recognition internally runs detection+extraction+matching in a
@@ -138,9 +144,9 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
 
             // Faces with a SubjectId were matched; those without were detected but not recognized.
             var matchedFaces = allFaces.Where(f => !string.IsNullOrEmpty(f.SubjectId)).ToList();
+            // Keep the full RecognizedFace so bestSimilarity (partial match score) is preserved on the result DTO.
             var unmatchedDetected = allFaces
                 .Where(f => string.IsNullOrEmpty(f.SubjectId) && f.BoundingBox != null)
-                .Select(f => f.BoundingBox!)
                 .ToList();
 
             result.DetectedFaceCount = allFaces.Count(f => f.BoundingBox != null);
@@ -325,10 +331,10 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
         result.RawDetectionCount = rawFaces.Count;
 
         var threshold = GetThreshold(config.FaceDetectionThreshold);
-        var minSize = config.MinimumFaceSizePixels ?? 0;
+        var minSize = config.MinimumFaceSizePixels ?? 40;
         var maxSize = config.MaximumFaceSizePixels ?? 0;
-        var qualityMin = config.FaceQualityThreshold ?? 0;
-        var blurMin = config.BlurThreshold ?? 0;
+        var qualityMin = config.FaceQualityThreshold ?? 20;
+        var blurMin = config.BlurThreshold ?? 8;
         int passedCount = 0;
 
         foreach (var face in rawFaces)
@@ -443,10 +449,10 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
         CancellationToken cancellationToken)
     {
         var threshold = GetThreshold(config.FaceDetectionThreshold);
-        var minimumFaceSize = config.MinimumFaceSizePixels ?? 0;
-        var qualityThreshold = config.FaceQualityThreshold ?? 0;
+        var minimumFaceSize = config.MinimumFaceSizePixels ?? 40;
+        var qualityThreshold = config.FaceQualityThreshold ?? 20;
         var maximumFaceSize = config.MaximumFaceSizePixels ?? 0;
-        var blurThreshold = config.BlurThreshold ?? 0;
+        var blurThreshold = config.BlurThreshold ?? 8;
         var rollLimit = config.RollLimitDegrees ?? 0;
 
         foreach (var engine in GetEngineOrder(config))
@@ -505,14 +511,15 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
         Domain.ValueObjects.CameraConfiguration config,
         CancellationToken cancellationToken)
     {
-        var minimumFaceSize = config.MinimumFaceSizePixels ?? 0;
+        var minimumFaceSize = config.MinimumFaceSizePixels ?? 40;
         var maximumFaceSize = config.MaximumFaceSizePixels ?? 0;
-        var qualityThreshold = config.FaceQualityThreshold ?? 0;
-        var blurThreshold = config.BlurThreshold ?? 0;
+        var qualityThreshold = config.FaceQualityThreshold ?? 40;
+        var blurThreshold = config.BlurThreshold ?? 8;
         // UnknownFaceThreshold is the lower bound for matched faces.
         // FacialRecognitionThreshold determines "known" vs "low confidence" and is applied later.
-        // Faces with empty SubjectId are detected-unknown — they bypass this threshold entirely.
+        // FaceDetectionThreshold gates unmatched (truly unknown) faces by BoundingBox confidence.
         var unknownThreshold = GetThreshold(config.UnknownFaceThreshold);
+        var detectionThreshold = GetThreshold(config.FaceDetectionThreshold);
 
         foreach (var engine in GetEngineOrder(config))
         {
@@ -537,13 +544,17 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
                     faces = recognizedFaces
                         .Where(face =>
                         {
-                            // Matched faces must meet the unknown threshold; detected-unknown faces always pass.
+                            // Matched faces must meet the unknown threshold.
                             if (!string.IsNullOrEmpty(face.SubjectId) && face.Similarity < unknownThreshold)
                                 return false;
 
                             var box = face.BoundingBox;
                             if (box == null)
                                 return !string.IsNullOrEmpty(face.SubjectId);
+
+                            // Unmatched detected faces must meet FaceDetectionThreshold (BoundingBox confidence = quality/100).
+                            if (string.IsNullOrEmpty(face.SubjectId) && detectionThreshold > 0 && box.Confidence < detectionThreshold)
+                                return false;
 
                             if (minimumFaceSize > 0 && box.Width < minimumFaceSize && box.Height < minimumFaceSize)
                                 return false;
@@ -832,6 +843,39 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
             .ToList();
     }
 
+    // Overload for the single-pass Luxand path: preserves bestSimilarity from engine matching.
+    private static IEnumerable<CameraFrameFaceResultDto> BuildUnmatchedUnknownFaces(
+        IEnumerable<RecognizedFace> recognizedFaces,
+        IReadOnlyCollection<CameraFrameFaceResultDto> knownFaces,
+        int remainingSlots)
+    {
+        if (remainingSlots <= 0)
+        {
+            return Enumerable.Empty<CameraFrameFaceResultDto>();
+        }
+
+        var knownBoxes = knownFaces
+            .Where(face => face.BoundingBox != null)
+            .Select(face => face.BoundingBox!)
+            .ToList();
+
+        return recognizedFaces
+            .Where(face => face.BoundingBox != null &&
+                           knownBoxes.All(box => GetIntersectionOverUnion(MapBox(face.BoundingBox!), box) < BoundingBoxMatchThreshold))
+            .OrderByDescending(face => face.BoundingBox!.Confidence)
+            .Take(remainingSlots)
+            .Select(face => new CameraFrameFaceResultDto
+            {
+                IsKnown = false,
+                PersonType = "Unknown",
+                Similarity = face.Similarity > 0 ? face.Similarity : 0,
+                Confidence = face.BoundingBox!.Confidence,
+                BoundingBox = MapBox(face.BoundingBox!),
+                SuggestedAction = "reviewUnknown"
+            })
+            .ToList();
+    }
+
     private static string GetFaceWorkflowAction(
         bool isKnown,
         bool isBlacklisted,
@@ -930,7 +974,9 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
             using var sourceImage = Image.Load(frameBytes);
             foreach (var face in facesToSnapshot)
             {
-                face.SnapshotDataUrl = CreateFaceSnapshotDataUrl(sourceImage, face.BoundingBox);
+                var box = face.BoundingBox;
+                if (box == null || box.Width < 20 || box.Height < 20) continue;
+                face.SnapshotDataUrl = CreateFaceSnapshotDataUrl(sourceImage, box);
             }
         }
         catch
@@ -944,10 +990,11 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
         try
         {
             var crop = GetSnapshotCrop(sourceImage.Width, sourceImage.Height, box);
+            if (crop == null) return null;
             using var cropped = sourceImage.Clone(ctx =>
             {
-                ctx.Crop(crop);
-                if (crop.Width > 360 || crop.Height > 360)
+                ctx.Crop(crop.Value);
+                if (crop.Value.Width > 360 || crop.Value.Height > 360)
                 {
                     ctx.Resize(new ResizeOptions { Size = new Size(360, 360), Mode = ResizeMode.Max });
                 }
@@ -962,11 +1009,11 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
         }
     }
 
-    private static Rectangle GetSnapshotCrop(int imageWidth, int imageHeight, CameraFrameFaceBoxDto? box)
+    private static Rectangle? GetSnapshotCrop(int imageWidth, int imageHeight, CameraFrameFaceBoxDto? box)
     {
-        if (box == null || box.Width <= 0 || box.Height <= 0)
+        if (box == null || box.Width < 20 || box.Height < 20)
         {
-            return new Rectangle(0, 0, imageWidth, imageHeight);
+            return null;
         }
 
         var paddingX = Math.Max(20, (int)Math.Round(box.Width * 0.35d));
@@ -1060,6 +1107,50 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
     {
         try { return Image.Load<Rgb24>(frameBytes); }
         catch { return null; }
+    }
+
+    // Samples ~500 pixels in a grid to compute mean luminance and pixel variance.
+    // Returns false for near-black frames (mean < 15/255) or near-uniform frames
+    // (variance < 100, i.e. stddev < 10), which are characteristic of RTSP stream
+    // artifacts (reconnection, I-frame gaps) and USB camera warm-up frames.
+    // Fails open — if the check itself throws, the frame is allowed through.
+    private static bool IsFrameUsable(byte[] frameBytes)
+    {
+        try
+        {
+            using var image = Image.Load<Rgb24>(frameBytes);
+            long sum = 0, sumSq = 0;
+            int count = 0;
+            var rowStep = Math.Max(1, image.Height / 20);
+            var colStep = Math.Max(1, image.Width / 25);
+
+            image.ProcessPixelRows(accessor =>
+            {
+                for (var row = 0; row < accessor.Height; row += rowStep)
+                {
+                    var rowSpan = accessor.GetRowSpan(row);
+                    for (var col = 0; col < rowSpan.Length; col += colStep)
+                    {
+                        var lum = (rowSpan[col].R + rowSpan[col].G + rowSpan[col].B) / 3;
+                        sum += lum;
+                        sumSq += (long)lum * lum;
+                        count++;
+                    }
+                }
+            });
+
+            if (count == 0) return true;
+
+            var mean = sum / (double)count;
+            if (mean < 15.0) return false;
+
+            var variance = sumSq / (double)count - mean * mean;
+            return variance >= 100.0;
+        }
+        catch
+        {
+            return true;
+        }
     }
 
     private long GetMaxFrameBytes()
