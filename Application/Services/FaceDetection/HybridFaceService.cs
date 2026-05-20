@@ -22,6 +22,9 @@ public class HybridFaceService : IFaceDetectionService
         _logger = logger;
     }
 
+    public float MatchTemplates(byte[]? probe, byte[]? stored)
+        => _luxand.IsAvailable ? _luxand.MatchTemplates(probe ?? [], stored ?? []) : 0f;
+
     public async Task<List<DetectedFace>> DetectFacesAsync(
         Stream imageStream,
         CancellationToken cancellationToken = default)

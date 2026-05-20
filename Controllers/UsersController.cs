@@ -29,6 +29,7 @@ public class UsersController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<UsersController> _logger;
+    private readonly IWebHostEnvironment _environment;
     private readonly IUserImportService _userImportService;
     private readonly IFaceTemplateEnrollmentService _enrollmentService;
     private readonly IUnitOfWork _unitOfWork;
@@ -37,6 +38,7 @@ public class UsersController : BaseController
     public UsersController(
         IMediator mediator,
         ILogger<UsersController> logger,
+        IWebHostEnvironment environment,
         IUserImportService userImportService,
         IFaceTemplateEnrollmentService enrollmentService,
         IUnitOfWork unitOfWork,
@@ -44,6 +46,7 @@ public class UsersController : BaseController
     {
         _mediator = mediator;
         _logger = logger;
+        _environment = environment;
         _userImportService = userImportService;
         _enrollmentService = enrollmentService;
         _unitOfWork = unitOfWork;
@@ -1106,8 +1109,17 @@ public class UsersController : BaseController
         await file.CopyToAsync(ms, cancellationToken);
         var bytes = ms.ToArray();
 
+        var webRoot = _environment.WebRootPath ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
+        var uploadDir = Path.Combine(webRoot, "uploads", "users", id.ToString());
+        Directory.CreateDirectory(uploadDir);
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (ext is not (".jpg" or ".jpeg" or ".png" or ".webp")) ext = ".jpg";
+        var fileName = $"template_{id}_{Guid.NewGuid():N}{ext}";
+        await System.IO.File.WriteAllBytesAsync(Path.Combine(uploadDir, fileName), bytes, cancellationToken);
+        var sourcePath = $"uploads/users/{id}/{fileName}";
+
         var result = await _enrollmentService.EnrollAdditionalFaceAsync(
-            "Staff", id, bytes, source: "Upload", cancellationToken: cancellationToken);
+            "Staff", id, bytes, sourcePath: sourcePath, source: "Upload", cancellationToken: cancellationToken);
 
         if (!result.Success && !result.Skipped)
             return BadRequest(new { message = result.Message });
@@ -1155,6 +1167,27 @@ public class UsersController : BaseController
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return NoContent();
+    }
+
+    /// <summary>GET /api/users/{id}/candidate-snapshots — high-quality camera snapshots suitable for face template enrollment</summary>
+    [HttpGet("{id:int}/candidate-snapshots")]
+    [Authorize(Policy = Permissions.User.Read)]
+    public async Task<ActionResult<List<CandidateSnapshotDto>>> GetUserCandidateSnapshots(
+        int id, CancellationToken cancellationToken = default)
+    {
+        var candidates = await _unitOfWork.FaceEvents
+            .GetCandidateSnapshotsAsync("Staff", id, 5, cancellationToken);
+
+        return Ok(candidates.Select(e => new CandidateSnapshotDto
+        {
+            FaceEventId = e.Id,
+            SnapshotUrl = !string.IsNullOrEmpty(e.SnapshotPath)
+                ? _urlResolver.GetAbsoluteUrl(e.SnapshotPath) : null,
+            Similarity = e.Similarity,
+            Confidence = e.Confidence,
+            CameraName = e.CameraName,
+            CapturedAt = e.CapturedAt
+        }));
     }
 
     private FaceTemplateDto MapTemplateDto(FaceTemplate t) =>

@@ -661,6 +661,7 @@ public static class RolePermissionSeeder
                 Permissions.CivilDefense.RegisterVisitor,
                 Permissions.CivilDefense.CheckOutVisitor,
                 Permissions.VisitPurpose.Read,
+                Permissions.Location.Read,
                 Permissions.Profile.ViewOwn,
                 Permissions.Profile.UpdateOwn,
                 Permissions.Profile.ChangePassword,

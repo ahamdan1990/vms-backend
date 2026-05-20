@@ -552,8 +552,8 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
                             if (box == null)
                                 return !string.IsNullOrEmpty(face.SubjectId);
 
-                            // Unmatched detected faces must meet FaceDetectionThreshold (BoundingBox confidence = quality/100).
-                            if (string.IsNullOrEmpty(face.SubjectId) && detectionThreshold > 0 && box.Confidence < detectionThreshold)
+                            // All detected faces must meet FaceDetectionThreshold — applied consistently to known and unknown alike.
+                            if (detectionThreshold > 0 && box.Confidence < detectionThreshold)
                                 return false;
 
                             if (minimumFaceSize > 0 && box.Width < minimumFaceSize && box.Height < minimumFaceSize)
@@ -661,7 +661,8 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
             IsVip = identity?.IsVip ?? false,
             IsBlacklisted = identity?.IsBlacklisted ?? false,
             BlacklistReason = identity?.BlacklistReason,
-            SuggestedAction = GetFaceWorkflowAction(isKnown, identity?.IsBlacklisted ?? false, config)
+            SuggestedAction = GetFaceWorkflowAction(isKnown, identity?.IsBlacklisted ?? false, config),
+            TemplateBytes = recognizedFace.TemplateBytes
         };
     }
 

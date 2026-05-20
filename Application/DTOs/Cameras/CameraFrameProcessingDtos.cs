@@ -117,6 +117,13 @@ public class CameraFrameFaceResultDto
     public string? BlacklistReason { get; set; }
 
     public string SuggestedAction { get; set; } = "none";
+
+    /// <summary>
+    /// Raw face template bytes forwarded from the recognition engine for track-level identity comparison.
+    /// Not serialized to API responses.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public byte[]? TemplateBytes { get; set; }
 }
 
 /// <summary>

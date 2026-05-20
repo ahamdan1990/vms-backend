@@ -14,6 +14,8 @@ public interface IFaceSnapshotService
         int x, int y, int width, int height,
         int cameraId,
         string category,
+        int? personId = null,
+        string? personType = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

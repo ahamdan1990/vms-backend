@@ -341,7 +341,7 @@ public class CameraConfiguration
         RecognitionEnabled = true,
         CompreFaceFallbackEnabled = true,
         FacialRecognitionThreshold = 80,
-        FaceDetectionThreshold = 80,
+        FaceDetectionThreshold = 50,
         UnknownFaceThreshold = 70,
         MinimumFaceSizePixels = 40,
         FaceQualityThreshold = 20,

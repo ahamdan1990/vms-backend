@@ -43,3 +43,13 @@ public class FaceTemplateEnrollmentItemResultDto
     public decimal? PrimaryTemplateQuality { get; set; }
     public bool SuggestPromoteToPrimary { get; set; }
 }
+
+public class CandidateSnapshotDto
+{
+    public int FaceEventId { get; set; }
+    public string? SnapshotUrl { get; set; }
+    public float? Similarity { get; set; }
+    public float? Confidence { get; set; }
+    public string? CameraName { get; set; }
+    public DateTime CapturedAt { get; set; }
+}

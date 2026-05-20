@@ -367,9 +367,9 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
         return await Task.Run(() => FeedFrameInternal(cameraId, trackerHandle, jpegBytes), cancellationToken);
     }
 
-    public float MatchTemplates(byte[] probe, byte[] stored)
+    public float MatchTemplates(byte[]? probe, byte[]? stored)
     {
-        if (!IsAvailable || probe.Length == 0 || stored.Length == 0)
+        if (!IsAvailable || probe == null || probe.Length == 0 || stored == null || stored.Length == 0)
         {
             return 0f;
         }
@@ -652,7 +652,8 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
                 {
                     BoundingBox = extraction.Face,
                     Similarity = bestSimilarity,
-                    Confidence = 0
+                    Confidence = 0,
+                    TemplateBytes = extraction.Template
                 });
             }
             else
@@ -662,7 +663,8 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
                     SubjectId = bestEntry.SubjectId,
                     Similarity = bestSimilarity,
                     Confidence = bestSimilarity,
-                    BoundingBox = extraction.Face
+                    BoundingBox = extraction.Face,
+                    TemplateBytes = extraction.Template
                 });
             }
         }

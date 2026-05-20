@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using VisitorManagementSystem.Api.Application.Services.Cameras;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -32,11 +33,16 @@ public class VisitorQuickCheckInCommand : IRequest<int>
 public class VisitorQuickCheckInCommandHandler : IRequestHandler<VisitorQuickCheckInCommand, int>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICameraFaceEventService _faceEventService;
     private readonly ILogger<VisitorQuickCheckInCommandHandler> _logger;
 
-    public VisitorQuickCheckInCommandHandler(IUnitOfWork unitOfWork, ILogger<VisitorQuickCheckInCommandHandler> logger)
+    public VisitorQuickCheckInCommandHandler(
+        IUnitOfWork unitOfWork,
+        ICameraFaceEventService faceEventService,
+        ILogger<VisitorQuickCheckInCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _faceEventService = faceEventService;
         _logger = logger;
     }
 
@@ -131,6 +137,8 @@ public class VisitorQuickCheckInCommandHandler : IRequestHandler<VisitorQuickChe
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             await _unitOfWork.CommitTransactionAsync(cancellationToken);
+
+            await _faceEventService.AutoReviewPendingEventsForPersonAsync("Visitor", visitorId, cancellationToken);
 
             _logger.LogInformation("CD visitor quick check-in: visitorId={VisitorId} invitationId={InvitationId}",
                 visitorId, invitation.Id);

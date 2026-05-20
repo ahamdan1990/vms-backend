@@ -36,7 +36,7 @@ public class GetCivilDefensePresenceQueryHandler
         var staff = new List<StaffPresenceEntryDto>();
         var visitors = new List<VisitorPresenceEntryDto>();
 
-        if (request.Type == null || request.Type == "Staff")
+        if (request.Type == null || request.Type.Equals("Staff", StringComparison.OrdinalIgnoreCase))
         {
             var staffQuery = _unitOfWork.Repository<Domain.Entities.StaffPresence>()
                 .GetQueryable()
@@ -77,7 +77,7 @@ public class GetCivilDefensePresenceQueryHandler
             }).ToList();
         }
 
-        if (request.Type == null || request.Type == "Visitor")
+        if (request.Type == null || request.Type.Equals("Visitor", StringComparison.OrdinalIgnoreCase))
         {
             var visitorQuery = _unitOfWork.Invitations
                 .GetQueryable()

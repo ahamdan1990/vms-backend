@@ -810,8 +810,17 @@ public class VisitorsController : BaseController
         await file.CopyToAsync(ms, cancellationToken);
         var bytes = ms.ToArray();
 
+        var webRoot = _environment.WebRootPath ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
+        var uploadDir = Path.Combine(webRoot, "uploads", "visitors", id.ToString());
+        Directory.CreateDirectory(uploadDir);
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (ext is not (".jpg" or ".jpeg" or ".png" or ".webp")) ext = ".jpg";
+        var fileName = $"template_{id}_{Guid.NewGuid():N}{ext}";
+        await System.IO.File.WriteAllBytesAsync(Path.Combine(uploadDir, fileName), bytes, cancellationToken);
+        var sourcePath = $"uploads/visitors/{id}/{fileName}";
+
         var result = await _enrollmentService.EnrollAdditionalFaceAsync(
-            "Visitor", id, bytes, source: "Upload", cancellationToken: cancellationToken);
+            "Visitor", id, bytes, sourcePath: sourcePath, source: "Upload", cancellationToken: cancellationToken);
 
         if (!result.Success && !result.Skipped)
             return BadRequest(new { message = result.Message });
@@ -859,6 +868,27 @@ public class VisitorsController : BaseController
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return NoContent();
+    }
+
+    /// <summary>GET /api/visitors/{id}/candidate-snapshots — high-quality camera snapshots suitable for face template enrollment</summary>
+    [HttpGet("{id:int}/candidate-snapshots")]
+    [Authorize(Policy = Permissions.Visitor.Read)]
+    public async Task<ActionResult<List<CandidateSnapshotDto>>> GetVisitorCandidateSnapshots(
+        int id, CancellationToken cancellationToken = default)
+    {
+        var candidates = await _unitOfWork.FaceEvents
+            .GetCandidateSnapshotsAsync("Visitor", id, 5, cancellationToken);
+
+        return Ok(candidates.Select(e => new CandidateSnapshotDto
+        {
+            FaceEventId = e.Id,
+            SnapshotUrl = !string.IsNullOrEmpty(e.SnapshotPath)
+                ? _urlResolver.GetAbsoluteUrl(e.SnapshotPath) : null,
+            Similarity = e.Similarity,
+            Confidence = e.Confidence,
+            CameraName = e.CameraName,
+            CapturedAt = e.CapturedAt
+        }));
     }
 
     private FaceTemplateDto MapTemplateDto(FaceTemplate t) =>

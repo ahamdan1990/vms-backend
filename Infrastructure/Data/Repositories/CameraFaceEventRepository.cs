@@ -60,6 +60,22 @@ public class CameraFaceEventRepository : BaseRepository<CameraFaceEvent>, ICamer
     }
 
     public async Task<CameraFaceEvent?> GetPendingKnownEventAsync(
+        int cameraId,
+        string personType,
+        int personId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _ctx.CameraFaceEvents
+            .Where(e => e.CameraId == cameraId &&
+                        e.IsKnown &&
+                        e.PersonId == personId &&
+                        e.PersonType == personType &&
+                        e.ReviewStatus == FaceEventReviewStatus.Pending)
+            .OrderByDescending(e => e.CapturedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<List<CameraFaceEvent>> GetAllPendingKnownEventsForPersonAsync(
         string personType,
         int personId,
         CancellationToken cancellationToken = default)
@@ -69,8 +85,7 @@ public class CameraFaceEventRepository : BaseRepository<CameraFaceEvent>, ICamer
                         e.PersonId == personId &&
                         e.PersonType == personType &&
                         e.ReviewStatus == FaceEventReviewStatus.Pending)
-            .OrderByDescending(e => e.CapturedAt)
-            .FirstOrDefaultAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<CameraFaceEvent?> GetPendingUnknownEventBySubjectAsync(
@@ -122,6 +137,23 @@ public class CameraFaceEventRepository : BaseRepository<CameraFaceEvent>, ICamer
                         e.IsKnownCandidate)
             .OrderBy(e => e.CapturedAt)
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<List<CameraFaceEvent>> GetCandidateSnapshotsAsync(
+        string personType,
+        int personId,
+        int limit = 5,
+        CancellationToken cancellationToken = default)
+    {
+        return await _ctx.CameraFaceEvents
+            .Where(e => e.IsKnown &&
+                        e.PersonId == personId &&
+                        e.PersonType == personType &&
+                        e.IsKnownCandidate &&
+                        e.SnapshotPath != null)
+            .OrderByDescending(e => e.Similarity)
+            .Take(limit)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<List<CameraFaceEvent>> GetExpiredEventsAsync(

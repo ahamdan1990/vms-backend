@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using VisitorManagementSystem.Api.Application.Services.Cameras;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -17,11 +18,16 @@ public class StaffCheckInCommand : IRequest<int>
 public class StaffCheckInCommandHandler : IRequestHandler<StaffCheckInCommand, int>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICameraFaceEventService _faceEventService;
     private readonly ILogger<StaffCheckInCommandHandler> _logger;
 
-    public StaffCheckInCommandHandler(IUnitOfWork unitOfWork, ILogger<StaffCheckInCommandHandler> logger)
+    public StaffCheckInCommandHandler(
+        IUnitOfWork unitOfWork,
+        ICameraFaceEventService faceEventService,
+        ILogger<StaffCheckInCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
+        _faceEventService = faceEventService;
         _logger = logger;
     }
 
@@ -54,6 +60,8 @@ public class StaffCheckInCommandHandler : IRequestHandler<StaffCheckInCommand, i
 
         await _unitOfWork.Repository<StaffPresence>().AddAsync(presence, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _faceEventService.AutoReviewPendingEventsForPersonAsync("Staff", request.UserId, cancellationToken);
 
         _logger.LogInformation("Staff {UserId} checked in by {OperatorId}", request.UserId, request.CheckedInById);
         return presence.Id;

@@ -9,6 +9,7 @@ using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
+using VisitorManagementSystem.Api.Application.Services.FaceDetection;
 using VisitorManagementSystem.Api.Hubs;
 
 // IFaceSnapshotService lives in the same Application.Services.Cameras namespace.
@@ -25,6 +26,7 @@ public class CameraFaceEventService : ICameraFaceEventService
     private const string SignalREventName = "CameraFaceEvent";
     private const double UnknownTrackIouThreshold = 0.25;
     private const double UnknownPendingSimilarityThreshold = 0.65;
+    private const float UnknownTrackTemplateSimilarityThreshold = 0.70f;
     private const int MaxSubjectIdLength = 200;
 
     private static readonly JsonSerializerOptions PayloadJsonOptions = new()
@@ -39,6 +41,7 @@ public class CameraFaceEventService : ICameraFaceEventService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMemoryCache _memoryCache;
     private readonly IFaceSnapshotService _snapshotService;
+    private readonly IFaceDetectionService _faceDetectionService;
     private readonly IHubContext<OperatorHub> _operatorHubContext;
     private readonly IHubContext<SecurityHub> _securityHubContext;
     private readonly IHubContext<AdminHub> _adminHubContext;
@@ -48,6 +51,7 @@ public class CameraFaceEventService : ICameraFaceEventService
         IUnitOfWork unitOfWork,
         IMemoryCache memoryCache,
         IFaceSnapshotService snapshotService,
+        IFaceDetectionService faceDetectionService,
         IHubContext<OperatorHub> operatorHubContext,
         IHubContext<SecurityHub> securityHubContext,
         IHubContext<AdminHub> adminHubContext,
@@ -56,6 +60,7 @@ public class CameraFaceEventService : ICameraFaceEventService
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
         _snapshotService = snapshotService ?? throw new ArgumentNullException(nameof(snapshotService));
+        _faceDetectionService = faceDetectionService ?? throw new ArgumentNullException(nameof(faceDetectionService));
         _operatorHubContext = operatorHubContext ?? throw new ArgumentNullException(nameof(operatorHubContext));
         _securityHubContext = securityHubContext ?? throw new ArgumentNullException(nameof(securityHubContext));
         _adminHubContext = adminHubContext ?? throw new ArgumentNullException(nameof(adminHubContext));
@@ -168,6 +173,40 @@ public class CameraFaceEventService : ICameraFaceEventService
         }
 
         return events;
+    }
+
+    public void ClearPersonCooldown(int cameraId, bool isKnown, string personType, int? personId, string? subjectId)
+    {
+        string identityKey;
+        if (isKnown && personId.HasValue)
+            identityKey = $"{cameraId}:{personType}:{personId.Value}".ToLowerInvariant();
+        else if (!string.IsNullOrWhiteSpace(subjectId))
+            identityKey = $"{cameraId}:{subjectId}".ToLowerInvariant();
+        else
+            return;
+
+        _memoryCache.Remove($"camera-face:cooldown:{identityKey}");
+        _memoryCache.Remove($"camera-face:active:{identityKey}");
+    }
+
+    public async Task AutoReviewPendingEventsForPersonAsync(
+        string personType,
+        int personId,
+        CancellationToken cancellationToken = default)
+    {
+        var pending = await _unitOfWork.FaceEvents.GetAllPendingKnownEventsForPersonAsync(
+            personType, personId, cancellationToken);
+
+        if (pending.Count == 0) return;
+
+        var now = DateTime.UtcNow;
+        foreach (var ev in pending)
+        {
+            ev.ReviewStatus = FaceEventReviewStatus.Reviewed;
+            ev.ReviewedAt = now;
+        }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     private static bool ShouldPublish(CameraFrameRecognitionResultDto result)
@@ -525,6 +564,7 @@ public class CameraFaceEventService : ICameraFaceEventService
         if (face.IsKnown && face.PersonId.HasValue)
         {
             return await _unitOfWork.FaceEvents.GetPendingKnownEventAsync(
+                result.CameraId,
                 face.PersonType,
                 face.PersonId.Value,
                 cancellationToken);
@@ -627,8 +667,20 @@ public class CameraFaceEventService : ICameraFaceEventService
 
         if (bestTrack != null && bestScore >= UnknownTrackIouThreshold)
         {
+            // Verify it's the same person when both templates are available
+            if (bestTrack.TemplateBytes != null && face.TemplateBytes != null)
+            {
+                var sim = _faceDetectionService.MatchTemplates(face.TemplateBytes, bestTrack.TemplateBytes);
+                if (sim < UnknownTrackTemplateSimilarityThreshold)
+                    bestTrack = null; // different person — fall through to new track
+            }
+        }
+
+        if (bestTrack != null)
+        {
             bestTrack.LastBox = CopyBox(face.BoundingBox);
             bestTrack.LastSeenAt = now;
+            bestTrack.TemplateBytes ??= face.TemplateBytes; // preserve first seen template
             _memoryCache.Set(cacheKey, tracks, trackWindow);
             return bestTrack.TrackId;
         }
@@ -636,7 +688,10 @@ public class CameraFaceEventService : ICameraFaceEventService
         var newTrack = new UnknownFaceTrackState(
             Guid.NewGuid().ToString("N"),
             CopyBox(face.BoundingBox),
-            now);
+            now)
+        {
+            TemplateBytes = face.TemplateBytes
+        };
 
         tracks.Add(newTrack);
         _memoryCache.Set(cacheKey, tracks, trackWindow);
@@ -793,7 +848,10 @@ public class CameraFaceEventService : ICameraFaceEventService
                     frameBytes,
                     face.BoundingBox.X, face.BoundingBox.Y,
                     face.BoundingBox.Width, face.BoundingBox.Height,
-                    result.CameraId, category, cancellationToken);
+                    result.CameraId, category,
+                    personId: face.IsKnown ? face.PersonId : null,
+                    personType: face.IsKnown ? face.PersonType : null,
+                    cancellationToken);
             }
 
             bool isCandidate = false;
@@ -824,11 +882,11 @@ public class CameraFaceEventService : ICameraFaceEventService
                 LocationId = result.CameraLocationId,
                 CapturedAt = result.CapturedAt,
                 IsKnown = face.IsKnown,
-                PersonType = face.PersonType,
-                PersonId = face.PersonId,
-                SubjectId = !string.IsNullOrWhiteSpace(face.SubjectId)
-                    ? face.SubjectId
-                    : pendingDedupeSubjectId,
+                PersonType = face.IsKnown ? face.PersonType : "Unknown",
+                PersonId = face.IsKnown ? face.PersonId : null,
+                SubjectId = face.IsKnown
+                    ? (!string.IsNullOrWhiteSpace(face.SubjectId) ? face.SubjectId : pendingDedupeSubjectId)
+                    : null,
                 Similarity = face.Similarity > 0 ? (float?)face.Similarity : null,
                 Confidence = face.Confidence > 0 ? (float?)face.Confidence : null,
                 SnapshotPath = snapshotPath,
@@ -874,6 +932,7 @@ public class CameraFaceEventService : ICameraFaceEventService
         public string TrackId { get; }
         public CameraFrameFaceBoxDto LastBox { get; set; }
         public DateTime LastSeenAt { get; set; }
+        public byte[]? TemplateBytes { get; set; }
     }
 
     private sealed record CooldownDecision(

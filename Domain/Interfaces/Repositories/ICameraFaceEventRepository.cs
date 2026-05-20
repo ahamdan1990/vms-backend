@@ -20,6 +20,12 @@ public interface ICameraFaceEventRepository : IGenericRepository<CameraFaceEvent
         CancellationToken cancellationToken = default);
 
     Task<CameraFaceEvent?> GetPendingKnownEventAsync(
+        int cameraId,
+        string personType,
+        int personId,
+        CancellationToken cancellationToken = default);
+
+    Task<List<CameraFaceEvent>> GetAllPendingKnownEventsForPersonAsync(
         string personType,
         int personId,
         CancellationToken cancellationToken = default);
@@ -42,6 +48,13 @@ public interface ICameraFaceEventRepository : IGenericRepository<CameraFaceEvent
     Task<CameraFaceEvent?> GetOldestKnownCandidateAsync(
         int personId,
         string personType,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Returns up to <paramref name="limit"/> high-quality candidate snapshots for a person, ordered by similarity descending.</summary>
+    Task<List<CameraFaceEvent>> GetCandidateSnapshotsAsync(
+        string personType,
+        int personId,
+        int limit = 5,
         CancellationToken cancellationToken = default);
 
     Task<List<CameraFaceEvent>> GetExpiredEventsAsync(

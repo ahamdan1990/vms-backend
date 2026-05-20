@@ -88,6 +88,12 @@ public interface IFaceDetectionService
     /// Does nothing if the subject has fewer than maxFaces faces.
     /// </summary>
     Task TrimFacesToMaxAsync(string subjectId, int maxFaces, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Compares two raw face template byte arrays and returns a similarity score (0–1).
+    /// Returns 0 for engines that do not support binary template comparison (e.g., CompreFace).
+    /// </summary>
+    float MatchTemplates(byte[]? probe, byte[]? stored) => 0f;
 }
 
 /// <summary>
@@ -192,6 +198,12 @@ public class RecognizedFace
     /// Bounding box of the detected face
     /// </summary>
     public DetectedFace? BoundingBox { get; set; }
+
+    /// <summary>
+    /// Raw Luxand face template bytes for this detection, used for track-level identity comparison.
+    /// Null when using CompreFace or when template extraction failed.
+    /// </summary>
+    public byte[]? TemplateBytes { get; set; }
 }
 
 /// <summary>

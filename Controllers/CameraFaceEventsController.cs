@@ -24,6 +24,7 @@ public class CameraFaceEventsController : BaseController
     private readonly IUrlResolverService _urlResolver;
     private readonly IFaceTemplateEnrollmentService _enrollmentService;
     private readonly IMediator _mediator;
+    private readonly ICameraFaceEventService _faceEventService;
     private readonly ILogger<CameraFaceEventsController> _logger;
 
     public CameraFaceEventsController(
@@ -32,6 +33,7 @@ public class CameraFaceEventsController : BaseController
         IUrlResolverService urlResolver,
         IFaceTemplateEnrollmentService enrollmentService,
         IMediator mediator,
+        ICameraFaceEventService faceEventService,
         ILogger<CameraFaceEventsController> logger)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
@@ -39,6 +41,7 @@ public class CameraFaceEventsController : BaseController
         _urlResolver = urlResolver ?? throw new ArgumentNullException(nameof(urlResolver));
         _enrollmentService = enrollmentService ?? throw new ArgumentNullException(nameof(enrollmentService));
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+        _faceEventService = faceEventService ?? throw new ArgumentNullException(nameof(faceEventService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -125,6 +128,9 @@ public class CameraFaceEventsController : BaseController
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        if (request.Status == FaceEventReviewStatus.Dismissed)
+            _faceEventService.ClearPersonCooldown(ev.CameraId, ev.IsKnown, ev.PersonType, ev.PersonId, ev.SubjectId);
+
         _logger.LogInformation(
             "Face event {EventId} reviewed. Status={Status}, ReviewedBy={UserId}",
             ev.EventId, request.Status, ev.ReviewedById);
@@ -149,6 +155,8 @@ public class CameraFaceEventsController : BaseController
         ev.ReviewedAt = DateTime.UtcNow;
         ev.ReviewedById = GetCurrentUserId();
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _faceEventService.ClearPersonCooldown(ev.CameraId, ev.IsKnown, ev.PersonType, ev.PersonId, ev.SubjectId);
 
         return NoContent();
     }
@@ -343,6 +351,16 @@ public class CameraFaceEventsController : BaseController
         var hasFaceTemplate = await _unitOfWork.Repository<FaceTemplate>()
             .AnyAsync(t => t.UserId == userId && !t.IsDeleted, ct);
 
+        var staffPresence = await _unitOfWork.Repository<StaffPresence>()
+            .GetQueryable()
+            .Where(sp => sp.UserId == userId && sp.Status != StaffPresenceStatus.CheckedOut)
+            .OrderByDescending(sp => sp.CheckedInAt)
+            .FirstOrDefaultAsync(ct);
+
+        bool? isInsideBuilding = staffPresence?.Status == StaffPresenceStatus.Active ? true
+            : staffPresence != null ? false  // TemporarilyAbsent
+            : (bool?)false;
+
         return new PersonContextDto
         {
             PersonId = userId,
@@ -357,7 +375,7 @@ public class CameraFaceEventsController : BaseController
             IsVip = false,
             IsBlacklisted = false,
             HasFaceEnrollment = hasFaceTemplate,
-            IsInsideBuilding = null, // Staff presence not tracked in VMS
+            IsInsideBuilding = isInsideBuilding,
             TodaysInvitations = new()
         };
     }

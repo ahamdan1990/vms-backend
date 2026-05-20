@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using VisitorManagementSystem.Api.Application.Services.Cameras;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -59,8 +60,13 @@ public class StaffTempReturnCommand : IRequest
 public class StaffTempReturnCommandHandler : IRequestHandler<StaffTempReturnCommand>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICameraFaceEventService _faceEventService;
 
-    public StaffTempReturnCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public StaffTempReturnCommandHandler(IUnitOfWork unitOfWork, ICameraFaceEventService faceEventService)
+    {
+        _unitOfWork = unitOfWork;
+        _faceEventService = faceEventService;
+    }
 
     public async Task Handle(StaffTempReturnCommand request, CancellationToken cancellationToken)
     {
@@ -90,6 +96,8 @@ public class StaffTempReturnCommandHandler : IRequestHandler<StaffTempReturnComm
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _faceEventService.AutoReviewPendingEventsForPersonAsync("Staff", presence.UserId, cancellationToken);
     }
 }
 
@@ -150,8 +158,13 @@ public class VisitorTempReturnCommand : IRequest
 public class VisitorTempReturnCommandHandler : IRequestHandler<VisitorTempReturnCommand>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICameraFaceEventService _faceEventService;
 
-    public VisitorTempReturnCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public VisitorTempReturnCommandHandler(IUnitOfWork unitOfWork, ICameraFaceEventService faceEventService)
+    {
+        _unitOfWork = unitOfWork;
+        _faceEventService = faceEventService;
+    }
 
     public async Task Handle(VisitorTempReturnCommand request, CancellationToken cancellationToken)
     {
@@ -168,5 +181,9 @@ public class VisitorTempReturnCommandHandler : IRequestHandler<VisitorTempReturn
         activeLeave.ModifiedOn = DateTime.UtcNow;
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        var invitation = await _unitOfWork.Invitations.GetByIdAsync(request.InvitationId, cancellationToken);
+        if (invitation != null)
+            await _faceEventService.AutoReviewPendingEventsForPersonAsync("Visitor", invitation.VisitorId, cancellationToken);
     }
 }

@@ -34,6 +34,8 @@ public sealed class FileSystemFaceSnapshotService : IFaceSnapshotService
         int x, int y, int width, int height,
         int cameraId,
         string category,
+        int? personId = null,
+        string? personType = null,
         CancellationToken cancellationToken = default)
     {
         if (frameBytes is not { Length: > 0 })
@@ -69,10 +71,22 @@ public sealed class FileSystemFaceSnapshotService : IFaceSnapshotService
 
             var now = DateTime.UtcNow;
             var safeCategory = SanitizeSegment(category);
-            var relativePath = Path.Combine(
-                SnapshotRoot, safeCategory, cameraId.ToString(),
-                now.Year.ToString(), now.Month.ToString("D2"), now.Day.ToString("D2"),
-                $"{Guid.NewGuid():N}.jpg");
+            string relativePath;
+            if (personId.HasValue && !string.IsNullOrWhiteSpace(personType))
+            {
+                relativePath = Path.Combine(
+                    SnapshotRoot, safeCategory,
+                    SanitizeSegment(personType), personId.Value.ToString(),
+                    now.Year.ToString(), now.Month.ToString("D2"), now.Day.ToString("D2"),
+                    $"{Guid.NewGuid():N}.jpg");
+            }
+            else
+            {
+                relativePath = Path.Combine(
+                    SnapshotRoot, safeCategory, cameraId.ToString(),
+                    now.Year.ToString(), now.Month.ToString("D2"), now.Day.ToString("D2"),
+                    $"{Guid.NewGuid():N}.jpg");
+            }
 
             var absolutePath = Path.Combine(_webRootPath, relativePath);
             Directory.CreateDirectory(Path.GetDirectoryName(absolutePath)!);

@@ -69,6 +69,21 @@ public class CivilDefenseController : BaseController
         return SuccessResponse(result);
     }
 
+    // GET /api/civil-defense/staff/search
+    [HttpGet("staff/search")]
+    [Authorize(Policy = Permissions.CivilDefense.CheckInStaff)]
+    public async Task<IActionResult> SearchStaff(
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] int pageSize = 30)
+    {
+        var result = await _mediator.Send(new GetCdStaffSearchQuery
+        {
+            SearchTerm = searchTerm,
+            PageSize = pageSize,
+        });
+        return SuccessResponse(result);
+    }
+
     // POST /api/civil-defense/staff/check-in
     [HttpPost("staff/check-in")]
     [Authorize(Policy = Permissions.CivilDefense.CheckInStaff)]

@@ -113,7 +113,7 @@ public class RecognizeFaceForCdCommandHandler
         if (personType == "visitor")
             return await BuildVisitorResult(personId, best.Similarity, box, cancellationToken);
 
-        if (personType == "user")
+        if (personType is "user" or "staff")
             return await BuildStaffResult(personId, best.Similarity, box, cancellationToken);
 
         return new CdRecognitionResultDto { IsRecognized = false };
