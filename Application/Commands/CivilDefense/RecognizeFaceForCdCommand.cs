@@ -1,3 +1,4 @@
+using System.Globalization;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -98,9 +99,29 @@ public class RecognizeFaceForCdCommandHandler
             };
         }
 
+        // 2. Read recognition threshold from system config (default 0.9)
+        var thresholdConfig = await _unitOfWork.SystemConfigurations
+            .GetByCategoryAndKeyAsync("FRSystem", "RecognitionThreshold", cancellationToken);
+        var recognitionThreshold = double.TryParse(
+            thresholdConfig?.Value,
+            NumberStyles.Any,
+            CultureInfo.InvariantCulture,
+            out var parsedThreshold) ? parsedThreshold : 0.9;
+
         var best = recognized.OrderByDescending(f => f.Similarity).First();
 
-        // 2. Determine person type from subject ID prefix
+        if (best.Similarity < recognitionThreshold)
+        {
+            var belowBox = best.BoundingBox;
+            return new CdRecognitionResultDto
+            {
+                IsRecognized = false,
+                FaceX = belowBox?.X, FaceY = belowBox?.Y,
+                FaceWidth = belowBox?.Width, FaceHeight = belowBox?.Height,
+            };
+        }
+
+        // 3. Determine person type from subject ID prefix
         if (!TryParseSubject(best.SubjectId, out var personType, out var personId))
         {
             _logger.LogWarning("CD recognition: unrecognized subject ID format '{SubjectId}'", best.SubjectId);

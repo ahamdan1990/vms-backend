@@ -897,7 +897,13 @@ public class CameraFaceEventService : ICameraFaceEventService
                 SuggestedAction = face.SuggestedAction ?? "none",
                 ReviewStatus = FaceEventReviewStatus.Pending,
                 IsKnownCandidate = isCandidate,
-                ExpiresAt = face.IsKnown ? null : DateTime.UtcNow.AddDays(UnknownRetentionDays)
+                ExpiresAt = face.IsKnown ? null : DateTime.UtcNow.AddDays(UnknownRetentionDays),
+                // Rejection metadata — populated only for unknown events with a near-match candidate.
+                BestCandidatePersonId = !face.IsKnown && face.RejectionReason != null ? face.PersonId : null,
+                BestCandidatePersonType = !face.IsKnown && face.RejectionReason != null ? face.PersonType : null,
+                BestCandidateSimilarity = !face.IsKnown && face.Similarity > 0 ? (float?)face.Similarity : null,
+                AppliedThreshold = face.AppliedThreshold > 0 ? (float?)face.AppliedThreshold : null,
+                RejectionReason = !face.IsKnown ? face.RejectionReason : null
             };
 
             await _unitOfWork.FaceEvents.AddAsync(faceEvent, cancellationToken);

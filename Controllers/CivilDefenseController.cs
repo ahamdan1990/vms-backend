@@ -142,8 +142,8 @@ public class CivilDefenseController : BaseController
             Data = data,
             RegisteredById = userId.Value
         };
-        var invitationId = await _mediator.Send(command);
-        return SuccessResponse(new { invitationId }, "Visitor checked in successfully.");
+        var checkIn = await _mediator.Send(command);
+        return SuccessResponse(new { visitorId = checkIn.VisitorId, invitationId = checkIn.InvitationId }, "Visitor checked in successfully.");
     }
 
     // POST /api/civil-defense/visitors/{invitationId}/check-out

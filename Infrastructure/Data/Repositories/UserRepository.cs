@@ -193,40 +193,50 @@ public class UserRepository : BaseRepository<User>, IUserRepository
 
         var startDate = DateTime.UtcNow.AddDays(-days);
 
-        // Get audit logs for the user
-        var auditLogs = await _context.Set<AuditLog>()
-            .Where(al => al.UserId == userId && al.CreatedOn >= startDate)
+        // Base filter — reused for every aggregated query below.
+        // Each query sends a small, targeted SQL statement instead of loading all rows.
+        var base_ = _context.Set<AuditLog>()
+            .Where(al => al.UserId == userId && al.CreatedOn >= startDate);
+
+        var loginCount = await base_
+            .CountAsync(al => al.Action == "Login" && al.IsSuccess, cancellationToken);
+
+        var lastFailedLogin = await base_
+            .Where(al => al.Action == "Login" && !al.IsSuccess)
+            .OrderByDescending(al => al.CreatedOn)
+            .Select(al => (DateTime?)al.CreatedOn)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var invitationsCreated = await base_
+            .CountAsync(al => al.Action == "InvitationCreated", cancellationToken);
+
+        var passwordChanges = await base_
+            .CountAsync(al => al.Action == "PasswordChanged", cancellationToken);
+
+        var activityByTypeRows = await base_
+            .GroupBy(al => al.Action)
+            .Select(g => new { Action = g.Key, Count = g.Count() })
             .ToListAsync(cancellationToken);
 
-        var summary = new UserActivitySummary
+        var recentActionRows = await base_
+            .OrderByDescending(al => al.CreatedOn)
+            .Take(10)
+            .Select(al => new { al.Action, al.EntityName })
+            .ToListAsync(cancellationToken);
+
+        return new UserActivitySummary
         {
             UserId = userId,
             UserName = user.FullName,
             LastLogin = user.LastLoginDate,
-            FailedLoginAttempts = user.FailedLoginAttempts
+            FailedLoginAttempts = user.FailedLoginAttempts,
+            LoginCount = loginCount,
+            LastFailedLogin = lastFailedLogin,
+            InvitationsCreated = invitationsCreated,
+            PasswordChanges = passwordChanges,
+            ActivityByType = activityByTypeRows.ToDictionary(x => x.Action, x => x.Count),
+            RecentActions = recentActionRows.Select(x => $"{x.Action} on {x.EntityName}").ToList(),
         };
-
-        // Calculate activity metrics from audit logs
-        summary.ActivityByType = auditLogs
-            .GroupBy(al => al.Action)
-            .ToDictionary(g => g.Key, g => g.Count());
-
-        // Calculate missing fields from audit logs
-        summary.LoginCount = auditLogs.Count(al => al.Action == "Login" && al.IsSuccess);
-        summary.LastFailedLogin = auditLogs
-            .Where(al => al.Action == "Login" && !al.IsSuccess)
-            .OrderByDescending(al => al.CreatedOn)
-            .FirstOrDefault()?.CreatedOn;
-        summary.InvitationsCreated = auditLogs.Count(al => al.Action == "InvitationCreated");
-        summary.PasswordChanges = auditLogs.Count(al => al.Action == "PasswordChanged");
-
-        summary.RecentActions = auditLogs
-            .OrderByDescending(al => al.CreatedOn)
-            .Take(10)
-            .Select(al => $"{al.Action} on {al.EntityName}")
-            .ToList();
-
-        return summary;
     }
 
     public async Task<PagedResultDto<UserActivityDto>> GetUserAuditLogsAsync(

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Caching.Memory;
 using VisitorManagementSystem.Api.Application.DTOs.Cameras;
 using VisitorManagementSystem.Api.Application.Services.Common;
 using VisitorManagementSystem.Api.Application.Services.FaceDetection;
@@ -20,6 +21,7 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
 {
     private const long DefaultMaxFrameBytes = 5 * 1024 * 1024;
     private const double BoundingBoxMatchThreshold = 0.25;
+    private const int IdentityCacheTtlMinutes = 5;
 
     private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -42,6 +44,7 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
     private readonly IFaceDetectionService _compreFaceService;
     private readonly IUrlResolverService _urlResolver;
     private readonly IConfiguration _configuration;
+    private readonly IMemoryCache _identityCache;
     private readonly ILogger<CameraFrameRecognitionService> _logger;
 
     public CameraFrameRecognitionService(
@@ -50,6 +53,7 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
         [Microsoft.Extensions.DependencyInjection.FromKeyedServices("compreface")] IFaceDetectionService compreFaceService,
         IUrlResolverService urlResolver,
         IConfiguration configuration,
+        IMemoryCache identityCache,
         ILogger<CameraFrameRecognitionService> logger)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
@@ -57,6 +61,7 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
         _compreFaceService = compreFaceService ?? throw new ArgumentNullException(nameof(compreFaceService));
         _urlResolver = urlResolver ?? throw new ArgumentNullException(nameof(urlResolver));
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _identityCache = identityCache ?? throw new ArgumentNullException(nameof(identityCache));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -180,6 +185,7 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
             result.Success = true;
             result.ProcessedAt = DateTime.UtcNow;
 
+            LogFaceDecisions(cameraId, result.Faces);
             _logger.LogInformation(
                 "Processed camera frame (single-pass). CameraId={CameraId}, Type={CameraType}, Role={CameraRole}, Engine={Engine}, Detected={Detected}, Known={KnownCount}, Unknown={UnknownCount}, ClientIp={ClientIp}",
                 camera.Id, camera.CameraType, config.CameraRole, result.EngineUsed,
@@ -244,6 +250,7 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
         result.Success = true;
         result.ProcessedAt = DateTime.UtcNow;
 
+        LogFaceDecisions(cameraId, result.Faces);
         _logger.LogInformation(
             "Processed camera frame. CameraId={CameraId}, Type={CameraType}, Role={CameraRole}, Engine={Engine}, Known={KnownCount}, Unknown={UnknownCount}, ClientIp={ClientIp}",
             camera.Id, camera.CameraType, config.CameraRole, result.EngineUsed,
@@ -454,6 +461,8 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
         var maximumFaceSize = config.MaximumFaceSizePixels ?? 0;
         var blurThreshold = config.BlurThreshold ?? 8;
         var rollLimit = config.RollLimitDegrees ?? 0;
+        var yawLimit = config.YawLimitDegrees ?? 0;
+        var pitchLimit = config.PitchLimitDegrees ?? 0;
 
         foreach (var engine in GetEngineOrder(config))
         {
@@ -482,6 +491,8 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
                         .Where(face => qualityThreshold <= 0 || !face.QualityScore.HasValue || face.QualityScore.Value >= qualityThreshold)
                         .Where(face => blurThreshold <= 0 || blurImage == null || ComputeBlurScoreFromDecodedImage(blurImage, face) >= blurThreshold)
                         .Where(face => rollLimit <= 0 || !face.Roll.HasValue || Math.Abs(face.Roll.Value) <= rollLimit)
+                        .Where(face => yawLimit <= 0 || !face.Yaw.HasValue || Math.Abs(face.Yaw.Value) <= yawLimit)
+                        .Where(face => pitchLimit <= 0 || !face.Pitch.HasValue || Math.Abs(face.Pitch.Value) <= pitchLimit)
                         .OrderByDescending(face => face.Confidence)
                         .Take(Math.Max(1, config.MaxFacesPerFrame))
                         .ToList();
@@ -645,6 +656,13 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
         // but classified as unknown (low-confidence matches).
         var isKnown = identity != null && recognizedFace.Similarity >= recognitionThreshold;
 
+        // Determine rejection reason for near-match unknowns so operators can review.
+        string? rejectionReason = null;
+        if (!isKnown && identity != null && recognizedFace.Similarity > 0)
+        {
+            rejectionReason = "BelowRecognitionThreshold";
+        }
+
         return new CameraFrameFaceResultDto
         {
             IsKnown = isKnown,
@@ -662,7 +680,9 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
             IsBlacklisted = identity?.IsBlacklisted ?? false,
             BlacklistReason = identity?.BlacklistReason,
             SuggestedAction = GetFaceWorkflowAction(isKnown, identity?.IsBlacklisted ?? false, config),
-            TemplateBytes = recognizedFace.TemplateBytes
+            TemplateBytes = recognizedFace.TemplateBytes,
+            AppliedThreshold = (float)recognitionThreshold,
+            RejectionReason = rejectionReason
         };
     }
 
@@ -676,7 +696,32 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
         }
 
         var normalizedSubject = subjectId.Trim();
+        var cacheKey = $"face-identity:{normalizedSubject}";
 
+        if (_identityCache.TryGetValue<RecognizedIdentity?>(cacheKey, out var cached))
+        {
+            return cached;
+        }
+
+        var identity = await ResolveIdentityFromDbAsync(normalizedSubject, cancellationToken);
+
+        if (identity == null)
+        {
+            _logger.LogDebug("Identity not found for SubjectId={SubjectId}", normalizedSubject);
+        }
+
+        _identityCache.Set(cacheKey, identity, new MemoryCacheEntryOptions
+        {
+            SlidingExpiration = TimeSpan.FromMinutes(IdentityCacheTtlMinutes)
+        });
+
+        return identity;
+    }
+
+    private async Task<RecognizedIdentity?> ResolveIdentityFromDbAsync(
+        string normalizedSubject,
+        CancellationToken cancellationToken)
+    {
         if (TryParseCanonicalSubject(normalizedSubject, out var personType, out var personId))
         {
             if (personType == "Visitor")
@@ -1158,6 +1203,30 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
     {
         var configuredBytes = _configuration.GetValue<long?>("CameraFrameProcessing:MaxFrameBytes");
         return configuredBytes.GetValueOrDefault(DefaultMaxFrameBytes);
+    }
+
+    private void LogFaceDecisions(int cameraId, IReadOnlyList<CameraFrameFaceResultDto> faces)
+    {
+        if (!_logger.IsEnabled(LogLevel.Debug) || faces.Count == 0)
+            return;
+
+        foreach (var face in faces)
+        {
+            _logger.LogDebug(
+                "FaceDecision CameraId={CameraId} Index={Index} Decision={Decision} " +
+                "Similarity={Similarity:F4} AppliedThreshold={Threshold:F4} " +
+                "RejectionReason={RejectionReason} " +
+                "BestCandidatePersonId={BestCandidatePersonId} BestCandidatePersonType={BestCandidatePersonType} " +
+                "FaceSize={W}x{H}px Confidence={Confidence:F4}",
+                cameraId, face.Index,
+                face.IsKnown ? "Recognized" : "Unknown",
+                face.Similarity, face.AppliedThreshold,
+                face.RejectionReason ?? (face.IsKnown ? null : "NoCandidate"),
+                face.IsKnown ? (int?)null : face.PersonId,
+                face.IsKnown ? null : face.PersonType,
+                face.BoundingBox?.Width, face.BoundingBox?.Height,
+                face.Confidence);
+        }
     }
 
     private static double GetThreshold(int? percentage)

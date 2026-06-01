@@ -1,3 +1,5 @@
+using VisitorManagementSystem.Api.Application.DTOs.FaceDetection;
+
 namespace VisitorManagementSystem.Api.Application.Services.FaceDetection;
 
 /// <summary>
@@ -94,6 +96,18 @@ public interface IFaceDetectionService
     /// Returns 0 for engines that do not support binary template comparison (e.g., CompreFace).
     /// </summary>
     float MatchTemplates(byte[]? probe, byte[]? stored) => 0f;
+
+    /// <summary>
+    /// Checks whether the face in <paramref name="imageBytes"/> closely matches any cached template
+    /// that belongs to a subject other than <paramref name="currentSubjectId"/>.
+    /// Returns null when no conflict is found, when the cache is cold, or when the engine does not
+    /// support binary template matching.  Does not modify any state.
+    /// </summary>
+    Task<FaceDuplicateConflict?> FindCrossPersonDuplicateAsync(
+        byte[] imageBytes,
+        string currentSubjectId,
+        CancellationToken cancellationToken = default)
+        => Task.FromResult<FaceDuplicateConflict?>(null);
 }
 
 /// <summary>
@@ -146,6 +160,18 @@ public class DetectedFace
     /// Corresponds to RollLimitDegrees filter.
     /// </summary>
     public float? Roll { get; set; }
+
+    /// <summary>
+    /// Left-right head rotation in degrees. Populated by engines that support it; null otherwise.
+    /// Corresponds to YawLimitDegrees filter.
+    /// </summary>
+    public float? Yaw { get; set; }
+
+    /// <summary>
+    /// Up-down head rotation in degrees. Populated by engines that support it; null otherwise.
+    /// Corresponds to PitchLimitDegrees filter.
+    /// </summary>
+    public float? Pitch { get; set; }
 }
 
 /// <summary>

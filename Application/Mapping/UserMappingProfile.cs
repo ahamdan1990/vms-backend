@@ -56,7 +56,8 @@ public class UserMappingProfile : Profile
             .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.ToString()))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
             .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
-            .ForMember(dest => dest.IsLockedOut, opt => opt.MapFrom(src => src.LockoutEnd.HasValue && src.LockoutEnd > DateTime.UtcNow));
+            .ForMember(dest => dest.IsLockedOut, opt => opt.MapFrom(src => src.LockoutEnd.HasValue && src.LockoutEnd > DateTime.UtcNow))
+            .ForMember(dest => dest.ProfilePhotoUrl, opt => opt.MapFrom<UserProfilePhotoUrlResolver>());
 
         // User Entity -> UserDetailDto (Extended details)
         CreateMap<User, UserDetailDto>()

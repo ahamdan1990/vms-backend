@@ -44,10 +44,13 @@ public interface IFaceTemplateEnrollmentService
     /// <summary>
     /// Saves an uploaded image as the user's/staff member's profile photo and immediately
     /// enrolls the face as their primary face template.
+    /// Pass <paramref name="skipDuplicateCheck"/> = true to force enrollment even when the face
+    /// closely matches a different person already in the system.
     /// </summary>
     Task<FaceTemplateEnrollmentItemResultDto> EnrollUserPhotoAsync(
         int userId,
         byte[] imageBytes,
         string originalFileName,
+        bool skipDuplicateCheck = false,
         CancellationToken cancellationToken = default);
 }

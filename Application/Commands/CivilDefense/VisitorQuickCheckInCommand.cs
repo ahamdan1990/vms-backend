@@ -24,13 +24,15 @@ public class VisitorQuickCheckInRequest
     public string? Notes { get; set; }
 }
 
-public class VisitorQuickCheckInCommand : IRequest<int>
+public record VisitorQuickCheckInResult(int VisitorId, int InvitationId);
+
+public class VisitorQuickCheckInCommand : IRequest<VisitorQuickCheckInResult>
 {
     public VisitorQuickCheckInRequest Data { get; set; } = new();
     public int RegisteredById { get; set; }
 }
 
-public class VisitorQuickCheckInCommandHandler : IRequestHandler<VisitorQuickCheckInCommand, int>
+public class VisitorQuickCheckInCommandHandler : IRequestHandler<VisitorQuickCheckInCommand, VisitorQuickCheckInResult>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICameraFaceEventService _faceEventService;
@@ -46,7 +48,7 @@ public class VisitorQuickCheckInCommandHandler : IRequestHandler<VisitorQuickChe
         _logger = logger;
     }
 
-    public async Task<int> Handle(VisitorQuickCheckInCommand request, CancellationToken cancellationToken)
+    public async Task<VisitorQuickCheckInResult> Handle(VisitorQuickCheckInCommand request, CancellationToken cancellationToken)
     {
         var data = request.Data;
         int visitorId;
@@ -142,7 +144,7 @@ public class VisitorQuickCheckInCommandHandler : IRequestHandler<VisitorQuickChe
 
             _logger.LogInformation("CD visitor quick check-in: visitorId={VisitorId} invitationId={InvitationId}",
                 visitorId, invitation.Id);
-            return invitation.Id;
+            return new VisitorQuickCheckInResult(visitorId, invitation.Id);
         }
         catch
         {

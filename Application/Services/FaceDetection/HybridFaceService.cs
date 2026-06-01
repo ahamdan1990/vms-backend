@@ -1,3 +1,5 @@
+using VisitorManagementSystem.Api.Application.DTOs.FaceDetection;
+
 namespace VisitorManagementSystem.Api.Application.Services.FaceDetection;
 
 /// <summary>
@@ -24,6 +26,14 @@ public class HybridFaceService : IFaceDetectionService
 
     public float MatchTemplates(byte[]? probe, byte[]? stored)
         => _luxand.IsAvailable ? _luxand.MatchTemplates(probe ?? [], stored ?? []) : 0f;
+
+    public Task<FaceDuplicateConflict?> FindCrossPersonDuplicateAsync(
+        byte[] imageBytes,
+        string currentSubjectId,
+        CancellationToken cancellationToken = default)
+        => _luxand.IsAvailable
+            ? _luxand.FindCrossPersonDuplicateAsync(imageBytes, currentSubjectId, cancellationToken)
+            : Task.FromResult<FaceDuplicateConflict?>(null);
 
     public async Task<List<DetectedFace>> DetectFacesAsync(
         Stream imageStream,
@@ -78,13 +88,13 @@ public class HybridFaceService : IFaceDetectionService
             compreFaceResult = await _compreFace.AddFaceToCollectionAsync(imageBytes, subjectId, sourcePath, cancellationToken);
         }
 
-        return luxandResult?.Success == true
-            ? luxandResult
-            : compreFaceResult ?? luxandResult ?? new FaceRecognitionResult
-            {
-                Success = false,
-                ErrorMessage = "No face recognition engine is available"
-            };
+        // Prefer a success from either engine; on failure, prefer Luxand's error message
+        // because CompreFace may have timed out and produced a less informative message.
+        return (luxandResult?.Success == true ? luxandResult : null)
+            ?? (compreFaceResult?.Success == true ? compreFaceResult : null)
+            ?? luxandResult
+            ?? compreFaceResult
+            ?? new FaceRecognitionResult { Success = false, ErrorMessage = "No face recognition engine is available" };
     }
 
     public async Task<bool> RemoveFaceFromCollectionAsync(

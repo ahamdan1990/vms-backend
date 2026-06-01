@@ -803,6 +803,19 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.Property<int?>("AlertId")
                         .HasColumnType("int");
 
+                    b.Property<float?>("AppliedThreshold")
+                        .HasColumnType("real");
+
+                    b.Property<int?>("BestCandidatePersonId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BestCandidatePersonType")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<float?>("BestCandidateSimilarity")
+                        .HasColumnType("real");
+
                     b.Property<int?>("BoundingBoxHeight")
                         .HasColumnType("int");
 
@@ -862,6 +875,10 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("ReviewNotes")
                         .HasMaxLength(1000)

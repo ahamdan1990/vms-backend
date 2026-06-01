@@ -11,11 +11,15 @@ public sealed class CameraStreamHostedService : BackgroundService
 {
     private const int TickIntervalSeconds = 5;
     private const int DefaultHealthCheckIntervalSeconds = 30;
+    private const int CameraListCacheTtlSeconds = 30;
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ICameraStreamRuntimeService _streamRuntime;
     private readonly ILogger<CameraStreamHostedService> _logger;
     private readonly ConcurrentDictionary<int, DateTime> _nextCheckDue = new();
+
+    private List<Domain.Entities.Camera> _cachedCameras = [];
+    private DateTime _cameraListExpiresAt = DateTime.MinValue;
 
     public CameraStreamHostedService(
         IServiceScopeFactory scopeFactory,
@@ -64,11 +68,21 @@ public sealed class CameraStreamHostedService : BackgroundService
 
     private async Task EnsureAutoStartCamerasRunningAsync(CancellationToken stoppingToken)
     {
-        await using var scope = _scopeFactory.CreateAsyncScope();
-        var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-        var cameras = await unitOfWork.Cameras.GetAsync(
-            camera => camera.IsActive && !camera.IsDeleted,
-            stoppingToken);
+        IEnumerable<Domain.Entities.Camera> cameras;
+        if (DateTime.UtcNow < _cameraListExpiresAt && _cachedCameras.Count > 0)
+        {
+            cameras = _cachedCameras;
+        }
+        else
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            _cachedCameras = (await unitOfWork.Cameras.GetAsync(
+                camera => camera.IsActive && !camera.IsDeleted,
+                stoppingToken)).ToList();
+            _cameraListExpiresAt = DateTime.UtcNow.AddSeconds(CameraListCacheTtlSeconds);
+            cameras = _cachedCameras;
+        }
 
         var autoStartCameras = cameras
             .Where(camera =>

@@ -592,7 +592,18 @@ public static class RolePermissionSeeder
         // Permissions added after initial seed that must be patched into existing role rows
         var additiveMappings = new Dictionary<string, string[]>
         {
-            ["Administrator"] = new[] { Permissions.Notification.ManageRecipients },
+            ["Administrator"] = new[]
+            {
+                Permissions.Notification.ManageRecipients,
+                // Civil Defense permissions added after initial seed — admin must have all
+                Permissions.CivilDefense.ViewPresence,
+                Permissions.CivilDefense.CheckInStaff,
+                Permissions.CivilDefense.CheckOutStaff,
+                Permissions.CivilDefense.RegisterVisitor,
+                Permissions.CivilDefense.CheckOutVisitor,
+                Permissions.CivilDefense.ViewReports,
+                Permissions.CivilDefense.ExportReports,
+            },
             ["Receptionist"]  = new[] { Permissions.Visitor.Update }
         };
 

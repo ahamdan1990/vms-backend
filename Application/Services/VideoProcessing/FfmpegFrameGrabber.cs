@@ -142,7 +142,12 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
                         break;
                     }
 
-                    AppendToFrameBuffer(frameBuffer, ref windowStart, readBuffer, read, _options.MaxCapturedFrameBytes);
+                    if (AppendToFrameBuffer(frameBuffer, ref windowStart, readBuffer, read, _options.MaxCapturedFrameBytes))
+                    {
+                        _logger.LogWarning(
+                            "Camera {CameraId}: JPEG frame buffer overflow — buffer cleared. Increase MaxCapturedFrameBytes or reduce CaptureFpsLimit.",
+                            camera.Id);
+                    }
 
                     while (TryExtractJpegFrame(frameBuffer, ref windowStart, out var frameBytes))
                     {
@@ -612,14 +617,17 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
         };
     }
 
-    private static void AppendToFrameBuffer(MemoryStream buffer, ref int windowStart, byte[] source, int count, int maxBytes)
+    // Returns true if the buffer was cleared due to overflow.
+    private static bool AppendToFrameBuffer(MemoryStream buffer, ref int windowStart, byte[] source, int count, int maxBytes)
     {
         var validBytes = (int)buffer.Length - windowStart;
+        var overflowed = false;
         if (validBytes + count > maxBytes)
         {
             // Drop everything — a partial frame in progress will be skipped by the JPEG marker scanner.
             buffer.SetLength(0);
             windowStart = 0;
+            overflowed = true;
         }
 
         buffer.Seek(0, SeekOrigin.End);
@@ -630,6 +638,8 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
         {
             CompactFrameBuffer(buffer, ref windowStart);
         }
+
+        return overflowed;
     }
 
     private static void CompactFrameBuffer(MemoryStream buffer, ref int windowStart)

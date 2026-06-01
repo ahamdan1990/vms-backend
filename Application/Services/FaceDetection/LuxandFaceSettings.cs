@@ -28,6 +28,13 @@ public class LuxandFaceSettings
     public bool ArbitraryRotationsEnabled { get; set; } = true;
 
     /// <summary>
+    /// When true, Luxand computes the in-plane roll angle for each detected face.
+    /// Required for RollLimitDegrees filtering to have any effect.
+    /// Slight performance cost (~5%). Default true.
+    /// </summary>
+    public bool DetermineRotationAngle { get; set; } = true;
+
+    /// <summary>
     /// When true, every frame passed into Luxand is written to DebugFrameDumpPath as a JPEG.
     /// Disabled by default — enable only for short diagnostic sessions.
     /// </summary>

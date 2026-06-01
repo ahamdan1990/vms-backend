@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Threading.Channels;
 using Microsoft.AspNetCore.Http;
 using VisitorManagementSystem.Api.Application.DTOs.Cameras;
 using VisitorManagementSystem.Api.Application.Services.FaceDetection;
@@ -300,53 +301,70 @@ public sealed class CameraStreamRuntimeService : ICameraStreamRuntimeService, IA
                             config.ReIdentificationTimeoutMs);
                     }
 
-                    await foreach (var frame in frameGrabber.CaptureFramesAsync(camera, cancellationToken))
+                    // Bounded channel with capacity 1 and DropOldest so the capture loop is never
+                    // blocked by inference. When inference is slow the channel simply holds the
+                    // latest un-processed frame; an arriving newer frame evicts the stale one.
+                    var inferenceChannel = Channel.CreateBounded<(FfmpegFrame Frame, IReadOnlyList<TrackedFace> TrackedFaces)>(
+                        new BoundedChannelOptions(1)
+                        {
+                            FullMode = BoundedChannelFullMode.DropOldest,
+                            SingleReader = true,
+                            SingleWriter = true
+                        });
+
+                    var inferenceTask = RunInferenceLoopAsync(
+                        state, inferenceChannel.Reader, recognitionService, eventService, cancellationToken);
+
+                    try
                     {
-                        state.MarkFrameGrabbed(frame);
-                        state.StoreLastFrame(frame.ImageBytes, frame.CapturedAt.UtcDateTime);
-
-                        if (!markedActive)
+                        await foreach (var frame in frameGrabber.CaptureFramesAsync(camera, cancellationToken))
                         {
-                            camera.UpdateStatus(CameraStatus.Active);
-                            await unitOfWork.SaveChangesAsync(cancellationToken);
-                            markedActive = true;
-                        }
+                            state.MarkFrameGrabbed(frame);
+                            state.StoreLastFrame(frame.ImageBytes, frame.CapturedAt.UtcDateTime);
 
-                        IReadOnlyList<TrackedFace> trackedFaces = [];
-                        bool shouldRunInference;
+                            if (!markedActive)
+                            {
+                                camera.UpdateStatus(CameraStatus.Active);
+                                await unitOfWork.SaveChangesAsync(cancellationToken);
+                                markedActive = true;
+                            }
 
-                        if (useTracker)
-                        {
-                            trackedFaces = await _tracker.FeedFrameAsync(camera.Id, frame.ImageBytes, cancellationToken);
-                            // When tracker sees faces: use per-face recognition scheduling.
-                            // When tracker sees no faces: fall back to the scheduled-interval path so
-                            // direct detection still runs — the tracker may miss faces that the
-                            // recognition engine's own detection step would catch.
-                            shouldRunInference = trackedFaces.Count > 0
-                                ? ShouldRunInferenceForTracks(trackedFaces, camera.Id, config)
-                                : ShouldRunInference(camera, config, state, frame.CapturedAt);
-                        }
-                        else
-                        {
-                            shouldRunInference = ShouldRunInference(camera, config, state, frame.CapturedAt);
-                        }
+                            IReadOnlyList<TrackedFace> trackedFaces = [];
+                            bool shouldRunInference;
 
-                        if (!shouldRunInference)
-                        {
-                            continue;
-                        }
+                            if (useTracker)
+                            {
+                                trackedFaces = await _tracker.FeedFrameAsync(camera.Id, frame.ImageBytes, cancellationToken);
+                                // When tracker sees faces: use per-face recognition scheduling.
+                                // When tracker sees no faces: fall back to the scheduled-interval path so
+                                // direct detection still runs — the tracker may miss faces that the
+                                // recognition engine's own detection step would catch.
+                                shouldRunInference = trackedFaces.Count > 0
+                                    ? ShouldRunInferenceForTracks(trackedFaces, camera.Id, config)
+                                    : ShouldRunInference(camera, config, state, frame.CapturedAt);
+                            }
+                            else
+                            {
+                                shouldRunInference = ShouldRunInference(camera, config, state, frame.CapturedAt);
+                            }
 
-                        await RunInferenceAsync(
-                            state,
-                            frame,
-                            recognitionService,
-                            eventService,
-                            cancellationToken);
+                            if (!shouldRunInference)
+                            {
+                                continue;
+                            }
 
-                        if (useTracker && trackedFaces.Count > 0)
-                        {
-                            MarkTrackerRecognitionDone(camera.Id, trackedFaces);
+                            if (!inferenceChannel.Writer.TryWrite((frame, trackedFaces)))
+                            {
+                                _logger.LogDebug(
+                                    "Camera {CameraId}: inference channel full — frame {Seq} dropped (inference is slower than capture rate)",
+                                    cameraId, frame.SequenceNumber);
+                            }
                         }
+                    }
+                    finally
+                    {
+                        inferenceChannel.Writer.TryComplete();
+                        await inferenceTask;
                     }
 
                     if (useTracker)
@@ -503,6 +521,37 @@ public sealed class CameraStreamRuntimeService : ICameraStreamRuntimeService, IA
         foreach (var face in trackedFaces)
         {
             perCamera[face.FaceId] = now;
+        }
+    }
+
+    private async Task RunInferenceLoopAsync(
+        CameraStreamWorkerState state,
+        ChannelReader<(FfmpegFrame Frame, IReadOnlyList<TrackedFace> TrackedFaces)> reader,
+        ICameraFrameRecognitionService recognitionService,
+        ICameraFaceEventService eventService,
+        CancellationToken cancellationToken)
+    {
+        await foreach (var (frame, trackedFaces) in reader.ReadAllAsync(cancellationToken))
+        {
+            try
+            {
+                await RunInferenceAsync(state, frame, recognitionService, eventService, cancellationToken);
+
+                if (trackedFaces.Count > 0)
+                {
+                    MarkTrackerRecognitionDone(frame.CameraId, trackedFaces);
+                }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Camera {CameraId}: inference failed for frame {Seq}. Capture loop continues.",
+                    frame.CameraId, frame.SequenceNumber);
+            }
         }
     }
 

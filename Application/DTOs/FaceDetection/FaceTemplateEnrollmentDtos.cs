@@ -42,7 +42,16 @@ public class FaceTemplateEnrollmentItemResultDto
     public decimal? NewTemplateQuality { get; set; }
     public decimal? PrimaryTemplateQuality { get; set; }
     public bool SuggestPromoteToPrimary { get; set; }
+
+    // Set when enrollment is blocked by a cross-person duplicate match
+    public bool IsDuplicate { get; set; }
+    public string? ConflictPersonType { get; set; }
+    public int? ConflictPersonId { get; set; }
+    public float? ConflictSimilarity { get; set; }
 }
+
+/// <summary>Result returned by FindCrossPersonDuplicateAsync when a conflict is detected.</summary>
+public record FaceDuplicateConflict(string PersonType, int PersonId, float Similarity);
 
 public class CandidateSnapshotDto
 {

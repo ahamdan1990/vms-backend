@@ -124,6 +124,21 @@ public class CameraFrameFaceResultDto
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public byte[]? TemplateBytes { get; set; }
+
+    /// <summary>
+    /// Recognition threshold (0–1) applied when classifying this face as known/unknown.
+    /// Populated by CameraFrameRecognitionService.BuildRecognizedFaceAsync so the event
+    /// service can record the exact threshold used for operator review.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public float AppliedThreshold { get; set; }
+
+    /// <summary>
+    /// Human-readable rejection reason when IsKnown=false, e.g. "BelowRecognitionThreshold".
+    /// Null for truly unknown faces with no candidate.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? RejectionReason { get; set; }
 }
 
 /// <summary>

@@ -44,6 +44,23 @@ public class CameraFaceEvent : BaseEntity
     /// <summary>True when this snapshot is eligible for FIFO face-template enrichment.</summary>
     public bool IsKnownCandidate { get; set; }
 
+    // ── Rejection metadata (populated for unknown events that had a near-match candidate) ──
+
+    /// <summary>PersonId of the closest matching candidate when the face was rejected (similarity below threshold).</summary>
+    public int? BestCandidatePersonId { get; set; }
+
+    /// <summary>PersonType of the closest matching candidate (e.g. "Visitor", "Staff").</summary>
+    public string? BestCandidatePersonType { get; set; }
+
+    /// <summary>Raw similarity score (0–1) of the closest candidate that was rejected.</summary>
+    public float? BestCandidateSimilarity { get; set; }
+
+    /// <summary>Recognition threshold (0–1) that was applied when this event was created.</summary>
+    public float? AppliedThreshold { get; set; }
+
+    /// <summary>Human-readable rejection reason, e.g. "BelowRecognitionThreshold".</summary>
+    public string? RejectionReason { get; set; }
+
     /// <summary>
     /// Null for known events (kept indefinitely).
     /// Set to UtcNow + 7 days for unknown events; the retention job hard-deletes after this.

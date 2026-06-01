@@ -3,6 +3,7 @@ using Luxand;
 using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
+using VisitorManagementSystem.Api.Application.DTOs.FaceDetection;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
@@ -26,8 +27,11 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
     private readonly ConcurrentDictionary<int, int> _trackerHandles = new();
     private readonly ConcurrentDictionary<int, int> _trackerMaxFaces = new();
 
+    private const int TemplateCacheTtlMinutes = 10;
+
     private bool _initialized;
     private bool _templatesLoaded;
+    private DateTimeOffset _templateCacheExpiresAt = DateTimeOffset.MinValue;
     private int _disposeState;
 
     public bool IsAvailable => _settings.Enabled && _initialized && _disposeState == 0;
@@ -101,7 +105,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             FSDK.SetFaceDetectionThreshold(_settings.DetectionThreshold);
             FSDK.SetFaceDetectionParameters(
                 HandleArbitraryRotations: _settings.ArbitraryRotationsEnabled,
-                DetermineFaceRotationAngle: false,
+                DetermineFaceRotationAngle: _settings.DetermineRotationAngle,
                 InternalResizeWidth: _settings.InternalResizeWidth);
 
             _initialized = true;
@@ -190,6 +194,42 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             SubjectId = identity.SubjectId,
             ImageId = storedTemplate.Id.ToString()
         };
+    }
+
+    private const float CrossPersonEnrollmentThreshold = 0.7f;
+
+    public async Task<FaceDuplicateConflict?> FindCrossPersonDuplicateAsync(
+        byte[] imageBytes,
+        string currentSubjectId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!IsAvailable || _templates.Count == 0)
+            return null;
+
+        var extraction = await Task.Run(
+            () => DetectAndExtractTemplates(imageBytes).OrderByDescending(t => t.QualityScore).FirstOrDefault(),
+            cancellationToken);
+
+        if (extraction == null || extraction.Template.Length == 0)
+            return null;
+
+        FaceTemplateCacheEntry? bestConflict = null;
+        var bestSim = 0f;
+        foreach (var cached in _templates.Values)
+        {
+            if (cached.SubjectId == currentSubjectId)
+                continue;
+            var sim = MatchTemplates(extraction.Template, cached.TemplateData);
+            if (sim > bestSim)
+            {
+                bestSim = sim;
+                bestConflict = cached;
+            }
+        }
+
+        return bestConflict != null && bestSim >= CrossPersonEnrollmentThreshold
+            ? new FaceDuplicateConflict(bestConflict.PersonType, bestConflict.PersonId, bestSim)
+            : null;
     }
 
     public async Task<bool> RemoveFaceFromCollectionAsync(
@@ -400,6 +440,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
         {
             _templates.Clear();
             _templatesLoaded = false;
+            _templateCacheExpiresAt = DateTimeOffset.MinValue;
         }
         finally
         {
@@ -412,7 +453,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
 
     private async Task EnsureTemplatesLoadedAsync(CancellationToken cancellationToken)
     {
-        if (_templatesLoaded)
+        if (_templatesLoaded && DateTimeOffset.UtcNow < _templateCacheExpiresAt)
         {
             return;
         }
@@ -420,10 +461,13 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
         await _templateLoadLock.WaitAsync(cancellationToken);
         try
         {
-            if (_templatesLoaded)
+            if (_templatesLoaded && DateTimeOffset.UtcNow < _templateCacheExpiresAt)
             {
                 return;
             }
+
+            var wasExpired = _templatesLoaded;
+            _templates.Clear();
 
             await using var scope = _scopeFactory.CreateAsyncScope();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
@@ -440,7 +484,12 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             }
 
             _templatesLoaded = true;
-            _logger.LogInformation("Loaded {Count} Luxand face template(s) into memory", _templates.Count);
+            _templateCacheExpiresAt = DateTimeOffset.UtcNow.AddMinutes(TemplateCacheTtlMinutes);
+
+            if (wasExpired)
+                _logger.LogInformation("Luxand template cache refreshed (TTL expired). Count={Count}", _templates.Count);
+            else
+                _logger.LogInformation("Loaded {Count} Luxand face template(s) into memory", _templates.Count);
         }
         finally
         {
@@ -644,20 +693,24 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
                 }
             }
 
-            if (bestEntry == null || bestSimilarity < _settings.MatchThreshold)
+            if (bestEntry == null)
             {
-                // Detected but not matched to any identity.
-                // Returned with empty SubjectId so callers can show them as unknown without a second detection pass.
+                // No templates in DB — detected but no candidate at all.
                 recognized.Add(new RecognizedFace
                 {
                     BoundingBox = extraction.Face,
-                    Similarity = bestSimilarity,
+                    Similarity = 0,
                     Confidence = 0,
                     TemplateBytes = extraction.Template
                 });
             }
             else
             {
+                // Return with SubjectId regardless of raw similarity.
+                // The per-camera FacialRecognitionThreshold in CameraFrameRecognitionService
+                // is the sole gate for classifying a match as "known" vs "low-confidence unknown".
+                // This eliminates the dual-threshold dead zone where per-camera thresholds below
+                // LuxandFaceSettings.MatchThreshold were silently overridden.
                 recognized.Add(new RecognizedFace
                 {
                     SubjectId = bestEntry.SubjectId,
@@ -780,22 +833,32 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             {
                 var position = positions[i];
                 var half = position.w / 2;
+                // Luxand TFacePosition describes a detection circle (xc, yc, w=half-radius).
+                // Faces are taller than wide, so estimate height as 1.3× width and shift Y up
+                // to keep the face center roughly aligned with the cheekbone region.
+                var estimatedHeight = (int)(position.w * 1.3f);
                 var qualityScore = 0.0;
                 var face = new DetectedFace
                 {
                     X = Math.Max(0, position.xc - half),
-                    Y = Math.Max(0, position.yc - half),
+                    Y = Math.Max(0, position.yc - (int)(position.w * 0.65f)),
                     Width = position.w,
-                    Height = position.w,
+                    Height = estimatedHeight,
                     Confidence = 1.0,
                     Roll = (float?)position.angle
                 };
                 face.QualityScore = qualityScore = CalculateQualityScore(face, imageWidth, imageHeight);
 
                 // Extract the face template from this region while the image is already loaded.
+                // GetFaceTemplateUsingFeatures is the most accurate extraction path per SDK docs.
+                // Fall back to GetFaceTemplateInRegion if facial feature detection fails (e.g. extreme angle).
                 byte[]? template = null;
                 var pos = position;
-                FSDK.GetFaceTemplateInRegion(image, ref pos, out template);
+                FSDK.TPoint[]? features = null;
+                if (FSDK.DetectFacialFeaturesInRegion(image, ref pos, out features) == FSDK.FSDKE_OK && features != null)
+                    FSDK.GetFaceTemplateUsingFeatures(image, ref features, out template);
+                else
+                    FSDK.GetFaceTemplateInRegion(image, ref pos, out template);
 
                 var hasTemplate = template is { Length: > 0 };
                 // A face with no extractable template cannot be matched — zero out its quality
@@ -890,12 +953,13 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             {
                 var position = positions[i];
                 var half = position.w / 2;
+                var estimatedHeight = (int)(position.w * 1.3f);
                 var face = new DetectedFace
                 {
                     X = Math.Max(0, position.xc - half),
-                    Y = Math.Max(0, position.yc - half),
+                    Y = Math.Max(0, position.yc - (int)(position.w * 0.65f)),
                     Width = position.w,
-                    Height = position.w,
+                    Height = estimatedHeight,
                 };
                 var quality = CalculateQualityScore(face, imageWidth, imageHeight);
                 face.QualityScore = quality;

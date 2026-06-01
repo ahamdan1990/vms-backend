@@ -1002,6 +1002,7 @@ public class UsersController : BaseController
     public async Task<IActionResult> UploadUserPhoto(
         int id,
         IFormFile file,
+        [FromQuery] bool forceEnroll = false,
         CancellationToken cancellationToken = default)
     {
         try
@@ -1025,7 +1026,17 @@ public class UsersController : BaseController
             }
 
             var result = await _enrollmentService.EnrollUserPhotoAsync(
-                id, imageBytes, file.FileName, cancellationToken);
+                id, imageBytes, file.FileName, skipDuplicateCheck: forceEnroll, cancellationToken);
+
+            if (result.IsDuplicate)
+                return StatusCode(409, new
+                {
+                    isDuplicate = true,
+                    conflictPersonType = result.ConflictPersonType,
+                    conflictPersonId = result.ConflictPersonId,
+                    similarity = result.ConflictSimilarity,
+                    message = result.Message
+                });
 
             if (result.Message?.Contains("not found") == true)
                 return NotFoundResponse($"User {id} not found.");

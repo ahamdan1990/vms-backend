@@ -75,6 +75,8 @@ public class UserListDto
     /// null = follow global setting, true = always require approval, false = always auto-approve.
     /// </summary>
     public bool? RequiresApprovalOverride { get; set; }
+
+    public string? ProfilePhotoUrl { get; set; }
 }
 
 

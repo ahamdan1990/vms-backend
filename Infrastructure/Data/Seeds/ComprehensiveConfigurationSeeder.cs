@@ -882,9 +882,13 @@ public static class ComprehensiveConfigurationSeeder
                 frSystemSection["RetryCount"] ?? "3",
                 "int", "Retry count for Face Recognition system requests", false, false, false, now, systemUserId),
                 
-            CreateConfiguration("FRSystem", "HealthCheckInterval", 
+            CreateConfiguration("FRSystem", "HealthCheckInterval",
                 frSystemSection["HealthCheckInterval"] ?? "00:01:00",
-                "timespan", "Health check interval for Face Recognition system", false, false, false, now, systemUserId)
+                "timespan", "Health check interval for Face Recognition system", false, false, false, now, systemUserId),
+
+            CreateConfiguration("FRSystem", "RecognitionThreshold",
+                frSystemSection["RecognitionThreshold"] ?? "0.9",
+                "decimal", "Minimum Luxand similarity score (0.0–1.0) for a face match to be accepted. Lower = more permissive (higher false-positive risk). Default 0.9.", false, false, false, now, systemUserId)
         });
 
         await Task.CompletedTask;

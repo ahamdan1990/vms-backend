@@ -267,6 +267,7 @@ public class FaceTemplateEnrollmentService : IFaceTemplateEnrollmentService
         int userId,
         byte[] imageBytes,
         string originalFileName,
+        bool skipDuplicateCheck = false,
         CancellationToken cancellationToken = default)
     {
         var user = await _unitOfWork.Users.GetByIdAsync(userId, cancellationToken);
@@ -277,6 +278,47 @@ public class FaceTemplateEnrollmentService : IFaceTemplateEnrollmentService
                 Success = false, Message = $"User {userId} not found."
             };
 
+        var subjectId = $"user:{userId}";
+
+        // Duplicate check runs from in-memory bytes — no disk I/O yet.
+        if (!skipDuplicateCheck)
+        {
+            var conflict = await _faceDetectionService.FindCrossPersonDuplicateAsync(
+                imageBytes, subjectId, cancellationToken);
+
+            if (conflict != null)
+            {
+                return new FaceTemplateEnrollmentItemResultDto
+                {
+                    PersonType = "Staff",
+                    PersonId = userId,
+                    SubjectId = subjectId,
+                    Success = false,
+                    IsDuplicate = true,
+                    ConflictPersonType = conflict.PersonType,
+                    ConflictPersonId = conflict.PersonId,
+                    ConflictSimilarity = conflict.Similarity,
+                    Message = $"This face closely matches an existing {conflict.PersonType} (ID {conflict.PersonId}) with {conflict.Similarity:P0} similarity."
+                };
+            }
+        }
+
+        // Enroll from in-memory bytes BEFORE writing anything to disk or DB.
+        // This ensures a "no face detected" failure leaves the user's current photo untouched.
+        var enrollment = await _faceDetectionService.AddFaceToCollectionAsync(
+            imageBytes, subjectId, sourcePath: null, cancellationToken);
+
+        if (!enrollment.Success)
+        {
+            return new FaceTemplateEnrollmentItemResultDto
+            {
+                PersonType = "Staff", PersonId = userId, SubjectId = subjectId,
+                Success = false,
+                Message = enrollment.ErrorMessage ?? "Face enrollment failed."
+            };
+        }
+
+        // Face enrolled — now persist the image and update the user record.
         var webRoot = _environment.WebRootPath
             ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
         var uploadDir = Path.Combine(webRoot, "uploads", "users", userId.ToString());
@@ -295,15 +337,25 @@ public class FaceTemplateEnrollmentService : IFaceTemplateEnrollmentService
         user.ProfilePhotoPath = relativePath;
         user.UpdateModifiedOn();
         _unitOfWork.Users.Update(user);
+
+        // Backfill SourceImagePath on the newly created template now that we have the disk path.
+        if (int.TryParse(enrollment.ImageId, out var templateId))
+        {
+            var template = await _unitOfWork.Repository<FaceTemplate>()
+                .GetByIdAsync(templateId, cancellationToken);
+            if (template != null)
+                template.SourceImagePath = relativePath;
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await EnrollIdentityAsync(
-            "Staff",
-            userId,
-            $"user:{userId}",
-            relativePath,
-            force: true,
-            cancellationToken);
+        return new FaceTemplateEnrollmentItemResultDto
+        {
+            PersonType = "Staff", PersonId = userId, SubjectId = subjectId,
+            Success = true,
+            ImageId = enrollment.ImageId,
+            Message = "Face template enrolled."
+        };
     }
 
     public async Task<FaceTemplateEnrollmentItemResultDto> EnrollAdditionalFaceAsync(
