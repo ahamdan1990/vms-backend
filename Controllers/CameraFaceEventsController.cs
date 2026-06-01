@@ -357,6 +357,8 @@ public class CameraFaceEventsController : BaseController
             .OrderByDescending(sp => sp.CheckedInAt)
             .FirstOrDefaultAsync(ct);
 
+        var isTempAway = staffPresence?.Status == StaffPresenceStatus.TemporarilyAbsent;
+
         bool? isInsideBuilding = staffPresence?.Status == StaffPresenceStatus.Active ? true
             : staffPresence != null ? false  // TemporarilyAbsent
             : (bool?)false;
@@ -376,6 +378,7 @@ public class CameraFaceEventsController : BaseController
             IsBlacklisted = false,
             HasFaceEnrollment = hasFaceTemplate,
             IsInsideBuilding = isInsideBuilding,
+            IsTempAway = isTempAway,
             TodaysInvitations = new()
         };
     }

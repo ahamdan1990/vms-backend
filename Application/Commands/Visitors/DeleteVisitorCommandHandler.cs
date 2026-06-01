@@ -67,44 +67,42 @@ public class DeleteVisitorCommandHandler : IRequestHandler<DeleteVisitorCommand,
 
             // Get ALL invitations for this visitor to analyze them
             var allInvitations = await _unitOfWork.Invitations.GetByVisitorIdAsync(request.Id, cancellationToken);
-            
-            // Separate cancelled and active invitations
-            var cancelledInvitations = allInvitations.Where(i => i.Status == InvitationStatus.Cancelled).ToList();
-            var activeInvitations = allInvitations.Where(i => i.Status != InvitationStatus.Cancelled).ToList();
 
-            // Check if there are active invitations that prevent deletion
-            if (activeInvitations.Any())
+            // Only pending/in-progress states block deletion — the visitor still has active work in the system
+            var blockingStatuses = new[]
             {
-                var activeStatuses = string.Join(", ", activeInvitations.Select(i => i.Status.ToString()).Distinct());
-                _logger.LogWarning("Cannot delete visitor {VisitorId} - has {Count} active invitations with statuses: {Statuses}", 
-                    request.Id, activeInvitations.Count, activeStatuses);
-                throw new InvalidOperationException($"Cannot delete visitor because there are {activeInvitations.Count} active invitations. " +
-                    $"Active invitation statuses: {activeStatuses}. Please cancel these invitations first.");
+                InvitationStatus.Draft,
+                InvitationStatus.Submitted,
+                InvitationStatus.UnderReview,
+                InvitationStatus.Approved,
+                InvitationStatus.Active
+            };
+
+            var blockingInvitations = allInvitations.Where(i => blockingStatuses.Contains(i.Status)).ToList();
+            var terminalInvitations = allInvitations.Where(i => !blockingStatuses.Contains(i.Status)).ToList();
+
+            // Block deletion only when there are pending or in-progress invitations
+            if (blockingInvitations.Any())
+            {
+                var blockingStatusStr = string.Join(", ", blockingInvitations.Select(i => i.Status.ToString()).Distinct());
+                _logger.LogWarning("Cannot delete visitor {VisitorId} - has {Count} pending invitations with statuses: {Statuses}",
+                    request.Id, blockingInvitations.Count, blockingStatusStr);
+                throw new InvalidOperationException(
+                    $"Cannot delete visitor because there are {blockingInvitations.Count} pending invitations " +
+                    $"with statuses: {blockingStatusStr}. Please cancel these invitations first.");
             }
 
-            // Delete cancelled invitations first if any exist
-            if (cancelledInvitations.Any())
+            // Soft-delete all terminal invitations (Completed, Rejected, Expired, Cancelled) alongside the visitor
+            if (terminalInvitations.Any())
             {
-                _logger.LogInformation("Deleting {Count} cancelled invitations for visitor {VisitorId}", 
-                    cancelledInvitations.Count, request.Id);
-                
-                // First, delete all invitation events for these cancelled invitations
-                var invitationEventRepo = _unitOfWork.Repository<InvitationEvent>();
-                var cancelledInvitationIds = cancelledInvitations.Select(i => i.Id).ToList();
-                
-                var invitationEvents = await invitationEventRepo.GetAsync(
-                    ie => cancelledInvitationIds.Contains(ie.InvitationId), 
-                    cancellationToken);
-                
-                if (invitationEvents.Any())
+                _logger.LogInformation("Soft-deleting {Count} terminal invitations for visitor {VisitorId}",
+                    terminalInvitations.Count, request.Id);
+
+                foreach (var invitation in terminalInvitations)
                 {
-                    _logger.LogInformation("Deleting {Count} invitation events for cancelled invitations", 
-                        invitationEvents.Count);
-                    invitationEventRepo.RemoveRange(invitationEvents);
+                    invitation.SoftDelete(request.DeletedBy);
+                    _unitOfWork.Invitations.Update(invitation);
                 }
-                
-                // Then delete the cancelled invitations
-                _unitOfWork.Invitations.RemoveRange(cancelledInvitations);
             }
 
             // Now delete the visitor
@@ -127,8 +125,8 @@ public class DeleteVisitorCommandHandler : IRequestHandler<DeleteVisitorCommand,
             // Save all changes in a single transaction
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Successfully deleted visitor {VisitorId} and {InvitationCount} cancelled invitations", 
-                request.Id, cancelledInvitations.Count);
+            _logger.LogInformation("Successfully deleted visitor {VisitorId} and soft-deleted {InvitationCount} terminal invitations",
+                request.Id, terminalInvitations.Count);
 
             return true;
         }
