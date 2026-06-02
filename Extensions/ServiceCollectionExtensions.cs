@@ -64,6 +64,7 @@ public static class ServiceCollectionExtensions
         services.RegisterServices();
         services.RegisterRepositories();
         services.RegisterExternalServices();
+        services.RegisterSpeechServices(configuration);
         services.RegisterCompreFaceServices(configuration);
         services.RegisterBackgroundServices();
         services.RegisterInfrastructureServices(configuration);
@@ -215,6 +216,29 @@ public static class ServiceCollectionExtensions
 
         // SignalR Notification service
         services.AddScoped<INotificationService, NotificationService>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers speech recognition services (offline faster-whisper via local Python service)
+    /// </summary>
+    private static IServiceCollection RegisterSpeechServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<VisitorManagementSystem.Api.Infrastructure.Speech.Options.SpeechRecognitionOptions>(
+            configuration.GetSection(VisitorManagementSystem.Api.Infrastructure.Speech.Options.SpeechRecognitionOptions.SectionName));
+
+        services.AddHttpClient("SpeechService", (sp, client) =>
+        {
+            var opts = sp.GetRequiredService<IOptions<VisitorManagementSystem.Api.Infrastructure.Speech.Options.SpeechRecognitionOptions>>().Value;
+            client.BaseAddress = new Uri(opts.ServiceUrl);
+            client.Timeout = TimeSpan.FromSeconds(opts.TimeoutSeconds);
+        });
+
+        services.AddScoped<VisitorManagementSystem.Api.Application.Speech.Interfaces.ISpeechRecognitionService,
+                           VisitorManagementSystem.Api.Infrastructure.Speech.LocalWhisperSpeechRecognitionService>();
+        services.AddScoped<VisitorManagementSystem.Api.Application.Speech.Interfaces.ISpeechNormalizationService,
+                           VisitorManagementSystem.Api.Infrastructure.Speech.SpeechNormalizationService>();
 
         return services;
     }

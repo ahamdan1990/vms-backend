@@ -223,6 +223,16 @@ public static class Permissions
         public const string ConfigureWebhooks = "FRSystem.ConfigureWebhooks";
     }
 
+    /// <summary>
+    /// Speech recognition permissions
+    /// </summary>
+    public static class Speech
+    {
+        public const string Use = "Speech.Use";
+        public const string SettingsRead = "Speech.Settings.Read";
+        public const string SettingsWrite = "Speech.Settings.Write";
+    }
+
     // REMOVED: Alert permissions - Merged into Notification class below
 
     /// <summary>

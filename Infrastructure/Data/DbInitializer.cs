@@ -57,6 +57,9 @@ public static class DbInitializer
 
                     await ComprehensiveConfigurationSeeder.SeedAllConfigurationsAsync(context, serviceProvider);
                 }
+                // Seed any categories added after the initial deployment (incremental)
+                await ComprehensiveConfigurationSeeder.SeedMissingCategoriesAsync(context, serviceProvider);
+
                 // Always sync JWT secret so reinstalls don't leave a stale DB key
                 await SyncJwtSecretFromAppSettingsAsync(context, serviceProvider);
                 return; // Database has already been seeded

@@ -94,6 +94,9 @@ public static class ComprehensiveConfigurationSeeder
             // 14. Storage Alert Configuration
             await SeedStorageAlertConfigurationAsync(configurations, now, systemUserId);
 
+            // 15. Speech Recognition Configuration
+            await SpeechConfigurationSeeder.SeedAsync(configurations, now, systemUserId);
+
             logger?.LogInformation("Seeded {Count} configuration entries", configurations.Count);
         }
         catch (Exception ex)
@@ -109,6 +112,38 @@ public static class ComprehensiveConfigurationSeeder
         await context.SaveChangesAsync();
 
         logger?.LogInformation("Successfully seeded {Count} comprehensive configurations to database", configurations.Count);
+    }
+
+    /// <summary>
+    /// Seeds only categories that are missing from the database.
+    /// Safe to call on existing databases — never overwrites existing rows.
+    /// </summary>
+    public static async Task SeedMissingCategoriesAsync(ApplicationDbContext context, IServiceProvider serviceProvider)
+    {
+        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        var logger = loggerFactory?.CreateLogger("ComprehensiveConfigurationSeeder");
+
+        var adminUser = await context.Users
+            .Where(u => u.Role == Domain.Enums.UserRole.Administrator)
+            .FirstOrDefaultAsync();
+        int? systemUserId = adminUser?.Id;
+
+        var now = DateTime.UtcNow;
+        var toAdd = new List<SystemConfiguration>();
+
+        // SpeechRecognition — added after initial deployment
+        if (!await context.SystemConfigurations.AnyAsync(c => c.Category == "SpeechRecognition"))
+        {
+            logger?.LogInformation("Seeding missing category: SpeechRecognition");
+            await SpeechConfigurationSeeder.SeedAsync(toAdd, now, systemUserId);
+        }
+
+        if (toAdd.Count > 0)
+        {
+            await context.SystemConfigurations.AddRangeAsync(toAdd);
+            await context.SaveChangesAsync();
+            logger?.LogInformation("Seeded {Count} missing configuration rows", toAdd.Count);
+        }
     }
 
     private static async Task SeedJwtConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int? systemUserId)
