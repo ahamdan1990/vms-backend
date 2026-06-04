@@ -54,36 +54,32 @@ namespace VisitorManagementSystem.Api.Application.Commands.Companies
                     };
                 }
 
-                if (string.IsNullOrWhiteSpace(request.CompanyData.Code))
-                {
-                    return new CreateCompanyResult
-                    {
-                        IsSuccess = false,
-                        Errors = new List<string> { "Company code is required" }
-                    };
-                }
+                // Auto-generate code from name when not provided (quick-create flow)
+                var code = string.IsNullOrWhiteSpace(request.CompanyData.Code)
+                    ? GenerateCodeFromName(request.CompanyData.Name)
+                    : request.CompanyData.Code.Trim().ToUpperInvariant();
 
                 // Check if company with same code already exists
                 var companiesRepo = _unitOfWork.Repository<Company>();
                 var existingCompanies = await companiesRepo.GetAsync(
-                    c => c.Code == request.CompanyData.Code.ToUpperInvariant() && !c.IsDeleted);
+                    c => c.Code == code && !c.IsDeleted);
                 if (existingCompanies.Any())
                 {
-                    _logger.LogWarning("Attempt to create company with duplicate code: {Code}", request.CompanyData.Code);
+                    _logger.LogWarning("Attempt to create company with duplicate code: {Code}", code);
                     return new CreateCompanyResult
                     {
                         IsSuccess = false,
-                        ErrorMessage = $"A company with code '{request.CompanyData.Code}' already exists"
+                        ErrorMessage = $"A company with code '{code}' already exists"
                     };
                 }
 
-                _logger.LogInformation("Creating new company: {CompanyName} ({CompanyCode})", request.CompanyData.Name, request.CompanyData.Code);
+                _logger.LogInformation("Creating new company: {CompanyName} ({CompanyCode})", request.CompanyData.Name, code);
 
                 // Create company entity
                 var company = new Company
                 {
                     Name = request.CompanyData.Name.Trim(),
-                    Code = request.CompanyData.Code.Trim().ToUpperInvariant(),
+                    Code = code,
                     Website = string.IsNullOrWhiteSpace(request.CompanyData.Website) ? null : request.CompanyData.Website.Trim(),
                     Industry = string.IsNullOrWhiteSpace(request.CompanyData.Industry) ? null : request.CompanyData.Industry.Trim(),
                     TaxId = string.IsNullOrWhiteSpace(request.CompanyData.TaxId) ? null : request.CompanyData.TaxId.Trim(),
@@ -124,6 +120,17 @@ namespace VisitorManagementSystem.Api.Application.Commands.Companies
                     ErrorMessage = "An error occurred while creating the company"
                 };
             }
+        }
+
+        private static string GenerateCodeFromName(string name)
+        {
+            var initials = string.Concat(
+                name.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(w => char.ToUpperInvariant(w[0]))
+                    .Take(5));
+            if (string.IsNullOrEmpty(initials)) initials = "CO";
+            var suffix = (DateTime.UtcNow.Ticks % 100000).ToString("D5");
+            return $"{initials}{suffix}";
         }
 
         /// <summary>

@@ -42,6 +42,8 @@ public class CivilDefensePresenceSummaryDto
     public int TotalInside { get; set; }
     public int StaffCount { get; set; }
     public int VisitorCount { get; set; }
+    public int TodayEntries { get; set; }
+    public int TodayExits { get; set; }
 }
 
 public class CivilDefensePresenceDto

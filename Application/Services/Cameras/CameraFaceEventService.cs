@@ -91,7 +91,17 @@ public class CameraFaceEventService : ICameraFaceEventService
             cancellationToken.ThrowIfCancellationRequested();
 
             var eventDto = CreateEventDto(recognitionResult, face);
-            var cooldownDecision = ApplyCooldown(recognitionResult, face, config);
+
+            // CD cameras bypass the in-memory cooldown entirely and rely on the DB
+            // pending-duplicate check (FindPendingDuplicateAsync) as the sole dedup gate.
+            // This ensures every face detected in a frame can emit an event even when a
+            // known person was seen within the normal cooldown window — the critical case
+            // being two people entering simultaneously where one triggered a recent event.
+            // Unknown faces keep the standard cooldown: the bounding-box spatial tracker
+            // fails for moving people, so without the 60 s gate they generate rapid duplicates.
+            var cooldownDecision = (config.IsCivilDefenseCamera && face.IsKnown)
+                ? BuildCdCooldownDecision(recognitionResult, face, config)
+                : ApplyCooldown(recognitionResult, face, config);
 
             if (!cooldownDecision.ShouldEmit)
             {
@@ -215,6 +225,20 @@ public class CameraFaceEventService : ICameraFaceEventService
                !result.RecognitionSkipped &&
                result.Faces.Count > 0 &&
                result.Faces.Any(face => !string.Equals(face.SuggestedAction, "none", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private CooldownDecision BuildCdCooldownDecision(
+        CameraFrameRecognitionResultDto result,
+        CameraFrameFaceResultDto face,
+        CameraConfiguration config)
+    {
+        var identity = BuildIdentityKey(result, face, config, DateTime.UtcNow);
+        return new CooldownDecision(
+            ShouldEmit: true,
+            Reason: null,
+            NextAllowedAt: null,
+            Cooldown: GetEventCooldown(config, face),
+            PendingDedupeSubjectId: identity.PendingDedupeSubjectId);
     }
 
     private CooldownDecision ApplyCooldown(

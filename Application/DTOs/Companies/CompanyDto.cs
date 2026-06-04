@@ -29,7 +29,7 @@ namespace VisitorManagementSystem.Api.Application.DTOs.Companies
     public class CreateCompanyDto
     {
         public required string Name { get; set; }
-        public required string Code { get; set; }
+        public string? Code { get; set; }
         public string? Website { get; set; }
         public string? Industry { get; set; }
         public string? TaxId { get; set; }

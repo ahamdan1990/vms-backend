@@ -11,6 +11,8 @@ public class GetCivilDefenseReportsQuery : IRequest<CivilDefenseReportDto>
     public DateTime? DateFrom { get; set; }
     public DateTime? DateTo { get; set; }
     public string? Type { get; set; } // "Staff" | "Visitor" | null = all
+    public string? Status { get; set; } // "Active" | "CheckedOut" | "TemporarilyAbsent" | null = all
+    public bool? IsCivilian { get; set; }
     public int? LocationId { get; set; }
     public string? SearchTerm { get; set; }
     public int PageIndex { get; set; } = 0;
@@ -31,8 +33,10 @@ public class GetCivilDefenseReportsQueryHandler
         GetCivilDefenseReportsQuery request,
         CancellationToken cancellationToken)
     {
-        var dateFrom = request.DateFrom?.ToUniversalTime() ?? DateTime.UtcNow.Date;
-        var dateTo = request.DateTo?.ToUniversalTime() ?? DateTime.UtcNow;
+        var dateFrom = request.DateFrom?.Date ?? DateTime.UtcNow.Date;
+        var dateTo = request.DateTo.HasValue
+            ? request.DateTo.Value.Date.AddDays(1).AddTicks(-1)
+            : DateTime.UtcNow;
 
         var entries = new List<CivilDefenseReportEntryDto>();
 
@@ -125,6 +129,12 @@ public class GetCivilDefenseReportsQueryHandler
                 };
             }));
         }
+
+        if (!string.IsNullOrWhiteSpace(request.Status))
+            entries = entries.Where(e => string.Equals(e.Status, request.Status, StringComparison.OrdinalIgnoreCase)).ToList();
+
+        if (request.IsCivilian.HasValue)
+            entries = entries.Where(e => e.IsCivilian == request.IsCivilian.Value).ToList();
 
         entries = entries.OrderByDescending(e => e.CheckedInAt).ToList();
         var total = entries.Count;

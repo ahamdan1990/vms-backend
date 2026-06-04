@@ -136,6 +136,28 @@ public class GetCivilDefensePresenceQueryHandler
             }).ToList();
         }
 
+        var todayStart = DateTime.Today;
+        var todayEnd   = todayStart.AddDays(1);
+
+        var staffTodayIn = await _unitOfWork.Repository<Domain.Entities.StaffPresence>()
+            .GetQueryable()
+            .CountAsync(x => x.CheckedInAt >= todayStart && x.CheckedInAt < todayEnd, cancellationToken);
+
+        var visitorTodayIn = await _unitOfWork.Invitations
+            .GetQueryable()
+            .CountAsync(x => !x.IsDeleted && x.CheckedInAt != null
+                          && x.CheckedInAt >= todayStart && x.CheckedInAt < todayEnd, cancellationToken);
+
+        var staffTodayOut = await _unitOfWork.Repository<Domain.Entities.StaffPresence>()
+            .GetQueryable()
+            .CountAsync(x => x.CheckedOutAt != null
+                          && x.CheckedOutAt >= todayStart && x.CheckedOutAt < todayEnd, cancellationToken);
+
+        var visitorTodayOut = await _unitOfWork.Invitations
+            .GetQueryable()
+            .CountAsync(x => !x.IsDeleted && x.CheckedOutAt != null
+                          && x.CheckedOutAt >= todayStart && x.CheckedOutAt < todayEnd, cancellationToken);
+
         return new CivilDefensePresenceDto
         {
             Staff = staff,
@@ -144,7 +166,9 @@ public class GetCivilDefensePresenceQueryHandler
             {
                 StaffCount = staff.Count,
                 VisitorCount = visitors.Count,
-                TotalInside = staff.Count + visitors.Count
+                TotalInside = staff.Count + visitors.Count,
+                TodayEntries = staffTodayIn + visitorTodayIn,
+                TodayExits   = staffTodayOut + visitorTodayOut
             },
             GeneratedAt = DateTime.UtcNow
         };

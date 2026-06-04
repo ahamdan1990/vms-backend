@@ -422,16 +422,18 @@ public class InvitationsController : BaseController
         var invitation = await _mediator.Send(query);
 
         if (invitation == null)
-        {
             return NotFoundResponse("Invitation", id);
-        }
 
-        if (string.IsNullOrEmpty(invitation.QrCode))
-        {
-            return BadRequestResponse("QR code not generated for this invitation");
-        }
+        // QR already stored — return it directly
+        if (!string.IsNullOrEmpty(invitation.QrCode))
+            return SuccessResponse(new { QrCode = invitation.QrCode });
 
-        return SuccessResponse(new { QrCode = invitation.QrCode });
+        // Lazy-generate for Approved/Active invitations that are missing a QR
+        var result = await _mediator.Send(new GenerateInvitationQrCommand(id));
+        if (!result.IsSuccess)
+            return BadRequestResponse(result.Error ?? "QR code cannot be generated for this invitation");
+
+        return SuccessResponse(new { QrCode = result.QrCode });
     }
 
 

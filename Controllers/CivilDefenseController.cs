@@ -1,6 +1,10 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
+using System.Drawing;
 using System.Globalization;
 using System.Text;
 using VisitorManagementSystem.Api.Application.Commands.CivilDefense;
@@ -9,6 +13,7 @@ using VisitorManagementSystem.Api.Application.DTOs.CivilDefense;
 using VisitorManagementSystem.Api.Application.Queries.CivilDefense;
 using VisitorManagementSystem.Api.Application.Services.FaceDetection;
 using VisitorManagementSystem.Api.Domain.Constants;
+using VisitorManagementSystem.Api.Hubs;
 
 namespace VisitorManagementSystem.Api.Controllers;
 
@@ -19,17 +24,19 @@ public class CivilDefenseController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly ILogger<CivilDefenseController> _logger;
-
     private readonly IFaceTemplateEnrollmentService _faceEnrollment;
+    private readonly IHubContext<OperatorHub> _operatorHub;
 
     public CivilDefenseController(
         IMediator mediator,
         ILogger<CivilDefenseController> logger,
-        IFaceTemplateEnrollmentService faceEnrollment)
+        IFaceTemplateEnrollmentService faceEnrollment,
+        IHubContext<OperatorHub> operatorHub)
     {
         _mediator = mediator;
         _logger = logger;
         _faceEnrollment = faceEnrollment;
+        _operatorHub = operatorHub;
     }
 
     // GET /api/civil-defense/presence
@@ -94,6 +101,7 @@ public class CivilDefenseController : BaseController
 
         command.CheckedInById = userId.Value;
         var presenceId = await _mediator.Send(command);
+        await NotifyPresenceChanged();
         return SuccessResponse(new { staffPresenceId = presenceId }, "Staff checked in successfully.");
     }
 
@@ -111,6 +119,7 @@ public class CivilDefenseController : BaseController
             CheckedOutById = userId.Value
         };
         await _mediator.Send(command);
+        await NotifyPresenceChanged();
         return SuccessResponse(new { }, "Staff checked out successfully.");
     }
 
@@ -143,6 +152,7 @@ public class CivilDefenseController : BaseController
             RegisteredById = userId.Value
         };
         var checkIn = await _mediator.Send(command);
+        await NotifyPresenceChanged();
         return SuccessResponse(new { visitorId = checkIn.VisitorId, invitationId = checkIn.InvitationId }, "Visitor checked in successfully.");
     }
 
@@ -160,6 +170,7 @@ public class CivilDefenseController : BaseController
             CheckedOutBy = userId.Value
         };
         await _mediator.Send(command);
+        await NotifyPresenceChanged();
         return SuccessResponse(new { }, "Visitor checked out successfully.");
     }
 
@@ -177,6 +188,7 @@ public class CivilDefenseController : BaseController
             Reason = body?.Reason,
             RecordedById = userId.Value
         });
+        await NotifyPresenceChanged();
         return SuccessResponse(new { }, "Temporary leave recorded.");
     }
 
@@ -193,6 +205,7 @@ public class CivilDefenseController : BaseController
             StaffPresenceId = id,
             ReturnedById = userId.Value
         });
+        await NotifyPresenceChanged();
         return SuccessResponse(new { }, "Staff marked as returned.");
     }
 
@@ -210,6 +223,7 @@ public class CivilDefenseController : BaseController
             Reason = body?.Reason,
             RecordedById = userId.Value
         });
+        await NotifyPresenceChanged();
         return SuccessResponse(new { }, "Temporary leave recorded.");
     }
 
@@ -226,6 +240,7 @@ public class CivilDefenseController : BaseController
             InvitationId = invitationId,
             ReturnedById = userId.Value
         });
+        await NotifyPresenceChanged();
         return SuccessResponse(new { }, "Visitor marked as returned.");
     }
 
@@ -272,6 +287,8 @@ public class CivilDefenseController : BaseController
         [FromQuery] DateTime? dateFrom = null,
         [FromQuery] DateTime? dateTo = null,
         [FromQuery] string? type = null,
+        [FromQuery] string? status = null,
+        [FromQuery] bool? isCivilian = null,
         [FromQuery] int? locationId = null,
         [FromQuery] string? search = null,
         [FromQuery] int pageIndex = 0,
@@ -282,6 +299,8 @@ public class CivilDefenseController : BaseController
             DateFrom = dateFrom,
             DateTo = dateTo,
             Type = type,
+            Status = status,
+            IsCivilian = isCivilian,
             LocationId = locationId,
             SearchTerm = search,
             PageIndex = pageIndex,
@@ -298,25 +317,81 @@ public class CivilDefenseController : BaseController
         [FromQuery] DateTime? dateFrom = null,
         [FromQuery] DateTime? dateTo = null,
         [FromQuery] string? type = null,
+        [FromQuery] string? status = null,
+        [FromQuery] bool? isCivilian = null,
         [FromQuery] int? locationId = null,
-        [FromQuery] string? search = null)
+        [FromQuery] string? search = null,
+        [FromQuery] string? format = "csv")
     {
         var query = new GetCivilDefenseReportsQuery
         {
             DateFrom = dateFrom,
             DateTo = dateTo,
             Type = type,
+            Status = status,
+            IsCivilian = isCivilian,
             LocationId = locationId,
             SearchTerm = search,
             PageIndex = 0,
             PageSize = 10000
         };
         var result = await _mediator.Send(query);
+        var dateStr = DateTime.UtcNow.ToString("yyyy-MM-dd");
+
+        if (string.Equals(format, "xlsx", StringComparison.OrdinalIgnoreCase))
+        {
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            using var package = new ExcelPackage();
+            var ws = package.Workbook.Worksheets.Add("Civil Defense Report");
+
+            var headers = new[]
+            {
+                "Type", "Name", "Phone", "Company/Department", "Civilian",
+                "Affiliated Organization", "Host", "Purpose", "Location",
+                "Check-In", "Check-Out", "Duration (min)", "Status"
+            };
+
+            for (var col = 0; col < headers.Length; col++)
+            {
+                var cell = ws.Cells[1, col + 1];
+                cell.Value = headers[col];
+                cell.Style.Font.Bold = true;
+                cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                cell.Style.Fill.BackgroundColor.SetColor(Color.FromArgb(200, 16, 46));
+                cell.Style.Font.Color.SetColor(Color.White);
+            }
+
+            for (var row = 0; row < result.Items.Count; row++)
+            {
+                var item = result.Items[row];
+                var r = row + 2;
+                ws.Cells[r, 1].Value  = item.EntryType;
+                ws.Cells[r, 2].Value  = item.Name;
+                ws.Cells[r, 3].Value  = item.Phone;
+                ws.Cells[r, 4].Value  = item.CompanyOrDepartment;
+                ws.Cells[r, 5].Value  = item.IsCivilian.HasValue ? (item.IsCivilian.Value ? "Yes" : "No") : "";
+                ws.Cells[r, 6].Value  = item.AffiliatedOrganization;
+                ws.Cells[r, 7].Value  = item.HostName;
+                ws.Cells[r, 8].Value  = item.Purpose;
+                ws.Cells[r, 9].Value  = item.LocationName;
+                ws.Cells[r, 10].Value = item.CheckedInAt.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
+                ws.Cells[r, 11].Value = item.CheckedOutAt.HasValue
+                    ? item.CheckedOutAt.Value.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) : "";
+                ws.Cells[r, 12].Value = item.DurationMinutes;
+                ws.Cells[r, 13].Value = item.Status;
+            }
+
+            ws.Cells[ws.Dimension.Address].AutoFitColumns();
+
+            var xlsxBytes = package.GetAsByteArray();
+            return File(xlsxBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"civil-defense-report-{dateStr}.xlsx");
+        }
 
         var csv = BuildCsv(result.Items);
         var bytes = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
-        var fileName = $"civil-defense-report-{DateTime.UtcNow:yyyy-MM-dd}.csv";
-        return File(bytes, "text/csv; charset=utf-8", fileName);
+        return File(bytes, "text/csv; charset=utf-8", $"civil-defense-report-{dateStr}.csv");
     }
 
     private static string BuildCsv(List<CivilDefenseReportEntryDto> items)
@@ -354,6 +429,10 @@ public class CivilDefenseController : BaseController
             return $"\"{value.Replace("\"", "\"\"")}\"";
         return value;
     }
+
+    private Task NotifyPresenceChanged() =>
+        _operatorHub.Clients.Group("Operators")
+            .SendAsync("CivilDefensePresenceUpdated", new { timestamp = DateTime.UtcNow });
 }
 
 public class TempLeaveRequest
