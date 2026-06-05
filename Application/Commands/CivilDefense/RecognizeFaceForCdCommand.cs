@@ -33,6 +33,9 @@ public class CdRecognitionResultDto
     public int? FaceY { get; set; }
     public int? FaceWidth { get; set; }
     public int? FaceHeight { get; set; }
+    public bool IsVip { get; set; }
+    public bool IsBlacklisted { get; set; }
+    public string? BlacklistReason { get; set; }
 }
 
 public class RecognizeFaceForCdCommandHandler
@@ -180,6 +183,9 @@ public class RecognizeFaceForCdCommandHandler
             ActiveInvitationId = activeInvitation?.Id,
             FaceX = box?.X, FaceY = box?.Y,
             FaceWidth = box?.Width, FaceHeight = box?.Height,
+            IsVip = visitor.IsVip,
+            IsBlacklisted = visitor.IsBlacklisted,
+            BlacklistReason = visitor.BlacklistReason,
         };
     }
 

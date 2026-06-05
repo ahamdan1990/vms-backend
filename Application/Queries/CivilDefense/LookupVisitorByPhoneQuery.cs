@@ -52,7 +52,10 @@ public class LookupVisitorByPhoneQueryHandler
             Company = visitor.Company,
             ProfilePhotoUrl = string.IsNullOrWhiteSpace(visitor.ProfilePhotoPath) ? null : _urlResolver.GetAbsoluteUrl(visitor.ProfilePhotoPath),
             IsCurrentlyInside = activeInvitation != null,
-            ActiveInvitationId = activeInvitation?.Id
+            ActiveInvitationId = activeInvitation?.Id,
+            IsVip = visitor.IsVip,
+            IsBlacklisted = visitor.IsBlacklisted,
+            BlacklistReason = visitor.BlacklistReason
         };
     }
 }

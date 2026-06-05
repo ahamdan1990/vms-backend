@@ -321,6 +321,8 @@ public static class RolePermissionSeeder
             Permissions.CivilDefense.ViewPresence,
             Permissions.CivilDefense.ViewReports,
             Permissions.CivilDefense.ExportReports,
+            Permissions.CivilDefense.ViewRegistry,
+            Permissions.CivilDefense.ManageVipBlacklist,
             Permissions.Profile.ViewOwn,
             Permissions.Profile.UpdateOwn,
             Permissions.Profile.ChangePassword,
@@ -603,6 +605,8 @@ public static class RolePermissionSeeder
                 Permissions.CivilDefense.CheckOutVisitor,
                 Permissions.CivilDefense.ViewReports,
                 Permissions.CivilDefense.ExportReports,
+                Permissions.CivilDefense.ViewRegistry,
+                Permissions.CivilDefense.ManageVipBlacklist,
             },
             ["Receptionist"]  = new[] { Permissions.Visitor.Update }
         };
@@ -685,6 +689,8 @@ public static class RolePermissionSeeder
                 Permissions.CivilDefense.ViewPresence,
                 Permissions.CivilDefense.ViewReports,
                 Permissions.CivilDefense.ExportReports,
+                Permissions.CivilDefense.ViewRegistry,
+                Permissions.CivilDefense.ManageVipBlacklist,
                 Permissions.Profile.ViewOwn,
                 Permissions.Profile.UpdateOwn,
                 Permissions.Profile.ChangePassword,

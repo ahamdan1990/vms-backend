@@ -9,6 +9,7 @@ using System.Globalization;
 using System.Text;
 using VisitorManagementSystem.Api.Application.Commands.CivilDefense;
 using VisitorManagementSystem.Api.Application.Commands.Invitations;
+using VisitorManagementSystem.Api.Application.Commands.Visitors;
 using VisitorManagementSystem.Api.Application.DTOs.CivilDefense;
 using VisitorManagementSystem.Api.Application.Queries.CivilDefense;
 using VisitorManagementSystem.Api.Application.Services.FaceDetection;
@@ -430,12 +431,112 @@ public class CivilDefenseController : BaseController
         return value;
     }
 
+    // GET /api/civil-defense/registry/visitors
+    [HttpGet("registry/visitors")]
+    [Authorize(Policy = Permissions.CivilDefense.ViewRegistry)]
+    public async Task<IActionResult> GetVisitorRegistry(
+        [FromQuery] string? search = null,
+        [FromQuery] bool? isVip = null,
+        [FromQuery] bool? isBlacklisted = null,
+        [FromQuery] int pageIndex = 0,
+        [FromQuery] int pageSize = 50)
+    {
+        var result = await _mediator.Send(new GetCdVisitorRegistryQuery
+        {
+            SearchTerm = search,
+            IsVip = isVip,
+            IsBlacklisted = isBlacklisted,
+            PageIndex = pageIndex,
+            PageSize = Math.Min(pageSize, 200)
+        });
+        return SuccessResponse(result);
+    }
+
+    // POST /api/civil-defense/registry/visitors/{id}/vip
+    [HttpPost("registry/visitors/{id:int}/vip")]
+    [Authorize(Policy = Permissions.CivilDefense.ManageVipBlacklist)]
+    public async Task<IActionResult> MarkVisitorVip(int id)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        await _mediator.Send(new MarkAsVipCommand { Id = id, ModifiedBy = userId.Value });
+        return SuccessResponse(new { }, "Visitor marked as VIP.");
+    }
+
+    // DELETE /api/civil-defense/registry/visitors/{id}/vip
+    [HttpDelete("registry/visitors/{id:int}/vip")]
+    [Authorize(Policy = Permissions.CivilDefense.ManageVipBlacklist)]
+    public async Task<IActionResult> RemoveVisitorVip(int id)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        await _mediator.Send(new RemoveVipStatusCommand { Id = id, ModifiedBy = userId.Value });
+        return SuccessResponse(new { }, "VIP status removed.");
+    }
+
+    // POST /api/civil-defense/registry/visitors/{id}/blacklist
+    [HttpPost("registry/visitors/{id:int}/blacklist")]
+    [Authorize(Policy = Permissions.CivilDefense.ManageVipBlacklist)]
+    public async Task<IActionResult> BlacklistVisitor(int id, [FromBody] BlacklistRequest body)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        await _mediator.Send(new BlacklistVisitorCommand
+        {
+            Id = id,
+            Reason = body.Reason ?? string.Empty,
+            BlacklistedBy = userId.Value
+        });
+        return SuccessResponse(new { }, "Visitor blacklisted.");
+    }
+
+    // DELETE /api/civil-defense/registry/visitors/{id}/blacklist
+    [HttpDelete("registry/visitors/{id:int}/blacklist")]
+    [Authorize(Policy = Permissions.CivilDefense.ManageVipBlacklist)]
+    public async Task<IActionResult> RemoveVisitorBlacklist(int id)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        await _mediator.Send(new RemoveBlacklistCommand { Id = id, ModifiedBy = userId.Value });
+        return SuccessResponse(new { }, "Blacklist removed.");
+    }
+
+    // GET /api/civil-defense/person-report
+    [HttpGet("person-report")]
+    [Authorize(Policy = Permissions.CivilDefense.ViewRegistry)]
+    public async Task<IActionResult> GetPersonReport(
+        [FromQuery] string personType,
+        [FromQuery] int personId,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _mediator.Send(new GetCdPersonReportQuery
+        {
+            PersonType = personType,
+            PersonId = personId,
+            StartDate = startDate,
+            EndDate = endDate,
+        }, cancellationToken);
+        if (result == null) return NotFound();
+        return SuccessResponse(result);
+    }
+
     private Task NotifyPresenceChanged() =>
         _operatorHub.Clients.Group("Operators")
             .SendAsync("CivilDefensePresenceUpdated", new { timestamp = DateTime.UtcNow });
 }
 
 public class TempLeaveRequest
+{
+    public string? Reason { get; set; }
+}
+
+public class BlacklistRequest
 {
     public string? Reason { get; set; }
 }

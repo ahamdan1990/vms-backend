@@ -11,4 +11,7 @@ public class VisitorLookupDto
     public string? ProfilePhotoUrl { get; set; }
     public bool IsCurrentlyInside { get; set; }
     public int? ActiveInvitationId { get; set; }
+    public bool IsVip { get; set; }
+    public bool IsBlacklisted { get; set; }
+    public string? BlacklistReason { get; set; }
 }

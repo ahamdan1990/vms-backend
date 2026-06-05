@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using VisitorManagementSystem.Api.Application.Services.Cameras;
+using VisitorManagementSystem.Api.Application.Services.Notifications;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
@@ -36,15 +37,18 @@ public class VisitorQuickCheckInCommandHandler : IRequestHandler<VisitorQuickChe
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICameraFaceEventService _faceEventService;
+    private readonly INotificationService _notificationService;
     private readonly ILogger<VisitorQuickCheckInCommandHandler> _logger;
 
     public VisitorQuickCheckInCommandHandler(
         IUnitOfWork unitOfWork,
         ICameraFaceEventService faceEventService,
+        INotificationService notificationService,
         ILogger<VisitorQuickCheckInCommandHandler> logger)
     {
         _unitOfWork = unitOfWork;
         _faceEventService = faceEventService;
+        _notificationService = notificationService;
         _logger = logger;
     }
 
@@ -62,6 +66,20 @@ public class VisitorQuickCheckInCommandHandler : IRequestHandler<VisitorQuickChe
                 var existing = await _unitOfWork.Visitors.GetByIdAsync(data.VisitorId.Value, cancellationToken)
                     ?? throw new KeyNotFoundException($"Visitor {data.VisitorId} not found.");
                 visitorId = existing.Id;
+
+                // Fire VIP/blacklist alerts — notification failure must never abort check-in
+                try
+                {
+                    var visitorName = $"{existing.FirstName} {existing.LastName}".Trim();
+                    if (existing.IsVip)
+                        await _notificationService.NotifyVipArrivalAsync(visitorName, "الدفاع المدني", existing.Id, cancellationToken);
+                    if (existing.IsBlacklisted)
+                        await _notificationService.NotifyBlacklistDetectionAsync($"{visitorName} (ID: {existing.Id})", "الدفاع المدني", existing.Id, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to send VIP/blacklist alert for visitor {VisitorId}", existing.Id);
+                }
             }
             else
             {
