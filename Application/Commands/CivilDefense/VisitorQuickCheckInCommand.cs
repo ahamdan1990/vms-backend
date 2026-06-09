@@ -67,18 +67,36 @@ public class VisitorQuickCheckInCommandHandler : IRequestHandler<VisitorQuickChe
                     ?? throw new KeyNotFoundException($"Visitor {data.VisitorId} not found.");
                 visitorId = existing.Id;
 
-                // Fire VIP/blacklist alerts — notification failure must never abort check-in
+                var visitorName = $"{existing.FirstName} {existing.LastName}".Trim();
+
+                // Blacklisted visitors must never be admitted — block before creating any record.
+                if (existing.IsBlacklisted)
+                {
+                    _logger.LogWarning(
+                        "Blacklisted visitor {VisitorId} ({VisitorName}) blocked at CD quick check-in by user {RegisteredById}",
+                        existing.Id, visitorName, request.RegisteredById);
+                    try
+                    {
+                        await _notificationService.NotifyBlacklistDetectionAsync(
+                            $"{visitorName} (ID: {existing.Id})", "الدفاع المدني", existing.Id, cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send blacklist alert for visitor {VisitorId}", existing.Id);
+                    }
+                    throw new InvalidOperationException(
+                        $"Check-in denied: visitor '{visitorName}' is on the blacklist.");
+                }
+
+                // Fire VIP alert — notification failure must never abort check-in
                 try
                 {
-                    var visitorName = $"{existing.FirstName} {existing.LastName}".Trim();
                     if (existing.IsVip)
                         await _notificationService.NotifyVipArrivalAsync(visitorName, "الدفاع المدني", existing.Id, cancellationToken);
-                    if (existing.IsBlacklisted)
-                        await _notificationService.NotifyBlacklistDetectionAsync($"{visitorName} (ID: {existing.Id})", "الدفاع المدني", existing.Id, cancellationToken);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to send VIP/blacklist alert for visitor {VisitorId}", existing.Id);
+                    _logger.LogWarning(ex, "Failed to send VIP alert for visitor {VisitorId}", existing.Id);
                 }
             }
             else
