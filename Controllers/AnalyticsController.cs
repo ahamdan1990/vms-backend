@@ -355,7 +355,7 @@ public class AnalyticsController : BaseController
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Success response</returns>
     [HttpPost("broadcast-update")]
-    [Authorize(Roles = UserRoles.Administrator)]
+    [Authorize(Policy = Permissions.Dashboard.ViewAdmin)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -389,7 +389,7 @@ public class AnalyticsController : BaseController
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Analytics data in requested format</returns>
     [HttpGet("export")]
-    [Authorize(Roles = UserRoles.Administrator)]
+    [Authorize(Policy = Permissions.Report.Export)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> ExportAnalytics(
         [FromQuery] DateTime? startDate,

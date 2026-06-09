@@ -73,6 +73,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<NotificationAlert> NotificationAlerts { get; set; } = null!;
     public DbSet<OperatorSession> OperatorSessions { get; set; } = null!;
     public DbSet<AlertEscalation> AlertEscalations { get; set; } = null!;
+    public DbSet<AlertEscalationLog> AlertEscalationLogs { get; set; } = null!;
     public DbSet<AlertRecipientConfiguration> AlertRecipientConfigurations { get; set; } = null!;
 
     // DbSets - Backup & Storage Management
@@ -135,6 +136,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new NotificationAlertConfiguration());
         modelBuilder.ApplyConfiguration(new OperatorSessionConfiguration());
         modelBuilder.ApplyConfiguration(new AlertEscalationConfiguration());
+        modelBuilder.ApplyConfiguration(new AlertEscalationLogConfiguration());
         modelBuilder.ApplyConfiguration(new AlertRecipientConfigurationConfig());
 
         // Apply all configurations - Backup & Storage Management

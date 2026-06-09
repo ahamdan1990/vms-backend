@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MediatR;
 using System.Security.Claims;
+using VisitorManagementSystem.Api.Application.Common;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
 using VisitorManagementSystem.Api.Application.Services.Visitors;
 using VisitorManagementSystem.Api.Domain.Entities;
@@ -131,18 +132,10 @@ public class UpdateVisitorCommandHandler : IRequestHandler<UpdateVisitorCommand,
             // Update enhanced phone number
             if (!string.IsNullOrEmpty(request.PhoneNumber))
             {
-                var fullPhoneNumber = !string.IsNullOrEmpty(request.PhoneCountryCode)
-                    ? $"+{request.PhoneCountryCode}{request.PhoneNumber}"
-                    : request.PhoneNumber;
-
-                if (PhoneNumber.IsValidPhoneNumber(fullPhoneNumber))
-                {
-                    visitor.PhoneNumber = new PhoneNumber(fullPhoneNumber, request.PhoneCountryCode);
-                }
-                else
-                {
-                    visitor.PhoneNumber = null;
-                }
+                var normalized = PhoneNormalizer.TryNormalizeToE164(request.PhoneNumber, request.PhoneCountryCode);
+                visitor.PhoneNumber = normalized != null && PhoneNumber.IsValidPhoneNumber(normalized)
+                    ? new PhoneNumber(normalized)
+                    : null;
             }
             else
             {

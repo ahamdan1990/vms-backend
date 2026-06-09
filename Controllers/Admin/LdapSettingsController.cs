@@ -16,7 +16,7 @@ namespace VisitorManagementSystem.Api.Controllers.Admin;
 /// </summary>
 [ApiController]
 [Route("api/admin/ldap-settings")]
-[Authorize(Roles = "Administrator")]
+[Authorize(Policy = Permissions.SystemConfig.Update)]
 public class LdapSettingsController : BaseController
 {
     private readonly IDynamicConfigurationService _configurationService;

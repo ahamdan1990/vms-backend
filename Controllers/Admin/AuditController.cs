@@ -14,7 +14,7 @@ namespace VisitorManagementSystem.Api.Controllers.Admin;
 /// </summary>
 [ApiController]
 [Route("api/audit")]
-[Authorize(Roles = "Administrator")]
+[Authorize(Policy = Permissions.Audit.ReadAll)]
 public class AuditController : BaseController
 {
     private readonly IMediator _mediator;

@@ -14,7 +14,7 @@ namespace VisitorManagementSystem.Api.Controllers.Admin;
 /// </summary>
 [ApiController]
 [Route("api/system/backup")]
-[Authorize(Roles = "Administrator")]
+[Authorize(Policy = Permissions.Backup.Execute)]
 public class BackupController : ControllerBase
 {
     private readonly IDatabaseBackupService _backupService;

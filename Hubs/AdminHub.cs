@@ -29,13 +29,14 @@ public class AdminHub : BaseHub
             return;
         }
 
-        // Check admin permissions
-        var userRole = GetCurrentUserRole();
-        if (userRole != UserRoles.Administrator && !HasPermission(Permissions.SystemConfig.Read))
+        // Gate on the SystemConfig.Read permission rather than a hardcoded role name,
+        // so any role granted that permission can use the admin hub.
+        if (!HasPermission(Permissions.SystemConfig.Read))
         {
             await Clients.Caller.SendAsync("Error", "Administrator permissions required");
             return;
         }
+        var userRole = GetCurrentUserRole();
 
         try
         {

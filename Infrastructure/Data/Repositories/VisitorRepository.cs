@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using VisitorManagementSystem.Api.Application.Common;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.Models;
@@ -34,11 +35,22 @@ public class VisitorRepository : BaseRepository<Visitor>, IVisitorRepository
 
     public async Task<Visitor?> GetByPhoneNumberAsync(string phoneNumber, CancellationToken cancellationToken = default)
     {
+        // Normalize the search input so lookups work regardless of the format the caller provides
+        // (e.g. "03988760", "+9613988760", "9613988760" all resolve to the same record).
+        var normalized = PhoneNormalizer.TryNormalizeToE164(phoneNumber, null);
+        var digitsOnly = PhoneNormalizer.DigitsOnly(normalized ?? phoneNumber);
+
         return await _dbSet
             .Include(v => v.EmergencyContacts)
             .Include(v => v.Documents)
             .Include(v => v.VisitorNotes)
-            .FirstOrDefaultAsync(v => v.PhoneNumber != null && v.PhoneNumber.Value == phoneNumber && v.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(v =>
+                v.PhoneNumber != null &&
+                v.IsActive &&
+                (v.PhoneNumber.Value == phoneNumber ||
+                 (normalized != null && v.PhoneNumber.Value == normalized) ||
+                 v.PhoneNumber.DigitsOnly == digitsOnly),
+                cancellationToken);
     }
 
     public async Task<(List<Visitor> Visitors, int TotalCount)> GetAccessibleByUserAsync(
@@ -110,8 +122,14 @@ public class VisitorRepository : BaseRepository<Visitor>, IVisitorRepository
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             var term = searchTerm.ToLower().Trim();
-            // Normalize phone search term by removing common separators
-            var phoneSearchTerm = term.Replace("+", "").Replace("-", "").Replace(" ", "").Replace("(", "").Replace(")", "");
+            // Strip separators from the raw search term for digit-only comparison.
+            var phoneSearchDigits = PhoneNormalizer.DigitsOnly(term);
+
+            // If the search term looks like a Lebanese national number (starts with 0, 7–9 digits),
+            // also try matching against the international equivalent (strip leading 0, prepend 961).
+            string? lebaneseInternational = null;
+            if (phoneSearchDigits.StartsWith("0") && phoneSearchDigits.Length >= 7 && phoneSearchDigits.Length <= 9)
+                lebaneseInternational = "961" + phoneSearchDigits.Substring(1);
 
             query = query.Where(v =>
                 v.FirstName.ToLower().Contains(term) ||
@@ -120,7 +138,8 @@ public class VisitorRepository : BaseRepository<Visitor>, IVisitorRepository
                 (v.Company != null && v.Company.ToLower().Contains(term)) ||
                 (v.PhoneNumber != null && (
                     v.PhoneNumber.Value.Contains(term) ||
-                    v.PhoneNumber.Value.Replace("+", "").Replace("-", "").Replace(" ", "").Replace("(", "").Replace(")", "").Contains(phoneSearchTerm)
+                    v.PhoneNumber.DigitsOnly.Contains(phoneSearchDigits) ||
+                    (lebaneseInternational != null && v.PhoneNumber.DigitsOnly.Contains(lebaneseInternational))
                 )));
         }
 

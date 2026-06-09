@@ -88,12 +88,37 @@ public class VisitorFilterSpecification : BaseSpecification<Visitor>
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             var term = searchTerm.ToLower().Trim();
-            criteria = CombineWithAnd(criteria, v =>
-                v.FirstName.ToLower().Contains(term) ||
-                v.LastName.ToLower().Contains(term) ||
-                v.Email.Value.ToLower().Contains(term) ||
-                (v.Company != null && v.Company.ToLower().Contains(term)) ||
-                (v.PhoneNumber != null && v.PhoneNumber.Value.Contains(term)));
+            var phoneDigits = new string(term.Where(char.IsDigit).ToArray());
+            string? lebaneseIntl = phoneDigits.StartsWith("0") && phoneDigits.Length >= 7 && phoneDigits.Length <= 9
+                ? "961" + phoneDigits.Substring(1)
+                : null;
+
+            if (lebaneseIntl != null)
+            {
+                var lb = lebaneseIntl;
+                criteria = CombineWithAnd(criteria, v =>
+                    v.FirstName.ToLower().Contains(term) ||
+                    v.LastName.ToLower().Contains(term) ||
+                    v.Email.Value.ToLower().Contains(term) ||
+                    (v.Company != null && v.Company.ToLower().Contains(term)) ||
+                    (v.PhoneNumber != null && (
+                        v.PhoneNumber.Value.Contains(term) ||
+                        v.PhoneNumber.DigitsOnly.Contains(phoneDigits) ||
+                        v.PhoneNumber.DigitsOnly.Contains(lb)
+                    )));
+            }
+            else
+            {
+                criteria = CombineWithAnd(criteria, v =>
+                    v.FirstName.ToLower().Contains(term) ||
+                    v.LastName.ToLower().Contains(term) ||
+                    v.Email.Value.ToLower().Contains(term) ||
+                    (v.Company != null && v.Company.ToLower().Contains(term)) ||
+                    (v.PhoneNumber != null && (
+                        v.PhoneNumber.Value.Contains(term) ||
+                        v.PhoneNumber.DigitsOnly.Contains(phoneDigits)
+                    )));
+            }
         }
 
         // Company filter

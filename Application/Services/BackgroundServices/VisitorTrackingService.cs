@@ -271,13 +271,15 @@ public class VisitorTrackingService : BackgroundService
                     continue; // Not overstayed yet
                 }
 
-                // Check if we already sent an overstay alert recently (within last hour)
+                // Only create a new alert if there is no existing unacknowledged overstay alert
+                // for this invitation. If the previous alert was acknowledged (operator handled it)
+                // and the visitor is still overstaying, a fresh alert is warranted.
                 var existingAlert = await unitOfWork.Repository<NotificationAlert>()
                     .GetFirstOrDefaultAsync(
                         a => a.RelatedEntityType == "Invitation" &&
                              a.RelatedEntityId == invitation.Id &&
                              a.Type == Domain.Enums.NotificationAlertType.VisitorOverstay &&
-                             a.CreatedOn >= DateTime.UtcNow.AddHours(-1), // Changed from -2 to -1 to reduce spam
+                             !a.IsAcknowledged,
                         cancellationToken: cancellationToken);
 
                 if (existingAlert == null)

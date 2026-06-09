@@ -20,6 +20,7 @@
 		<PackageReference Include="itext.bouncy-castle-adapter" Version="8.0.5" />
 		<PackageReference Include="iText7" Version="8.0.5" />
 		<PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.5" />
+		<PackageReference Include="libphonenumber-csharp" Version="8.13.52" />
 		<PackageReference Include="MailKit" Version="4.16.0" />
 		<PackageReference Include="MediatR" Version="12.2.0" />
 		<PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />

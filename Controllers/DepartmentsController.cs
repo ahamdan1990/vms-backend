@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using VisitorManagementSystem.Api.Application.Commands.Departments;
 using VisitorManagementSystem.Api.Application.DTOs.Departments;
 using VisitorManagementSystem.Api.Application.Queries.Departments;
+using VisitorManagementSystem.Api.Domain.Constants;
 
 namespace VisitorManagementSystem.Api.Controllers;
 
@@ -102,7 +103,7 @@ public class DepartmentsController : BaseController
     /// <param name="createDepartmentDto">Department creation data</param>
     /// <returns>Created department</returns>
     [HttpPost]
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     public async Task<IActionResult> CreateDepartment([FromBody] CreateDepartmentDto createDepartmentDto)
     {
         if (!ModelState.IsValid)
@@ -123,7 +124,7 @@ public class DepartmentsController : BaseController
     /// <param name="updateDepartmentDto">Update data</param>
     /// <returns>Updated department</returns>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     public async Task<IActionResult> UpdateDepartment(int id, [FromBody] UpdateDepartmentDto updateDepartmentDto)
     {
         if (!ModelState.IsValid)
@@ -149,7 +150,7 @@ public class DepartmentsController : BaseController
     /// <param name="reason">Optional deletion reason</param>
     /// <returns>Deletion result</returns>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Policy = Permissions.SystemConfig.Update)]
     public async Task<IActionResult> DeleteDepartment(int id, [FromQuery] string? reason = null)
     {
         try

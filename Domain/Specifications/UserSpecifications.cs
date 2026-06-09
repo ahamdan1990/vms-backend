@@ -140,12 +140,50 @@ public class UserSearchSpecification : BaseSpecification<User>
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             var lowerSearchTerm = searchTerm.ToLower();
-            Expression<Func<User, bool>> searchCriteria = u =>
-                u.FirstName.ToLower().Contains(lowerSearchTerm) ||
-                u.LastName.ToLower().Contains(lowerSearchTerm) ||
-                u.Email.Value.ToLower().Contains(lowerSearchTerm) ||
-                (u.EmployeeId != null && u.EmployeeId.ToLower().Contains(lowerSearchTerm)) ||
-                (u.Department != null && u.Department.ToLower().Contains(lowerSearchTerm));
+            var phoneDigits = new string(lowerSearchTerm.Where(char.IsDigit).ToArray());
+            string? lebaneseIntl = phoneDigits.StartsWith("0") && phoneDigits.Length >= 7 && phoneDigits.Length <= 9
+                ? "961" + phoneDigits.Substring(1)
+                : null;
+
+            Expression<Func<User, bool>> searchCriteria;
+            if (lebaneseIntl != null)
+            {
+                var lb = lebaneseIntl;
+                searchCriteria = u =>
+                    u.FirstName.ToLower().Contains(lowerSearchTerm) ||
+                    u.LastName.ToLower().Contains(lowerSearchTerm) ||
+                    u.Email.Value.ToLower().Contains(lowerSearchTerm) ||
+                    (u.EmployeeId != null && u.EmployeeId.ToLower().Contains(lowerSearchTerm)) ||
+                    (u.Department != null && u.Department.ToLower().Contains(lowerSearchTerm)) ||
+                    (u.PhoneNumber != null && (
+                        u.PhoneNumber.Value.Contains(lowerSearchTerm) ||
+                        u.PhoneNumber.DigitsOnly.Contains(phoneDigits) ||
+                        u.PhoneNumber.DigitsOnly.Contains(lb)
+                    ));
+            }
+            else if (phoneDigits.Length > 0)
+            {
+                searchCriteria = u =>
+                    u.FirstName.ToLower().Contains(lowerSearchTerm) ||
+                    u.LastName.ToLower().Contains(lowerSearchTerm) ||
+                    u.Email.Value.ToLower().Contains(lowerSearchTerm) ||
+                    (u.EmployeeId != null && u.EmployeeId.ToLower().Contains(lowerSearchTerm)) ||
+                    (u.Department != null && u.Department.ToLower().Contains(lowerSearchTerm)) ||
+                    (u.PhoneNumber != null && (
+                        u.PhoneNumber.Value.Contains(lowerSearchTerm) ||
+                        u.PhoneNumber.DigitsOnly.Contains(phoneDigits)
+                    ));
+            }
+            else
+            {
+                searchCriteria = u =>
+                    u.FirstName.ToLower().Contains(lowerSearchTerm) ||
+                    u.LastName.ToLower().Contains(lowerSearchTerm) ||
+                    u.Email.Value.ToLower().Contains(lowerSearchTerm) ||
+                    (u.EmployeeId != null && u.EmployeeId.ToLower().Contains(lowerSearchTerm)) ||
+                    (u.Department != null && u.Department.ToLower().Contains(lowerSearchTerm)) ||
+                    (u.PhoneNumber != null && u.PhoneNumber.Value.Contains(lowerSearchTerm));
+            }
 
             criteria = CombineExpressions(criteria, searchCriteria);
         }

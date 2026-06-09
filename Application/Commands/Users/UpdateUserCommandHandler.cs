@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using MediatR;
+using VisitorManagementSystem.Api.Application.Common;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
+using VisitorManagementSystem.Api.Application.Services.Auth;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
@@ -15,15 +17,18 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILogger<UpdateUserCommandHandler> _logger;
+        private readonly IPermissionService _permissionService;
 
         public UpdateUserCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
-            ILogger<UpdateUserCommandHandler> logger)
+            ILogger<UpdateUserCommandHandler> logger,
+            IPermissionService permissionService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _logger = logger;
+            _permissionService = permissionService;
         }
 
         public async Task<UserDto> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
@@ -94,11 +99,10 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 // Update enhanced phone number
                 if (!string.IsNullOrEmpty(request.PhoneNumber))
                 {
-                    var fullPhoneNumber = !string.IsNullOrEmpty(request.PhoneCountryCode)
-                        ? $"+{request.PhoneCountryCode}{request.PhoneNumber}"
-                        : request.PhoneNumber;
-
-                    user.PhoneNumber = new PhoneNumber(fullPhoneNumber, request.PhoneCountryCode);
+                    var normalized = PhoneNormalizer.TryNormalizeToE164(request.PhoneNumber, request.PhoneCountryCode);
+                    user.PhoneNumber = normalized != null && PhoneNumber.IsValidPhoneNumber(normalized)
+                        ? new PhoneNumber(normalized)
+                        : null;
                 }
                 else
                 {
@@ -148,6 +152,16 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 // Update user in repository
                 _unitOfWork.Users.Update(user);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                // If the role changed, invalidate the user's permission cache immediately so
+                // PermissionClaimsMiddleware picks up the new role's permissions on the next request
+                // without waiting for the 15-minute cache TTL to expire.
+                if (originalRole != request.RoleName)
+                {
+                    _permissionService.InvalidateUserPermissionCache(user.Id);
+                    _logger.LogInformation("Permission cache invalidated for user {UserId} after role change: {OldRole} → {NewRole}",
+                        user.Id, originalRole, request.RoleName);
+                }
 
                 _logger.LogInformation("User updated successfully: {UserId} by {ModifiedBy}. Email: {OriginalEmail} -> {NewEmail}, Role: {OriginalRole} -> {NewRole}",
                     user.Id, request.ModifiedBy, originalEmail, user.Email.Value, originalRole, request.RoleName);

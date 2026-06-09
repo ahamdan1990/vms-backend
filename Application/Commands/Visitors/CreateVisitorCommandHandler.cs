@@ -1,12 +1,13 @@
 ﻿using AutoMapper;
 using MediatR;
-using VisitorManagementSystem.Api.Application.DTOs.Visitors;
 using VisitorManagementSystem.Api.Application.Commands.Invitations;
+using VisitorManagementSystem.Api.Application.Common;
+using VisitorManagementSystem.Api.Application.DTOs.Visitors;
+using VisitorManagementSystem.Api.Application.Services.Visitors;
 using VisitorManagementSystem.Api.Domain.Entities;
+using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
-using VisitorManagementSystem.Api.Domain.Enums;
-using VisitorManagementSystem.Api.Application.Services.Visitors;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Visitors;
 
@@ -45,9 +46,8 @@ public class CreateVisitorCommandHandler : IRequestHandler<CreateVisitorCommand,
             _logger.LogDebug("Processing create visitor command for email: {Email}", request.Email);
 
             // STEP 1: Check for duplicate visitor
-            var phoneNumber = !string.IsNullOrEmpty(request.PhoneNumber) && !string.IsNullOrEmpty(request.PhoneCountryCode)
-                ? $"+{request.PhoneCountryCode}{request.PhoneNumber}"
-                : request.PhoneNumber;
+            var phoneNumber = PhoneNormalizer.TryNormalizeToE164(request.PhoneNumber, request.PhoneCountryCode)
+                              ?? request.PhoneNumber;
 
             var existingVisitor = await _duplicateDetectionService.FindDuplicateVisitorAsync(
                 request.Email,
@@ -113,14 +113,9 @@ public class CreateVisitorCommandHandler : IRequestHandler<CreateVisitorCommand,
             // Set enhanced phone number if provided
             if (!string.IsNullOrEmpty(request.PhoneNumber))
             {
-                var fullPhoneNumber = !string.IsNullOrEmpty(request.PhoneCountryCode)
-                    ? $"+{request.PhoneCountryCode}{request.PhoneNumber}"
-                    : request.PhoneNumber;
-
-                if (PhoneNumber.IsValidPhoneNumber(fullPhoneNumber))
-                {
-                    visitor.PhoneNumber = new PhoneNumber(fullPhoneNumber, request.PhoneCountryCode);
-                }
+                var normalized = PhoneNormalizer.TryNormalizeToE164(request.PhoneNumber, request.PhoneCountryCode);
+                if (normalized != null && PhoneNumber.IsValidPhoneNumber(normalized))
+                    visitor.PhoneNumber = new PhoneNumber(normalized);
             }
 
             // Set address if provided

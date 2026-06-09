@@ -1,4 +1,5 @@
-﻿using VisitorManagementSystem.Api.Application.Services.Email;
+﻿using VisitorManagementSystem.Api.Application.Common;
+using VisitorManagementSystem.Api.Application.Services.Email;
 using VisitorManagementSystem.Api.Application.Services.Notifications;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
@@ -73,14 +74,15 @@ public class NotificationDispatcherService : BackgroundService
 
         try
         {
-            var cutoffTime = DateTime.UtcNow.AddMinutes(-5); // Check alerts older than 5 minutes
+            var minimumAgeMinutes = _configuration.GetValue<int>("BackgroundServices:NotificationDispatcher:MinimumAlertAgeMinutes", 5);
+            var cutoffTime = DateTime.UtcNow.AddMinutes(-minimumAgeMinutes);
 
             // Get unacknowledged alerts that may need escalation
             var unacknowledgedAlerts = await unitOfWork.Repository<NotificationAlert>()
                 .GetAllAsync(
-                    a => !a.IsAcknowledged && 
-                         a.IsActive && 
-                         a.CreatedOn < cutoffTime && 
+                    a => !a.IsAcknowledged &&
+                         a.IsActive &&
+                         a.CreatedOn < cutoffTime &&
                          (a.ExpiresOn == null || a.ExpiresOn > DateTime.UtcNow),
                     orderBy: q => q.OrderBy(r => r.CreatedOn),
                     cancellationToken: cancellationToken);
@@ -95,9 +97,26 @@ public class NotificationDispatcherService : BackgroundService
                     orderBy: q => q.OrderBy(r => r.RulePriority),
                     cancellationToken: cancellationToken);
 
+            if (!escalationRules.Any())
+                return;
+
+            // Pre-load escalation log entries for all candidate alerts in one query,
+            // then build an in-memory lookup: (alertId, ruleId) → attempt count.
+            // This prevents re-executing rules that have already reached MaxAttempts.
+            var alertIds = unacknowledgedAlerts.Select(a => a.Id).ToList();
+            var escalationLogs = await unitOfWork.Repository<AlertEscalationLog>()
+                .GetAllAsync(
+                    log => alertIds.Contains(log.NotificationAlertId),
+                    cancellationToken: cancellationToken);
+
+            var attemptCounts = new Dictionary<(int alertId, int ruleId), int>(
+                escalationLogs
+                    .GroupBy(log => (log.NotificationAlertId, log.AlertEscalationId))
+                    .ToDictionary(g => g.Key, g => g.Count()));
+
             foreach (var alert in unacknowledgedAlerts)
             {
-                await ProcessAlertEscalation(alert, escalationRules, unitOfWork, notificationService, cancellationToken);
+                await ProcessAlertEscalation(alert, escalationRules, unitOfWork, notificationService, attemptCounts, cancellationToken);
             }
         }
         catch (Exception ex)
@@ -108,23 +127,55 @@ public class NotificationDispatcherService : BackgroundService
     }
 
     /// <summary>
-    /// Process escalation for a specific alert
+    /// Process escalation for a specific alert, enforcing MaxAttempts per rule via the escalation log.
     /// </summary>
-    private async Task ProcessAlertEscalation(NotificationAlert alert, IEnumerable<AlertEscalation> escalationRules,
-        IUnitOfWork unitOfWork, INotificationService notificationService, CancellationToken cancellationToken)
+    private async Task ProcessAlertEscalation(
+        NotificationAlert alert,
+        IEnumerable<AlertEscalation> escalationRules,
+        IUnitOfWork unitOfWork,
+        INotificationService notificationService,
+        Dictionary<(int alertId, int ruleId), int> attemptCounts,
+        CancellationToken cancellationToken)
     {
         try
         {
             var minutesSinceCreated = (DateTime.UtcNow - alert.CreatedOn).TotalMinutes;
 
-            // Find applicable escalation rules
             var applicableRules = escalationRules
                 .Where(rule => rule.MatchesAlert(alert) && minutesSinceCreated >= rule.EscalationDelayMinutes);
-               // .Take(1); // Apply first matching rule only
 
             foreach (var rule in applicableRules)
             {
+                var key = (alert.Id, rule.Id);
+                var attempts = attemptCounts.GetValueOrDefault(key, 0);
+
+                if (attempts >= rule.MaxAttempts)
+                {
+                    _logger.LogDebug(
+                        "Skipping rule {RuleName} for alert {AlertId}: MaxAttempts ({Max}) already reached",
+                        rule.RuleName, alert.Id, rule.MaxAttempts);
+                    continue;
+                }
+
                 await ExecuteEscalationAction(rule, alert, unitOfWork, notificationService, cancellationToken);
+
+                // Record the attempt so this rule never fires again for this alert
+                // once MaxAttempts is exhausted, even across service restarts.
+                var logEntry = new AlertEscalationLog
+                {
+                    NotificationAlertId = alert.Id,
+                    AlertEscalationId   = rule.Id,
+                    AttemptNumber       = attempts + 1,
+                    Action              = rule.Action,
+                    TargetInfo          = rule.Action == EscalationAction.SendEmail
+                                         ? rule.EscalationEmails
+                                         : rule.EscalationTargetRole ?? rule.EscalationTargetUserId?.ToString()
+                };
+                await unitOfWork.Repository<AlertEscalationLog>().AddAsync(logEntry, cancellationToken);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
+
+                // Update the in-memory count so subsequent rules in the same cycle see the correct value.
+                attemptCounts[key] = attempts + 1;
             }
         }
         catch (Exception ex)
@@ -267,7 +318,8 @@ public class NotificationDispatcherService : BackgroundService
 
             foreach (var phone in phones)
             {
-                await smsService.SendSMSAsync(phone, smsMessage, cancellationToken);
+                var normalizedPhone = PhoneNormalizer.TryNormalizeToE164(phone, null) ?? phone;
+                await smsService.SendSMSAsync(normalizedPhone, smsMessage, cancellationToken);
             }
 
             _logger.LogInformation("Escalation SMS sent for alert {AlertId} to {PhoneCount} recipients",

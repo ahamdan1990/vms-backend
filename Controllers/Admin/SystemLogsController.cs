@@ -12,7 +12,7 @@ namespace VisitorManagementSystem.Api.Controllers.Admin;
 /// </summary>
 [ApiController]
 [Route("api/system/logs")]
-[Authorize(Roles = "Administrator")]
+[Authorize(Policy = Permissions.Audit.ReadAll)]
 public class SystemLogsController : ControllerBase
 {
     private readonly ILogFileService _logService;

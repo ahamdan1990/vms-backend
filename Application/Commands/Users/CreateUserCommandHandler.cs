@@ -1,6 +1,7 @@
 ﻿// Application/Commands/Users/CreateUserCommandHandler.cs
 using AutoMapper;
 using MediatR;
+using VisitorManagementSystem.Api.Application.Common;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Application.Services.Auth;
 using VisitorManagementSystem.Api.Application.Services.Email;
@@ -115,11 +116,9 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                 // Set enhanced phone number if provided
                 if (!string.IsNullOrEmpty(request.PhoneNumber))
                 {
-                    var fullPhoneNumber = !string.IsNullOrEmpty(request.PhoneCountryCode)
-                        ? $"+{request.PhoneCountryCode}{request.PhoneNumber}"
-                        : request.PhoneNumber;
-
-                    user.PhoneNumber = new PhoneNumber(fullPhoneNumber, request.PhoneCountryCode);
+                    var normalized = PhoneNormalizer.TryNormalizeToE164(request.PhoneNumber, request.PhoneCountryCode);
+                    if (normalized != null && PhoneNumber.IsValidPhoneNumber(normalized))
+                        user.PhoneNumber = new PhoneNumber(normalized);
                 }
 
                 // Set enhanced address if provided

@@ -13,7 +13,7 @@ namespace VisitorManagementSystem.Api.Controllers.Admin;
 /// </summary>
 [ApiController]
 [Route("api/admin/configuration")]
-[Authorize(Roles = "Administrator")]
+[Authorize(Policy = Permissions.SystemConfig.Update)]
 public class ConfigurationController : ControllerBase
 {
     private readonly IDynamicConfigurationService _configService;

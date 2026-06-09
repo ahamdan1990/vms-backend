@@ -155,13 +155,16 @@ public class VisitorMonitoringService : BackgroundService
 
             if (minutesLate >= _noShowThresholdMinutes)
             {
-                var existingAlerts = await unitOfWork.NotificationAlerts.GetAllAsync(cancellationToken);
-                var hasNoShowAlert = existingAlerts?.Any(n =>
-                    n.RelatedEntityType == "Invitation" &&
-                    n.RelatedEntityId == invitation.Id &&
-                    n.Type == NotificationAlertType.VisitorNoShow) ?? false;
+                // Use a targeted DB lookup instead of loading the entire alerts table.
+                // No-show is a one-time event per invitation — never re-notify once sent.
+                var existingNoShow = await unitOfWork.Repository<NotificationAlert>()
+                    .GetFirstOrDefaultAsync(
+                        n => n.RelatedEntityType == "Invitation" &&
+                             n.RelatedEntityId == invitation.Id &&
+                             n.Type == NotificationAlertType.VisitorNoShow,
+                        cancellationToken: cancellationToken);
 
-                if (!hasNoShowAlert && invitation.Visitor != null)
+                if (existingNoShow == null && invitation.Visitor != null)
                 {
                     await notificationService.NotifyVisitorNoShowAsync(
                         invitation.Id,
@@ -177,13 +180,16 @@ public class VisitorMonitoringService : BackgroundService
             }
             else if (minutesLate >= _delayThresholdMinutes)
             {
-                var existingAlerts = await unitOfWork.NotificationAlerts.GetAllAsync(cancellationToken);
-                var hasDelayAlert = existingAlerts?.Any(n =>
-                    n.RelatedEntityType == "Invitation" &&
-                    n.RelatedEntityId == invitation.Id &&
-                    n.Type == NotificationAlertType.VisitorDelayed) ?? false;
+                // Use a targeted DB lookup instead of loading the entire alerts table.
+                // Delayed is a one-time event per invitation — never re-notify once sent.
+                var existingDelay = await unitOfWork.Repository<NotificationAlert>()
+                    .GetFirstOrDefaultAsync(
+                        n => n.RelatedEntityType == "Invitation" &&
+                             n.RelatedEntityId == invitation.Id &&
+                             n.Type == NotificationAlertType.VisitorDelayed,
+                        cancellationToken: cancellationToken);
 
-                if (!hasDelayAlert && invitation.Visitor != null)
+                if (existingDelay == null && invitation.Visitor != null)
                 {
                     await notificationService.NotifyVisitorDelayedAsync(
                         invitation.Id,
