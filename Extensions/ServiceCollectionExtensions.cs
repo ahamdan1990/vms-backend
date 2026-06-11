@@ -444,10 +444,11 @@ public static class ServiceCollectionExtensions
             options.Cookie.IsEssential = true;
         });
 
-        // Data protection
+        // Data protection — keys are persisted so they survive IIS app-pool recycles.
         services.AddDataProtection()
             .SetApplicationName("VisitorManagementSystem")
-            .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
+            .SetDefaultKeyLifetime(TimeSpan.FromDays(90))
+            .PersistKeysToFileSystem(new System.IO.DirectoryInfo(@"C:\ProgramData\VMS\DataProtectionKeys"));
 
         return services;
     }

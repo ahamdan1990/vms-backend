@@ -532,25 +532,34 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
         safeInput = camera.GetSafeConnectionString();
 
         if (!Uri.TryCreate(camera.ConnectionString, UriKind.Absolute, out var uri))
-        {
             return camera.ConnectionString;
-        }
 
-        if (!string.IsNullOrWhiteSpace(uri.UserInfo) || string.IsNullOrWhiteSpace(camera.Username))
-        {
+        // URI already has both username and password embedded — use as-is.
+        if (!string.IsNullOrWhiteSpace(uri.UserInfo) && uri.UserInfo.Contains(':'))
             return camera.ConnectionString;
-        }
+
+        // Prefer username from the URI (e.g. rtsp://service@host/); fall back to the stored field.
+        var username = !string.IsNullOrWhiteSpace(uri.UserInfo)
+            ? uri.UserInfo
+            : camera.Username;
+
+        if (string.IsNullOrWhiteSpace(username))
+            return camera.ConnectionString;
+
+        var password = DecryptPassword(camera.Password);
+        if (string.IsNullOrEmpty(password))
+            return camera.ConnectionString;
 
         var builder = new UriBuilder(uri)
         {
-            UserName = camera.Username,
-            Password = DecryptPassword(camera.Password) ?? string.Empty
+            UserName = Uri.EscapeDataString(username),
+            Password = Uri.EscapeDataString(password)
         };
 
         safeInput = new UriBuilder(uri)
         {
-            UserName = "***",
-            Password = string.Empty
+            UserName = Uri.EscapeDataString(username),
+            Password = "***"
         }.Uri.ToString();
 
         return builder.Uri.ToString();

@@ -11,6 +11,7 @@ using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
 using VisitorManagementSystem.Api.Application.Services.FaceDetection;
 using VisitorManagementSystem.Api.Hubs;
+using Microsoft.EntityFrameworkCore;
 
 // IFaceSnapshotService lives in the same Application.Services.Cameras namespace.
 
@@ -112,6 +113,21 @@ public class CameraFaceEventService : ICameraFaceEventService
                 continue;
             }
 
+            // For CD cameras, suppress events that are not actionable given the person's
+            // current presence state: entry events for someone already inside, exit events
+            // for someone already outside. Prevents re-detection floods for stationary persons.
+            if (config.IsCivilDefenseCamera && face.IsKnown && face.PersonId.HasValue)
+            {
+                var isActionable = await IsPresenceStateActionableAsync(face, config, cancellationToken);
+                if (!isActionable)
+                {
+                    eventDto.Emitted = false;
+                    eventDto.SuppressedReason = "presenceStateNotActionable";
+                    events.Add(eventDto);
+                    continue;
+                }
+            }
+
             var pendingDuplicate = await FindPendingDuplicateAsync(
                 recognitionResult,
                 face,
@@ -199,6 +215,55 @@ public class CameraFaceEventService : ICameraFaceEventService
         _memoryCache.Remove($"camera-face:active:{identityKey}");
     }
 
+    private async Task<bool> IsPresenceStateActionableAsync(
+        CameraFrameFaceResultDto face,
+        CameraConfiguration config,
+        CancellationToken cancellationToken)
+    {
+        if (config.CameraRole == CameraRole.General)
+            return true;
+
+        var isInsideBuilding = false;
+        var isTempAway = false;
+
+        if (face.PersonType == "Staff")
+        {
+            var presence = await _unitOfWork.Repository<StaffPresence>()
+                .GetQueryable()
+                .Where(sp => sp.UserId == face.PersonId!.Value &&
+                             sp.Status != StaffPresenceStatus.CheckedOut)
+                .OrderByDescending(sp => sp.CheckedInAt)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            isInsideBuilding = presence?.Status == StaffPresenceStatus.Active;
+            isTempAway = presence?.Status == StaffPresenceStatus.TemporarilyAbsent;
+        }
+        else if (face.PersonType == "Visitor")
+        {
+            var invitations = await _unitOfWork.Invitations
+                .GetByVisitorIdAndStatusAsync(face.PersonId!.Value, InvitationStatus.Active, cancellationToken);
+            var activeVisit = invitations.FirstOrDefault();
+
+            if (activeVisit != null)
+            {
+                isTempAway = await _unitOfWork.Repository<TemporaryLeave>()
+                    .GetQueryable()
+                    .AnyAsync(tl => tl.InvitationId == activeVisit.Id && tl.IsActive, cancellationToken);
+                isInsideBuilding = !isTempAway;
+            }
+        }
+
+        // Entry camera: suppress if person is actively inside (not returning from temp leave).
+        if (config.CameraRole == CameraRole.Entry && isInsideBuilding)
+            return false;
+
+        // Exit camera: suppress if person is already outside and not on temp leave.
+        if (config.CameraRole == CameraRole.Exit && !isInsideBuilding && !isTempAway)
+            return false;
+
+        return true;
+    }
+
     public async Task AutoReviewPendingEventsForPersonAsync(
         string personType,
         int personId,
@@ -232,12 +297,19 @@ public class CameraFaceEventService : ICameraFaceEventService
         CameraFrameFaceResultDto face,
         CameraConfiguration config)
     {
-        var identity = BuildIdentityKey(result, face, config, DateTime.UtcNow);
+        // CD cameras bypass the per-person post-emission cooldown so that two different
+        // known persons entering simultaneously are never blocked by each other's cooldown key.
+        // Re-detection suppression after operator actions is handled by the frontend
+        // suppression map (Phase 4), which is action-triggered and therefore more precise.
+        var now = DateTime.UtcNow;
+        var identity = BuildIdentityKey(result, face, config, now);
+        var cooldown = GetEventCooldown(config, face);
+
         return new CooldownDecision(
             ShouldEmit: true,
             Reason: null,
             NextAllowedAt: null,
-            Cooldown: GetEventCooldown(config, face),
+            Cooldown: cooldown,
             PendingDedupeSubjectId: identity.PendingDedupeSubjectId);
     }
 

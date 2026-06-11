@@ -105,6 +105,13 @@ public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, C
             // Log significant configuration changes
             LogConfigurationChanges(originalName, originalConnectionString, originalCameraType, camera);
 
+            // If auto-start is enabled in the saved config, clear any manual-stop pause so that
+            // CameraStreamHostedService can restart the stream on its next 5-second tick.
+            if (configuration.AutoStart)
+            {
+                _streamRuntime.ResumeAutoStart(request.Id);
+            }
+
             // If the stream was running and stream-relevant settings changed, restart the worker
             // so it picks up the updated camera configuration from the database.
             if (streamWasRunning && StreamSettingsChanged(originalConfig, camera, request))

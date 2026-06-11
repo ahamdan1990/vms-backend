@@ -19,8 +19,13 @@ public class StaffTempLeaveCommand : IRequest
 public class StaffTempLeaveCommandHandler : IRequestHandler<StaffTempLeaveCommand>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICameraFaceEventService _faceEventService;
 
-    public StaffTempLeaveCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public StaffTempLeaveCommandHandler(IUnitOfWork unitOfWork, ICameraFaceEventService faceEventService)
+    {
+        _unitOfWork = unitOfWork;
+        _faceEventService = faceEventService;
+    }
 
     public async Task Handle(StaffTempLeaveCommand request, CancellationToken cancellationToken)
     {
@@ -46,6 +51,8 @@ public class StaffTempLeaveCommandHandler : IRequestHandler<StaffTempLeaveComman
 
         await _unitOfWork.Repository<TemporaryLeave>().AddAsync(leave, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _faceEventService.AutoReviewPendingEventsForPersonAsync("Staff", presence.UserId, cancellationToken);
     }
 }
 
@@ -113,8 +120,13 @@ public class VisitorTempLeaveCommand : IRequest
 public class VisitorTempLeaveCommandHandler : IRequestHandler<VisitorTempLeaveCommand>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICameraFaceEventService _faceEventService;
 
-    public VisitorTempLeaveCommandHandler(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
+    public VisitorTempLeaveCommandHandler(IUnitOfWork unitOfWork, ICameraFaceEventService faceEventService)
+    {
+        _unitOfWork = unitOfWork;
+        _faceEventService = faceEventService;
+    }
 
     public async Task Handle(VisitorTempLeaveCommand request, CancellationToken cancellationToken)
     {
@@ -144,6 +156,8 @@ public class VisitorTempLeaveCommandHandler : IRequestHandler<VisitorTempLeaveCo
 
         await _unitOfWork.Repository<TemporaryLeave>().AddAsync(leave, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _faceEventService.AutoReviewPendingEventsForPersonAsync("Visitor", invitation.VisitorId, cancellationToken);
     }
 }
 

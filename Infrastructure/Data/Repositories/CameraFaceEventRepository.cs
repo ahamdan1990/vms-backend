@@ -65,12 +65,16 @@ public class CameraFaceEventRepository : BaseRepository<CameraFaceEvent>, ICamer
         int personId,
         CancellationToken cancellationToken = default)
     {
+        // Only treat events captured within the last 60 seconds as blocking duplicates.
+        // Older pending events remain in the DB but must not suppress fresh detections.
+        var cutoff = DateTime.UtcNow.AddSeconds(-60);
         return await _ctx.CameraFaceEvents
             .Where(e => e.CameraId == cameraId &&
                         e.IsKnown &&
                         e.PersonId == personId &&
                         e.PersonType == personType &&
-                        e.ReviewStatus == FaceEventReviewStatus.Pending)
+                        e.ReviewStatus == FaceEventReviewStatus.Pending &&
+                        e.CapturedAt >= cutoff)
             .OrderByDescending(e => e.CapturedAt)
             .FirstOrDefaultAsync(cancellationToken);
     }
