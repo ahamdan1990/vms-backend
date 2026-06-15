@@ -2,6 +2,7 @@ using Microsoft.Extensions.Caching.Memory;
 using System.Text.Json;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
+using VisitorManagementSystem.Api.Infrastructure.Configuration;
 
 namespace VisitorManagementSystem.Api.Application.Services.Configuration;
 
@@ -13,17 +14,20 @@ public class DynamicConfigurationService : IDynamicConfigurationService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMemoryCache _cache;
     private readonly ILogger<DynamicConfigurationService> _logger;
+    private readonly SensitiveConfigurationProtection _protection;
     private static readonly TimeSpan CacheExpiry = TimeSpan.FromMinutes(30);
     private const string CacheKeyPrefix = "config_";
 
     public DynamicConfigurationService(
         IUnitOfWork unitOfWork,
         IMemoryCache cache,
-        ILogger<DynamicConfigurationService> logger)
+        ILogger<DynamicConfigurationService> logger,
+        SensitiveConfigurationProtection protection)
     {
         _unitOfWork = unitOfWork;
         _cache = cache;
         _logger = logger;
+        _protection = protection;
     }
 
     public async Task<T?> GetConfigurationAsync<T>(string category, string key, T? defaultValue = default, CancellationToken cancellationToken = default)
@@ -42,13 +46,16 @@ public class DynamicConfigurationService : IDynamicConfigurationService
 
             if (config == null)
             {
-                _logger.LogWarning("Config not found: {Category}.{Key}, using default {DefaultValue}", category, key, defaultValue);
+                _logger.LogWarning("Config not found: {Category}.{Key}; using the caller-provided default", category, key);
                 _cache.Set(cacheKey, defaultValue, CacheExpiry);
                 return defaultValue;
             }
 
-            var value = ConvertValue<T>(config.Value, config.DataType);
-            _logger.LogInformation("Config value retrieved from DB: {Category}.{Key} = {Value}", category, key, value);
+            var storedValue = config.IsSensitive || config.IsEncrypted
+                ? _protection.Unprotect(config.Value)
+                : config.Value;
+            var value = ConvertValue<T>(storedValue, config.DataType);
+            _logger.LogDebug("Configuration retrieved from DB: {Category}.{Key}", category, key);
             _cache.Set(cacheKey, value, CacheExpiry);
             
             return value;
@@ -67,7 +74,12 @@ public class DynamicConfigurationService : IDynamicConfigurationService
             var config = await _unitOfWork.SystemConfigurations
                 .GetByCategoryAndKeyAsync(category, key, cancellationToken);
 
-            return config?.Value ?? defaultValue;
+            if (config == null)
+                return defaultValue;
+
+            return config.IsSensitive || config.IsEncrypted
+                ? _protection.Unprotect(config.Value)
+                : config.Value;
         }
         catch (Exception ex)
         {
@@ -117,10 +129,11 @@ public class DynamicConfigurationService : IDynamicConfigurationService
             }
 
             var oldValue = config.Value;
-            config.UpdateValue(value, modifiedBy);
+            var storedValue = config.IsSensitive || config.IsEncrypted ? _protection.Protect(value) : value;
+            config.UpdateValue(storedValue, modifiedBy);
 
             // Log the change in audit table
-            await LogConfigurationChangeAsync(config.Id, category, key, oldValue, value, "Updated", modifiedBy, reason, cancellationToken);
+            await LogConfigurationChangeAsync(config, oldValue, storedValue, "Updated", modifiedBy, reason, cancellationToken);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             
@@ -149,7 +162,10 @@ public class DynamicConfigurationService : IDynamicConfigurationService
 
             foreach (var config in configurations)
             {
-                var value = ConvertValue<object>(config.Value, config.DataType);
+                var storedValue = config.IsSensitive || config.IsEncrypted
+                    ? _protection.Unprotect(config.Value)
+                    : config.Value;
+                var value = ConvertValue<object>(storedValue, config.DataType);
                 if (value != null)
                 {
                     result[config.Key] = value;
@@ -179,7 +195,10 @@ public class DynamicConfigurationService : IDynamicConfigurationService
                     result[config.Category] = new Dictionary<string, object>();
                 }
 
-                var value = ConvertValue<object>(config.Value, config.DataType);
+                var storedValue = config.IsSensitive || config.IsEncrypted
+                    ? _protection.Unprotect(config.Value)
+                    : config.Value;
+                var value = ConvertValue<object>(storedValue, config.DataType);
                 if (value != null)
                 {
                     result[config.Category][config.Key] = value;
@@ -215,7 +234,7 @@ public class DynamicConfigurationService : IDynamicConfigurationService
             var oldValue = config.Value;
             
             // Log the deletion
-            await LogConfigurationChangeAsync(config.Id, category, key, oldValue, "", "Deleted", modifiedBy, reason, cancellationToken);
+            await LogConfigurationChangeAsync(config, oldValue, "", "Deleted", modifiedBy, reason, cancellationToken);
 
             _unitOfWork.SystemConfigurations.Remove(config);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -334,7 +353,7 @@ public class DynamicConfigurationService : IDynamicConfigurationService
             if (!config.IsValidValue(value))
             {
                 result.IsValid = false;
-                result.Errors.Add($"Value '{value}' is not valid for configuration {category}.{key}");
+                result.Errors.Add($"The supplied value is not valid for configuration {category}.{key}");
             }
 
             return result;
@@ -367,8 +386,13 @@ public class DynamicConfigurationService : IDynamicConfigurationService
             await _unitOfWork.SystemConfigurations.AddAsync(configuration, cancellationToken);
 
             // Log the creation
-            await LogConfigurationChangeAsync(configuration.Id, configuration.Category, configuration.Key, 
-                null, configuration.Value, "Created", modifiedBy, "Configuration created", cancellationToken);
+            if (configuration.IsSensitive || configuration.IsEncrypted)
+            {
+                configuration.Value = _protection.Protect(configuration.Value);
+                configuration.DefaultValue = null;
+            }
+
+            await LogConfigurationChangeAsync(configuration, null, configuration.Value, "Created", modifiedBy, "Configuration created", cancellationToken);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -423,7 +447,7 @@ public class DynamicConfigurationService : IDynamicConfigurationService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error converting value '{Value}' to type '{DataType}'", value, dataType);
+            _logger.LogError(ex, "Error converting configuration value to type {DataType}", dataType);
             return default(T);
         }
     }
@@ -431,18 +455,18 @@ public class DynamicConfigurationService : IDynamicConfigurationService
     /// <summary>
     /// Logs configuration changes to audit table
     /// </summary>
-    private async Task LogConfigurationChangeAsync(int configurationId, string category, string key, 
+    private async Task LogConfigurationChangeAsync(SystemConfiguration configuration,
         string? oldValue, string newValue, string action, int modifiedBy, string? reason, CancellationToken cancellationToken)
     {
         try
         {
             var audit = new ConfigurationAudit
             {
-                SystemConfigurationId = configurationId,
-                Category = category,
-                Key = key,
-                OldValue = oldValue,
-                NewValue = newValue,
+                SystemConfigurationId = configuration.Id,
+                Category = configuration.Category,
+                Key = configuration.Key,
+                OldValue = configuration.IsSensitive || configuration.IsEncrypted ? "[REDACTED]" : oldValue,
+                NewValue = configuration.IsSensitive || configuration.IsEncrypted ? "[REDACTED]" : newValue,
                 Action = action,
                 Reason = reason,
                 CreatedBy = modifiedBy
@@ -452,7 +476,7 @@ public class DynamicConfigurationService : IDynamicConfigurationService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error logging configuration change for {Category}.{Key}", category, key);
+            _logger.LogError(ex, "Error logging configuration change for {Category}.{Key}", configuration.Category, configuration.Key);
         }
     }
 

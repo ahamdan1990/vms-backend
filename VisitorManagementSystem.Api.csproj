@@ -8,7 +8,12 @@
 		<NoWarn>1591</NoWarn>
 		<Version>1.0.0</Version>
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
-		<DefaultItemExcludes>$(DefaultItemExcludes);bin\**;obj\**;artifacts\**</DefaultItemExcludes>
+		<!-- .NET 9 marks apphosts CET/shadow-stack compatible by default. On Windows 10
+		     with CET-capable CPUs the CLR fail-fasts at startup (0xC0000602). IIS hosts
+		     this app in-process (w3wp), but the apphost can also be run directly, so opt
+		     out until all target machines run Windows 11+. -->
+		<CetCompat>false</CetCompat>
+		<DefaultItemExcludes>$(DefaultItemExcludes);bin\**;obj\**;tools\**\bin\**;tools\**\obj\**;tests\**;artifacts\**;logs\**;uploads\**;backups\**;debug_frames\**;wwwroot\face-snapshots\**;wwwroot\uploads\**</DefaultItemExcludes>
 	</PropertyGroup>
 	
 	<ItemGroup>
@@ -55,6 +60,7 @@
 		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
 		<PackageReference Include="StackExchange.Redis" Version="2.8.37" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.4" />
+		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.12.0" />
 		<PackageReference Include="System.DirectoryServices" Version="4.7.0" />
 		<PackageReference Include="System.DirectoryServices.AccountManagement" Version="4.7.0" />
@@ -62,11 +68,25 @@
 
 
 	<ItemGroup>
-		<Folder Include="uploads\" />
 		<Folder Include="Templates\Email\" />
 		<Folder Include="Templates\SMS\" />
 		<Folder Include="Templates\Reports\" />
 		<Folder Include="Templates\Import\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="tools\**\*.cs" />
+		<Compile Remove="tests\**\*.cs" />
+		<EmbeddedResource Remove="tools\**\*" />
+		<EmbeddedResource Remove="tests\**\*" />
+		<None Remove="tools\**\*" />
+		<None Remove="tests\**\*" />
+		<Content Update="appsettings.Development.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+		<Content Update="appsettings.Production.template.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+		<Content Remove="wwwroot\face-snapshots\**" />
+		<Content Remove="wwwroot\uploads\**" />
+		<None Remove="wwwroot\face-snapshots\**" />
+		<None Remove="wwwroot\uploads\**" />
 	</ItemGroup>
 
 	<ItemGroup>

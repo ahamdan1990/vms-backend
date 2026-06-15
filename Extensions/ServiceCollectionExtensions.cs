@@ -30,6 +30,7 @@ using VisitorManagementSystem.Api.Infrastructure.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using VisitorManagementSystem.Api.Infrastructure.Security.Authorization;
 using VisitorManagementSystem.Api.Infrastructure.Security.Encryption;
+using VisitorManagementSystem.Api.Infrastructure.Configuration;
 using VisitorManagementSystem.Api.Application.Services.Notifications;
 using VisitorManagementSystem.Api.Application.Services.BackgroundServices;
 using VisitorManagementSystem.Api.Infrastructure.Data.Repositories.Notifications;
@@ -87,6 +88,7 @@ public static class ServiceCollectionExtensions
     {
         // Register the dynamic configuration service
         services.AddScoped<IDynamicConfigurationService, DynamicConfigurationService>();
+        services.AddSingleton<SensitiveConfigurationProtection>();
         services.Configure<FfmpegOptions>(configuration.GetSection(FfmpegOptions.SectionName));
 
         // Note: All other configurations are now stored in database and accessed via IDynamicConfigurationService
@@ -448,7 +450,8 @@ public static class ServiceCollectionExtensions
         services.AddDataProtection()
             .SetApplicationName("VisitorManagementSystem")
             .SetDefaultKeyLifetime(TimeSpan.FromDays(90))
-            .PersistKeysToFileSystem(new System.IO.DirectoryInfo(@"C:\ProgramData\VMS\DataProtectionKeys"));
+            .PersistKeysToFileSystem(new System.IO.DirectoryInfo(Path.Combine(VmsRuntimePaths.ProgramDataRoot, "secrets", "DataProtectionKeys")))
+            .ProtectKeysWithDpapi(protectToLocalMachine: true);
 
         return services;
     }

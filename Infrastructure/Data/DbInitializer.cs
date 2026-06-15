@@ -5,6 +5,7 @@ using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
 using VisitorManagementSystem.Api.Infrastructure.Data.Seeds;
+using VisitorManagementSystem.Api.Infrastructure.Configuration;
 
 namespace VisitorManagementSystem.Api.Infrastructure.Data;
 
@@ -23,9 +24,6 @@ public static class DbInitializer
     {
         try
         {
-            // Ensure database is created
-            await context.Database.EnsureCreatedAsync();
-
             var logger = serviceProvider.GetService<ILogger<ApplicationDbContext>>();
 
             // ALWAYS seed permission system first (idempotent - checks for existing data)
@@ -51,7 +49,7 @@ public static class DbInitializer
                     if (adminUser == null)
                     {
                         logger?.LogWarning("No admin user found. Creating system admin for configuration seeding...");
-                        await SeedUsersAsync(context);
+                        await SeedUsersAsync(context, serviceProvider);
                         await context.SaveChangesAsync();
                     }
 
@@ -62,11 +60,12 @@ public static class DbInitializer
 
                 // Always sync JWT secret so reinstalls don't leave a stale DB key
                 await SyncJwtSecretFromAppSettingsAsync(context, serviceProvider);
+                await ProtectSensitiveConfigurationsAsync(context, serviceProvider);
                 return; // Database has already been seeded
             }
 
             // Seed data in order of dependencies
-            await SeedUsersAsync(context);
+            await SeedUsersAsync(context, serviceProvider);
             await context.SaveChangesAsync(); // Save users first
 
             // Now that users exist, assign RoleId based on their Role enum
@@ -84,6 +83,7 @@ public static class DbInitializer
 
             // Always sync JWT secret from appsettings to DB so signing and validation keys match
             await SyncJwtSecretFromAppSettingsAsync(context, serviceProvider);
+            await ProtectSensitiveConfigurationsAsync(context, serviceProvider);
 
         }
         catch (Exception ex)
@@ -95,15 +95,45 @@ public static class DbInitializer
         }
     }
 
+    private static async Task ProtectSensitiveConfigurationsAsync(
+        ApplicationDbContext context,
+        IServiceProvider serviceProvider)
+    {
+        var protection = serviceProvider.GetRequiredService<SensitiveConfigurationProtection>();
+        var sensitiveConfigurations = await context.SystemConfigurations
+            .IgnoreQueryFilters()
+            .Where(c => c.IsSensitive || c.IsEncrypted)
+            .ToListAsync();
+
+        var changed = false;
+        foreach (var configuration in sensitiveConfigurations)
+        {
+            if (!SensitiveConfigurationProtection.IsProtected(configuration.Value))
+            {
+                configuration.Value = protection.Protect(configuration.Value);
+                changed = true;
+            }
+
+            if (configuration.DefaultValue != null)
+            {
+                configuration.DefaultValue = null;
+                changed = true;
+            }
+        }
+
+        if (changed)
+            await context.SaveChangesAsync();
+    }
+
     /// <summary>
-    /// Ensures the JWT SecretKey in SystemConfigurations matches appsettings.
-    /// Must run on every startup so reinstalls don't leave a stale DB key that
-    /// diverges from the key the Bearer middleware was configured with.
+    /// Ensures the protected JWT SecretKey in SystemConfigurations matches the
+    /// installer-generated production secret.
     /// </summary>
     private static async Task SyncJwtSecretFromAppSettingsAsync(ApplicationDbContext context, IServiceProvider serviceProvider)
     {
         var configuration = serviceProvider.GetService<IConfiguration>();
         var logger = serviceProvider.GetService<ILogger<ApplicationDbContext>>();
+        var protection = serviceProvider.GetRequiredService<SensitiveConfigurationProtection>();
 
         var appsettingsKey = configuration?["JWT:SecretKey"];
         if (string.IsNullOrEmpty(appsettingsKey))
@@ -115,9 +145,10 @@ public static class DbInitializer
         if (dbConfig == null)
             return; // Not seeded yet — seeder will pick up the correct key
 
-        if (dbConfig.Value != appsettingsKey)
+        var currentValue = protection.Unprotect(dbConfig.Value);
+        if (currentValue != appsettingsKey)
         {
-            dbConfig.Value = appsettingsKey;
+            dbConfig.Value = protection.Protect(appsettingsKey);
             context.SystemConfigurations.Update(dbConfig);
             await context.SaveChangesAsync();
             logger?.LogInformation("JWT SecretKey synced from appsettings to database.");
@@ -129,9 +160,11 @@ public static class DbInitializer
     /// </summary>
     /// <param name="context">Database context</param>
     /// <returns>Task</returns>
-    private static async Task SeedUsersAsync(ApplicationDbContext context)
+    private static async Task SeedUsersAsync(ApplicationDbContext context, IServiceProvider serviceProvider)
     {
-        var users = UserSeeder.GetSeedUsers();
+        var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+        var bootstrapPassword = configuration["BootstrapAdmin:Password"];
+        var users = UserSeeder.GetSeedUsers(bootstrapPassword);
 
         foreach (var user in users)
         {
@@ -213,34 +246,6 @@ public static class DbInitializer
 
             await context.AuditLogs.AddAsync(auditLog);
         }
-    }
-
-    /// <summary>
-    /// Creates a migration if needed
-    /// </summary>
-    /// <param name="context">Database context</param>
-    /// <returns>Task</returns>
-    public static async Task MigrateAsync(ApplicationDbContext context)
-    {
-        try
-        {
-            await context.Database.MigrateAsync();
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException("Failed to migrate database", ex);
-        }
-    }
-
-    /// <summary>
-    /// Resets the database (USE WITH EXTREME CAUTION)
-    /// </summary>
-    /// <param name="context">Database context</param>
-    /// <returns>Task</returns>
-    public static async Task ResetDatabaseAsync(ApplicationDbContext context)
-    {
-        await context.Database.EnsureDeletedAsync();
-        await context.Database.EnsureCreatedAsync();
     }
 
     /// <summary>

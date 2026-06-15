@@ -27,8 +27,9 @@ public class AlertEscalationLogConfiguration : IEntityTypeConfiguration<AlertEsc
         // In practice NotificationAlerts are soft-deleted (IsActive=false), so this rarely triggers.
         builder.HasOne(e => e.NotificationAlert)
             .WithMany()
-            .HasForeignKey(e => e.NotificationAlertId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .HasForeignKey(e => e.NotificationAlertReferenceId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // FK: Preserve logs even when the originating rule is soft-deleted/removed.
         builder.HasOne(e => e.AlertEscalation)

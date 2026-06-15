@@ -152,8 +152,8 @@ public static class ComprehensiveConfigurationSeeder
         
         configurations.AddRange(new[]
         {
-            CreateConfiguration("JWT", "SecretKey", 
-                jwtSection["SecretKey"] ?? "ThisIsAVeryLongSecretKeyForJWTTokenGenerationThatMustBeAtLeast256BitsLong",
+            CreateConfiguration("JWT", "SecretKey",
+                jwtSection["SecretKey"] ?? string.Empty,
                 "string", "Secret key used for JWT token signing and validation", true, true, true, now, systemUserId),
                 
             CreateConfiguration("JWT", "Issuer", 
@@ -1040,7 +1040,7 @@ public static class ComprehensiveConfigurationSeeder
         // Add essential defaults if appsettings.json reading fails
         configurations.AddRange(new[]
         {
-            CreateConfiguration("JWT", "SecretKey", "ThisIsAVeryLongSecretKeyForJWTTokenGenerationThatMustBeAtLeast256BitsLong", "string", "Secret key for JWT signing", true, true, true, now, systemUserId),
+            CreateConfiguration("JWT", "SecretKey", string.Empty, "string", "Secret key for JWT signing", true, true, true, now, systemUserId),
             CreateConfiguration("JWT", "Issuer", "VisitorManagementSystem", "string", "JWT token issuer", false, false, false, now, systemUserId),
             CreateConfiguration("JWT", "Audience", "VMS-Users", "string", "JWT token audience", false, false, false, now, systemUserId),
             CreateConfiguration("JWT", "ExpiryInMinutes", "15", "int", "Token expiry time in minutes", false, false, false, now, systemUserId),
@@ -1084,7 +1084,7 @@ public static class ComprehensiveConfigurationSeeder
                 "string", "Daily backup time in HH:mm format (24-hour). The backup runs once per day at this local time.", false, false, false, now, systemUserId),
 
             CreateConfiguration("Backup", "DestinationPath",
-                @"C:\VMS_Backups",
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "VMS", "backups"),
                 "string", "Absolute path to the folder where backup .bak files will be written. Must be writable by the application process.", false, false, false, now, systemUserId),
 
             CreateConfiguration("Backup", "RetentionDays",
@@ -1186,7 +1186,7 @@ public static class ComprehensiveConfigurationSeeder
             IsEncrypted = isEncrypted,
             IsSensitive = isSensitive,
             IsReadOnly = false,
-            DefaultValue = value,
+            DefaultValue = isSensitive || isEncrypted ? null : value,
             Group = GetGroupForCategory(category),
             DisplayOrder = GetDisplayOrderForKey(key),
             Environment = "All",

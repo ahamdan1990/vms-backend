@@ -52,8 +52,10 @@ public class GetCivilDefensePresenceQueryHandler
             {
                 var term = request.SearchTerm.ToLower();
                 staffQuery = staffQuery.Where(sp =>
-                    (sp.User.FirstName + " " + sp.User.LastName).ToLower().Contains(term) ||
-                    sp.User.Department!.ToLower().Contains(term));
+                    sp.UserDisplayName.ToLower().Contains(term) ||
+                    (sp.User != null && (sp.User.FirstName + " " + sp.User.LastName).ToLower().Contains(term)) ||
+                    (sp.UserDepartment != null && sp.UserDepartment.ToLower().Contains(term)) ||
+                    (sp.User != null && sp.User.Department != null && sp.User.Department.ToLower().Contains(term)));
             }
 
             var staffEntities = await staffQuery
@@ -65,10 +67,10 @@ public class GetCivilDefensePresenceQueryHandler
             {
                 StaffPresenceId = sp.Id,
                 UserId = sp.UserId,
-                Name = $"{sp.User.FirstName} {sp.User.LastName}".Trim(),
-                Department = sp.User.Department,
-                JobTitle = sp.User.JobTitle,
-                ProfilePhotoUrl = ResolvePhoto(sp.User.ProfilePhotoPath),
+                Name = sp.User?.FullName ?? sp.UserDisplayName,
+                Department = sp.User?.Department ?? sp.UserDepartment,
+                JobTitle = sp.User?.JobTitle ?? sp.UserJobTitle,
+                ProfilePhotoUrl = ResolvePhoto(sp.User?.ProfilePhotoPath),
                 CheckedInAt = sp.CheckedInAt,
                 LocationId = sp.LocationId,
                 LocationName = sp.Location?.Name,

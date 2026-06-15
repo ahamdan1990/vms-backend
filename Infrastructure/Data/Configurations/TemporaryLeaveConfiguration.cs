@@ -32,7 +32,8 @@ public class TemporaryLeaveConfiguration : IEntityTypeConfiguration<TemporaryLea
 
         builder.HasOne(e => e.RecordedByUser)
             .WithMany()
-            .HasForeignKey(e => e.RecordedById)
+            .HasForeignKey(e => e.RecordedByReferenceId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(e => e.ReturnedByUser)

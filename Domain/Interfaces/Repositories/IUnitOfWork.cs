@@ -266,13 +266,6 @@ public interface IUnitOfWork : IDisposable
     void SetQueryTrackingEnabled(bool enabled);
 
     /// <summary>
-    /// Performs database migration
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Task</returns>
-    Task MigrateAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Checks if database can connect
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>

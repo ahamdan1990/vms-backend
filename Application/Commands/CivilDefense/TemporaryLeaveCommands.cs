@@ -46,7 +46,8 @@ public class StaffTempLeaveCommandHandler : IRequestHandler<StaffTempLeaveComman
             LeftAt = DateTime.UtcNow,
             IsActive = true,
             Reason = request.Reason?.Trim(),
-            RecordedById = request.RecordedById
+            RecordedById = request.RecordedById,
+            RecordedByReferenceId = request.RecordedById
         };
 
         await _unitOfWork.Repository<TemporaryLeave>().AddAsync(leave, cancellationToken);
@@ -151,7 +152,8 @@ public class VisitorTempLeaveCommandHandler : IRequestHandler<VisitorTempLeaveCo
             LeftAt = DateTime.UtcNow,
             IsActive = true,
             Reason = request.Reason?.Trim(),
-            RecordedById = request.RecordedById
+            RecordedById = request.RecordedById,
+            RecordedByReferenceId = request.RecordedById
         };
 
         await _unitOfWork.Repository<TemporaryLeave>().AddAsync(leave, cancellationToken);

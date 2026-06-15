@@ -331,11 +331,6 @@ public class UnitOfWork : IUnitOfWork
             QueryTrackingBehavior.TrackAll : QueryTrackingBehavior.NoTracking;
     }
 
-    public async Task MigrateAsync(CancellationToken cancellationToken = default)
-    {
-        await _context.Database.MigrateAsync(cancellationToken);
-    }
-
     public async Task<bool> CanConnectAsync(CancellationToken cancellationToken = default)
     {
         return await _context.Database.CanConnectAsync(cancellationToken);

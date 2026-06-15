@@ -15,6 +15,7 @@ using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.ValueObjects;
+using VisitorManagementSystem.Api.Infrastructure.Configuration;
 
 namespace VisitorManagementSystem.Api.Controllers;
 
@@ -525,8 +526,7 @@ public class VisitorsController : BaseController
 
             // Construct file path
             var relativePath = visitorEntity.ProfilePhotoPath.Replace('/', Path.DirectorySeparatorChar);
-            var webRootPath = _environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            var filePath = Path.Combine(webRootPath, relativePath);
+            var filePath = VmsRuntimePaths.ResolveDataPath(_environment, relativePath);
 
             _logger.LogDebug("Serving visitor photo: {FilePath}", filePath);
 
@@ -810,8 +810,7 @@ public class VisitorsController : BaseController
         await file.CopyToAsync(ms, cancellationToken);
         var bytes = ms.ToArray();
 
-        var webRoot = _environment.WebRootPath ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
-        var uploadDir = Path.Combine(webRoot, "uploads", "visitors", id.ToString());
+        var uploadDir = VmsRuntimePaths.ResolveDataPath(_environment, $"uploads/visitors/{id}");
         Directory.CreateDirectory(uploadDir);
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
         if (ext is not (".jpg" or ".jpeg" or ".png" or ".webp")) ext = ".jpg";

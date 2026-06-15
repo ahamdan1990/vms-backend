@@ -6,6 +6,7 @@ using VisitorManagementSystem.Api.Application.Services.FaceDetection;
 using VisitorManagementSystem.Api.Application.Services.Common;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
+using VisitorManagementSystem.Api.Infrastructure.Configuration;
 
 namespace VisitorManagementSystem.Api.Application.Services.Visitors;
 
@@ -437,7 +438,7 @@ public class VisitorService : IVisitorService
             var fileName = $"visitor_{visitorId}_{Guid.NewGuid()}.jpg"; // Always save as JPEG
 
             // Create upload directory if it doesn't exist
-            var uploadDir = Path.Combine(_environment.WebRootPath, "uploads", "visitors", visitorId.ToString());
+            var uploadDir = VmsRuntimePaths.ResolveDataPath(_environment, $"uploads/visitors/{visitorId}");
             Directory.CreateDirectory(uploadDir);
 
             var filePath = Path.Combine(uploadDir, fileName);
@@ -838,7 +839,7 @@ public class VisitorService : IVisitorService
     {
         try
         {
-            var fullPath = Path.Combine(_environment.WebRootPath, photoPath.Replace('/', Path.DirectorySeparatorChar));
+            var fullPath = VmsRuntimePaths.ResolveDataPath(_environment, photoPath);
             if (File.Exists(fullPath))
             {
                 await Task.Run(() => File.Delete(fullPath));

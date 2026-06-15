@@ -2,6 +2,7 @@ using MediatR;
 using VisitorManagementSystem.Api.Application.Services.FaceDetection;
 using VisitorManagementSystem.Api.Domain.Enums;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
+using VisitorManagementSystem.Api.Infrastructure.Configuration;
 
 namespace VisitorManagementSystem.Api.Application.Commands.FaceEvents;
 
@@ -114,19 +115,14 @@ public class AssignFaceEventToPersonCommandHandler
         if (Uri.TryCreate(storedPath, UriKind.Absolute, out _))
             return null;
 
-        var webRoot = _environment.WebRootPath
-            ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
-
-        var relativePath = storedPath
-            .Replace('/', Path.DirectorySeparatorChar)
-            .TrimStart(Path.DirectorySeparatorChar);
-
-        var root = Path.GetFullPath(webRoot);
-        if (!root.EndsWith(Path.DirectorySeparatorChar))
-            root += Path.DirectorySeparatorChar;
-
-        var candidate = Path.GetFullPath(Path.Combine(root, relativePath));
-        return candidate.StartsWith(root, StringComparison.OrdinalIgnoreCase) ? candidate : null;
+        try
+        {
+            return VmsRuntimePaths.ResolveDataPath(_environment, storedPath);
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
     }
 
     private static AssignFaceEventToPersonResult Fail(string message) =>

@@ -20,9 +20,6 @@ public static class DatabaseSeeder
 
         try
         {
-            // Ensure database is created and migrations are applied
-            await context.Database.MigrateAsync();
-
             // 1. Seed Permissions (must be first)
             await PermissionSeeder.SeedPermissionsToDbAsync(context);
 

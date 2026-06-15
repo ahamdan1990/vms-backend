@@ -12,14 +12,17 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
 {
     private readonly ILogger<ApiKeyAuthenticationHandler> _logger;
     private readonly Dictionary<string, ApiKeyInfo> _apiKeys;
+    private readonly IConfiguration _configuration;
 
     public ApiKeyAuthenticationHandler(
         IOptionsMonitor<ApiKeyAuthenticationSchemeOptions> options,
         ILoggerFactory logger,
-        UrlEncoder encoder)
+        UrlEncoder encoder,
+        IConfiguration configuration)
         : base(options, logger, encoder)
     {
         _logger = logger.CreateLogger<ApiKeyAuthenticationHandler>();
+        _configuration = configuration;
         _apiKeys = LoadApiKeys();
     }
 
@@ -42,7 +45,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
             // Validate API key
             if (!_apiKeys.TryGetValue(apiKey, out var apiKeyInfo))
             {
-                _logger.LogWarning("Invalid API key attempted: {ApiKey}", apiKey.Substring(0, Math.Min(apiKey.Length, 8)) + "...");
+                _logger.LogWarning("Invalid API key attempted from {IP}", GetClientIpAddress());
                 return Task.FromResult(AuthenticateResult.Fail("Invalid API key"));
             }
 
@@ -127,20 +130,26 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthentic
 
     private Dictionary<string, ApiKeyInfo> LoadApiKeys()
     {
-        // In production, load from secure configuration or database
-        return new Dictionary<string, ApiKeyInfo>
+        var result = new Dictionary<string, ApiKeyInfo>(StringComparer.Ordinal);
+        foreach (var entry in _configuration.GetSection("ApiKeys:Integrations").GetChildren())
         {
-            ["vms-api-key-2024"] = new ApiKeyInfo
+            var key = entry["Key"];
+            if (string.IsNullOrWhiteSpace(key))
+                continue;
+
+            result[key] = new ApiKeyInfo
             {
-                Id = "api-001",
-                Name = "VMS Integration API Key",
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow.AddDays(-30),
-                ExpiryDate = DateTime.UtcNow.AddYears(1),
-                Scopes = new[] { "read:visitors", "write:visitors", "read:invitations" },
-                AllowedIPs = new List<string>()
-            }
-        };
+                Id = entry["Id"] ?? entry.Key,
+                Name = entry["Name"] ?? entry.Key,
+                IsActive = entry.GetValue("IsActive", true),
+                CreatedDate = entry.GetValue<DateTime?>("CreatedDate") ?? DateTime.UtcNow,
+                ExpiryDate = entry.GetValue<DateTime?>("ExpiryDate"),
+                Scopes = entry.GetSection("Scopes").Get<string[]>() ?? Array.Empty<string>(),
+                AllowedIPs = entry.GetSection("AllowedIPs").Get<List<string>>() ?? new List<string>()
+            };
+        }
+
+        return result;
     }
 
     protected override async Task HandleChallengeAsync(AuthenticationProperties properties)

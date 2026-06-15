@@ -974,6 +974,7 @@ public class CameraFaceEventService : ICameraFaceEventService
             {
                 EventId = eventId,
                 CameraId = result.CameraId,
+                CameraReferenceId = result.CameraId,
                 CameraName = result.CameraName,
                 LocationId = result.CameraLocationId,
                 CapturedAt = result.CapturedAt,

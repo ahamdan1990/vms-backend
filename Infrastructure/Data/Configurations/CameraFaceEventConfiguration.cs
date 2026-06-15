@@ -45,7 +45,8 @@ public class CameraFaceEventConfiguration : IEntityTypeConfiguration<CameraFaceE
 
         builder.HasOne(e => e.Camera)
             .WithMany()
-            .HasForeignKey(e => e.CameraId)
+            .HasForeignKey(e => e.CameraReferenceId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
         // Querying by camera + time range (live feed panel)

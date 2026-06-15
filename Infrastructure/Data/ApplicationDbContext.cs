@@ -437,41 +437,6 @@ public class ApplicationDbContext : DbContext
         }
     }
 
-    /// <summary>
-    /// Migrates the database
-    /// </summary>
-    public async Task MigrateAsync()
-    {
-        await Database.MigrateAsync();
-    }
-
-    /// <summary>
-    /// Ensures database is created
-    /// </summary>
-    public async Task EnsureCreatedAsync()
-    {
-        await Database.EnsureCreatedAsync();
-    }
-
-    /// <summary>
-    /// Resets all database data - ONLY ALLOWED IN DEVELOPMENT ENVIRONMENT
-    /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown when attempting to reset database in non-development environment</exception>
-    public async Task ResetDatabaseAsync()
-    {
-        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-
-        if (environment != "Development")
-        {
-            throw new InvalidOperationException(
-                "Database reset is not allowed in non-development environments. " +
-                "This operation would result in permanent data loss and is blocked for security.");
-        }
-
-        await Database.EnsureDeletedAsync();
-        await Database.EnsureCreatedAsync();
-    }
-
     private static DateTime NormalizeUtc(DateTime value)
     {
         return value.Kind switch

@@ -51,10 +51,15 @@ public class StaffCheckInCommandHandler : IRequestHandler<StaffCheckInCommand, i
         var presence = new StaffPresence
         {
             UserId = request.UserId,
+            UserReferenceId = request.UserId,
+            UserDisplayName = user.FullName,
+            UserDepartment = user.Department,
+            UserJobTitle = user.JobTitle,
             CheckedInAt = DateTime.UtcNow,
             Status = StaffPresenceStatus.Active,
             LocationId = request.LocationId,
             CheckedInById = request.CheckedInById,
+            CheckedInByReferenceId = request.CheckedInById,
             Notes = request.Notes?.Trim()
         };
 

@@ -177,6 +177,9 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.Property<int>("NotificationAlertId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("NotificationAlertReferenceId")
+                        .HasColumnType("int");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -190,6 +193,8 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AlertEscalationId");
+
+                    b.HasIndex("NotificationAlertReferenceId");
 
                     b.HasIndex("NotificationAlertId", "AlertEscalationId")
                         .HasDatabaseName("IX_AlertEscalationLogs_AlertId_RuleId");
@@ -886,6 +891,9 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("CameraReferenceId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CapturedAt")
                         .HasColumnType("datetime2");
 
@@ -968,6 +976,8 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CameraReferenceId");
 
                     b.HasIndex("EventId")
                         .IsUnique()
@@ -3067,6 +3077,9 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.Property<int>("CheckedInById")
                         .HasColumnType("int");
 
+                    b.Property<int?>("CheckedInByReferenceId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("CheckedOutAt")
                         .HasColumnType("datetime2");
 
@@ -3100,7 +3113,23 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<string>("UserDepartment")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("UserDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
                     b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserJobTitle")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int?>("UserReferenceId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -3108,7 +3137,7 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.HasIndex("CheckedInAt")
                         .HasDatabaseName("IX_StaffPresences_CheckedInAt");
 
-                    b.HasIndex("CheckedInById");
+                    b.HasIndex("CheckedInByReferenceId");
 
                     b.HasIndex("CheckedOutById");
 
@@ -3116,6 +3145,8 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
 
                     b.HasIndex("Status")
                         .HasDatabaseName("IX_StaffPresences_Status");
+
+                    b.HasIndex("UserReferenceId");
 
                     b.HasIndex("UserId", "Status")
                         .HasDatabaseName("IX_StaffPresences_UserId_Status");
@@ -3281,6 +3312,9 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.Property<int>("RecordedById")
                         .HasColumnType("int");
 
+                    b.Property<int?>("RecordedByReferenceId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("ReturnedAt")
                         .HasColumnType("datetime2");
 
@@ -3301,7 +3335,7 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                     b.HasIndex("InvitationId")
                         .HasDatabaseName("IX_TemporaryLeaves_InvitationId");
 
-                    b.HasIndex("RecordedById");
+                    b.HasIndex("RecordedByReferenceId");
 
                     b.HasIndex("ReturnedById");
 
@@ -4531,9 +4565,8 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
 
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.NotificationAlert", "NotificationAlert")
                         .WithMany()
-                        .HasForeignKey("NotificationAlertId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("NotificationAlertReferenceId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("AlertEscalation");
 
@@ -4662,9 +4695,8 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                 {
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.Camera", "Camera")
                         .WithMany()
-                        .HasForeignKey("CameraId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("CameraReferenceId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Camera");
                 });
@@ -5595,9 +5627,8 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
                 {
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CheckedInByUser")
                         .WithMany()
-                        .HasForeignKey("CheckedInById")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("CheckedInByReferenceId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "CheckedOutByUser")
                         .WithMany()
@@ -5611,9 +5642,8 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
 
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("UserReferenceId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CheckedInByUser");
 
@@ -5650,9 +5680,8 @@ namespace VisitorManagementSystem.Api.Infrastructure.Data.Migrations
 
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "RecordedByUser")
                         .WithMany()
-                        .HasForeignKey("RecordedById")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("RecordedByReferenceId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("VisitorManagementSystem.Api.Domain.Entities.User", "ReturnedByUser")
                         .WithMany()

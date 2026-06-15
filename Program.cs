@@ -23,8 +23,11 @@ using VisitorManagementSystem.Api.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using VisitorManagementSystem.Api.Infrastructure.Security.Authentication;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.FileProviders;
+using VisitorManagementSystem.Api.Infrastructure.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddVmsProductionConfiguration(builder.Environment);
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -368,9 +371,25 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// Static files (for serving uploaded images and the React SPA)
+// Managed SPA assets remain under the application directory. Customer-generated
+// uploads and face snapshots are served from the external runtime data root.
 app.UseDefaultFiles();
 app.UseStaticFiles();
+var runtimeDataRoot = VmsRuntimePaths.GetDataRoot(app.Environment);
+var uploadsRoot = Path.Combine(runtimeDataRoot, "uploads");
+var faceSnapshotsRoot = Path.Combine(runtimeDataRoot, "face-snapshots");
+Directory.CreateDirectory(uploadsRoot);
+Directory.CreateDirectory(faceSnapshotsRoot);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsRoot),
+    RequestPath = "/uploads"
+});
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(faceSnapshotsRoot),
+    RequestPath = "/face-snapshots"
+});
 
 // CORS middleware
 app.UseCors("AllowFrontend");
@@ -428,25 +447,6 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 
 // SPA fallback — must be AFTER all API/hub/health routes
 app.MapFallbackToFile("index.html");
-
-// Initialize database
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-
-    try
-    {
-        await context.Database.MigrateAsync();
-        await DbInitializer.InitializeAsync(context, scope.ServiceProvider);
-        logger.LogInformation("Database initialized successfully");
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "An error occurred while initializing the database");
-        throw;
-    }
-}
 
 // Cache mode startup diagnostic
 var startupLogger = app.Services.GetRequiredService<ILogger<Program>>();

@@ -2,6 +2,7 @@ using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Application.Services.Common;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
+using VisitorManagementSystem.Api.Infrastructure.Configuration;
 
 namespace VisitorManagementSystem.Api.Application.Services.FileUploadService;
 
@@ -63,7 +64,7 @@ public class FileUploadService : IFileUploadService
             var fileName = $"profile_{userId}_{Guid.NewGuid()}{fileExtension}";
             
             // Create upload directory if it doesn't exist
-            var uploadDir = Path.Combine(_environment.WebRootPath, "uploads", "profiles");
+            var uploadDir = VmsRuntimePaths.ResolveDataPath(_environment, "uploads/profiles");
             Directory.CreateDirectory(uploadDir);
 
             var filePath = Path.Combine(uploadDir, fileName);
@@ -179,7 +180,7 @@ public class FileUploadService : IFileUploadService
     {
         try
         {
-            var fullPath = Path.Combine(_environment.WebRootPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            var fullPath = VmsRuntimePaths.ResolveDataPath(_environment, relativePath);
             if (File.Exists(fullPath))
             {
                 File.Delete(fullPath);
@@ -216,7 +217,7 @@ public class FileUploadService : IFileUploadService
             var fileName = $"visitor_{visitorId}_{documentType}_{Guid.NewGuid()}{fileExtension}";
             
             // Create upload directory if it doesn't exist
-            var uploadDir = Path.Combine(_environment.WebRootPath, "uploads", "visitor-documents", visitorId.ToString());
+            var uploadDir = VmsRuntimePaths.ResolveDataPath(_environment, $"uploads/visitor-documents/{visitorId}");
             Directory.CreateDirectory(uploadDir);
 
             var filePath = Path.Combine(uploadDir, fileName);
@@ -245,7 +246,7 @@ public class FileUploadService : IFileUploadService
             if (string.IsNullOrEmpty(filePath))
                 return;
 
-            var fullPath = Path.Combine(_environment.WebRootPath, filePath.TrimStart('/'));
+            var fullPath = VmsRuntimePaths.ResolveDataPath(_environment, filePath);
             
             if (File.Exists(fullPath))
             {

@@ -50,6 +50,10 @@ packages/
 
 # Ignore secrets
 secrets.json
+.env
+cert.pem
+key.pem
+.runtime/
 
 # Ignore publish output
 publish/
@@ -83,6 +87,14 @@ _ReSharper*/
 appsettings.Development.json
 appsettings.Local.json
 appsettings.*.json
+!appsettings.Production.template.json
+
+# Runtime/customer data must never be committed or packaged
+uploads/
+backups/
+debug_frames/
+wwwroot/uploads/
+wwwroot/face-snapshots/
 
 # Ignore coverage output
 coverage/

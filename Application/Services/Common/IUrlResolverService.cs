@@ -7,7 +7,7 @@ namespace VisitorManagementSystem.Api.Application.Services.Common;
 public interface IUrlResolverService
 {
     /// <summary>
-    /// Gets the base URL of the current application (e.g., "https://192.168.0.59:7000")
+    /// Gets the base URL of the current application (e.g., "https://vms.example.com")
     /// Dynamically resolved from HttpContext
     /// </summary>
     string GetBaseUrl();
@@ -16,7 +16,7 @@ public interface IUrlResolverService
     /// Converts a relative path to an absolute URL using the current server's base URL
     /// </summary>
     /// <param name="relativePath">Relative path (e.g., "uploads/profiles/photo.jpg")</param>
-    /// <returns>Absolute URL (e.g., "https://192.168.0.59:7000/uploads/profiles/photo.jpg")</returns>
+    /// <returns>Absolute URL (e.g., "https://vms.example.com/uploads/profiles/photo.jpg")</returns>
     string GetAbsoluteUrl(string relativePath);
 
     /// <summary>

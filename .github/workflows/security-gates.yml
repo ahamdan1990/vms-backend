@@ -1,0 +1,44 @@
+name: Backend security gates
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-test-and-inspect:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Reject tracked secrets and runtime data
+        shell: pwsh
+        run: |
+          $tracked = @(git ls-files)
+          $forbidden = $tracked | Where-Object {
+            $_ -match '(^|/)(\.env|cert\.pem|key\.pem|appsettings\.Production\.json)$' -or
+            $_ -match '(^|/)(uploads|face-snapshots|logs|backups|debug_frames)/'
+          }
+          if ($forbidden) { throw "Forbidden tracked files: $($forbidden -join ', ')" }
+
+          git grep -n -I -E 'AHWORKSTATION|Hamdan|WSS4Sec|192\.168\.0\.59' -- . ':(exclude).github/workflows/security-gates.yml'
+          if ($LASTEXITCODE -eq 0) { throw 'Known development values are committed.' }
+          if ($LASTEXITCODE -ne 1) { throw "git grep failed with exit code $LASTEXITCODE" }
+
+      - name: Build and test
+        run: dotnet test VisitorManagementSystem.Api.sln --configuration Release
+
+      - name: Inspect published backend
+        shell: pwsh
+        run: |
+          dotnet publish VisitorManagementSystem.Api.csproj --configuration Release --runtime win-x64 --self-contained false --output artifacts/publish
+          $forbiddenNames = @('appsettings.Development.json', 'appsettings.Production.json', '.env', 'cert.pem', 'key.pem')
+          $forbiddenDirectories = @('uploads', 'face-snapshots', 'logs', 'backups', 'debug_frames')
+          $bad = Get-ChildItem artifacts/publish -Recurse -Force | Where-Object {
+            $_.Name -in $forbiddenNames -or ($_.PSIsContainer -and $_.Name -in $forbiddenDirectories)
+          }
+          if ($bad) { throw "Forbidden publish content: $($bad.FullName -join ', ')" }

@@ -1,6 +1,7 @@
 using VisitorManagementSystem.Api.Application.DTOs.FaceDetection;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
+using VisitorManagementSystem.Api.Infrastructure.Configuration;
 
 namespace VisitorManagementSystem.Api.Application.Services.FaceDetection;
 
@@ -194,27 +195,14 @@ public class FaceTemplateEnrollmentService : IFaceTemplateEnrollmentService
             return null;
         }
 
-        var webRoot = _environment.WebRootPath;
-        if (string.IsNullOrWhiteSpace(webRoot))
+        try
         {
-            webRoot = Path.Combine(_environment.ContentRootPath, "wwwroot");
+            return VmsRuntimePaths.ResolveDataPath(_environment, storedPath);
         }
-
-        var relativePath = storedPath
-            .Replace('/', Path.DirectorySeparatorChar)
-            .TrimStart(Path.DirectorySeparatorChar);
-
-        var root = Path.GetFullPath(webRoot);
-        if (!root.EndsWith(Path.DirectorySeparatorChar))
+        catch (InvalidOperationException)
         {
-            root += Path.DirectorySeparatorChar;
+            return null;
         }
-
-        var candidate = Path.GetFullPath(Path.Combine(root, relativePath));
-
-        return candidate.StartsWith(root, StringComparison.OrdinalIgnoreCase)
-            ? candidate
-            : null;
     }
 
     public async Task<FaceTemplateEnrollmentItemResultDto> EnrollVisitorPhotoAsync(
@@ -232,9 +220,7 @@ public class FaceTemplateEnrollmentService : IFaceTemplateEnrollmentService
             };
 
         // Save image to disk
-        var webRoot = _environment.WebRootPath
-            ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
-        var uploadDir = Path.Combine(webRoot, "uploads", "visitors", visitorId.ToString());
+        var uploadDir = VmsRuntimePaths.ResolveDataPath(_environment, $"uploads/visitors/{visitorId}");
         Directory.CreateDirectory(uploadDir);
 
         var ext = Path.GetExtension(originalFileName).ToLowerInvariant();
@@ -319,9 +305,7 @@ public class FaceTemplateEnrollmentService : IFaceTemplateEnrollmentService
         }
 
         // Face enrolled — now persist the image and update the user record.
-        var webRoot = _environment.WebRootPath
-            ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
-        var uploadDir = Path.Combine(webRoot, "uploads", "users", userId.ToString());
+        var uploadDir = VmsRuntimePaths.ResolveDataPath(_environment, $"uploads/users/{userId}");
         Directory.CreateDirectory(uploadDir);
 
         var ext = Path.GetExtension(originalFileName).ToLowerInvariant();

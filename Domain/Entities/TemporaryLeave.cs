@@ -11,11 +11,12 @@ public class TemporaryLeave : BaseEntity
     public DateTime? ReturnedAt { get; set; }
     public string? Reason { get; set; }
     public int RecordedById { get; set; }
+    public int? RecordedByReferenceId { get; set; }
     public int? ReturnedById { get; set; }
 
     // Navigation
     public StaffPresence? StaffPresence { get; set; }
     public Invitation? Invitation { get; set; }
-    public User RecordedByUser { get; set; } = null!;
+    public User? RecordedByUser { get; set; }
     public User? ReturnedByUser { get; set; }
 }

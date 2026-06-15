@@ -21,13 +21,24 @@ public class StaffPresenceConfiguration : IEntityTypeConfiguration<StaffPresence
         builder.Property(e => e.Notes)
             .HasMaxLength(500);
 
+        builder.Property(e => e.UserDisplayName)
+            .HasMaxLength(300)
+            .IsRequired();
+
+        builder.Property(e => e.UserDepartment)
+            .HasMaxLength(200);
+
+        builder.Property(e => e.UserJobTitle)
+            .HasMaxLength(200);
+
         builder.Property(e => e.CheckedInAt)
             .IsRequired();
 
         // FK to User (the staff member)
         builder.HasOne(e => e.User)
             .WithMany()
-            .HasForeignKey(e => e.UserId)
+            .HasForeignKey(e => e.UserReferenceId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
         // FK to Location (optional)
@@ -39,7 +50,8 @@ public class StaffPresenceConfiguration : IEntityTypeConfiguration<StaffPresence
         // FK to User who checked them in
         builder.HasOne(e => e.CheckedInByUser)
             .WithMany()
-            .HasForeignKey(e => e.CheckedInById)
+            .HasForeignKey(e => e.CheckedInByReferenceId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
         // FK to User who checked them out (optional)

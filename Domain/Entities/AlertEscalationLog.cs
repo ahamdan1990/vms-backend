@@ -10,6 +10,7 @@ namespace VisitorManagementSystem.Api.Domain.Entities;
 public class AlertEscalationLog : BaseEntity
 {
     public int NotificationAlertId { get; set; }
+    public int? NotificationAlertReferenceId { get; set; }
     public int AlertEscalationId { get; set; }
     public int AttemptNumber { get; set; }
     public EscalationAction Action { get; set; }
@@ -19,6 +20,6 @@ public class AlertEscalationLog : BaseEntity
     /// </summary>
     public string? TargetInfo { get; set; }
 
-    public NotificationAlert NotificationAlert { get; set; } = null!;
+    public NotificationAlert? NotificationAlert { get; set; }
     public AlertEscalation AlertEscalation { get; set; } = null!;
 }

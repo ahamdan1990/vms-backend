@@ -15,6 +15,7 @@ using VisitorManagementSystem.Api.Application.DTOs.Auth;
 using VisitorManagementSystem.Api.Application.Services.Users;
 using VisitorManagementSystem.Api.Application.Services.FaceDetection;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
+using VisitorManagementSystem.Api.Infrastructure.Configuration;
 
 namespace VisitorManagementSystem.Api.Controllers;
 
@@ -569,8 +570,8 @@ public class UsersController : BaseController
             if (!currentUserId.HasValue)
                 return BadRequestResponse("User not authenticated");
 
-            _logger.LogDebug("Reset request details: NewPassword={NewPassword}, MustChangePassword={MustChangePassword}, NotifyUser={NotifyUser}, Reason={Reason}",
-                request.NewPassword, request.MustChangePassword, request.NotifyUser, request.Reason);
+            _logger.LogDebug("Password reset requested: MustChangePassword={MustChangePassword}, NotifyUser={NotifyUser}, Reason={Reason}",
+                request.MustChangePassword, request.NotifyUser, request.Reason);
             var command = new AdminPasswordResetCommand
             {
                 UserId = id,
@@ -1120,8 +1121,7 @@ public class UsersController : BaseController
         await file.CopyToAsync(ms, cancellationToken);
         var bytes = ms.ToArray();
 
-        var webRoot = _environment.WebRootPath ?? Path.Combine(_environment.ContentRootPath, "wwwroot");
-        var uploadDir = Path.Combine(webRoot, "uploads", "users", id.ToString());
+        var uploadDir = VmsRuntimePaths.ResolveDataPath(_environment, $"uploads/users/{id}");
         Directory.CreateDirectory(uploadDir);
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
         if (ext is not (".jpg" or ".jpeg" or ".png" or ".webp")) ext = ".jpg";

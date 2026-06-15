@@ -119,8 +119,6 @@ public class AlertEscalationConfiguration : IEntityTypeConfiguration<AlertEscala
             .IsRequired()
             .HasDefaultValue(true);
 
-        builder.HasQueryFilter(e => e.IsActive);
-
         // Row version for concurrency
         builder.Property(e => e.RowVersion)
             .IsRowVersion();

@@ -1,6 +1,7 @@
 using MediatR;
 using VisitorManagementSystem.Api.Application.Services.FaceDetection;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
+using VisitorManagementSystem.Api.Infrastructure.Configuration;
 
 namespace VisitorManagementSystem.Api.Application.Commands.Visitors;
 
@@ -105,7 +106,7 @@ public class RemoveVisitorProfilePhotoCommandHandler : IRequestHandler<RemoveVis
     {
         try
         {
-            var fullPath = Path.Combine(_environment.WebRootPath, photoPath.Replace('/', Path.DirectorySeparatorChar));
+            var fullPath = VmsRuntimePaths.ResolveDataPath(_environment, photoPath);
             if (File.Exists(fullPath))
             {
                 await Task.Run(() => File.Delete(fullPath));

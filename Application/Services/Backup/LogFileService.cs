@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using VisitorManagementSystem.Api.Application.DTOs.Backup;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
+using VisitorManagementSystem.Api.Infrastructure.Configuration;
 
 namespace VisitorManagementSystem.Api.Application.Services.Backup;
 
@@ -28,7 +29,7 @@ public class LogFileService : ILogFileService
     }
 
     public string GetLogFolderPath()
-        => Path.Combine(_env.ContentRootPath, "logs");
+        => VmsRuntimePaths.GetLogsRoot(_env);
 
     // ─────────────────────────────────────────────────────────────────────
     // Health

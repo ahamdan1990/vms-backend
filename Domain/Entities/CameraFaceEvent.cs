@@ -13,6 +13,7 @@ public class CameraFaceEvent : BaseEntity
     public string EventId { get; set; } = Guid.NewGuid().ToString("N");
 
     public int CameraId { get; set; }
+    public int? CameraReferenceId { get; set; }
     public string CameraName { get; set; } = string.Empty;
     public int? LocationId { get; set; }
 

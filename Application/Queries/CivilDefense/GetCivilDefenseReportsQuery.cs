@@ -55,7 +55,8 @@ public class GetCivilDefenseReportsQueryHandler
             {
                 var term = request.SearchTerm.ToLower();
                 staffQuery = staffQuery.Where(sp =>
-                    (sp.User.FirstName + " " + sp.User.LastName).ToLower().Contains(term));
+                    sp.UserDisplayName.ToLower().Contains(term) ||
+                    (sp.User != null && (sp.User.FirstName + " " + sp.User.LastName).ToLower().Contains(term)));
             }
 
             var staffList = await staffQuery.AsNoTracking().ToListAsync(cancellationToken);
@@ -67,8 +68,8 @@ public class GetCivilDefenseReportsQueryHandler
                 {
                     EntryType = "Staff",
                     PersonId = sp.UserId,
-                    Name = $"{sp.User.FirstName} {sp.User.LastName}".Trim(),
-                    CompanyOrDepartment = sp.User.Department,
+                    Name = sp.User?.FullName ?? sp.UserDisplayName,
+                    CompanyOrDepartment = sp.User?.Department ?? sp.UserDepartment,
                     LocationName = sp.Location?.Name,
                     CheckedInAt = sp.CheckedInAt,
                     CheckedOutAt = sp.CheckedOutAt,

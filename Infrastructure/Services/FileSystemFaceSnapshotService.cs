@@ -3,11 +3,12 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
 using VisitorManagementSystem.Api.Application.Services.Cameras;
+using VisitorManagementSystem.Api.Infrastructure.Configuration;
 
 namespace VisitorManagementSystem.Api.Infrastructure.Services;
 
 /// <summary>
-/// Saves face crop images under wwwroot/face-snapshots/{category}/{cameraId}/{yyyy}/{MM}/{dd}/{guid}.jpg
+/// Saves face crop images under the external VMS data root.
 /// and serves them as static files.
 /// </summary>
 public sealed class FileSystemFaceSnapshotService : IFaceSnapshotService
@@ -18,14 +19,14 @@ public sealed class FileSystemFaceSnapshotService : IFaceSnapshotService
     private const int PaddingFactor = 35;
     private const int MinPadding = 20;
 
-    private readonly string _webRootPath;
+    private readonly string _dataRootPath;
     private readonly ILogger<FileSystemFaceSnapshotService> _logger;
 
     public FileSystemFaceSnapshotService(
         IWebHostEnvironment env,
         ILogger<FileSystemFaceSnapshotService> logger)
     {
-        _webRootPath = env.WebRootPath ?? Path.Combine(env.ContentRootPath, "wwwroot");
+        _dataRootPath = VmsRuntimePaths.GetDataRoot(env);
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -88,7 +89,7 @@ public sealed class FileSystemFaceSnapshotService : IFaceSnapshotService
                     $"{Guid.NewGuid():N}.jpg");
             }
 
-            var absolutePath = Path.Combine(_webRootPath, relativePath);
+            var absolutePath = VmsRuntimePaths.ResolveDataPath(_dataRootPath, relativePath);
             Directory.CreateDirectory(Path.GetDirectoryName(absolutePath)!);
 
             await using var fs = File.Create(absolutePath);
@@ -110,7 +111,7 @@ public sealed class FileSystemFaceSnapshotService : IFaceSnapshotService
 
         try
         {
-            var absolutePath = Path.Combine(_webRootPath, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            var absolutePath = VmsRuntimePaths.ResolveDataPath(_dataRootPath, relativePath);
             if (File.Exists(absolutePath))
                 File.Delete(absolutePath);
         }
@@ -130,4 +131,5 @@ public sealed class FileSystemFaceSnapshotService : IFaceSnapshotService
         return string.IsNullOrWhiteSpace(segment) ? "misc" :
             new string(segment.Select(c => char.IsLetterOrDigit(c) || c == '-' ? c : '_').ToArray());
     }
+
 }

@@ -37,7 +37,7 @@ public class ConfigurationController : ControllerBase
         try
         {
             var configurations = await _configService.GetAllConfigurationsAsync(cancellationToken);
-            return Ok(new { success = true, data = configurations });
+            return Ok(new { success = true, data = RedactConfigurationDictionary(configurations) });
         }
         catch (Exception ex)
         {
@@ -56,7 +56,7 @@ public class ConfigurationController : ControllerBase
         try
         {
             var configurations = await _configService.GetCategoryConfigurationAsync(category, cancellationToken);
-            return Ok(new { success = true, data = configurations, category });
+            return Ok(new { success = true, data = RedactConfigurationDictionary(configurations), category });
         }
         catch (Exception ex)
         {
@@ -89,14 +89,14 @@ public class ConfigurationController : ControllerBase
                 {
                     category = metadata.Category,
                     key = metadata.Key,
-                    value = metadata.IsSensitive ? "***" : value,
+                    value = metadata.IsSensitive || metadata.IsEncrypted ? "***" : value,
                     dataType = metadata.DataType,
                     description = metadata.Description,
                     isReadOnly = metadata.IsReadOnly,
                     isEncrypted = metadata.IsEncrypted,
                     isSensitive = metadata.IsSensitive,
                     requiresRestart = metadata.RequiresRestart,
-                    defaultValue = metadata.DefaultValue
+                    defaultValue = metadata.IsSensitive || metadata.IsEncrypted ? null : metadata.DefaultValue
                 }
             });
         }
@@ -133,7 +133,8 @@ public class ConfigurationController : ControllerBase
                     Value          = request.Value,
                     DataType       = "String",
                     RequiresRestart = false,
-                    IsEncrypted    = false,
+                    IsEncrypted    = IsSensitiveKey(category + key),
+                    IsSensitive    = IsSensitiveKey(category + key),
                     Environment    = "All",
                 };
                 var created = await _configService.CreateConfigurationAsync(newConfig, userId, cancellationToken);
@@ -206,8 +207,8 @@ public class ConfigurationController : ControllerBase
                 DataType = request.DataType,
                 Description = request.Description,
                 RequiresRestart = request.RequiresRestart,
-                IsEncrypted = request.IsEncrypted,
-                IsSensitive = request.IsSensitive,
+                IsEncrypted = request.IsEncrypted || IsSensitiveKey(request.Category + request.Key),
+                IsSensitive = request.IsSensitive || IsSensitiveKey(request.Category + request.Key),
                 IsReadOnly = request.IsReadOnly,
                 DefaultValue = request.DefaultValue,
                 ValidationRules = request.ValidationRules,
@@ -223,7 +224,12 @@ public class ConfigurationController : ControllerBase
                 _logger.LogInformation("Configuration {Category}.{Key} created by user {UserId}", request.Category, request.Key, userId);
                 return CreatedAtAction(nameof(GetConfiguration), 
                     new { category = createdConfig.Category, key = createdConfig.Key }, 
-                    new { success = true, message = "Configuration created successfully", data = createdConfig });
+                    new
+                    {
+                        success = true,
+                        message = "Configuration created successfully",
+                        data = ToSafeConfiguration(createdConfig)
+                    });
             }
 
             return BadRequest(new { success = false, message = "Failed to create configuration" });
@@ -277,7 +283,19 @@ public class ConfigurationController : ControllerBase
         try
         {
             var history = await _configService.GetConfigurationHistoryAsync(category, key, pageSize, cancellationToken);
-            return Ok(new { success = true, data = history });
+            var safeHistory = history.Select(item => new
+            {
+                item.Id,
+                item.Category,
+                item.Key,
+                oldValue = IsSensitiveKey(item.Key) ? "[REDACTED]" : item.OldValue,
+                newValue = IsSensitiveKey(item.Key) ? "[REDACTED]" : item.NewValue,
+                item.Action,
+                item.Reason,
+                item.CreatedBy,
+                item.CreatedOn
+            });
+            return Ok(new { success = true, data = safeHistory });
         }
         catch (Exception ex)
         {
@@ -301,7 +319,7 @@ public class ConfigurationController : ControllerBase
             }
 
             var results = await _configService.SearchConfigurationsAsync(searchTerm, category, cancellationToken);
-            return Ok(new { success = true, data = results, searchTerm, category });
+            return Ok(new { success = true, data = results.Select(ToSafeConfiguration), searchTerm, category });
         }
         catch (Exception ex)
         {
@@ -357,6 +375,49 @@ public class ConfigurationController : ControllerBase
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         return int.TryParse(userIdClaim?.Value, out var userId) ? userId : 0;
+    }
+
+    private static object ToSafeConfiguration(SystemConfiguration configuration) => new
+    {
+        configuration.Id,
+        configuration.Category,
+        configuration.Key,
+        value = configuration.IsSensitive || configuration.IsEncrypted ? "***" : configuration.Value,
+        configuration.DataType,
+        configuration.Description,
+        configuration.RequiresRestart,
+        configuration.IsEncrypted,
+        configuration.IsSensitive,
+        configuration.IsReadOnly,
+        defaultValue = configuration.IsSensitive || configuration.IsEncrypted ? null : configuration.DefaultValue,
+        configuration.Group,
+        configuration.DisplayOrder,
+        configuration.Environment
+    };
+
+    private static Dictionary<string, object> RedactConfigurationDictionary(Dictionary<string, object> source) =>
+        source.ToDictionary(
+            item => item.Key,
+            item => IsSensitiveKey(item.Key) ? (object)"***" : item.Value,
+            StringComparer.OrdinalIgnoreCase);
+
+    private static Dictionary<string, Dictionary<string, object>> RedactConfigurationDictionary(
+        Dictionary<string, Dictionary<string, object>> source) =>
+        source.ToDictionary(
+            item => item.Key,
+            item => RedactConfigurationDictionary(item.Value),
+            StringComparer.OrdinalIgnoreCase);
+
+    private static bool IsSensitiveKey(string key)
+    {
+        var normalized = key.Replace("_", string.Empty, StringComparison.Ordinal).ToLowerInvariant();
+        return normalized.Contains("password", StringComparison.Ordinal)
+            || normalized.Contains("secret", StringComparison.Ordinal)
+            || normalized.Contains("apikey", StringComparison.Ordinal)
+            || normalized.Contains("token", StringComparison.Ordinal)
+            || normalized.Contains("connectionstring", StringComparison.Ordinal)
+            || normalized.Contains("licensekey", StringComparison.Ordinal)
+            || normalized.Contains("encryptionkey", StringComparison.Ordinal);
     }
 }
 

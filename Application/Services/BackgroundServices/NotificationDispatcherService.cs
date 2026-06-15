@@ -164,6 +164,7 @@ public class NotificationDispatcherService : BackgroundService
                 var logEntry = new AlertEscalationLog
                 {
                     NotificationAlertId = alert.Id,
+                    NotificationAlertReferenceId = alert.Id,
                     AlertEscalationId   = rule.Id,
                     AttemptNumber       = attempts + 1,
                     Action              = rule.Action,

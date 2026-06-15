@@ -3,6 +3,7 @@ using VisitorManagementSystem.Api.Application.DTOs.Backup;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Infrastructure.Data;
+using VisitorManagementSystem.Api.Infrastructure.Configuration;
 
 namespace VisitorManagementSystem.Api.Application.Services.Backup;
 
@@ -217,7 +218,7 @@ public class DatabaseBackupService : IDatabaseBackupService
         return new BackupSettingsDto(
             Enabled: await B("Backup", "Enabled", false),
             ScheduleTime: await S("Backup", "ScheduleTime", "02:00"),
-            DestinationPath: await S("Backup", "DestinationPath", @"C:\VMS_Backups"),
+            DestinationPath: await S("Backup", "DestinationPath", Path.Combine(VmsRuntimePaths.ProgramDataRoot, "backups")),
             RetentionDays: await I("Backup", "RetentionDays", 14),
             AutoBackupOnAlert: await B("Backup", "AutoBackupOnAlert", false),
             AutoBackupOnCritical: await B("Backup", "AutoBackupOnCritical", true),

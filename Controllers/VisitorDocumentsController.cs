@@ -7,6 +7,7 @@ using VisitorManagementSystem.Api.Application.Queries.VisitorDocuments;
 using VisitorManagementSystem.Api.Application.Queries.Visitors;
 using VisitorManagementSystem.Api.Application.Services.FileUploadService;
 using VisitorManagementSystem.Api.Domain.Constants;
+using VisitorManagementSystem.Api.Infrastructure.Configuration;
 
 namespace VisitorManagementSystem.Api.Controllers;
 
@@ -197,8 +198,7 @@ public class VisitorDocumentsController : BaseController
             // Remove any leading slashes and replace forward slashes with the OS-specific separator
             var relativePath = (documentDto.FilePath ?? string.Empty).TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
 
-            var webRootPath = _environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            var filePath = Path.Combine(webRootPath, relativePath);
+            var filePath = VmsRuntimePaths.ResolveDataPath(_environment, relativePath);
 
             _logger.LogDebug("📄 Document Preview - ID: {DocumentId}, RelativePath: {RelativePath}, FileExists: {FileExists}",
                 id, relativePath, System.IO.File.Exists(filePath));
@@ -255,8 +255,7 @@ public class VisitorDocumentsController : BaseController
             // Remove any leading slashes and replace forward slashes with the OS-specific separator
             var relativePath = (documentDto.FilePath ?? string.Empty).TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
 
-            var webRootPath = _environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            var filePath = Path.Combine(webRootPath, relativePath);
+            var filePath = VmsRuntimePaths.ResolveDataPath(_environment, relativePath);
 
             _logger.LogDebug("📄 Document Download - ID: {DocumentId}, RelativePath: {RelativePath}, FileExists: {FileExists}",
                 id, relativePath, System.IO.File.Exists(filePath));

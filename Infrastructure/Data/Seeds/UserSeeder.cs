@@ -15,9 +15,12 @@ public static class UserSeeder
     /// Gets seed users for initial database setup
     /// </summary>
     /// <returns>List of seed users</returns>
-    public static List<User> GetSeedUsers()
+    public static List<User> GetSeedUsers(string? bootstrapPassword = null)
     {
         var users = new List<User>();
+        var initialPassword = string.IsNullOrWhiteSpace(bootstrapPassword)
+            ? NewRandomPassword()
+            : bootstrapPassword;
 
         // System Administrator
         var adminUser = CreateUser(
@@ -27,33 +30,10 @@ public static class UserSeeder
             role: UserRole.Administrator,
             department: "IT",
             jobTitle: "System Administrator",
-            employeeId: "SYS001"
+            employeeId: "SYS001",
+            password: initialPassword
         );
         users.Add(adminUser);
-
-        // Default Staff User
-        var staffUser = CreateUser(
-            firstName: "John",
-            lastName: "Staff",
-            email: "staff@vms.com",
-            role: UserRole.Staff,
-            department: "Human Resources",
-            jobTitle: "HR Manager",
-            employeeId: "HR001"
-        );
-        users.Add(staffUser);
-
-        // Default Operator User
-        var operatorUser = CreateUser(
-            firstName: "Jane",
-            lastName: "Receptionist",
-            email: "operator@vms.com",
-            role: UserRole.Receptionist,
-            department: "Security",
-            jobTitle: "Security Officer",
-            employeeId: "SEC001"
-        );
-        users.Add(operatorUser);
 
         return users;
     }
@@ -68,7 +48,7 @@ public static class UserSeeder
     /// <param name="department">Department</param>
     /// <param name="jobTitle">Job title</param>
     /// <param name="employeeId">Employee ID</param>
-    /// <param name="password">Password (defaults to "Password123!")</param>
+    /// <param name="password">One-time password generated or supplied by the installer.</param>
     /// <returns>User entity</returns>
     /// <remarks>
     /// NOTE: RoleId is not set here as roles may not be seeded yet.
@@ -82,8 +62,9 @@ public static class UserSeeder
         string? department = null,
         string? jobTitle = null,
         string? employeeId = null,
-        string password = "Password123!")
+        string? password = null)
     {
+        password ??= NewRandomPassword();
         var (passwordHash, passwordSalt) = HashPassword(password);
 
         var user = new User
@@ -105,12 +86,25 @@ public static class UserSeeder
             Language = "en-US",
             Theme = "light",
             PasswordChangedDate = DateTime.UtcNow,
-            MustChangePassword = false,
+            MustChangePassword = true,
             IsActive = true,
             CreatedOn = DateTime.UtcNow
         };
 
         return user;
+    }
+
+    private static string NewRandomPassword()
+    {
+        const string alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@$%&*";
+        Span<byte> bytes = stackalloc byte[24];
+        RandomNumberGenerator.Fill(bytes);
+        var chars = bytes.ToArray().Select(value => alphabet[value % alphabet.Length]).ToArray();
+        chars[0] = 'A';
+        chars[1] = 'a';
+        chars[2] = '7';
+        chars[3] = '!';
+        return new string(chars);
     }
 
     /// <summary>
