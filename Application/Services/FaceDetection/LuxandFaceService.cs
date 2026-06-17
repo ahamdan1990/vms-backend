@@ -14,7 +14,7 @@ namespace VisitorManagementSystem.Api.Application.Services.FaceDetection;
 /// </summary>
 public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDisposable
 {
-    private const string EngineName = "Luxand";
+    private const string EngineName = "Primary";
     private const long TrackerCameraIndex = 0L;
     private const long TrackerMaxFaces = 64L;
 
@@ -55,8 +55,8 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
         else
         {
             InitializationStatus = "disabled";
-            InitializationError = "Luxand FaceSDK is disabled in configuration.";
-            _logger.LogInformation("Luxand FaceSDK is disabled in configuration.");
+            InitializationError = "PrimaryEngine is disabled in configuration.";
+            _logger.LogInformation("PrimaryEngine is disabled in configuration.");
         }
     }
 
@@ -69,7 +69,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             var projectNativeDllPath = Path.Combine(Directory.GetCurrentDirectory(), "luxand facesdk", "facesdk.dll");
 
             _logger.LogInformation(
-                "Luxand FaceSDK initialization starting. LicenseConfigured={LicenseConfigured}, NativeDllInBaseDirectory={NativeDllInBaseDirectory}, NativeDllInProjectDirectory={NativeDllInProjectDirectory}",
+                "PrimaryEngine initialization starting. LicenseConfigured={LicenseConfigured}, NativeDllInBaseDirectory={NativeDllInBaseDirectory}, NativeDllInProjectDirectory={NativeDllInProjectDirectory}",
                 !string.IsNullOrWhiteSpace(_settings.LicenseKey),
                 File.Exists(nativeDllPath),
                 File.Exists(projectNativeDllPath));
@@ -77,7 +77,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             if (string.IsNullOrWhiteSpace(_settings.LicenseKey))
             {
                 InitializationStatus = "missingLicense";
-                InitializationError = "Luxand FaceSDK is enabled but no license key is configured.";
+                InitializationError = "PrimaryEngine is enabled but no license key is configured.";
                 _logger.LogWarning(InitializationError);
                 return;
             }
@@ -87,8 +87,8 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             if (ret != FSDK.FSDKE_OK)
             {
                 InitializationStatus = "activationFailed";
-                InitializationError = $"Luxand ActivateLibrary failed with code {ret}.";
-                _logger.LogError("Luxand ActivateLibrary failed with code {Code}.", ret);
+                InitializationError = $"PrimaryEngine ActivateLibrary failed with code {ret}.";
+                _logger.LogError("PrimaryEngine ActivateLibrary failed with code {Code}.", ret);
                 return;
             }
 
@@ -97,8 +97,8 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             if (ret != FSDK.FSDKE_OK)
             {
                 InitializationStatus = "initializeFailed";
-                InitializationError = $"Luxand InitializeLibrary failed with code {ret}.";
-                _logger.LogError("Luxand InitializeLibrary failed with code {Code}.", ret);
+                InitializationError = $"PrimaryEngine InitializeLibrary failed with code {ret}.";
+                _logger.LogError("PrimaryEngine InitializeLibrary failed with code {Code}.", ret);
                 return;
             }
 
@@ -111,25 +111,25 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             _initialized = true;
             InitializationStatus = "available";
             InitializationError = null;
-            _logger.LogInformation("Luxand FaceSDK initialized. TemplateSize={TemplateSize}", FSDK.TemplateSize);
+            _logger.LogInformation("PrimaryEngine initialized. TemplateSize={TemplateSize}", FSDK.TemplateSize);
         }
         catch (DllNotFoundException ex)
         {
             InitializationStatus = "nativeDllNotFound";
             InitializationError = ex.Message;
-            _logger.LogError(ex, "Luxand FaceSDK native DLL could not be loaded.");
+            _logger.LogError(ex, "PrimaryEngine native DLL could not be loaded.");
         }
         catch (BadImageFormatException ex)
         {
             InitializationStatus = "nativeDllArchitectureMismatch";
             InitializationError = ex.Message;
-            _logger.LogError(ex, "Luxand FaceSDK native DLL architecture does not match the running process.");
+            _logger.LogError(ex, "PrimaryEngine native DLL architecture does not match the running process.");
         }
         catch (Exception ex)
         {
             InitializationStatus = "exception";
             InitializationError = ex.Message;
-            _logger.LogError(ex, "Luxand FaceSDK initialization failed.");
+            _logger.LogError(ex, "PrimaryEngine initialization failed.");
         }
     }
 
@@ -168,7 +168,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
     {
         if (!IsAvailable)
         {
-            return Fail("Luxand FaceSDK is not available.");
+            return Fail("Primary face engine is not available.");
         }
 
         var identity = await ResolveSubjectAsync(subjectId, cancellationToken);
@@ -339,7 +339,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             var handle = 0;
             if (FSDK.CreateTracker(ref handle) != FSDK.FSDKE_OK)
             {
-                _logger.LogWarning("Luxand CreateTracker failed for camera {CameraId}", cameraId);
+                _logger.LogWarning("PrimaryEngine CreateTracker failed for camera {CameraId}", cameraId);
                 return false;
             }
 
@@ -365,7 +365,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Luxand CreateTracker failed for camera {CameraId}", cameraId);
+            _logger.LogError(ex, "PrimaryEngine CreateTracker failed for camera {CameraId}", cameraId);
             return false;
         }
         finally
@@ -448,7 +448,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
         }
 
         await EnsureTemplatesLoadedAsync(cancellationToken);
-        _logger.LogInformation("Luxand template cache reloaded. Count={Count}", _templates.Count);
+        _logger.LogInformation("PrimaryEngine template cache reloaded. Count={Count}", _templates.Count);
     }
 
     private async Task EnsureTemplatesLoadedAsync(CancellationToken cancellationToken)
@@ -487,9 +487,9 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             _templateCacheExpiresAt = DateTimeOffset.UtcNow.AddMinutes(TemplateCacheTtlMinutes);
 
             if (wasExpired)
-                _logger.LogInformation("Luxand template cache refreshed (TTL expired). Count={Count}", _templates.Count);
+                _logger.LogInformation("PrimaryEngine template cache refreshed (TTL expired). Count={Count}", _templates.Count);
             else
-                _logger.LogInformation("Loaded {Count} Luxand face template(s) into memory", _templates.Count);
+                _logger.LogInformation("PrimaryEngine loaded {Count} face template(s) into memory", _templates.Count);
         }
         finally
         {
@@ -771,7 +771,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Luxand face crop failed.");
+            _logger.LogWarning(ex, "PrimaryEngine face crop failed.");
             return null;
         }
     }
@@ -813,13 +813,13 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             var ret = FSDK.DetectMultipleFaces(image, ref count, out positions, 256 * FSDK.sizeofTFacePosition);
 
             _logger.LogDebug(
-                "Luxand DetectMultipleFaces. ImageSize={Width}x{Height}, ReturnCode={ReturnCode}, FaceCount={Count}",
+                "PrimaryEngine DetectMultipleFaces. ImageSize={Width}x{Height}, ReturnCode={ReturnCode}, FaceCount={Count}",
                 imageWidth, imageHeight, ret, count);
 
             if (ret != FSDK.FSDKE_OK)
             {
                 _logger.LogWarning(
-                    "Luxand DetectMultipleFaces returned error. ReturnCode={ReturnCode}, ImageSize={Width}x{Height}",
+                    "PrimaryEngine DetectMultipleFaces returned error. ReturnCode={ReturnCode}, ImageSize={Width}x{Height}",
                     ret, imageWidth, imageHeight);
                 return result;
             }
@@ -882,7 +882,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Luxand detect-and-extract failed.");
+            _logger.LogWarning(ex, "PrimaryEngine detect-and-extract failed.");
         }
         finally
         {
@@ -933,13 +933,13 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
                 256 * FSDK.sizeofTFacePosition);
 
             _logger.LogDebug(
-                "Luxand ExtractFacePositions. ImageSize={Width}x{Height}, ReturnCode={ReturnCode}, FaceCount={Count}",
+                "PrimaryEngine ExtractFacePositions. ImageSize={Width}x{Height}, ReturnCode={ReturnCode}, FaceCount={Count}",
                 imageWidth, imageHeight, ret, count);
 
             if (ret != FSDK.FSDKE_OK)
             {
                 _logger.LogWarning(
-                    "Luxand ExtractFacePositions DetectMultipleFaces returned error. ReturnCode={ReturnCode}, ImageSize={Width}x{Height}",
+                    "PrimaryEngine ExtractFacePositions DetectMultipleFaces returned error. ReturnCode={ReturnCode}, ImageSize={Width}x{Height}",
                     ret, imageWidth, imageHeight);
                 return result;
             }
@@ -974,7 +974,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Luxand face detection failed.");
+            _logger.LogWarning(ex, "PrimaryEngine face detection failed.");
         }
         finally
         {
@@ -1046,7 +1046,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Luxand FeedFrame failed for camera {CameraId}", cameraId);
+            _logger.LogWarning(ex, "PrimaryEngine FeedFrame failed for camera {CameraId}", cameraId);
         }
         finally
         {
@@ -1069,6 +1069,14 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             // ImageSharp Bgr24.CopyPixelDataTo produces B,G,R packed bytes — the correct order.
             var srcBytes = IsJpeg(imageBytes) ? imageBytes : ConvertToJpeg(imageBytes);
             using var img = SixLabors.ImageSharp.Image.Load<SixLabors.ImageSharp.PixelFormats.Bgr24>(srcBytes);
+            // Pre-scale to InternalResizeWidth before LoadImageFromBuffer to avoid FSDKE_INSUFFICIENT_BUFFER (-7)
+            // when source frames are large (e.g. 1920×1080). FSDK's internal resize pipeline can't allocate
+            // working memory proportional to both source and target sizes simultaneously on large buffers.
+            if (_settings.InternalResizeWidth > 0 && img.Width > _settings.InternalResizeWidth)
+            {
+                var targetHeight = (int)Math.Round((double)img.Height * _settings.InternalResizeWidth / img.Width);
+                img.Mutate(x => x.Resize(_settings.InternalResizeWidth, targetHeight));
+            }
             var pixels = new byte[img.Width * img.Height * 3];
             img.CopyPixelDataTo(pixels);
             var image = 0;
@@ -1076,13 +1084,13 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             if (ret != FSDK.FSDKE_OK)
             {
                 _logger.LogWarning(
-                    "Luxand LoadImageFromBuffer failed. ReturnCode={ReturnCode}, ImageSize={Width}x{Height}, BufferLen={BufferLen}",
+                    "PrimaryEngine LoadImageFromBuffer failed. ReturnCode={ReturnCode}, ImageSize={Width}x{Height}, BufferLen={BufferLen}",
                     ret, img.Width, img.Height, pixels.Length);
                 return -1;
             }
 
             _logger.LogDebug(
-                "Luxand image loaded. Width={Width}, Height={Height}, Stride={Stride}, BufferLen={BufferLen}",
+                "PrimaryEngine image loaded. Width={Width}, Height={Height}, Stride={Stride}, BufferLen={BufferLen}",
                 img.Width, img.Height, img.Width * 3, pixels.Length);
 
             TryDumpDebugFrame(imageBytes, img.Width, img.Height);
@@ -1090,7 +1098,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Luxand LoadImageToFsdk failed. BufferLen={BufferLen}", imageBytes.Length);
+            _logger.LogWarning(ex, "PrimaryEngine LoadImageToFsdk failed. BufferLen={BufferLen}", imageBytes.Length);
             return -1;
         }
     }
@@ -1219,7 +1227,7 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             }
 
             _trackerHandles.Clear();
-            _logger.LogInformation("Luxand FaceSDK disposed. FinalizeLibrary intentionally skipped for process stability.");
+            _logger.LogInformation("PrimaryEngine disposed. FinalizeLibrary intentionally skipped for process stability.");
         }
         finally
         {

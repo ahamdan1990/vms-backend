@@ -7,7 +7,7 @@ namespace VisitorManagementSystem.Api.Application.Services.FaceDetection;
 
 public class FaceTemplateEnrollmentService : IFaceTemplateEnrollmentService
 {
-    private const string LuxandEngine = "Luxand";
+    private const string LuxandEngine = "Primary";
 
     private readonly IUnitOfWork _unitOfWork;
     private readonly IWebHostEnvironment _environment;

@@ -186,10 +186,15 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
             result.ProcessedAt = DateTime.UtcNow;
 
             LogFaceDecisions(cameraId, result.Faces);
-            _logger.LogInformation(
-                "Processed camera frame (single-pass). CameraId={CameraId}, Type={CameraType}, Role={CameraRole}, Engine={Engine}, Detected={Detected}, Known={KnownCount}, Unknown={UnknownCount}, ClientIp={ClientIp}",
-                camera.Id, camera.CameraType, config.CameraRole, result.EngineUsed,
-                result.DetectedFaceCount, result.KnownFaceCount, result.UnknownFaceCount, clientIpAddress);
+            if (result.DetectedFaceCount > 0)
+                _logger.LogInformation(
+                    "Processed camera frame (single-pass). CameraId={CameraId}, Type={CameraType}, Role={CameraRole}, Engine={Engine}, Detected={Detected}, Known={KnownCount}, Unknown={UnknownCount}, ClientIp={ClientIp}",
+                    camera.Id, camera.CameraType, config.CameraRole, result.EngineUsed,
+                    result.DetectedFaceCount, result.KnownFaceCount, result.UnknownFaceCount, clientIpAddress);
+            else
+                _logger.LogDebug(
+                    "Processed camera frame (single-pass, no faces). CameraId={CameraId}, Engine={Engine}",
+                    camera.Id, result.EngineUsed);
 
             return result;
         }
@@ -251,10 +256,15 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
         result.ProcessedAt = DateTime.UtcNow;
 
         LogFaceDecisions(cameraId, result.Faces);
-        _logger.LogInformation(
-            "Processed camera frame. CameraId={CameraId}, Type={CameraType}, Role={CameraRole}, Engine={Engine}, Known={KnownCount}, Unknown={UnknownCount}, ClientIp={ClientIp}",
-            camera.Id, camera.CameraType, config.CameraRole, result.EngineUsed,
-            result.KnownFaceCount, result.UnknownFaceCount, clientIpAddress);
+        if (result.KnownFaceCount + result.UnknownFaceCount > 0)
+            _logger.LogInformation(
+                "Processed camera frame. CameraId={CameraId}, Type={CameraType}, Role={CameraRole}, Engine={Engine}, Known={KnownCount}, Unknown={UnknownCount}, ClientIp={ClientIp}",
+                camera.Id, camera.CameraType, config.CameraRole, result.EngineUsed,
+                result.KnownFaceCount, result.UnknownFaceCount, clientIpAddress);
+        else
+            _logger.LogDebug(
+                "Processed camera frame (no faces). CameraId={CameraId}, Engine={Engine}",
+                camera.Id, result.EngineUsed);
 
         return result;
     }
@@ -431,14 +441,14 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
     {
         return new Dictionary<string, object>
         {
-            ["luxandAvailable"] = _luxandService.IsAvailable,
-            ["luxandStatus"] = _luxandService.InitializationStatus,
-            ["luxandReturnCode"] = _luxandService.LastReturnCode?.ToString() ?? string.Empty,
-            ["luxandError"] = _luxandService.InitializationError ?? string.Empty,
-            ["compreFaceAvailable"] = _compreFaceService.IsAvailable,
+            ["primaryAvailable"] = _luxandService.IsAvailable,
+            ["primaryStatus"] = _luxandService.InitializationStatus,
+            ["primaryReturnCode"] = _luxandService.LastReturnCode?.ToString() ?? string.Empty,
+            ["primaryError"] = _luxandService.InitializationError ?? string.Empty,
+            ["backupAvailable"] = _compreFaceService.IsAvailable,
             // Diagnostic: confirm which values took effect at startup (requires server restart to update)
-            ["luxandDetectionThreshold"] = _configuration.GetValue<int>("LuxandFaceSDK:DetectionThreshold", 5),
-            ["luxandInternalResizeWidth"] = _configuration.GetValue<int>("LuxandFaceSDK:InternalResizeWidth", 384)
+            ["primaryDetectionThreshold"] = _configuration.GetValue<int>("FaceEngine:DetectionThreshold", 5),
+            ["primaryInternalResizeWidth"] = _configuration.GetValue<int>("FaceEngine:InternalResizeWidth", 384)
         };
     }
 

@@ -19,7 +19,7 @@ public sealed class FaceEngineWarmupService : IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation(
-            "Face engine startup status. LuxandAvailable={LuxandAvailable}, LuxandStatus={LuxandStatus}, LuxandReturnCode={LuxandReturnCode}, LuxandError={LuxandError}",
+            "Face engine startup status. PrimaryAvailable={PrimaryAvailable}, PrimaryStatus={PrimaryStatus}, PrimaryReturnCode={PrimaryReturnCode}, PrimaryError={PrimaryError}",
             _luxandFaceService.IsAvailable,
             _luxandFaceService.InitializationStatus,
             _luxandFaceService.LastReturnCode,

@@ -610,7 +610,7 @@ public sealed class CameraStreamRuntimeService : ICameraStreamRuntimeService, IA
                 "Camera inference skipped. CameraId={CameraId}, Sequence={Sequence}, Reason={Reason}",
                 frame.CameraId, frame.SequenceNumber, result.SkipReason);
         }
-        else
+        else if (result.DetectedFaceCount > 0 || result.Events.Count > 0)
         {
             _logger.LogInformation(
                 "Camera inference completed. CameraId={CameraId}, Sequence={Sequence}, Engine={Engine}, Detected={Detected}, Known={Known}, Unknown={Unknown}, Events={Events}, Success={Success}, Error={Error}",
@@ -623,6 +623,12 @@ public sealed class CameraStreamRuntimeService : ICameraStreamRuntimeService, IA
                 result.Events.Count,
                 result.Success,
                 result.ErrorMessage);
+        }
+        else
+        {
+            _logger.LogDebug(
+                "Camera inference completed (no faces). CameraId={CameraId}, Sequence={Sequence}",
+                frame.CameraId, frame.SequenceNumber);
         }
     }
 

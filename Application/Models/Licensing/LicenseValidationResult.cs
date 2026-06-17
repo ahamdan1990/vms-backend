@@ -8,6 +8,7 @@ public class LicenseValidationResult
     public LicenseStatus Status { get; init; }
     public string? FailureReason { get; init; }
     public LicenseType? LicenseType { get; init; }
+    public DateTime? IssuedAt { get; init; }
     public DateTime? ExpiresAt { get; init; }
     public string? CustomerEmail { get; init; }
     public LicenseEntitlements? Entitlements { get; init; }
@@ -19,6 +20,7 @@ public class LicenseValidationResult
         IsValid = true,
         Status = LicenseStatus.Valid,
         LicenseType = Enum.TryParse<LicenseType>(payload.LicenseType, true, out var lt) ? lt : Domain.Enums.LicenseType.Full,
+        IssuedAt = payload.IssuedAt,
         ExpiresAt = payload.ExpiresAt,
         CustomerEmail = payload.CustomerEmail,
         Entitlements = payload.Entitlements,

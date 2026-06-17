@@ -253,7 +253,8 @@ public static class ServiceCollectionExtensions
     /// </summary>
     private static IServiceCollection RegisterCompreFaceServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<CompreFaceSettings>(configuration.GetSection("CompreFace"));
+        services.Configure<CompreFaceSettings>(configuration.GetSection("FaceEngineBackup")
+            .Exists() ? configuration.GetSection("FaceEngineBackup") : configuration.GetSection("CompreFace"));
 
         // Register a named HttpClient for CompreFace so CompreFaceService can be a singleton.
         // CompreFaceService configures BaseAddress/Timeout itself in the constructor.
@@ -272,8 +273,13 @@ public static class ServiceCollectionExtensions
         {
             if (string.IsNullOrWhiteSpace(options.LicenseKey))
             {
-                options.LicenseKey = Environment.GetEnvironmentVariable("LUXAND_FACESDK_LICENSE")
+                options.LicenseKey =
+                    configuration["FaceEngine:LicenseKey"]
+                    ?? configuration["LuxandFaceSDK:LicenseKey"]          // backward compat: old section name
+                    ?? Environment.GetEnvironmentVariable("FACE_ENGINE_LICENSE")
+                    ?? Environment.GetEnvironmentVariable("LUXAND_FACESDK_LICENSE")   // backward compat
                     ?? Environment.GetEnvironmentVariable("LuxandFaceSDK__LicenseKey")
+                    ?? ReadDotEnvValue("FACE_ENGINE_LICENSE")
                     ?? ReadDotEnvValue("LUXAND_FACESDK_LICENSE")
                     ?? ReadDotEnvValue("LuxandFaceSDK__LicenseKey")
                     ?? string.Empty;

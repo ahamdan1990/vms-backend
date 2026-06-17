@@ -138,6 +138,41 @@ public static class ComprehensiveConfigurationSeeder
             await SpeechConfigurationSeeder.SeedAsync(toAdd, now, systemUserId);
         }
 
+        // Primary and backup face engine settings — added to FRSystem so all FR config is in one place
+        if (!await context.SystemConfigurations.AnyAsync(c => c.Category == "FRSystem" && c.Key == "PrimaryEnabled"))
+        {
+            logger?.LogInformation("Seeding FRSystem: primary and backup engine settings");
+            toAdd.AddRange(new[]
+            {
+                // Primary engine (local SDK)
+                CreateConfiguration("FRSystem", "PrimaryEnabled", "false", "bool", "Enable primary face detection engine", true, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "PrimaryDetectionThreshold", "3", "int", "Detection sensitivity 1–10 (lower = more detections, requires restart)", true, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "PrimaryInternalResizeWidth", "960", "int", "Image width for detection in pixels — 640–1280 recommended (requires restart)", true, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "PrimaryMatchThreshold", "0.80", "decimal", "Minimum similarity score to confirm identity (0–1)", false, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "PrimaryCropMarginPercent", "20", "int", "Face crop padding percentage (0–50)", false, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "PrimaryMaxAdditionalTemplates", "5", "int", "Extra templates stored per person (1–20)", false, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "PrimaryArbitraryRotationsEnabled", "true", "bool", "Detect faces at any rotation — more accurate but slower (requires restart)", true, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "PrimaryDetermineRotationAngle", "true", "bool", "Compute roll angle per face — required for roll-limit filtering (requires restart)", true, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "PrimaryDebugFrameDumpEnabled", "false", "bool", "Write each frame to disk as JPEG — for diagnostics only", false, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "PrimaryDebugFrameDumpPath", "debug_frames", "string", "Folder path for debug frame dump files", false, false, false, now, systemUserId),
+
+                // Backup engine (remote API)
+                CreateConfiguration("FRSystem", "BackupEnabled", "false", "bool", "Enable backup face detection engine", true, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "BackupBaseUrl", "", "string", "Backup engine API base URL (e.g. http://localhost:8000)", true, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "BackupDetectionApiKey", "", "string", "API key for backup engine face detection endpoint", true, false, true, now, systemUserId),
+                CreateConfiguration("FRSystem", "BackupRecognitionApiKey", "", "string", "API key for backup engine face recognition endpoint", true, false, true, now, systemUserId),
+                CreateConfiguration("FRSystem", "BackupVerificationApiKey", "", "string", "API key for backup engine face verification endpoint", true, false, true, now, systemUserId),
+                CreateConfiguration("FRSystem", "BackupDefaultMarginPercent", "40", "int", "Face crop margin percentage for backup engine (0–100)", false, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "BackupMinimumConfidence", "0.80", "decimal", "Minimum face detection confidence score (0–1)", false, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "BackupMinimumSimilarity", "0.85", "decimal", "Minimum similarity score for identity match (0–1)", false, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "BackupMaxFacesDetect", "1", "int", "Maximum faces to detect per request", false, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "BackupTimeoutSeconds", "2", "int", "HTTP request timeout in seconds (1–30)", false, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "BackupMaxRetries", "0", "int", "Number of retries on transient failure (0–5)", false, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "BackupCircuitBreakerThreshold", "1", "int", "Consecutive failures before circuit opens (1–10)", false, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "BackupCircuitBreakerRecoverySeconds", "60", "int", "Seconds before circuit breaker attempts recovery (10–3600)", false, false, false, now, systemUserId),
+            });
+        }
+
         if (toAdd.Count > 0)
         {
             await context.SystemConfigurations.AddRangeAsync(toAdd);

@@ -44,6 +44,7 @@ public class LicenseController : ControllerBase
             status = result.Status.ToString(),
             licenseType = result.LicenseType?.ToString(),
             customerEmail = result.CustomerEmail,
+            issuedAt = result.IssuedAt,
             expiresAt = result.ExpiresAt,
             daysRemaining = result.ExpiresAt.HasValue
                 ? Math.Max(0, (int)(result.ExpiresAt.Value - DateTime.UtcNow).TotalDays)

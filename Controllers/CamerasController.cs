@@ -485,14 +485,14 @@ public class CamerasController : BaseController
 
             return SuccessResponse(new
             {
-                luxand = new
+                primaryEngine = new
                 {
                     available = _luxandService.IsAvailable,
                     status = _luxandService.InitializationStatus,
                     returnCode = _luxandService.LastReturnCode,
                     error = _luxandService.InitializationError
                 },
-                compreFace = new
+                backupEngine = new
                 {
                     available = _compreFaceService.IsAvailable,
                     reachable = compreFaceReachable

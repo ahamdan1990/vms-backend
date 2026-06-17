@@ -129,7 +129,7 @@ public class HybridFaceService : IFaceDetectionService
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Luxand recognition failed; falling back to CompreFace when available.");
+                _logger.LogWarning(ex, "Primary engine recognition failed; falling back to backup engine when available.");
             }
         }
 
@@ -144,7 +144,7 @@ public class HybridFaceService : IFaceDetectionService
             imageStream.Position = 0;
         }
 
-        _logger.LogDebug("Luxand is unavailable or failed; falling back to CompreFace.");
+        _logger.LogDebug("Primary engine unavailable or failed; falling back to backup engine.");
         return await _compreFace.RecognizeFacesAsync(imageStream, cancellationToken);
     }
 
