@@ -145,7 +145,18 @@ public static class DbInitializer
         if (dbConfig == null)
             return; // Not seeded yet — seeder will pick up the correct key
 
-        var currentValue = protection.Unprotect(dbConfig.Value);
+        string? currentValue;
+        try
+        {
+            currentValue = protection.Unprotect(dbConfig.Value);
+        }
+        catch (System.Security.Cryptography.CryptographicException)
+        {
+            // Data Protection key ring has changed (e.g. fresh install on a machine
+            // with an existing database). Re-encrypt with the current key.
+            currentValue = null;
+        }
+
         if (currentValue != appsettingsKey)
         {
             dbConfig.Value = protection.Protect(appsettingsKey);

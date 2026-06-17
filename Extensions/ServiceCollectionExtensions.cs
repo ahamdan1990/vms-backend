@@ -47,6 +47,8 @@ using Microsoft.Extensions.Caching.Distributed;
 using VisitorManagementSystem.Api.Application.Services.Common;
 using VisitorManagementSystem.Api.Infrastructure.Services;
 using VisitorManagementSystem.Api.Application.Mapping;
+using VisitorManagementSystem.Api.Application.Services.Licensing;
+using VisitorManagementSystem.Api.Infrastructure.Services.Licensing;
 
 namespace VisitorManagementSystem.Api.Extensions;
 
@@ -62,6 +64,7 @@ public static class ServiceCollectionExtensions
     {
         // Register core services
         services.RegisterConfiguration(configuration);
+        services.RegisterLicensingServices();
         services.RegisterServices();
         services.RegisterRepositories();
         services.RegisterExternalServices();
@@ -340,10 +343,24 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
+    /// Registers licensing services
+    /// </summary>
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private static IServiceCollection RegisterLicensingServices(this IServiceCollection services)
+    {
+        services.AddSingleton<IMachineFingerprintService, MachineFingerprintService>();
+        services.AddSingleton<ILicenseStorageService, LicenseStorageService>();
+        services.AddSingleton<ILicenseValidatorService, LicenseValidatorService>();
+        return services;
+    }
+
+    /// <summary>
     /// Registers background services
     /// </summary>
     private static IServiceCollection RegisterBackgroundServices(this IServiceCollection services)
     {
+        services.AddHostedService<LicenseValidationBackgroundService>();
+
         // Token cleanup service
         services.AddHostedService<TokenCleanupBackgroundService>();
 

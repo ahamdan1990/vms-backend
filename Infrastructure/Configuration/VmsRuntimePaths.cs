@@ -42,6 +42,9 @@ public static class VmsRuntimePaths
         Environment.GetEnvironmentVariable(SecretsPathEnvironmentVariable)
         ?? Path.Combine(ProgramDataRoot, "secrets", "appsettings.secrets.dpapi");
 
+    public static string GetLicensePath() =>
+        Path.Combine(ProgramDataRoot, "secrets", "license.dpapi");
+
     public static string ResolveDataPath(IHostEnvironment environment, string relativePath)
         => ResolveDataPath(GetDataRoot(environment), relativePath);
 

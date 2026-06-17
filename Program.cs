@@ -25,6 +25,7 @@ using VisitorManagementSystem.Api.Infrastructure.Security.Authentication;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.FileProviders;
 using VisitorManagementSystem.Api.Infrastructure.Configuration;
+using VisitorManagementSystem.Api.Application.Services.Licensing;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddVmsProductionConfiguration(builder.Environment);
@@ -408,6 +409,7 @@ app.UseMiddleware<RateLimitingMiddleware>();
 // Authentication & Authorization (removed duplicate custom middleware)
 app.UseAuthentication();
 app.UseMiddleware<PermissionClaimsMiddleware>();
+app.UseLicenseEnforcement();
 
 app.UseAuthorization();
 
@@ -447,6 +449,25 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 
 // SPA fallback — must be AFTER all API/hub/health routes
 app.MapFallbackToFile("index.html");
+
+// ── License startup validation ────────────────────────────────────────────
+// In Production: validate license before accepting any traffic.
+// NotActivated is allowed (system runs but all API calls return 402).
+// Any other invalid state (Tampered, Expired, HardwareMismatch, etc.) = refuse to start.
+if (!app.Environment.IsDevelopment())
+{
+    var licenseValidator = app.Services.GetRequiredService<ILicenseValidatorService>();
+    var licenseResult = await licenseValidator.ValidateCurrentLicenseAsync();
+    if (!licenseResult.IsValid && licenseResult.Status != VisitorManagementSystem.Api.Domain.Enums.LicenseStatus.NotActivated)
+    {
+        Log.Fatal("License validation failed on startup (Status: {Status}): {Reason}",
+            licenseResult.Status, licenseResult.FailureReason);
+        Log.CloseAndFlush();
+        return;
+    }
+    if (licenseResult.Status == VisitorManagementSystem.Api.Domain.Enums.LicenseStatus.NotActivated)
+        Log.Warning("VMS is running without a license. All API endpoints are blocked until activation.");
+}
 
 // Cache mode startup diagnostic
 var startupLogger = app.Services.GetRequiredService<ILogger<Program>>();

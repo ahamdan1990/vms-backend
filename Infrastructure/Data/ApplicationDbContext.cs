@@ -89,6 +89,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<StaffPresence> StaffPresences { get; set; } = null!;
     public DbSet<TemporaryLeave> TemporaryLeaves { get; set; } = null!;
 
+    // DbSets - Licensing
+    public DbSet<LicenseRecord> LicenseRecords { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -147,6 +150,9 @@ public class ApplicationDbContext : DbContext
         // Apply all configurations - Civil Defense
         modelBuilder.ApplyConfiguration(new StaffPresenceConfiguration());
         modelBuilder.ApplyConfiguration(new TemporaryLeaveConfiguration());
+
+        // Apply all configurations - Licensing
+        modelBuilder.ApplyConfiguration(new LicenseRecordConfiguration());
 
         // Global query filters for soft delete (standardized on IsDeleted pattern)
         modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
