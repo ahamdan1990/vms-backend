@@ -448,7 +448,7 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
             ["backupAvailable"] = _compreFaceService.IsAvailable,
             // Diagnostic: confirm which values took effect at startup (requires server restart to update)
             ["primaryDetectionThreshold"] = _configuration.GetValue<int>("FaceEngine:DetectionThreshold", 5),
-            ["primaryInternalResizeWidth"] = _configuration.GetValue<int>("FaceEngine:InternalResizeWidth", 384)
+            ["primaryInternalResizeWidth"] = _configuration.GetValue<int>("FaceEngine:InternalResizeWidth", 640)
         };
     }
 

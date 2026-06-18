@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Domain.Entities;
 using VisitorManagementSystem.Api.Domain.Enums;
@@ -55,6 +56,11 @@ public static class DbInitializer
 
                     await ComprehensiveConfigurationSeeder.SeedAllConfigurationsAsync(context, serviceProvider);
                 }
+                // Remove obsolete rows (wrong category/key names, dead categories)
+                var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+                var cleanupLogger = loggerFactory?.CreateLogger("DbInitializer");
+                await ComprehensiveConfigurationSeeder.CleanupObsoleteSettingsAsync(context, cleanupLogger);
+
                 // Seed any categories added after the initial deployment (incremental)
                 await ComprehensiveConfigurationSeeder.SeedMissingCategoriesAsync(context, serviceProvider);
 

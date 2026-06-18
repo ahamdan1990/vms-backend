@@ -55,31 +55,25 @@ public static class ComprehensiveConfigurationSeeder
             // 1. JWT Configuration
             await SeedJwtConfigurationAsync(configurations, configuration, now, systemUserId);
             
-            // 2. Security Configuration
+            // 2. Security Configuration (password policy only)
             await SeedSecurityConfigurationAsync(configurations, configuration, now, systemUserId);
-            
-            // 3. Database Configuration
-            await SeedDatabaseConfigurationAsync(configurations, configuration, now, systemUserId);
-            
-            // 4. Logging Configuration
-            await SeedLoggingConfigurationAsync(configurations, configuration, now, systemUserId);
-            
-            // 5. Email Configuration
+
+            // 3. Lockout Configuration
+            await SeedLockoutConfigurationAsync(configurations, now, systemUserId);
+
+            // 4. Email Configuration
             await SeedEmailConfigurationAsync(configurations, configuration, now, systemUserId);
-            
-            // 6. SMS Configuration
+
+            // 5. SMS Configuration (provision — not yet wired)
             await SeedSmsConfigurationAsync(configurations, configuration, now, systemUserId);
-            
-            // 7. File Storage Configuration
-            await SeedFileStorageConfigurationAsync(configurations, configuration, now, systemUserId);
-            
-            // 8. System Settings Configuration
+
+            // 6. System Settings Configuration
             await SeedSystemSettingsConfigurationAsync(configurations, configuration, now, systemUserId);
-            
-            // 9. FR System Configuration
+
+            // 7. FR System Configuration
             await SeedFrSystemConfigurationAsync(configurations, configuration, now, systemUserId);
-            
-            // 10. Application Configuration
+
+            // 8. Application Configuration
             await SeedApplicationConfigurationAsync(configurations, configuration, now, systemUserId);
 
             // 11. LDAP Configuration
@@ -137,6 +131,32 @@ public static class ComprehensiveConfigurationSeeder
             logger?.LogInformation("Seeding missing category: SpeechRecognition");
             await SpeechConfigurationSeeder.SeedAsync(toAdd, now, systemUserId);
         }
+        else
+        {
+            // Add individual keys that were added to the seeder after the category was first seeded
+            if (!await context.SystemConfigurations.AnyAsync(c => c.Category == "SpeechRecognition" && c.Key == "TimeoutSeconds"))
+            {
+                toAdd.Add(new SystemConfiguration
+                {
+                    Category = "SpeechRecognition", Key = "TimeoutSeconds", Value = "30", DataType = "int",
+                    Description = "HTTP request timeout when calling the Whisper service, in seconds.",
+                    DefaultValue = "30", RequiresRestart = false, IsEncrypted = false, IsSensitive = false,
+                    IsReadOnly = false, Group = "Speech Recognition", DisplayOrder = 0, Environment = "All",
+                    CreatedBy = systemUserId, CreatedOn = now, IsActive = true,
+                });
+            }
+            if (!await context.SystemConfigurations.AnyAsync(c => c.Category == "SpeechRecognition" && c.Key == "ConcurrencyLimit"))
+            {
+                toAdd.Add(new SystemConfiguration
+                {
+                    Category = "SpeechRecognition", Key = "ConcurrencyLimit", Value = "2", DataType = "int",
+                    Description = "Maximum number of parallel transcription requests.",
+                    DefaultValue = "2", RequiresRestart = false, IsEncrypted = false, IsSensitive = false,
+                    IsReadOnly = false, Group = "Speech Recognition", DisplayOrder = 0, Environment = "All",
+                    CreatedBy = systemUserId, CreatedOn = now, IsActive = true,
+                });
+            }
+        }
 
         // Primary and backup face engine settings — added to FRSystem so all FR config is in one place
         if (!await context.SystemConfigurations.AnyAsync(c => c.Category == "FRSystem" && c.Key == "PrimaryEnabled"))
@@ -147,7 +167,7 @@ public static class ComprehensiveConfigurationSeeder
                 // Primary engine (local SDK)
                 CreateConfiguration("FRSystem", "PrimaryEnabled", "false", "bool", "Enable primary face detection engine", true, false, false, now, systemUserId),
                 CreateConfiguration("FRSystem", "PrimaryDetectionThreshold", "3", "int", "Detection sensitivity 1–10 (lower = more detections, requires restart)", true, false, false, now, systemUserId),
-                CreateConfiguration("FRSystem", "PrimaryInternalResizeWidth", "960", "int", "Image width for detection in pixels — 640–1280 recommended (requires restart)", true, false, false, now, systemUserId),
+                CreateConfiguration("FRSystem", "PrimaryInternalResizeWidth", "640", "int", "Image width for detection in pixels — 640–1280 recommended (requires restart)", true, false, false, now, systemUserId),
                 CreateConfiguration("FRSystem", "PrimaryMatchThreshold", "0.80", "decimal", "Minimum similarity score to confirm identity (0–1)", false, false, false, now, systemUserId),
                 CreateConfiguration("FRSystem", "PrimaryCropMarginPercent", "20", "int", "Face crop padding percentage (0–50)", false, false, false, now, systemUserId),
                 CreateConfiguration("FRSystem", "PrimaryMaxAdditionalTemplates", "5", "int", "Extra templates stored per person (1–20)", false, false, false, now, systemUserId),
@@ -173,12 +193,135 @@ public static class ComprehensiveConfigurationSeeder
             });
         }
 
+        // Lockout — added after initial deployment; fixes bug where Security seeder used wrong category/key names
+        if (!await context.SystemConfigurations.AnyAsync(c => c.Category == "Lockout"))
+        {
+            logger?.LogInformation("Seeding missing category: Lockout");
+            await SeedLockoutConfigurationAsync(toAdd, now, systemUserId);
+        }
+
         if (toAdd.Count > 0)
         {
             await context.SystemConfigurations.AddRangeAsync(toAdd);
             await context.SaveChangesAsync();
             logger?.LogInformation("Seeded {Count} missing configuration rows", toAdd.Count);
         }
+    }
+
+    /// <summary>
+    /// Deletes obsolete configuration rows that were seeded by earlier versions.
+    /// Call this before SeedMissingCategoriesAsync so stale rows are gone before new ones are added.
+    /// </summary>
+    public static async Task CleanupObsoleteSettingsAsync(ApplicationDbContext context, ILogger? logger = null)
+    {
+        var toDelete = new (string Category, string Key)[]
+        {
+            // FRSystem — dead integration stubs (GraphQL FR system never built)
+            ("FRSystem", "GraphQLEndpoint"), ("FRSystem", "ApiKey"),
+            ("FRSystem", "WebhookSecret"),   ("FRSystem", "Timeout"),
+            ("FRSystem", "RetryCount"),      ("FRSystem", "HealthCheckInterval"),
+
+            // Security — Lockout (wrong category/key names; now in "Lockout" category)
+            ("Security", "Lockout_DefaultLockoutTimeSpan"), ("Security", "Lockout_MaxFailedAccessAttempts"),
+            ("Security", "Lockout_AllowedForNewUsers"),     ("Security", "Lockout_LockoutWindow"),
+            ("Security", "Lockout_AutoUnlockAfterLockoutPeriod"), ("Security", "Lockout_NotifyOnLockout"),
+            ("Security", "Lockout_MaxLockoutAttempts"),     ("Security", "Lockout_ExtendedLockoutDuration"),
+
+            // Security — EncryptionKeys (Data Protection is configured at startup, not runtime)
+            ("Security", "EncryptionKeys_DataProtectionKey"), ("Security", "EncryptionKeys_DatabaseEncryptionKey"),
+            ("Security", "EncryptionKeys_CookieEncryptionKey"), ("Security", "EncryptionKeys_FileEncryptionKey"),
+            ("Security", "EncryptionKeys_AutoRotateKeys"), ("Security", "EncryptionKeys_KeyRotationDays"),
+
+            // Security — SessionSecurity (cookie/session middleware config, not runtime)
+            ("Security", "SessionSecurity_SessionTimeout"), ("Security", "SessionSecurity_SlidingExpiration"),
+            ("Security", "SessionSecurity_RequireSecureCookies"), ("Security", "SessionSecurity_RequireHttpOnlyCookies"),
+            ("Security", "SessionSecurity_SameSiteMode"), ("Security", "SessionSecurity_EnableDeviceTracking"),
+            ("Security", "SessionSecurity_EnableGeoLocationTracking"),
+
+            // Security — Https (HSTS/HTTPS middleware, not runtime)
+            ("Security", "Https_RequireHttps"), ("Security", "Https_RedirectHttpToHttps"),
+            ("Security", "Https_HttpsPort"),    ("Security", "Https_EnableHsts"),
+            ("Security", "Https_HstsMaxAge"),   ("Security", "Https_HstsIncludeSubdomains"),
+
+            // Application — removed non-functional settings
+            ("Application", "ApplicationVersion"), ("Application", "Environment"),
+            ("Application", "EnableDebugMode"),    ("Application", "MaxConcurrentUsers"),
+            ("Application", "EnableFeatureFlags"), ("Application", "CacheExpirationMinutes"),
+
+            // SystemSettings — removed non-functional settings
+            ("SystemSettings", "SessionTimeout"),           ("SystemSettings", "EnableAuditLogging"),
+            ("SystemSettings", "EnableRealTimeNotifications"), ("SystemSettings", "DateFormat"),
+            ("SystemSettings", "TimeFormat"),
+        };
+
+        var affectedCategories = toDelete.Select(x => x.Category).Distinct().ToList();
+        var existing = await context.SystemConfigurations
+            .Where(c => affectedCategories.Contains(c.Category))
+            .ToListAsync();
+
+        var specificRows = existing
+            .Where(c => toDelete.Contains((c.Category, c.Key)))
+            .ToList();
+
+        if (specificRows.Count > 0)
+            context.SystemConfigurations.RemoveRange(specificRows);
+
+        // Remove entire dead categories
+        var deadCategories = new[] { "Database", "Logging", "FileStorage", "Primary" };
+        var deadRows = await context.SystemConfigurations
+            .Where(c => deadCategories.Contains(c.Category))
+            .ToListAsync();
+
+        if (deadRows.Count > 0)
+            context.SystemConfigurations.RemoveRange(deadRows);
+
+        int total = specificRows.Count + deadRows.Count;
+        if (total > 0)
+        {
+            await context.SaveChangesAsync();
+            logger?.LogInformation("CleanupObsoleteSettings: removed {Count} obsolete configuration rows", total);
+        }
+    }
+
+    private static async Task SeedLockoutConfigurationAsync(List<SystemConfiguration> configurations, DateTime now, int? systemUserId)
+    {
+        configurations.AddRange(new[]
+        {
+            CreateConfiguration("Lockout", "MaxFailedAttempts", "5",
+                "int", "Failed login attempts before account lockout", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Lockout", "LockoutDuration", "15",
+                "int", "Account lockout duration in minutes", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Lockout", "EnableProgressiveLockout", "false",
+                "bool", "Double lockout duration on each successive lockout", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Lockout", "LockoutProgression", "15,30,60,1440",
+                "string", "Comma-separated lockout durations (minutes) for progressive lockout", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Lockout", "FailedAttemptWindow", "10",
+                "int", "Time window (minutes) in which failed attempts are counted", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Lockout", "ResetAttemptsOnSuccess", "true",
+                "bool", "Reset failed attempt counter after successful login", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Lockout", "EnableIpBlocking", "false",
+                "bool", "Block IP addresses after too many failed attempts", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Lockout", "MaxFailedAttemptsPerIp", "20",
+                "int", "Failed attempts per IP before IP block is applied", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Lockout", "IpBlockDuration", "60",
+                "int", "IP block duration in minutes", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Lockout", "NotifyOnLockout", "false",
+                "bool", "Send notification to user when account is locked", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Lockout", "NotifyAdminOnLockout", "false",
+                "bool", "Send notification to administrators when an account is locked", false, false, false, now, systemUserId),
+        });
+
+        await Task.CompletedTask;
     }
 
     private static async Task SeedJwtConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int? systemUserId)
@@ -332,136 +475,11 @@ public static class ComprehensiveConfigurationSeeder
                 "int", "Days before expiry to warn user", false, false, false, now, systemUserId),
         });
 
-        // Lockout Configuration
-        var lockoutSection = securitySection.GetSection("Lockout");
-        configurations.AddRange(new[]
-        {
-            CreateConfiguration("Security", "Lockout_DefaultLockoutTimeSpan", 
-                lockoutSection["DefaultLockoutTimeSpan"] ?? "00:15:00",
-                "timespan", "Default account lockout duration", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "Lockout_MaxFailedAccessAttempts", 
-                lockoutSection["MaxFailedAccessAttempts"] ?? "5",
-                "int", "Maximum failed login attempts before lockout", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "Lockout_AllowedForNewUsers", 
-                lockoutSection["AllowedForNewUsers"] ?? "true",
-                "bool", "Enable lockout for new users", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "Lockout_LockoutWindow", 
-                lockoutSection["LockoutWindow"] ?? "00:05:00",
-                "timespan", "Time window for tracking failed attempts", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "Lockout_AutoUnlockAfterLockoutPeriod", 
-                lockoutSection["AutoUnlockAfterLockoutPeriod"] ?? "true",
-                "bool", "Auto unlock accounts after lockout period", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "Lockout_NotifyOnLockout", 
-                lockoutSection["NotifyOnLockout"] ?? "true",
-                "bool", "Send notification when account is locked", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "Lockout_MaxLockoutAttempts", 
-                lockoutSection["MaxLockoutAttempts"] ?? "10",
-                "int", "Maximum lockout attempts before permanent lock", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "Lockout_ExtendedLockoutDuration", 
-                lockoutSection["ExtendedLockoutDuration"] ?? "1.00:00:00",
-                "timespan", "Extended lockout duration for repeated violations", false, false, false, now, systemUserId)
-        });
-
-        // Encryption Keys
-        var encryptionSection = securitySection.GetSection("EncryptionKeys");
-        configurations.AddRange(new[]
-        {
-            CreateConfiguration("Security", "EncryptionKeys_DataProtectionKey", 
-                encryptionSection["DataProtectionKey"] ?? "DataProtectionKey123456789012345678901234567890",
-                "string", "Data protection encryption key", true, true, true, now, systemUserId),
-                
-            CreateConfiguration("Security", "EncryptionKeys_DatabaseEncryptionKey", 
-                encryptionSection["DatabaseEncryptionKey"] ?? "DatabaseKey123456789012345678901234567890",
-                "string", "Database encryption key", true, true, true, now, systemUserId),
-                
-            CreateConfiguration("Security", "EncryptionKeys_CookieEncryptionKey", 
-                encryptionSection["CookieEncryptionKey"] ?? "CookieKey123456789012345678901234567890",
-                "string", "Cookie encryption key", true, true, true, now, systemUserId),
-                
-            CreateConfiguration("Security", "EncryptionKeys_FileEncryptionKey", 
-                encryptionSection["FileEncryptionKey"] ?? "FileKey123456789012345678901234567890",
-                "string", "File encryption key", true, true, true, now, systemUserId),
-                
-            CreateConfiguration("Security", "EncryptionKeys_AutoRotateKeys", 
-                encryptionSection["AutoRotateKeys"] ?? "true",
-                "bool", "Automatically rotate encryption keys", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "EncryptionKeys_KeyRotationDays", 
-                encryptionSection["KeyRotationDays"] ?? "90",
-                "int", "Key rotation interval in days", false, false, false, now, systemUserId)
-        });
-
-        // Session Security
-        var sessionSection = securitySection.GetSection("SessionSecurity");
-        configurations.AddRange(new[]
-        {
-            CreateConfiguration("Security", "SessionSecurity_SessionTimeout", 
-                sessionSection["SessionTimeout"] ?? "00:30:00",
-                "timespan", "Session timeout duration", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "SessionSecurity_SlidingExpiration", 
-                sessionSection["SlidingExpiration"] ?? "true",
-                "bool", "Enable sliding session expiration", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "SessionSecurity_RequireSecureCookies", 
-                sessionSection["RequireSecureCookies"] ?? "true",
-                "bool", "Require secure cookies (HTTPS only)", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "SessionSecurity_RequireHttpOnlyCookies", 
-                sessionSection["RequireHttpOnlyCookies"] ?? "true",
-                "bool", "Require HTTP-only cookies", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "SessionSecurity_SameSiteMode", 
-                sessionSection["SameSiteMode"] ?? "Strict",
-                "string", "Cookie SameSite mode", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "SessionSecurity_EnableDeviceTracking", 
-                sessionSection["EnableDeviceTracking"] ?? "true",
-                "bool", "Enable device fingerprinting", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "SessionSecurity_EnableGeoLocationTracking", 
-                sessionSection["EnableGeoLocationTracking"] ?? "false",
-                "bool", "Enable geographical location tracking", false, false, false, now, systemUserId)
-        });
-
-        // HTTPS Configuration
-        var httpsSection = securitySection.GetSection("Https");
-        configurations.AddRange(new[]
-        {
-            CreateConfiguration("Security", "Https_RequireHttps", 
-                httpsSection["RequireHttps"] ?? "true",
-                "bool", "Require HTTPS for all requests", true, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "Https_RedirectHttpToHttps", 
-                httpsSection["RedirectHttpToHttps"] ?? "true",
-                "bool", "Redirect HTTP requests to HTTPS", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "Https_HttpsPort", 
-                httpsSection["HttpsPort"] ?? "443",
-                "int", "HTTPS port number", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "Https_EnableHsts", 
-                httpsSection["EnableHsts"] ?? "true",
-                "bool", "Enable HTTP Strict Transport Security", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "Https_HstsMaxAge", 
-                httpsSection["HstsMaxAge"] ?? "365.00:00:00",
-                "timespan", "HSTS max age", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Security", "Https_HstsIncludeSubdomains", 
-                httpsSection["HstsIncludeSubdomains"] ?? "true",
-                "bool", "Include subdomains in HSTS", false, false, false, now, systemUserId)
-        });
-
         await Task.CompletedTask;
     }
+
+    // Dead method — no longer called from SeedAllConfigurationsAsync.
+    // CleanupObsoleteSettingsAsync will remove any rows previously seeded by these.
     private static async Task SeedDatabaseConfigurationAsync(List<SystemConfiguration> configurations, IConfiguration configuration, DateTime now, int? systemUserId)
     {
         var databaseSection = configuration.GetSection("Database");
@@ -890,37 +908,17 @@ public static class ComprehensiveConfigurationSeeder
         
         configurations.AddRange(new[]
         {
-            CreateConfiguration("SystemSettings", "DefaultTimeZone", 
+            CreateConfiguration("SystemSettings", "DefaultTimeZone",
                 systemSection["DefaultTimeZone"] ?? "UTC",
                 "string", "Default system timezone", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("SystemSettings", "DateFormat", 
-                systemSection["DateFormat"] ?? "yyyy-MM-dd",
-                "string", "Default date format", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("SystemSettings", "TimeFormat", 
-                systemSection["TimeFormat"] ?? "HH:mm:ss",
-                "string", "Default time format", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("SystemSettings", "DefaultPageSize", 
+
+            CreateConfiguration("SystemSettings", "DefaultPageSize",
                 systemSection["DefaultPageSize"] ?? "20",
                 "int", "Default page size for paginated results", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("SystemSettings", "MaxPageSize", 
+
+            CreateConfiguration("SystemSettings", "MaxPageSize",
                 systemSection["MaxPageSize"] ?? "100",
                 "int", "Maximum page size for paginated results", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("SystemSettings", "SessionTimeout", 
-                systemSection["SessionTimeout"] ?? "00:30:00",
-                "timespan", "User session timeout", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("SystemSettings", "EnableAuditLogging", 
-                systemSection["EnableAuditLogging"] ?? "true",
-                "bool", "Enable audit logging", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("SystemSettings", "EnableRealTimeNotifications", 
-                systemSection["EnableRealTimeNotifications"] ?? "true",
-                "bool", "Enable real-time notifications", false, false, false, now, systemUserId)
         });
 
         await Task.CompletedTask;
@@ -932,33 +930,9 @@ public static class ComprehensiveConfigurationSeeder
         
         configurations.AddRange(new[]
         {
-            CreateConfiguration("FRSystem", "GraphQLEndpoint", 
-                frSystemSection["GraphQLEndpoint"] ?? "https://your-fr-system.com/graphql",
-                "string", "Face Recognition system GraphQL endpoint", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("FRSystem", "ApiKey", 
-                frSystemSection["ApiKey"] ?? "",
-                "string", "Face Recognition system API key", false, true, true, now, systemUserId),
-                
-            CreateConfiguration("FRSystem", "WebhookSecret", 
-                frSystemSection["WebhookSecret"] ?? "",
-                "string", "Face Recognition system webhook secret", false, true, true, now, systemUserId),
-                
-            CreateConfiguration("FRSystem", "Timeout", 
-                frSystemSection["Timeout"] ?? "00:00:30",
-                "timespan", "Request timeout for Face Recognition system", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("FRSystem", "RetryCount", 
-                frSystemSection["RetryCount"] ?? "3",
-                "int", "Retry count for Face Recognition system requests", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("FRSystem", "HealthCheckInterval",
-                frSystemSection["HealthCheckInterval"] ?? "00:01:00",
-                "timespan", "Health check interval for Face Recognition system", false, false, false, now, systemUserId),
-
             CreateConfiguration("FRSystem", "RecognitionThreshold",
                 frSystemSection["RecognitionThreshold"] ?? "0.9",
-                "decimal", "Minimum Luxand similarity score (0.0–1.0) for a face match to be accepted. Lower = more permissive (higher false-positive risk). Default 0.9.", false, false, false, now, systemUserId)
+                "decimal", "Minimum similarity score (0.0–1.0) for a face match to be accepted. Lower = more permissive, higher = fewer false positives. Default 0.9.", false, false, false, now, systemUserId),
         });
 
         await Task.CompletedTask;
@@ -968,45 +942,21 @@ public static class ComprehensiveConfigurationSeeder
     {
         configurations.AddRange(new[]
         {
-            CreateConfiguration("Application", "ApplicationName", 
+            CreateConfiguration("Application", "ApplicationName",
                 "Visitor Management System",
                 "string", "Application display name", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Application", "ApplicationVersion", 
-                "1.0.0",
-                "string", "Application version", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Application", "Environment", 
-                Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production",
-                "string", "Application environment", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Application", "MaintenanceMode", 
+
+            CreateConfiguration("Application", "MaintenanceMode",
                 "false",
-                "bool", "Enable maintenance mode", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Application", "MaintenanceMessage", 
+                "bool", "Enable maintenance mode — returns 503 for all non-admin requests", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Application", "MaintenanceMessage",
                 "The system is currently under maintenance. Please try again later.",
-                "string", "Maintenance mode message", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Application", "EnableDebugMode", 
-                "false",
-                "bool", "Enable debug mode", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Application", "EnableSwagger", 
+                "string", "Message returned to clients during maintenance mode", false, false, false, now, systemUserId),
+
+            CreateConfiguration("Application", "EnableSwagger",
                 "true",
-                "bool", "Enable Swagger documentation", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Application", "MaxConcurrentUsers", 
-                "1000",
-                "int", "Maximum concurrent users", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Application", "EnableFeatureFlags", 
-                "true",
-                "bool", "Enable feature flag system", false, false, false, now, systemUserId),
-                
-            CreateConfiguration("Application", "CacheExpirationMinutes", 
-                "30",
-                "int", "Default cache expiration in minutes", false, false, false, now, systemUserId)
+                "bool", "Expose Swagger/OpenAPI documentation (requires restart)", false, false, false, now, systemUserId),
         });
 
         await Task.CompletedTask;

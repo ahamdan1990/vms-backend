@@ -794,6 +794,13 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
         // each call works exclusively with its own local HImage handle.
         try
         {
+            // Capture original frame dimensions BEFORE LoadImageToFsdk scales the image down.
+            // Detection coordinates come back in scaled space; we need the scale factor to
+            // map them back to original-frame pixel coordinates for correct face cropping.
+            var origInfo = SixLabors.ImageSharp.Image.Identify(imageBytes);
+            int originalWidth  = origInfo?.Width  ?? 0;
+            int originalHeight = origInfo?.Height ?? 0;
+
             image = LoadImageToFsdk(imageBytes);
             if (image < 0)
             {
@@ -807,6 +814,10 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             var imageHeight = 0;
             FSDK.GetImageWidth(image, ref imageWidth);
             FSDK.GetImageHeight(image, ref imageHeight);
+
+            // Scale factors: detection ran on the (possibly downscaled) image; convert back.
+            double scaleX = (originalWidth  > 0 && imageWidth  > 0) ? (double)originalWidth  / imageWidth  : 1.0;
+            double scaleY = (originalHeight > 0 && imageHeight > 0) ? (double)originalHeight / imageHeight : 1.0;
 
             var count = 0;
             FSDK.TFacePosition[]? positions = null;
@@ -838,16 +849,25 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
                 // to keep the face center roughly aligned with the cheekbone region.
                 var estimatedHeight = (int)(position.w * 1.3f);
                 var qualityScore = 0.0;
+
+                // Quality is assessed in scaled (detection) space — relative face/image size.
+                var scaledX = Math.Max(0, position.xc - half);
+                var scaledY = Math.Max(0, position.yc - (int)(position.w * 0.65f));
+                var qualityProxy = new DetectedFace { X = scaledX, Y = scaledY, Width = position.w, Height = estimatedHeight };
+                qualityScore = CalculateQualityScore(qualityProxy, imageWidth, imageHeight);
+
+                // Coordinates stored on the returned face are in ORIGINAL frame space so that
+                // downstream crop code (FileSystemFaceSnapshotService) extracts from the right pixels.
                 var face = new DetectedFace
                 {
-                    X = Math.Max(0, position.xc - half),
-                    Y = Math.Max(0, position.yc - (int)(position.w * 0.65f)),
-                    Width = position.w,
-                    Height = estimatedHeight,
-                    Confidence = 1.0,
+                    X      = (int)Math.Round(scaledX            * scaleX),
+                    Y      = (int)Math.Round(scaledY            * scaleY),
+                    Width  = (int)Math.Round(position.w         * scaleX),
+                    Height = (int)Math.Round(estimatedHeight     * scaleY),
+                    Confidence = qualityScore / 100.0,
+                    QualityScore = qualityScore,
                     Roll = (float?)position.angle
                 };
-                face.QualityScore = qualityScore = CalculateQualityScore(face, imageWidth, imageHeight);
 
                 // Extract the face template from this region while the image is already loaded.
                 // GetFaceTemplateUsingFeatures is the most accurate extraction path per SDK docs.
@@ -910,6 +930,10 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
 
         try
         {
+            var origInfoPos = SixLabors.ImageSharp.Image.Identify(imageBytes);
+            int originalWidthPos  = origInfoPos?.Width  ?? 0;
+            int originalHeightPos = origInfoPos?.Height ?? 0;
+
             image = LoadImageToFsdk(imageBytes);
             if (image < 0)
             {
@@ -923,6 +947,9 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             var imageHeight = 0;
             FSDK.GetImageWidth(image, ref imageWidth);
             FSDK.GetImageHeight(image, ref imageHeight);
+
+            double scalePosX = (originalWidthPos  > 0 && imageWidth  > 0) ? (double)originalWidthPos  / imageWidth  : 1.0;
+            double scalePosY = (originalHeightPos > 0 && imageHeight > 0) ? (double)originalHeightPos / imageHeight : 1.0;
 
             var count = 0;
             FSDK.TFacePosition[]? positions = null;
@@ -954,16 +981,21 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
                 var position = positions[i];
                 var half = position.w / 2;
                 var estimatedHeight = (int)(position.w * 1.3f);
+
+                var scaledPosX = Math.Max(0, position.xc - half);
+                var scaledPosY = Math.Max(0, position.yc - (int)(position.w * 0.65f));
+                var qualityProxyPos = new DetectedFace { X = scaledPosX, Y = scaledPosY, Width = position.w, Height = estimatedHeight };
+                var quality = CalculateQualityScore(qualityProxyPos, imageWidth, imageHeight);
+
                 var face = new DetectedFace
                 {
-                    X = Math.Max(0, position.xc - half),
-                    Y = Math.Max(0, position.yc - (int)(position.w * 0.65f)),
-                    Width = position.w,
-                    Height = estimatedHeight,
+                    X      = (int)Math.Round(scaledPosX        * scalePosX),
+                    Y      = (int)Math.Round(scaledPosY        * scalePosY),
+                    Width  = (int)Math.Round(position.w        * scalePosX),
+                    Height = (int)Math.Round(estimatedHeight   * scalePosY),
+                    QualityScore = quality,
+                    Confidence = quality / 100.0,
                 };
-                var quality = CalculateQualityScore(face, imageWidth, imageHeight);
-                face.QualityScore = quality;
-                face.Confidence = quality / 100.0;
 
                 result.Add(new ExtractedTemplate(
                     face,

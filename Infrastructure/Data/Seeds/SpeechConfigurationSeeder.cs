@@ -54,6 +54,12 @@ public static class SpeechConfigurationSeeder
 
             Create("SpeechRecognition", "MaxAudioSizeBytes",
                 "5242880", "int", "Maximum audio upload size in bytes (default 5 MB).", now, createdBy),
+
+            Create("SpeechRecognition", "TimeoutSeconds",
+                "30", "int", "HTTP request timeout when calling the Whisper service, in seconds.", now, createdBy),
+
+            Create("SpeechRecognition", "ConcurrencyLimit",
+                "2", "int", "Maximum number of parallel transcription requests.", now, createdBy),
         });
 
         return Task.CompletedTask;

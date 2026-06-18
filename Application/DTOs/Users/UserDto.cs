@@ -52,4 +52,11 @@ public class UserDto
     /// false = always auto-approve regardless of global setting.
     /// </summary>
     public bool? RequiresApprovalOverride { get; set; }
+
+    /// <summary>
+    /// Only populated when an admin creates a new user. Contains the plain-text temporary
+    /// password so the admin can share it when email delivery is not available.
+    /// Never returned by list or profile endpoints — only by the create endpoint.
+    /// </summary>
+    public string? TemporaryPassword { get; set; }
 }

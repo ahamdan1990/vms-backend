@@ -32,12 +32,13 @@ public class ConfigurationController : ControllerBase
     /// </summary>
     [HttpGet]
     [Authorize(Policy = Permissions.SystemConfig.Read)]
-    public async Task<IActionResult> GetAllConfigurations(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAllConfigurations([FromQuery] bool showSensitive = false, CancellationToken cancellationToken = default)
     {
         try
         {
             var configurations = await _configService.GetAllConfigurationsAsync(cancellationToken);
-            return Ok(new { success = true, data = RedactConfigurationDictionary(configurations) });
+            var data = showSensitive ? configurations : RedactConfigurationDictionary(configurations);
+            return Ok(new { success = true, data });
         }
         catch (Exception ex)
         {
@@ -51,12 +52,13 @@ public class ConfigurationController : ControllerBase
     /// </summary>
     [HttpGet("{category}")]
     [Authorize(Policy = Permissions.SystemConfig.Read)]
-    public async Task<IActionResult> GetCategoryConfiguration(string category, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetCategoryConfiguration(string category, [FromQuery] bool showSensitive = false, CancellationToken cancellationToken = default)
     {
         try
         {
             var configurations = await _configService.GetCategoryConfigurationAsync(category, cancellationToken);
-            return Ok(new { success = true, data = RedactConfigurationDictionary(configurations), category });
+            var data = showSensitive ? configurations : RedactConfigurationDictionary(configurations);
+            return Ok(new { success = true, data, category });
         }
         catch (Exception ex)
         {
@@ -70,7 +72,7 @@ public class ConfigurationController : ControllerBase
     /// </summary>
     [HttpGet("{category}/{key}")]
     [Authorize(Policy = Permissions.SystemConfig.Read)]
-    public async Task<IActionResult> GetConfiguration(string category, string key, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetConfiguration(string category, string key, [FromQuery] bool showSensitive = false, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -81,22 +83,23 @@ public class ConfigurationController : ControllerBase
             }
 
             var value = await _configService.GetConfigurationValueAsync(category, key, cancellationToken: cancellationToken);
-            
-            return Ok(new 
-            { 
-                success = true, 
-                data = new 
+            var mask = !showSensitive && (metadata.IsSensitive || metadata.IsEncrypted);
+
+            return Ok(new
+            {
+                success = true,
+                data = new
                 {
                     category = metadata.Category,
                     key = metadata.Key,
-                    value = metadata.IsSensitive || metadata.IsEncrypted ? "***" : value,
+                    value = mask ? "***" : value,
                     dataType = metadata.DataType,
                     description = metadata.Description,
                     isReadOnly = metadata.IsReadOnly,
                     isEncrypted = metadata.IsEncrypted,
                     isSensitive = metadata.IsSensitive,
                     requiresRestart = metadata.RequiresRestart,
-                    defaultValue = metadata.IsSensitive || metadata.IsEncrypted ? null : metadata.DefaultValue
+                    defaultValue = mask ? null : metadata.DefaultValue
                 }
             });
         }

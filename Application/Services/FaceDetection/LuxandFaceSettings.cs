@@ -15,7 +15,7 @@ public class LuxandFaceSettings
 
     public int DetectionThreshold { get; set; } = 5;
 
-    public int InternalResizeWidth { get; set; } = 384;
+    public int InternalResizeWidth { get; set; } = 640;
 
     public int CropMarginPercent { get; set; } = 20;
 

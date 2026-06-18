@@ -26,23 +26,35 @@ public class LocalWhisperSpeechRecognitionService : ISpeechRecognitionService
         _logger = logger;
     }
 
-    public async Task<RawTranscriptionResult> TranscribeAsync(byte[] audioData, string contentType, string? language, string? initialPrompt = null, CancellationToken ct = default)
+    public async Task<RawTranscriptionResult> TranscribeAsync(SpeechTranscribeRequest request, CancellationToken ct = default)
     {
+        if (request.Audio.Length > request.MaxAudioSizeBytes)
+            throw new InvalidOperationException(
+                $"Audio size {request.Audio.Length} bytes exceeds the maximum of {request.MaxAudioSizeBytes} bytes.");
+
         var client = _httpClientFactory.CreateClient("SpeechService");
 
         using var form = new MultipartFormDataContent();
 
-        var audioContent = new ByteArrayContent(audioData);
-        audioContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
+        var audioContent = new ByteArrayContent(request.Audio);
+        audioContent.Headers.ContentType = MediaTypeHeaderValue.Parse(request.ContentType);
         form.Add(audioContent, "audio", "recording.webm");
 
-        if (!string.IsNullOrEmpty(language))
-            form.Add(new StringContent(language), "language");
+        // Skip language field when set to "auto" so Whisper detects it automatically
+        if (!string.IsNullOrEmpty(request.Language) &&
+            !request.Language.Equals("auto", StringComparison.OrdinalIgnoreCase))
+        {
+            form.Add(new StringContent(request.Language), "language");
+        }
 
-        if (!string.IsNullOrEmpty(initialPrompt))
-            form.Add(new StringContent(initialPrompt), "initial_prompt");
+        if (!string.IsNullOrEmpty(request.Model))
+            form.Add(new StringContent(request.Model), "model");
 
-        _logger.LogDebug("Sending {Bytes} bytes to speech service (language={Language})", audioData.Length, language ?? "auto");
+        if (!string.IsNullOrEmpty(request.InitialPrompt))
+            form.Add(new StringContent(request.InitialPrompt), "initial_prompt");
+
+        _logger.LogDebug("Sending {Bytes} bytes to speech service (language={Language}, model={Model})",
+            request.Audio.Length, request.Language ?? "auto", request.Model);
 
         HttpResponseMessage response;
         try

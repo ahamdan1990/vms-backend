@@ -362,7 +362,10 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
-if (app.Environment.IsDevelopment())
+// Application:EnableSwagger in appsettings.Production.json controls production availability.
+// Changing it via the admin UI requires an app restart to take effect.
+var enableSwagger = builder.Configuration.GetValue<bool>("Application:EnableSwagger", true);
+if (enableSwagger || app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
@@ -412,6 +415,9 @@ app.UseMiddleware<PermissionClaimsMiddleware>();
 app.UseLicenseEnforcement();
 
 app.UseAuthorization();
+
+// Maintenance mode — after auth so Administrator role check works; before audit/endpoints
+app.UseMiddleware<MaintenanceModeMiddleware>();
 
 // Audit logging (after authentication so we have user context)
 app.UseMiddleware<AuditLoggingMiddleware>();

@@ -3,6 +3,7 @@ using MediatR;
 using System.Security.Claims;
 using VisitorManagementSystem.Api.Application.DTOs.Common;
 using VisitorManagementSystem.Api.Application.DTOs.Visitors;
+using VisitorManagementSystem.Api.Application.Services.Configuration;
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 using VisitorManagementSystem.Api.Domain.Specifications;
 using DomainPermissions = VisitorManagementSystem.Api.Domain.Constants.Permissions;
@@ -18,23 +19,30 @@ public class GetVisitorsQueryHandler : IRequestHandler<GetVisitorsQuery, PagedRe
     private readonly IMapper _mapper;
     private readonly ILogger<GetVisitorsQueryHandler> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IDynamicConfigurationService _config;
 
     public GetVisitorsQueryHandler(
         IUnitOfWork unitOfWork,
         IMapper mapper,
         ILogger<GetVisitorsQueryHandler> logger,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        IDynamicConfigurationService config)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _logger = logger;
         _httpContextAccessor = httpContextAccessor;
+        _config = config;
     }
 
     public async Task<PagedResultDto<VisitorListDto>> Handle(GetVisitorsQuery request, CancellationToken cancellationToken)
     {
         try
         {
+            var maxPage     = await _config.GetConfigurationAsync<int>("SystemSettings", "MaxPageSize", 100);
+            var defaultPage = await _config.GetConfigurationAsync<int>("SystemSettings", "DefaultPageSize", 20);
+            request.PageSize = request.PageSize <= 0 ? defaultPage : Math.Min(request.PageSize, maxPage);
+
             _logger.LogDebug("Processing get visitors query - Page: {PageIndex}, Size: {PageSize}",
                 request.PageIndex, request.PageSize);
 

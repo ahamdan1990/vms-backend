@@ -41,7 +41,7 @@ public class SpeechController : BaseController
     public async Task<IActionResult> Transcribe(
         IFormFile audio,
         [FromForm] string fieldName,
-        [FromForm] string? language = "ar",
+        [FromForm] string? language = null,
         [FromForm] SpeechNormalizationType normalizationType = SpeechNormalizationType.FreeText,
         CancellationToken cancellationToken = default)
     {

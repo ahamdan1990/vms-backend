@@ -139,6 +139,25 @@ public class CameraFrameFaceResultDto
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public string? RejectionReason { get; set; }
+
+    /// <summary>
+    /// Luxand composite quality score (0–100). Used by BestFaceEmissionBuffer for cross-frame ranking.
+    /// Not serialized to API responses.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public double? DetectionQualityScore { get; set; }
+
+    /// <summary>Left-right head rotation in degrees. Used for cross-frame best-face ranking.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public float? DetectionYaw { get; set; }
+
+    /// <summary>Up-down head rotation in degrees. Used for cross-frame best-face ranking.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public float? DetectionPitch { get; set; }
+
+    /// <summary>In-plane face rotation in degrees. Used for cross-frame best-face ranking.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public float? DetectionRoll { get; set; }
 }
 
 /// <summary>

@@ -2,8 +2,8 @@
 using VisitorManagementSystem.Api.Application.DTOs.Common;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
 using VisitorManagementSystem.Api.Application.Queries.Users;
+using VisitorManagementSystem.Api.Application.Services.Configuration;
 using VisitorManagementSystem.Api.Domain.Enums;
-
 using VisitorManagementSystem.Api.Domain.Interfaces.Repositories;
 
 /// <summary>
@@ -13,19 +13,26 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResultDt
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<GetUsersQueryHandler> _logger;
+    private readonly IDynamicConfigurationService _config;
 
     public GetUsersQueryHandler(
         IUnitOfWork unitOfWork,
-        ILogger<GetUsersQueryHandler> logger)
+        ILogger<GetUsersQueryHandler> logger,
+        IDynamicConfigurationService config)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _config = config;
     }
 
     public async Task<PagedResultDto<UserListDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {
         try
         {
+            var maxPage     = await _config.GetConfigurationAsync<int>("SystemSettings", "MaxPageSize", 100);
+            var defaultPage = await _config.GetConfigurationAsync<int>("SystemSettings", "DefaultPageSize", 20);
+            request.PageSize = request.PageSize <= 0 ? defaultPage : Math.Min(request.PageSize, maxPage);
+
             _logger.LogDebug("Processing GetUsersQuery with PageIndex: {PageIndex}, PageSize: {PageSize}, Status: {Status}",
                 request.PageIndex, request.PageSize, request.Status);
 

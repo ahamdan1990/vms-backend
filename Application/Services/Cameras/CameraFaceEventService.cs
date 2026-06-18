@@ -113,21 +113,6 @@ public class CameraFaceEventService : ICameraFaceEventService
                 continue;
             }
 
-            // For CD cameras, suppress events that are not actionable given the person's
-            // current presence state: entry events for someone already inside, exit events
-            // for someone already outside. Prevents re-detection floods for stationary persons.
-            if (config.IsCivilDefenseCamera && face.IsKnown && face.PersonId.HasValue)
-            {
-                var isActionable = await IsPresenceStateActionableAsync(face, config, cancellationToken);
-                if (!isActionable)
-                {
-                    eventDto.Emitted = false;
-                    eventDto.SuppressedReason = "presenceStateNotActionable";
-                    events.Add(eventDto);
-                    continue;
-                }
-            }
-
             var pendingDuplicate = await FindPendingDuplicateAsync(
                 recognitionResult,
                 face,

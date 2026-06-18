@@ -41,7 +41,6 @@ public class LicenseValidationBackgroundService : BackgroundService
         {
             try
             {
-                _licenseValidator.InvalidateCache();
                 var result = await _licenseValidator.ValidateCurrentLicenseAsync(stoppingToken);
 
                 if (!result.IsValid && result.Status != LicenseStatus.NotActivated)

@@ -177,8 +177,10 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users
                     }
                 }
 
-                // Map to DTO (NO PASSWORD INCLUDED - SECURITY IMPROVEMENT)
+                // Map to DTO and include the plain-text password so the admin can share it
+                // when email delivery is not available. Never returned by other endpoints.
                 var userDto = _mapper.Map<UserDto>(user);
+                userDto.TemporaryPassword = password;
 
                 return userDto;
             }
