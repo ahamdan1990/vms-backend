@@ -840,6 +840,7 @@ public class UserLockoutService : IUserLockoutService
             if (string.IsNullOrEmpty(ipAddress)) return;
 
             var failedAttemptWindow = await _dynamicConfig.GetConfigurationAsync<TimeSpan>("Lockout", "FailedAttemptWindow", TimeSpan.FromMinutes(15), cancellationToken);
+            if (failedAttemptWindow <= TimeSpan.Zero) failedAttemptWindow = TimeSpan.FromMinutes(15);
             var cacheKey = $"ip_attempts_{ipAddress}";
             var attempts = _cache.Get<int>(cacheKey);
             _cache.Set(cacheKey, attempts + 1, failedAttemptWindow);

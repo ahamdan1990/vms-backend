@@ -87,6 +87,9 @@ public static class DbInitializer
             await SeedSystemConfigAsync(context, serviceProvider);
             await context.SaveChangesAsync(); // Save configurations
 
+            // Seed settings added incrementally after initial deployment (idempotent — checks before inserting)
+            await ComprehensiveConfigurationSeeder.SeedMissingCategoriesAsync(context, serviceProvider);
+
             // Always sync JWT secret from appsettings to DB so signing and validation keys match
             await SyncJwtSecretFromAppSettingsAsync(context, serviceProvider);
             await ProtectSensitiveConfigurationsAsync(context, serviceProvider);

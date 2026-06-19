@@ -192,7 +192,7 @@ public class CreateCameraCommandHandler : IRequestHandler<CreateCameraCommand, C
             MaxConcurrentTracks = configDto.MaxConcurrentTracks > 0 ? configDto.MaxConcurrentTracks : CameraConfiguration.Default.MaxConcurrentTracks,
             CaptureFpsLimit = configDto.CaptureFpsLimit ?? CameraConfiguration.Default.CaptureFpsLimit,
             InferenceFps = configDto.InferenceFps ?? CameraConfiguration.Default.InferenceFps,
-            FrameSamplingIntervalMs = configDto.FrameSamplingIntervalMs > 0 ? configDto.FrameSamplingIntervalMs : CameraConfiguration.Default.FrameSamplingIntervalMs,
+            FrameSamplingIntervalMs = configDto.FrameSamplingIntervalMs >= 0 ? configDto.FrameSamplingIntervalMs : CameraConfiguration.Default.FrameSamplingIntervalMs,
             RecognitionIntervalPerTrackMs = configDto.RecognitionIntervalPerTrackMs > 0 ? configDto.RecognitionIntervalPerTrackMs : CameraConfiguration.Default.RecognitionIntervalPerTrackMs,
             TrackTimeoutMs = configDto.TrackTimeoutMs > 0 ? configDto.TrackTimeoutMs : CameraConfiguration.Default.TrackTimeoutMs,
             ReIdentificationTimeoutMs = configDto.ReIdentificationTimeoutMs > 0 ? configDto.ReIdentificationTimeoutMs : CameraConfiguration.Default.ReIdentificationTimeoutMs,

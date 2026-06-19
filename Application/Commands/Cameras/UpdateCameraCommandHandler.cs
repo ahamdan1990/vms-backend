@@ -231,7 +231,7 @@ public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, C
             MaxConcurrentTracks = updates.MaxConcurrentTracks > 0 ? updates.MaxConcurrentTracks : existing.MaxConcurrentTracks,
             CaptureFpsLimit = updates.CaptureFpsLimit ?? existing.CaptureFpsLimit,
             InferenceFps = updates.InferenceFps ?? existing.InferenceFps,
-            FrameSamplingIntervalMs = updates.FrameSamplingIntervalMs > 0 ? updates.FrameSamplingIntervalMs : existing.FrameSamplingIntervalMs,
+            FrameSamplingIntervalMs = updates.FrameSamplingIntervalMs >= 0 ? updates.FrameSamplingIntervalMs : existing.FrameSamplingIntervalMs,
             RecognitionIntervalPerTrackMs = updates.RecognitionIntervalPerTrackMs > 0 ? updates.RecognitionIntervalPerTrackMs : existing.RecognitionIntervalPerTrackMs,
             TrackTimeoutMs = updates.TrackTimeoutMs > 0 ? updates.TrackTimeoutMs : existing.TrackTimeoutMs,
             ReIdentificationTimeoutMs = updates.ReIdentificationTimeoutMs > 0 ? updates.ReIdentificationTimeoutMs : existing.ReIdentificationTimeoutMs,

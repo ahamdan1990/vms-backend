@@ -27,7 +27,7 @@ public class CameraFaceEventService : ICameraFaceEventService
     private const string SignalREventName = "CameraFaceEvent";
     private const double UnknownTrackIouThreshold = 0.25;
     private const double UnknownPendingSimilarityThreshold = 0.65;
-    private const float UnknownTrackTemplateSimilarityThreshold = 0.70f;
+    private const float UnknownTrackTemplateSimilarityThreshold = 0.82f;
     private const int MaxSubjectIdLength = 200;
 
     private static readonly JsonSerializerOptions PayloadJsonOptions = new()
@@ -87,7 +87,26 @@ public class CameraFaceEventService : ICameraFaceEventService
         var config = camera.GetConfiguration();
         var events = new List<CameraFrameFaceEventDto>();
 
-        foreach (var face in recognitionResult.Faces)
+        // Non-Maximum Suppression: FSDK_DetectMultipleFaces can return multiple overlapping
+        // boxes for a single physical face. Sort by confidence (highest first) and discard any
+        // detection whose box overlaps ≥ 35% with an already-accepted face.
+        const double NmsIouThreshold = 0.35;
+        var nmsInput = recognitionResult.Faces
+            .OrderByDescending(f => f.BoundingBox?.Confidence ?? 0d)
+            .ToList();
+        var dedupedFaces = new List<CameraFrameFaceResultDto>(nmsInput.Count);
+        foreach (var candidate in nmsInput)
+        {
+            if (candidate.BoundingBox == null ||
+                dedupedFaces.All(kept =>
+                    kept.BoundingBox == null ||
+                    CalculateIntersectionOverUnion(kept.BoundingBox, candidate.BoundingBox) < NmsIouThreshold))
+            {
+                dedupedFaces.Add(candidate);
+            }
+        }
+
+        foreach (var face in dedupedFaces)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -363,6 +382,35 @@ public class CameraFaceEventService : ICameraFaceEventService
             $"camera-face:active:{identity.IdentityKey}",
             new FaceActiveState(DateTime.UtcNow),
             GetTrackWindow(config));
+
+        if (!face.IsKnown)
+            MarkUnknownTrackEmitted(result, face, config);
+    }
+
+    private void MarkUnknownTrackEmitted(
+        CameraFrameRecognitionResultDto result,
+        CameraFrameFaceResultDto face,
+        CameraConfiguration config)
+    {
+        if (face.BoundingBox == null) return;
+
+        var cacheKey = $"camera-face:unknown-tracks:{result.CameraId}:{result.SourceDeviceId ?? "source"}";
+        var tracks = _memoryCache.Get<List<UnknownFaceTrackState>>(cacheKey);
+        if (tracks == null) return;
+
+        UnknownFaceTrackState? best = null;
+        var bestScore = 0d;
+        foreach (var track in tracks)
+        {
+            var score = CalculateUnknownTrackSimilarity(track.LastBox, face.BoundingBox);
+            if (score > bestScore) { bestScore = score; best = track; }
+        }
+
+        if (best != null && bestScore >= UnknownTrackIouThreshold)
+        {
+            best.HasEmittedEvent = true;
+            _memoryCache.Set(cacheKey, tracks, GetTrackWindow(config));
+        }
     }
 
     private async Task PublishSignalREventAsync(
@@ -748,12 +796,39 @@ public class CameraFaceEventService : ICameraFaceEventService
 
         if (bestTrack != null && bestScore >= UnknownTrackIouThreshold)
         {
-            // Verify it's the same person when both templates are available
             if (bestTrack.TemplateBytes != null && face.TemplateBytes != null)
             {
+                // Both templates available — use biometric similarity to confirm identity.
                 var sim = _faceDetectionService.MatchTemplates(face.TemplateBytes, bestTrack.TemplateBytes);
                 if (sim < UnknownTrackTemplateSimilarityThreshold)
                     bestTrack = null; // different person — fall through to new track
+            }
+            else
+            {
+                // Templates not yet available — cannot biometrically verify identity.
+                // Two scenarios require different treatment:
+                // 1. Same inference batch (< 150 ms): two distinct faces detected in one frame —
+                //    the center-distance fallback could merge Person B into Person A's track.
+                //    Require actual IoU overlap so nearby-but-distinct people stay separate.
+                // 2. Cross-frame (≥ 150 ms) AND track already fired an event: we have no way to
+                //    distinguish "same person returned" from "different person, same entry spot"
+                //    without biometrics. Reject the match so Person B gets a fresh track and event.
+                // 3. Cross-frame AND no event emitted yet: allow the center-distance score so
+                //    track continuity works before the first inference completes.
+                const double SameBatchWindowMs = 150;
+                var isFromCurrentBatch = (now - bestTrack.LastSeenAt).TotalMilliseconds < SameBatchWindowMs;
+                if (isFromCurrentBatch)
+                {
+                    var actualIou = CalculateIntersectionOverUnion(bestTrack.LastBox, face.BoundingBox);
+                    if (actualIou < UnknownTrackIouThreshold)
+                        bestTrack = null;
+                }
+                else if (bestTrack.HasEmittedEvent)
+                {
+                    // Cross-frame + prior event + no templates: cannot confirm same person.
+                    // Fall through to new track so the incoming face gets its own event.
+                    bestTrack = null;
+                }
             }
         }
 
@@ -1021,6 +1096,11 @@ public class CameraFaceEventService : ICameraFaceEventService
         public CameraFrameFaceBoxDto LastBox { get; set; }
         public DateTime LastSeenAt { get; set; }
         public byte[]? TemplateBytes { get; set; }
+        // Set to true once an event has been emitted for this track.
+        // Without biometric templates we cannot tell "same person returned" from
+        // "different person, same entry spot" — so a track that already fired is
+        // never inherited by a template-free spatial match.
+        public bool HasEmittedEvent { get; set; }
     }
 
     private sealed record CooldownDecision(

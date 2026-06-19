@@ -432,6 +432,15 @@ public class DynamicConfigurationService : IDynamicConfigurationService
             if (string.IsNullOrEmpty(value))
                 return default(T);
 
+            // When the stored DataType is "int" but the caller expects TimeSpan, the value
+            // is an integer number of minutes (all Lockout duration fields use this convention).
+            if (typeof(T) == typeof(TimeSpan) &&
+                (dataType.Equals("int", StringComparison.OrdinalIgnoreCase) ||
+                 dataType.Equals("integer", StringComparison.OrdinalIgnoreCase)))
+            {
+                return (T)(object)TimeSpan.FromMinutes(int.Parse(value));
+            }
+
             return dataType.ToLower() switch
             {
                 "string" => (T)(object)value,

@@ -343,6 +343,16 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
                 return false;
             }
 
+            // Docs (p.108): the Tracker API does NOT use FSDK_SetFaceDetectionParameters or
+            // FSDK_SetFaceDetectionThreshold — those only affect direct detection calls.
+            // All detection/recognition parameters MUST be set via SetTrackerParameter.
+            TrySetTrackerParameter(handle, "InternalResizeWidth", _settings.InternalResizeWidth.ToString());
+            TrySetTrackerParameter(handle, "HandleArbitraryRotations", "false");
+            TrySetTrackerParameter(handle, "DetermineRotationAngle", "false");
+            TrySetTrackerParameter(handle, "FaceDetectionThreshold", _settings.DetectionThreshold.ToString());
+            TrySetTrackerParameter(handle, "RecognizeFaces", "true");
+            TrySetTrackerParameter(handle, "Learning", "true");
+
             TrySetTrackerParameter(handle, "RecognitionPrecision", "1");
             TrySetTrackerParameter(handle, "Threshold", _settings.MatchThreshold.ToString("0.00"));
 
@@ -829,9 +839,15 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
 
             if (ret != FSDK.FSDKE_OK)
             {
-                _logger.LogWarning(
-                    "PrimaryEngine DetectMultipleFaces returned error. ReturnCode={ReturnCode}, ImageSize={Width}x{Height}",
-                    ret, imageWidth, imageHeight);
+                // -7 = FSDKE_FACE_NOT_FOUND: normal when no face is in the frame — log at Debug, not Warning.
+                if (ret == -7)
+                    _logger.LogDebug(
+                        "PrimaryEngine DetectMultipleFaces found no faces. ImageSize={Width}x{Height}",
+                        imageWidth, imageHeight);
+                else
+                    _logger.LogWarning(
+                        "PrimaryEngine DetectMultipleFaces returned error. ReturnCode={ReturnCode}, ImageSize={Width}x{Height}",
+                        ret, imageWidth, imageHeight);
                 return result;
             }
 
@@ -965,9 +981,15 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
 
             if (ret != FSDK.FSDKE_OK)
             {
-                _logger.LogWarning(
-                    "PrimaryEngine ExtractFacePositions DetectMultipleFaces returned error. ReturnCode={ReturnCode}, ImageSize={Width}x{Height}",
-                    ret, imageWidth, imageHeight);
+                // -7 = FSDKE_FACE_NOT_FOUND: normal when no face is in the frame — log at Debug, not Warning.
+                if (ret == -7)
+                    _logger.LogDebug(
+                        "PrimaryEngine ExtractFacePositions found no faces. ImageSize={Width}x{Height}",
+                        imageWidth, imageHeight);
+                else
+                    _logger.LogWarning(
+                        "PrimaryEngine ExtractFacePositions DetectMultipleFaces returned error. ReturnCode={ReturnCode}, ImageSize={Width}x{Height}",
+                        ret, imageWidth, imageHeight);
                 return result;
             }
 
@@ -1097,11 +1119,11 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
     {
         try
         {
-            // FSDK_IMAGE_COLOR_24BIT is 24-bit BGR (Windows BITMAP convention).
-            // ImageSharp Bgr24.CopyPixelDataTo produces B,G,R packed bytes — the correct order.
+            // FSDK_IMAGE_COLOR_24BIT expects 24-bit RGB (R, G, B order) per SDK documentation.
+            // Rgb24.CopyPixelDataTo produces R,G,B packed bytes — the correct order.
             var srcBytes = IsJpeg(imageBytes) ? imageBytes : ConvertToJpeg(imageBytes);
-            using var img = SixLabors.ImageSharp.Image.Load<SixLabors.ImageSharp.PixelFormats.Bgr24>(srcBytes);
-            // Pre-scale to InternalResizeWidth before LoadImageFromBuffer to avoid FSDKE_INSUFFICIENT_BUFFER (-7)
+            using var img = SixLabors.ImageSharp.Image.Load<SixLabors.ImageSharp.PixelFormats.Rgb24>(srcBytes);
+            // Pre-scale to InternalResizeWidth before LoadImageFromBuffer to avoid FSDKE_INSUFFICIENT_BUFFER_SIZE (-8)
             // when source frames are large (e.g. 1920×1080). FSDK's internal resize pipeline can't allocate
             // working memory proportional to both source and target sizes simultaneously on large buffers.
             if (_settings.InternalResizeWidth > 0 && img.Width > _settings.InternalResizeWidth)

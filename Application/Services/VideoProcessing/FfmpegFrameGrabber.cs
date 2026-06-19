@@ -339,12 +339,20 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
         {
             args.AddRange(new[] { "-hwaccel", ToFfmpegHardwareName(hardwareAcceleration) });
             safeArgs.AddRange(new[] { "-hwaccel", ToFfmpegHardwareName(hardwareAcceleration) });
+
+            // Without -hwaccel_output_format the decoder may output frames in software
+            // format instead of keeping them in device memory. hwdownload then has no
+            // device surface to pull from and FFmpeg inserts auto_scale_0, which fails
+            // (-40, Function not implemented). Pinning the output format ensures frames
+            // stay in the hw context so hwdownload in the filter chain works correctly.
+            args.AddRange(new[] { "-hwaccel_output_format", ToFfmpegHardwareName(hardwareAcceleration) });
+            safeArgs.AddRange(new[] { "-hwaccel_output_format", ToFfmpegHardwareName(hardwareAcceleration) });
         }
 
         var inputKind = AddInputArguments(camera, configuration, args, safeArgs, singleFrame, useConfiguredUsbInputOptions);
 
-        args.AddRange(BuildOutputArguments(configuration, singleFrame));
-        safeArgs.AddRange(BuildOutputArguments(configuration, singleFrame));
+        args.AddRange(BuildOutputArguments(configuration, singleFrame, hardwareAcceleration));
+        safeArgs.AddRange(BuildOutputArguments(configuration, singleFrame, hardwareAcceleration));
 
         return new FfmpegBuiltCommand(
             executablePath,
@@ -356,7 +364,8 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
 
     private static IEnumerable<string> BuildOutputArguments(
         CameraConfiguration configuration,
-        bool singleFrame)
+        bool singleFrame,
+        FfmpegHardwareAcceleration hardwareAcceleration = FfmpegHardwareAcceleration.Cpu)
     {
         var args = new List<string>
         {
@@ -367,6 +376,16 @@ public sealed class FfmpegFrameGrabber : IFfmpegFrameGrabber
         };
 
         var filters = new List<string>();
+
+        // GPU-decoded frames live in device memory. hwdownload copies them to CPU (NV12).
+        // format=yuv420p converts explicitly so mjpeg can encode without inserting auto_scale_0,
+        // which fails when bridging from a CUDA hw-decoder context to a software encoder.
+        if (hardwareAcceleration != FfmpegHardwareAcceleration.Cpu)
+        {
+            filters.Add("hwdownload");
+            filters.Add("format=nv12");
+            filters.Add("format=yuv420p");
+        }
 
         if (!singleFrame && configuration.InferenceFps is > 0)
         {
