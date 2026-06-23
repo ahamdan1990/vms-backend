@@ -497,16 +497,17 @@ public class NotificationService : INotificationService
         }
     }
 
-    public async Task NotifyCapacityAlertAsync(string locationName, int currentOccupancy, int maxCapacity, 
-        CancellationToken cancellationToken = default)
+    public async Task NotifyCapacityAlertAsync(string locationName, int currentOccupancy, int maxCapacity,
+        int locationId, CancellationToken cancellationToken = default)
     {
         try
         {
             var title = "Capacity Alert";
             var message = $"Location '{locationName}' is at {currentOccupancy}/{maxCapacity} capacity ({(currentOccupancy * 100 / maxCapacity)}%)";
 
-            var alert = NotificationAlert.CreateFRAlert(title, message, NotificationAlertType.CapacityAlert, 
-                AlertPriority.Medium, targetRole: UserRoles.Receptionist);
+            var alert = NotificationAlert.CreateFRAlert(title, message, NotificationAlertType.CapacityAlert,
+                AlertPriority.Medium, targetRole: UserRoles.Receptionist,
+                relatedEntityType: "Location", relatedEntityId: locationId);
 
             await _unitOfWork.Repository<NotificationAlert>().AddAsync(alert, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);

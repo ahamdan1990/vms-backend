@@ -172,6 +172,13 @@ public class DetectedFace
     /// Corresponds to PitchLimitDegrees filter.
     /// </summary>
     public float? Pitch { get; set; }
+
+    /// <summary>
+    /// Sobel/Laplacian sharpness score 0–100 for this face's region in the frame.
+    /// Populated by CameraFrameRecognitionService during blur filtering.
+    /// Used by BestFaceEmissionBuffer for cross-frame quality ranking.
+    /// </summary>
+    public double? SharpnessScore { get; set; }
 }
 
 /// <summary>

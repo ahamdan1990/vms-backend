@@ -131,6 +131,7 @@ public class VisitorTrackingService : BackgroundService
             {
                 // Update existing log
                 existingLog.CurrentCount = currentOccupancy;
+                existingLog.MaxCapacity = location.MaxCapacity;
                 existingLog.ModifiedOn = timestamp;
                 unitOfWork.Repository<OccupancyLog>().Update(existingLog);
             }
@@ -181,7 +182,7 @@ public class VisitorTrackingService : BackgroundService
             {
                 if (occupancy.Location == null) continue;
 
-                var percentageFull = (occupancy.CurrentCount * 100) / occupancy.MaxCapacity;
+                var percentageFull = (occupancy.CurrentCount * 100) / occupancy.Location.MaxCapacity;
                 
                 // Check if capacity threshold exceeded and no recent alert sent
                 if (percentageFull >= capacityThreshold)
@@ -200,7 +201,8 @@ public class VisitorTrackingService : BackgroundService
                         await notificationService.NotifyCapacityAlertAsync(
                             occupancy.Location.Name,
                             occupancy.CurrentCount,
-                            occupancy.MaxCapacity,
+                            occupancy.Location.MaxCapacity,
+                            occupancy.Location.Id,
                             cancellationToken);
 
                         _logger.LogWarning("Capacity alert sent for {LocationName}: {PercentageFull}% full",

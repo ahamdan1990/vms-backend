@@ -208,6 +208,9 @@ public class CreateCameraCommandHandler : IRequestHandler<CreateCameraCommand, C
             CpuFallbackEnabled = configDto.CpuFallbackEnabled,
             HardwareAcceleration = configDto.HardwareAcceleration,
             HealthCheckIntervalSeconds = configDto.HealthCheckIntervalSeconds > 0 ? configDto.HealthCheckIntervalSeconds : CameraConfiguration.Default.HealthCheckIntervalSeconds,
+            BestFrameCaptureDurationMs = configDto.BestFrameCaptureDurationMs >= 0 ? configDto.BestFrameCaptureDurationMs : CameraConfiguration.Default.BestFrameCaptureDurationMs,
+            BestFrameMinScoreImprovement = configDto.BestFrameMinScoreImprovement >= 0 ? configDto.BestFrameMinScoreImprovement : CameraConfiguration.Default.BestFrameMinScoreImprovement,
+            TrackerFallbackMinFrames = configDto.TrackerFallbackMinFrames >= 0 ? configDto.TrackerFallbackMinFrames : CameraConfiguration.Default.TrackerFallbackMinFrames,
             IsCivilDefenseCamera = configDto.IsCivilDefenseCamera,
             ExtendedConfiguration = configDto.ExtendedConfiguration
         };

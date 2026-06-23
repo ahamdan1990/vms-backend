@@ -70,8 +70,8 @@ public interface INotificationService
     /// <summary>
     /// Send capacity limit alert
     /// </summary>
-    Task NotifyCapacityAlertAsync(string locationName, int currentOccupancy, int maxCapacity, 
-        CancellationToken cancellationToken = default);
+    Task NotifyCapacityAlertAsync(string locationName, int currentOccupancy, int maxCapacity,
+        int locationId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Send emergency alert to all connected clients

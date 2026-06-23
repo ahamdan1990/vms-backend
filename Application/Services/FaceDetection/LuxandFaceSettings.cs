@@ -13,6 +13,14 @@ public class LuxandFaceSettings
 
     public float MatchThreshold { get; set; } = 0.80f;
 
+    /// <summary>
+    /// Luxand tracker's internal face-to-track similarity threshold (0–1).
+    /// Controls when two face appearances are merged into the same tracker ID.
+    /// Separate from MatchThreshold, which governs our own FSDK.MatchFaces calls.
+    /// Default 0.992 matches Luxand's recommendation (FAR ~0.000081 per SDK FAR/FRR table).
+    /// </summary>
+    public double TrackerThreshold { get; set; } = 0.992;
+
     public int DetectionThreshold { get; set; } = 5;
 
     public int InternalResizeWidth { get; set; } = 640;

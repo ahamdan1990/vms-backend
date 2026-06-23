@@ -20,6 +20,7 @@ public sealed class CameraStreamRuntimeService : ICameraStreamRuntimeService, IA
     private readonly ConcurrentDictionary<int, DateTimeOffset> _autoStartPausedCameraIds = new();
     private readonly ConcurrentDictionary<int, bool> _facialRecognitionOverrides = new();
     private readonly ConcurrentDictionary<int, ConcurrentDictionary<long, DateTime>> _trackerLastRecognition = new();
+    private readonly ConcurrentDictionary<int, ConcurrentDictionary<long, int>> _trackerFallbackFrameCounts = new();
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IFaceTrackerService _tracker;
     private readonly ILogger<CameraStreamRuntimeService> _logger;
@@ -312,8 +313,16 @@ public sealed class CameraStreamRuntimeService : ICameraStreamRuntimeService, IA
                             SingleWriter = true
                         });
 
+                    // Best-frame buffer: active only when tracker is running and window > 0.
+                    // Shared between the capture loop (IsInCaptureWindow read) and the inference
+                    // loop (Update/FlushLostTracks writes) — internally lock-protected.
+                    var bestFrameBuffer = useTracker && config.BestFrameCaptureDurationMs > 0
+                        ? new BestFaceEmissionBuffer(config.BestFrameCaptureDurationMs, config.BestFrameMinScoreImprovement, cameraId, _logger)
+                        : null;
+
                     var inferenceTask = RunInferenceLoopAsync(
-                        state, inferenceChannel.Reader, recognitionService, eventService, cancellationToken);
+                        state, inferenceChannel.Reader, recognitionService, eventService,
+                        bestFrameBuffer, cancellationToken);
 
                     try
                     {
@@ -340,7 +349,7 @@ public sealed class CameraStreamRuntimeService : ICameraStreamRuntimeService, IA
                                 // direct detection still runs — the tracker may miss faces that the
                                 // recognition engine's own detection step would catch.
                                 shouldRunInference = trackedFaces.Count > 0
-                                    ? ShouldRunInferenceForTracks(trackedFaces, camera.Id, config)
+                                    ? ShouldRunInferenceForTracks(trackedFaces, camera.Id, config, bestFrameBuffer)
                                     : ShouldRunInference(camera, config, state, frame.CapturedAt);
                             }
                             else
@@ -350,6 +359,12 @@ public sealed class CameraStreamRuntimeService : ICameraStreamRuntimeService, IA
 
                             if (!shouldRunInference)
                             {
+                                if (useTracker && trackedFaces.Count > 0)
+                                {
+                                    _logger.LogDebug(
+                                        "Cam {CameraId} seq {Seq}: inference GATED — tracker has {TC} face(s) but recognition interval not yet due",
+                                        camera.Id, frame.SequenceNumber, trackedFaces.Count);
+                                }
                                 continue;
                             }
 
@@ -371,6 +386,7 @@ public sealed class CameraStreamRuntimeService : ICameraStreamRuntimeService, IA
                     {
                         _tracker.DeleteCameraTracker(camera.Id);
                         _trackerLastRecognition.TryRemove(camera.Id, out _);
+                        _trackerFallbackFrameCounts.TryRemove(camera.Id, out _);
                     }
 
                     if (!cancellationToken.IsCancellationRequested)
@@ -423,6 +439,7 @@ public sealed class CameraStreamRuntimeService : ICameraStreamRuntimeService, IA
             }
 
             _trackerLastRecognition.TryRemove(cameraId, out _);
+            _trackerFallbackFrameCounts.TryRemove(cameraId, out _);
         }
     }
 
@@ -450,13 +467,20 @@ public sealed class CameraStreamRuntimeService : ICameraStreamRuntimeService, IA
             return false;
         }
 
-        var minimumIntervalMs = Math.Max(100, config.FrameSamplingIntervalMs);
+        // Start from the explicit sampling interval; 0 means no constraint from this field alone.
+        var minimumIntervalMs = Math.Max(0, config.FrameSamplingIntervalMs);
+
+        // InferenceFps drives the inter-frame interval when configured.
         if (config.InferenceFps is > 0)
         {
-            minimumIntervalMs = Math.Max(
-                minimumIntervalMs,
-                (int)Math.Ceiling(1000d / config.InferenceFps.Value));
+            var fpsInterval = (int)Math.Ceiling(1000d / config.InferenceFps.Value);
+            minimumIntervalMs = minimumIntervalMs > 0
+                ? Math.Max(minimumIntervalMs, fpsInterval)
+                : fpsInterval;
         }
+
+        // Safety floor: never hammer inference faster than 30 FPS regardless of settings.
+        minimumIntervalMs = Math.Max(33, minimumIntervalMs);
 
         var lastInferenceAt = state.LastInferenceCompletedAt;
         if (lastInferenceAt != null &&
@@ -476,7 +500,8 @@ public sealed class CameraStreamRuntimeService : ICameraStreamRuntimeService, IA
     private bool ShouldRunInferenceForTracks(
         IReadOnlyList<TrackedFace> trackedFaces,
         int cameraId,
-        CameraConfiguration config)
+        CameraConfiguration config,
+        BestFaceEmissionBuffer? bestFrameBuffer = null)
     {
         if (trackedFaces.Count == 0)
         {
@@ -498,17 +523,56 @@ public sealed class CameraStreamRuntimeService : ICameraStreamRuntimeService, IA
             perCamera.TryRemove(staleId, out _);
         }
 
+        // Angle limits sourced from config (populated by DetectAngles=true on the tracker).
+        // A limit of 0 means unconstrained. Null angles on TrackedFace mean the SDK did not
+        // report a value for this frame — treat as within limit (fail-open).
+        var rollLimit = config.RollLimitDegrees ?? 0;
+        var yawLimit = config.YawLimitDegrees ?? 0;
+        var pitchLimit = config.PitchLimitDegrees ?? 0;
+
         foreach (var face in trackedFaces)
         {
+            bool isDue;
             if (!perCamera.TryGetValue(face.FaceId, out var lastAt))
             {
-                return true; // New face ID seen for the first time
+                isDue = true; // New face ID — always attempt recognition on first sight
+            }
+            else
+            {
+                isDue = intervalMs <= 0 || (now - lastAt).TotalMilliseconds >= intervalMs;
+
+                // During the best-frame capture window, bypass the interval so multiple
+                // quality samples are collected for the buffer to compare.
+                if (!isDue && bestFrameBuffer?.IsInCaptureWindow(face.FaceId) == true)
+                {
+                    isDue = true;
+                }
             }
 
-            if (intervalMs <= 0 || (now - lastAt).TotalMilliseconds >= intervalMs)
+            if (!isDue)
             {
-                return true; // Face is due for re-recognition
+                continue;
             }
+
+            // Gate on head pose: skip faces whose angles exceed configured limits.
+            // This avoids wasting inference cycles on poorly posed faces that will
+            // produce low-quality or unreliable templates. Null == not measured == allow.
+            if (rollLimit > 0 && face.Roll.HasValue && Math.Abs(face.Roll.Value) > rollLimit)
+            {
+                continue;
+            }
+
+            if (yawLimit > 0 && face.Yaw.HasValue && Math.Abs(face.Yaw.Value) > yawLimit)
+            {
+                continue;
+            }
+
+            if (pitchLimit > 0 && face.Pitch.HasValue && Math.Abs(face.Pitch.Value) > pitchLimit)
+            {
+                continue;
+            }
+
+            return true; // At least one face is due for recognition AND within pose limits
         }
 
         return false;
@@ -524,21 +588,174 @@ public sealed class CameraStreamRuntimeService : ICameraStreamRuntimeService, IA
         }
     }
 
+    private int IncrementTrackerFallbackCount(int cameraId, long faceId)
+    {
+        var perCamera = _trackerFallbackFrameCounts.GetOrAdd(cameraId, _ => new ConcurrentDictionary<long, int>());
+        return perCamera.AddOrUpdate(faceId, 1, (_, count) => count + 1);
+    }
+
+    private void ResetTrackerFallbackCounts(int cameraId, IEnumerable<long> faceIds)
+    {
+        if (!_trackerFallbackFrameCounts.TryGetValue(cameraId, out var perCamera)) return;
+        foreach (var id in faceIds)
+            perCamera.TryRemove(id, out _);
+    }
+
+    private void CleanupStaleTrackerFallbackCounts(int cameraId, IReadOnlySet<long> activeFaceIds)
+    {
+        if (!_trackerFallbackFrameCounts.TryGetValue(cameraId, out var perCamera)) return;
+        foreach (var staleId in perCamera.Keys.Where(id => !activeFaceIds.Contains(id)).ToList())
+            perCamera.TryRemove(staleId, out _);
+    }
+
     private async Task RunInferenceLoopAsync(
         CameraStreamWorkerState state,
         ChannelReader<(FfmpegFrame Frame, IReadOnlyList<TrackedFace> TrackedFaces)> reader,
         ICameraFrameRecognitionService recognitionService,
         ICameraFaceEventService eventService,
+        BestFaceEmissionBuffer? bestFrameBuffer,
         CancellationToken cancellationToken)
     {
+        // Holds a detection result captured when TrackerFaces=0 (tracker not yet initialized).
+        // The Luxand tracker takes one frame to assign an ID after first detecting a face.
+        // Holding for 200ms lets the tracker catch up; if it does, the BUFFER path takes over
+        // and produces a quality-selected result instead of firing on a raw first-frame image.
+        CameraFrameRecognitionResultDto? pendingDirectResult = null;
+        var pendingDirectAt = DateTime.MinValue;
+        const int DirectHoldMs = 200;
+
         await foreach (var (frame, trackedFaces) in reader.ReadAllAsync(cancellationToken))
         {
             try
             {
-                await RunInferenceAsync(state, frame, recognitionService, eventService, cancellationToken);
+                var result = await RecognizeOnlyAsync(state, frame, recognitionService, cancellationToken);
 
-                if (trackedFaces.Count > 0)
+                var useBuffer = bestFrameBuffer != null && trackedFaces.Count > 0 && result.Success && result.Faces.Count > 0;
+                _logger.LogWarning(
+                    "Cam {CameraId} seq {Seq}: TrackerFaces={TC} DetectedFaces={DC} → Path={Path} RecognitionSkipped={Skipped}",
+                    frame.CameraId, frame.SequenceNumber, trackedFaces.Count, result.Faces.Count,
+                    useBuffer ? "BUFFER" : (result.Success ? "DIRECT" : "SKIPPED"),
+                    result.RecognitionSkipped);
+
+                var trackerFallbackUsed = false;
+
+                // Tracker initialized on this frame — discard the held no-tracker result.
+                // The BUFFER path will produce a quality-selected event from the window.
+                if (trackedFaces.Count > 0 && pendingDirectResult != null)
                 {
+                    _logger.LogWarning(
+                        "Cam {CameraId} seq {Seq}: tracker initialized — discarding held no-tracker DIRECT result; BUFFER path takes over",
+                        frame.CameraId, frame.SequenceNumber);
+                    pendingDirectResult = null;
+                }
+
+                // Hold window expired with no tracker — emit the held result now.
+                if (pendingDirectResult != null &&
+                    (DateTime.UtcNow - pendingDirectAt).TotalMilliseconds >= DirectHoldMs)
+                {
+                    _logger.LogWarning(
+                        "Cam {CameraId} seq {Seq}: no-tracker hold {Ms}ms expired — emitting held DIRECT result",
+                        frame.CameraId, frame.SequenceNumber, DirectHoldMs);
+                    await PublishResultAsync(pendingDirectResult, eventService, cancellationToken);
+                    pendingDirectResult = null;
+                }
+
+                // Always flush candidates whose tracks have been lost, regardless of current frame
+                // mode. FlushLostTracks must run on every frame so candidates are not silently
+                // stuck in the buffer when the face disappears on a tracker-only or empty frame.
+                var currentActive = trackedFaces.Select(t => t.FaceId).ToHashSet();
+                var flushedCandidates = bestFrameBuffer?.FlushLostTracks(currentActive)
+                                        ?? (IReadOnlyList<Candidate>)[];
+                foreach (var fc in flushedCandidates)
+                    await PublishResultAsync(fc.Result, eventService, cancellationToken);
+
+                if (useBuffer)
+                {
+                    // Best-frame path: buffer manages when to emit.
+                    // FlushLostTracks already called above; only collect window-close candidates here.
+                    var ready = bestFrameBuffer!.Update(result, trackedFaces);
+
+                    foreach (var candidate in ready)
+                    {
+                        await PublishResultAsync(candidate.Result, eventService, cancellationToken);
+                    }
+
+                    // Detection succeeded — reset fallback counters so threshold resets cleanly.
+                    ResetTrackerFallbackCounts(frame.CameraId, trackedFaces.Select(t => t.FaceId));
+
+                    // Drop stale fallback counter entries for faces the tracker has lost.
+                    CleanupStaleTrackerFallbackCounts(frame.CameraId, currentActive);
+                }
+                else if (trackedFaces.Count > 0 && result.Faces.Count == 0 && result.Success && !result.RecognitionSkipped)
+                {
+                    // Tracker fallback: FSDK.DetectMultipleFaces returned 0 on this frame (motion blur /
+                    // borderline face size / angle) but the Luxand tracker reliably sees the face.
+                    // Count consecutive detection-fail frames per FaceId; emit only when the configured
+                    // threshold (TrackerFallbackMinFrames) is reached. Prevents false positives from
+                    // momentary faces at the camera edge. Dedup is handled by ClientTrackId (FaceId) +
+                    // TemplateBytes so CameraFaceEventService's 30s cooldown correctly suppresses repeats.
+                    var rawMin = state.LastConfiguration?.TrackerFallbackMinFrames ?? CameraConfiguration.Default.TrackerFallbackMinFrames;
+                    // rawMin=0 → fallback completely disabled; only best-frame buffer (detection success) fires.
+                    if (rawMin > 0)
+                    {
+                        var readyFaces = new List<TrackedFace>();
+
+                        foreach (var tf in trackedFaces.Where(t => t.Width > 0 && t.Height > 0))
+                        {
+                            var count = IncrementTrackerFallbackCount(frame.CameraId, tf.FaceId);
+                            _logger.LogDebug(
+                                "Cam {CameraId} seq {Seq}: tracker-fallback FaceId={FaceId} frame {Count}/{Min}",
+                                frame.CameraId, frame.SequenceNumber, tf.FaceId, count, rawMin);
+
+                            if (count >= rawMin)
+                                readyFaces.Add(tf);
+                        }
+
+                        if (readyFaces.Count > 0)
+                        {
+                            _logger.LogWarning(
+                                "Cam {CameraId} seq {Seq}: tracker-fallback threshold reached for {N} face(s) — emitting unknown-face event.",
+                                frame.CameraId, frame.SequenceNumber, readyFaces.Count);
+                            var fallback = BuildTrackerFallbackResult(result, readyFaces, frame.ImageBytes);
+                            await PublishResultAsync(fallback, eventService, cancellationToken);
+                            trackerFallbackUsed = true;
+                        }
+                    }
+                }
+                else if (result.Success)
+                {
+                    if (trackedFaces.Count == 0 && bestFrameBuffer != null && result.Faces.Count > 0)
+                    {
+                        // TrackerFaces=0 but detection found a face. The tracker has not yet assigned
+                        // an ID (it initializes one frame after first detection). Hold this result
+                        // for DirectHoldMs; if the tracker catches up, the BUFFER path fires instead
+                        // and we discard this held result. If no tracker after DirectHoldMs, emit it.
+                        if (pendingDirectResult == null)
+                        {
+                            pendingDirectResult = result;
+                            pendingDirectAt = DateTime.UtcNow;
+                            _logger.LogWarning(
+                                "Cam {CameraId} seq {Seq}: TrackerFaces=0 — holding DIRECT result {Ms}ms for tracker to initialize",
+                                frame.CameraId, frame.SequenceNumber, DirectHoldMs);
+                        }
+                    }
+                    else
+                    {
+                        // Camera has no buffer (BestFrameCaptureDurationMs=0) — emit immediately.
+                        await PublishResultAsync(result, eventService, cancellationToken);
+                    }
+                }
+
+                state.MarkInferenceCompleted(result);
+
+                if (trackedFaces.Count > 0 && (result.Faces.Count > 0 || trackerFallbackUsed))
+                {
+                    _logger.LogInformation(
+                        "Cam {CameraId}: marking {TC} tracker face(s) as recognized{Src} — cooldown {Interval}ms. FaceIds=[{Ids}]",
+                        frame.CameraId, trackedFaces.Count,
+                        trackerFallbackUsed ? " (tracker-fallback)" : "",
+                        state.LastConfiguration?.RecognitionIntervalPerTrackMs ?? 0,
+                        string.Join(",", trackedFaces.Select(f => f.FaceId)));
                     MarkTrackerRecognitionDone(frame.CameraId, trackedFaces);
                 }
             }
@@ -555,25 +772,20 @@ public sealed class CameraStreamRuntimeService : ICameraStreamRuntimeService, IA
         }
     }
 
-    private async Task RunInferenceAsync(
+    private async Task<CameraFrameRecognitionResultDto> RecognizeOnlyAsync(
         CameraStreamWorkerState state,
         FfmpegFrame frame,
         ICameraFrameRecognitionService recognitionService,
-        ICameraFaceEventService eventService,
         CancellationToken cancellationToken)
     {
         state.MarkInferenceStarted();
 
-        var hwAccel = GetMetadataValue(frame, "hardwareAcceleration", "unknown");
+        var hwAccel   = GetMetadataValue(frame, "hardwareAcceleration", "unknown");
         var inputKind = GetMetadataValue(frame, "inputKind", "stream");
 
         _logger.LogDebug(
             "Camera inference starting. CameraId={CameraId}, Sequence={Sequence}, FrameSize={FrameSize} bytes, HardwareAcceleration={HwAccel}, InputKind={InputKind}",
-            frame.CameraId,
-            frame.SequenceNumber,
-            frame.ImageBytes.Length,
-            hwAccel,
-            inputKind);
+            frame.CameraId, frame.SequenceNumber, frame.ImageBytes.Length, hwAccel, inputKind);
 
         await using var frameStream = new MemoryStream(frame.ImageBytes, writable: false);
         var formFile = new FormFile(frameStream, 0, frame.ImageBytes.Length, "Frame", $"camera-{frame.CameraId}-{frame.SequenceNumber}.jpg")
@@ -596,39 +808,45 @@ public sealed class CameraStreamRuntimeService : ICameraStreamRuntimeService, IA
             clientIpAddress: "ffmpeg-worker",
             cancellationToken);
 
-        if (result.Success)
-        {
-            var events = await eventService.PublishFrameEventsAsync(result, processedByUserId: null, cancellationToken);
-            result.Events = events.ToList();
-        }
-
-        state.MarkInferenceCompleted(result);
-
         if (result.RecognitionSkipped)
         {
             _logger.LogDebug(
                 "Camera inference skipped. CameraId={CameraId}, Sequence={Sequence}, Reason={Reason}",
                 frame.CameraId, frame.SequenceNumber, result.SkipReason);
         }
-        else if (result.DetectedFaceCount > 0 || result.Events.Count > 0)
+        else
+        {
+            _logger.LogDebug(
+                "Camera inference completed (no publish yet). CameraId={CameraId}, Sequence={Sequence}, Detected={Detected}",
+                frame.CameraId, frame.SequenceNumber, result.DetectedFaceCount);
+        }
+
+        return result;
+    }
+
+    private async Task PublishResultAsync(
+        CameraFrameRecognitionResultDto result,
+        ICameraFaceEventService eventService,
+        CancellationToken cancellationToken)
+    {
+        if (!result.Success)
+        {
+            return;
+        }
+
+        var events = await eventService.PublishFrameEventsAsync(result, processedByUserId: null, cancellationToken);
+        result.Events = events.ToList();
+
+        if (result.DetectedFaceCount > 0 || result.Events.Count > 0)
         {
             _logger.LogInformation(
-                "Camera inference completed. CameraId={CameraId}, Sequence={Sequence}, Engine={Engine}, Detected={Detected}, Known={Known}, Unknown={Unknown}, Events={Events}, Success={Success}, Error={Error}",
-                frame.CameraId,
-                frame.SequenceNumber,
+                "Camera inference published. CameraId={CameraId}, Engine={Engine}, Detected={Detected}, Known={Known}, Unknown={Unknown}, Events={Events}",
+                result.CameraId,
                 result.EngineUsed,
                 result.DetectedFaceCount,
                 result.KnownFaceCount,
                 result.UnknownFaceCount,
-                result.Events.Count,
-                result.Success,
-                result.ErrorMessage);
-        }
-        else
-        {
-            _logger.LogDebug(
-                "Camera inference completed (no faces). CameraId={CameraId}, Sequence={Sequence}",
-                frame.CameraId, frame.SequenceNumber);
+                result.Events.Count);
         }
     }
 
@@ -666,6 +884,83 @@ public sealed class CameraStreamRuntimeService : ICameraStreamRuntimeService, IA
         {
             _logger.LogWarning(ex, "Failed to update camera {CameraId} status to {Status}", cameraId, status);
         }
+    }
+
+    /// <summary>
+    /// Builds a synthetic recognition result from tracker bounding boxes when FSDK.DetectMultipleFaces
+    /// fails (motion blur, face too small at current InternalResizeWidth, extreme angle).
+    /// The tracker has temporal persistence so it reliably knows the face is there; we trust its
+    /// position to emit the unknown-face event. Snapshots are cropped from the tracker box which
+    /// is now in original-frame space after the coordinate-space fix in FeedFrameInternal.
+    /// </summary>
+    private static CameraFrameRecognitionResultDto BuildTrackerFallbackResult(
+        CameraFrameRecognitionResultDto detectionResult,
+        IReadOnlyList<TrackedFace> trackedFaces,
+        byte[]? rawFrameBytes = null)
+    {
+        var faces = trackedFaces
+            .Where(tf => tf.Width > 0 && tf.Height > 0)
+            .Select((tf, i) => new CameraFrameFaceResultDto
+            {
+                Index           = i,
+                IsKnown         = false,
+                PersonType      = "Unknown",
+                Confidence      = 0.5,
+                SuggestedAction = "reviewUnknown",
+                // Template from the Luxand tracker enables CameraFaceEventService to do biometric
+                // dedup against the prior event's template, preventing duplicate events when the
+                // tracker briefly reassigns a new FaceId to the same physical person.
+                TemplateBytes   = tf.Template,
+                BoundingBox     = new CameraFrameFaceBoxDto
+                {
+                    X          = tf.X,
+                    Y          = tf.Y,
+                    Width      = tf.Width,
+                    Height     = tf.Height,
+                    Confidence = 0.5
+                }
+            })
+            .ToList();
+
+        return new CameraFrameRecognitionResultDto
+        {
+            Success              = true,
+            RecognitionSkipped   = false,
+            CameraId             = detectionResult.CameraId,
+            CameraName           = detectionResult.CameraName,
+            CameraLocationId     = detectionResult.CameraLocationId,
+            CameraLocationName   = detectionResult.CameraLocationName,
+            CameraType           = detectionResult.CameraType,
+            CameraRole           = detectionResult.CameraRole,
+            WorkflowMode         = detectionResult.WorkflowMode,
+            PreferredEngine      = detectionResult.PreferredEngine,
+            EngineUsed           = "luxand-tracker",
+            FallbackUsed         = true,
+            SkipReason           = null,
+            EngineStatus         = detectionResult.EngineStatus,
+            CapturedAt           = detectionResult.CapturedAt,
+            ProcessedAt          = DateTime.UtcNow,
+            FrameSizeBytes       = detectionResult.FrameSizeBytes,
+            SourceDeviceId       = detectionResult.SourceDeviceId,
+            // Stable FaceId as ClientTrackId for single-face results: CameraFaceEventService uses
+            // ClientTrackId as the direct cooldown key, bypassing spatial/template matching entirely.
+            // For multi-face, fall back to template matching via TemplateBytes above.
+            ClientTrackId        = trackedFaces.Count == 1
+                                       ? trackedFaces[0].FaceId.ToString()
+                                       : detectionResult.ClientTrackId,
+            DetectedFaceCount    = faces.Count,
+            RecognizedFaceCount  = 0,
+            KnownFaceCount       = 0,
+            UnknownFaceCount     = faces.Count,
+            RecognitionThreshold = detectionResult.RecognitionThreshold,
+            DetectionThreshold   = detectionResult.DetectionThreshold,
+            SuggestedWorkflowAction = "reviewUnknown",
+            Faces                = faces,
+            Events               = [],
+            // Prefer raw frame bytes directly from FfmpegFrame (always populated) over the detection
+            // result's FrameBytes which may be null when FSDK.DetectMultipleFaces returns early.
+            FrameBytes           = rawFrameBytes ?? detectionResult.FrameBytes
+        };
     }
 
     private static string GetMetadataValue(FfmpegFrame frame, string key, string fallback)

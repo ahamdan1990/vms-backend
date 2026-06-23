@@ -348,10 +348,10 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
         result.RawDetectionCount = rawFaces.Count;
 
         var threshold = GetThreshold(config.FaceDetectionThreshold);
-        var minSize = config.MinimumFaceSizePixels ?? 40;
+        var minSize = config.MinimumFaceSizePixels ?? 25;
         var maxSize = config.MaximumFaceSizePixels ?? 0;
         var qualityMin = config.FaceQualityThreshold ?? 20;
-        var blurMin = config.BlurThreshold ?? 8;
+        var blurMin = config.BlurThreshold ?? 20;
         int passedCount = 0;
 
         foreach (var face in rawFaces)
@@ -466,10 +466,10 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
         CancellationToken cancellationToken)
     {
         var threshold = GetThreshold(config.FaceDetectionThreshold);
-        var minimumFaceSize = config.MinimumFaceSizePixels ?? 40;
+        var minimumFaceSize = config.MinimumFaceSizePixels ?? 25;
         var qualityThreshold = config.FaceQualityThreshold ?? 20;
         var maximumFaceSize = config.MaximumFaceSizePixels ?? 0;
-        var blurThreshold = config.BlurThreshold ?? 8;
+        var blurThreshold = config.BlurThreshold ?? 20;
         var rollLimit = config.RollLimitDegrees ?? 0;
         var yawLimit = config.YawLimitDegrees ?? 0;
         var pitchLimit = config.PitchLimitDegrees ?? 0;
@@ -494,12 +494,20 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
                 List<DetectedFace> faces;
                 try
                 {
+                    // Compute blur scores upfront so the filter can gate AND the score is
+                    // carried through to the DTO for BestFaceEmissionBuffer ranking.
+                    if (blurImage != null)
+                    {
+                        foreach (var f in detectedFaces)
+                            f.SharpnessScore = ComputeBlurScoreFromDecodedImage(blurImage, f);
+                    }
+
                     faces = detectedFaces
                         .Where(face => face.Confidence >= threshold)
                         .Where(face => minimumFaceSize <= 0 || face.Width >= minimumFaceSize || face.Height >= minimumFaceSize)
                         .Where(face => maximumFaceSize <= 0 || face.Width <= maximumFaceSize || face.Height <= maximumFaceSize)
                         .Where(face => qualityThreshold <= 0 || !face.QualityScore.HasValue || face.QualityScore.Value >= qualityThreshold)
-                        .Where(face => blurThreshold <= 0 || blurImage == null || ComputeBlurScoreFromDecodedImage(blurImage, face) >= blurThreshold)
+                        .Where(face => blurThreshold <= 0 || !face.SharpnessScore.HasValue || face.SharpnessScore.Value >= blurThreshold)
                         .Where(face => rollLimit <= 0 || !face.Roll.HasValue || Math.Abs(face.Roll.Value) <= rollLimit)
                         .Where(face => yawLimit <= 0 || !face.Yaw.HasValue || Math.Abs(face.Yaw.Value) <= yawLimit)
                         .Where(face => pitchLimit <= 0 || !face.Pitch.HasValue || Math.Abs(face.Pitch.Value) <= pitchLimit)
@@ -532,10 +540,10 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
         Domain.ValueObjects.CameraConfiguration config,
         CancellationToken cancellationToken)
     {
-        var minimumFaceSize = config.MinimumFaceSizePixels ?? 40;
+        var minimumFaceSize = config.MinimumFaceSizePixels ?? 25;
         var maximumFaceSize = config.MaximumFaceSizePixels ?? 0;
-        var qualityThreshold = config.FaceQualityThreshold ?? 40;
-        var blurThreshold = config.BlurThreshold ?? 8;
+        var qualityThreshold = config.FaceQualityThreshold ?? 20;
+        var blurThreshold = config.BlurThreshold ?? 20;
         // UnknownFaceThreshold is the lower bound for matched faces.
         // FacialRecognitionThreshold determines "known" vs "low confidence" and is applied later.
         // FaceDetectionThreshold gates unmatched (truly unknown) faces by BoundingBox confidence.
@@ -562,6 +570,14 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
                 List<RecognizedFace> faces;
                 try
                 {
+                    // Attach sharpness scores to bounding boxes before filtering so the score
+                    // is carried through to the DTO for BestFaceEmissionBuffer ranking.
+                    if (blurImage != null)
+                    {
+                        foreach (var f in recognizedFaces.Where(f => f.BoundingBox != null))
+                            f.BoundingBox!.SharpnessScore = ComputeBlurScoreFromDecodedImage(blurImage, f.BoundingBox);
+                    }
+
                     faces = recognizedFaces
                         .Where(face =>
                         {
@@ -586,7 +602,7 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
                             if (qualityThreshold > 0 && box.QualityScore.HasValue && box.QualityScore.Value < qualityThreshold)
                                 return false;
 
-                            if (blurThreshold > 0 && blurImage != null && ComputeBlurScoreFromDecodedImage(blurImage, box) < blurThreshold)
+                            if (blurThreshold > 0 && box.SharpnessScore.HasValue && box.SharpnessScore.Value < blurThreshold)
                                 return false;
 
                             return true;
@@ -692,7 +708,10 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
             SuggestedAction = GetFaceWorkflowAction(isKnown, identity?.IsBlacklisted ?? false, config),
             TemplateBytes = recognizedFace.TemplateBytes,
             AppliedThreshold = (float)recognitionThreshold,
-            RejectionReason = rejectionReason
+            RejectionReason = rejectionReason,
+            DetectionQualityScore = recognizedFace.BoundingBox?.QualityScore,
+            DetectionRoll = recognizedFace.BoundingBox?.Roll,
+            SharpnessScore = recognizedFace.BoundingBox?.SharpnessScore
         };
     }
 
@@ -864,7 +883,10 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
                 PersonType = "Unknown",
                 Confidence = face.Confidence,
                 BoundingBox = MapBox(face),
-                SuggestedAction = "reviewUnknown"
+                SuggestedAction = "reviewUnknown",
+                DetectionQualityScore = face.QualityScore,
+                DetectionRoll = face.Roll,
+                SharpnessScore = face.SharpnessScore
             })
             .ToList();
     }
@@ -894,7 +916,10 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
                 PersonType = "Unknown",
                 Confidence = face.Confidence,
                 BoundingBox = MapBox(face),
-                SuggestedAction = "reviewUnknown"
+                SuggestedAction = "reviewUnknown",
+                DetectionQualityScore = face.QualityScore,
+                DetectionRoll = face.Roll,
+                SharpnessScore = face.SharpnessScore
             })
             .ToList();
     }
@@ -927,7 +952,10 @@ public class CameraFrameRecognitionService : ICameraFrameRecognitionService
                 Similarity = face.Similarity > 0 ? face.Similarity : 0,
                 Confidence = face.BoundingBox!.Confidence,
                 BoundingBox = MapBox(face.BoundingBox!),
-                SuggestedAction = "reviewUnknown"
+                SuggestedAction = "reviewUnknown",
+                DetectionQualityScore = face.BoundingBox!.QualityScore,
+                DetectionRoll = face.BoundingBox!.Roll,
+                SharpnessScore = face.BoundingBox!.SharpnessScore
             })
             .ToList();
     }

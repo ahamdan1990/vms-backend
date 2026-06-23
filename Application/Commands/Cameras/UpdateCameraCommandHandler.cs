@@ -247,6 +247,9 @@ public class UpdateCameraCommandHandler : IRequestHandler<UpdateCameraCommand, C
             CpuFallbackEnabled = updates.CpuFallbackEnabled,
             HardwareAcceleration = updates.HardwareAcceleration,
             HealthCheckIntervalSeconds = updates.HealthCheckIntervalSeconds > 0 ? updates.HealthCheckIntervalSeconds : existing.HealthCheckIntervalSeconds,
+            BestFrameCaptureDurationMs = updates.BestFrameCaptureDurationMs >= 0 ? updates.BestFrameCaptureDurationMs : existing.BestFrameCaptureDurationMs,
+            BestFrameMinScoreImprovement = updates.BestFrameMinScoreImprovement >= 0 ? updates.BestFrameMinScoreImprovement : existing.BestFrameMinScoreImprovement,
+            TrackerFallbackMinFrames = updates.TrackerFallbackMinFrames >= 0 ? updates.TrackerFallbackMinFrames : existing.TrackerFallbackMinFrames,
             IsCivilDefenseCamera = updates.IsCivilDefenseCamera,
             ExtendedConfiguration = updates.ExtendedConfiguration ?? existing.ExtendedConfiguration
         };

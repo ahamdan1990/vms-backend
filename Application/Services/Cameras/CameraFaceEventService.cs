@@ -132,6 +132,20 @@ public class CameraFaceEventService : ICameraFaceEventService
                 continue;
             }
 
+            if (face.IsKnown && face.PersonId.HasValue &&
+                config.CameraRole != CameraRole.General &&
+                config.WorkflowMode == CameraWorkflowMode.Automatic)
+            {
+                var isActionable = await IsPresenceStateActionableAsync(face, config, cancellationToken);
+                if (!isActionable)
+                {
+                    eventDto.Emitted = false;
+                    eventDto.SuppressedReason = "presenceStateNotActionable";
+                    events.Add(eventDto);
+                    continue;
+                }
+            }
+
             var pendingDuplicate = await FindPendingDuplicateAsync(
                 recognitionResult,
                 face,
@@ -261,8 +275,8 @@ public class CameraFaceEventService : ICameraFaceEventService
         if (config.CameraRole == CameraRole.Entry && isInsideBuilding)
             return false;
 
-        // Exit camera: suppress if person is already outside and not on temp leave.
-        if (config.CameraRole == CameraRole.Exit && !isInsideBuilding && !isTempAway)
+        // Exit camera: suppress if person is not currently inside (already outside or temp-away).
+        if (config.CameraRole == CameraRole.Exit && !isInsideBuilding)
             return false;
 
         return true;
@@ -301,13 +315,24 @@ public class CameraFaceEventService : ICameraFaceEventService
         CameraFrameFaceResultDto face,
         CameraConfiguration config)
     {
-        // CD cameras bypass the per-person post-emission cooldown so that two different
-        // known persons entering simultaneously are never blocked by each other's cooldown key.
-        // Re-detection suppression after operator actions is handled by the frontend
-        // suppression map (Phase 4), which is action-triggered and therefore more precise.
+        // CD cameras skip the active-track window (which could block simultaneously-detected
+        // known persons), but still respect the post-emission cooldown to close the race window
+        // between a presence-state DB update and the next frame evaluation. Cooldown keys are
+        // per-person per-camera so Person A's key cannot block Person B.
         var now = DateTime.UtcNow;
         var identity = BuildIdentityKey(result, face, config, now);
+        var cooldownKey = $"camera-face:cooldown:{identity.IdentityKey}";
         var cooldown = GetEventCooldown(config, face);
+
+        if (_memoryCache.TryGetValue<DateTime>(cooldownKey, out var nextAllowedAt) && nextAllowedAt > now)
+        {
+            return new CooldownDecision(
+                ShouldEmit: false,
+                Reason: "cdCooldown",
+                NextAllowedAt: nextAllowedAt,
+                Cooldown: cooldown,
+                PendingDedupeSubjectId: identity.PendingDedupeSubjectId);
+        }
 
         return new CooldownDecision(
             ShouldEmit: true,

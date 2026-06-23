@@ -156,7 +156,7 @@ public class CameraConfiguration
     /// Minimum accepted face size in pixels.
     /// </summary>
     [Range(20, 2000)]
-    public int? MinimumFaceSizePixels { get; set; } = 40;
+    public int? MinimumFaceSizePixels { get; set; } = 25;
 
     /// <summary>
     /// Maximum accepted face size in pixels. Faces larger than this are filtered out (e.g. partial faces too close to camera).
@@ -173,9 +173,10 @@ public class CameraConfiguration
 
     /// <summary>
     /// Blur rejection threshold (0-100), interpreted by the pipeline implementation.
+    /// Frames whose Sobel sharpness score falls below this value are dropped before template extraction.
     /// </summary>
     [Range(0, 100)]
-    public int? BlurThreshold { get; set; }
+    public int? BlurThreshold { get; set; } = 20;
 
     /// <summary>
     /// Maximum allowed yaw angle in degrees.
@@ -193,7 +194,7 @@ public class CameraConfiguration
     /// Maximum allowed roll angle in degrees.
     /// </summary>
     [Range(0, 180)]
-    public int? RollLimitDegrees { get; set; } = 45;
+    public int? RollLimitDegrees { get; set; } = 30;
 
     /// <summary>
     /// Maximum faces to process per frame.
@@ -310,6 +311,30 @@ public class CameraConfiguration
     public int HealthCheckIntervalSeconds { get; set; } = 60;
 
     /// <summary>
+    /// Duration (ms) from a face's first detection during which frames are sampled to find
+    /// the best-quality capture per tracked face. Event emits at window end or track loss.
+    /// 0 = disabled — emit on first detection (legacy behavior).
+    /// </summary>
+    [Range(0, 10000)]
+    public int BestFrameCaptureDurationMs { get; set; } = 1500;
+
+    /// <summary>
+    /// Minimum relative score improvement (0–1) required to replace the current best candidate
+    /// in the BestFaceEmissionBuffer. 0.05 = new frame must score ≥5% higher to replace.
+    /// </summary>
+    [Range(0.0, 1.0)]
+    public double BestFrameMinScoreImprovement { get; set; } = 0.05;
+
+    /// <summary>
+    /// Minimum number of consecutive tracker-fallback frames (detection=0 but tracker sees face)
+    /// before an unknown-face event is emitted. Higher values reduce false positives from
+    /// momentary faces at the edge of the camera view at the cost of slightly more latency.
+    /// Default 3 ≈ 300ms at 10fps inference.
+    /// </summary>
+    [Range(0, 100)]
+    public int TrackerFallbackMinFrames { get; set; } = 3;
+
+    /// <summary>
     /// Additional camera-specific configuration parameters
     /// Stored as JSON for flexible extension
     /// </summary>
@@ -341,18 +366,19 @@ public class CameraConfiguration
         RecognitionEnabled = true,
         CompreFaceFallbackEnabled = true,
         FacialRecognitionThreshold = 80,
-        FaceDetectionThreshold = 50,
+        FaceDetectionThreshold = 40,
         UnknownFaceThreshold = 70,
-        MinimumFaceSizePixels = 40,
+        MinimumFaceSizePixels = 25,
         FaceQualityThreshold = 20,
+        BlurThreshold = 20,
         YawLimitDegrees = 30,
         PitchLimitDegrees = 30,
-        RollLimitDegrees = 45,
+        RollLimitDegrees = 30,
         MaxFacesPerFrame = 10,
         MaxConcurrentTracks = 25,
-        CaptureFpsLimit = 15,
-        InferenceFps = 5,
-        FrameSamplingIntervalMs = 200,
+        CaptureFpsLimit = 10,
+        InferenceFps = 10,
+        FrameSamplingIntervalMs = 0,
         RecognitionIntervalPerTrackMs = 10000,
         TrackTimeoutMs = 10000,
         ReIdentificationTimeoutMs = 10000,
@@ -367,7 +393,10 @@ public class CameraConfiguration
         GpuDecodingEnabled = true,
         CpuFallbackEnabled = true,
         HardwareAcceleration = FfmpegHardwareAcceleration.Auto,
-        HealthCheckIntervalSeconds = 60
+        HealthCheckIntervalSeconds = 60,
+        BestFrameCaptureDurationMs = 1500,
+        BestFrameMinScoreImprovement = 0.05,
+        TrackerFallbackMinFrames = 3
     };
 
     /// <summary>

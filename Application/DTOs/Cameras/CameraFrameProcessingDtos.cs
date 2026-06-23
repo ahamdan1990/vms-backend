@@ -158,6 +158,13 @@ public class CameraFrameFaceResultDto
     /// <summary>In-plane face rotation in degrees. Used for cross-frame best-face ranking.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public float? DetectionRoll { get; set; }
+
+    /// <summary>
+    /// Sobel/Laplacian edge sharpness score 0–100. 0 = motion-blurred/featureless, 100 = sharp.
+    /// Used by BestFaceEmissionBuffer to prefer sharper frames within the capture window.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public double? SharpnessScore { get; set; }
 }
 
 /// <summary>

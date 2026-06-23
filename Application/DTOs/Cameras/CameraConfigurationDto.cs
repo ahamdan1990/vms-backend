@@ -313,6 +313,25 @@ public class CameraConfigurationDto
     public int HealthCheckIntervalSeconds { get; set; } = 60;
 
     /// <summary>
+    /// Duration (ms) from a face's first detection during which frames are sampled to find
+    /// the best-quality capture per tracked face. 0 = disabled (emit on first detection).
+    /// </summary>
+    [Range(0, 10000)]
+    public int BestFrameCaptureDurationMs { get; set; } = 1500;
+
+    /// <summary>
+    /// Minimum relative score improvement (0–1) required to replace the current best candidate.
+    /// </summary>
+    [Range(0.0, 1.0)]
+    public double BestFrameMinScoreImprovement { get; set; } = 0.05;
+
+    /// <summary>
+    /// Minimum consecutive tracker-fallback frames before an unknown-face event is emitted.
+    /// </summary>
+    [Range(0, 100)]
+    public int TrackerFallbackMinFrames { get; set; } = 3;
+
+    /// <summary>
     /// Additional camera-specific configuration parameters
     /// </summary>
     public string? ExtendedConfiguration { get; set; }

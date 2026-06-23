@@ -346,28 +346,35 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             // Docs (p.108): the Tracker API does NOT use FSDK_SetFaceDetectionParameters or
             // FSDK_SetFaceDetectionThreshold — those only affect direct detection calls.
             // All detection/recognition parameters MUST be set via SetTrackerParameter.
+            //
+            // Parameters verified against SDK 8.x documentation (p.104-117):
+            // - HandleArbitraryRotations: extend rotation tolerance from ±15° to ±30° (3× perf cost)
+            // - DetermineFaceRotationAngle: REQUIRED for accurate facial feature detection (tracker name differs from SetFaceDetectionParameters param — same name used in both)
+            // - DetectAngles: populate Pan (Yaw) and Tilt (Pitch) via GetTrackerFacialAttribute("Angles")
+            // - InternalResizeWidth: 384 is SDK global default; tracker default is 256 (too low)
+            //   We use settings value (default 640) which is better for 2MP cameras
+            // - FaceDetectionThreshold: 1–9 scale; lower = more sensitive
+            // - RecognizeFaces/Learning: enable recognition and incremental learning
+            // - Threshold: match threshold 0.0–1.0; 0.992 gives 99.9% recognition rate (SDK table)
+            //
+            // REMOVED (not valid SDK parameters — silently no-op'd but misleading):
+            //   RecognitionPrecision, MaxFaces, TrackingClearTimeout, ReidentificationTimeout
+            TrySetTrackerParameter(handle, "HandleArbitraryRotations",
+                _settings.ArbitraryRotationsEnabled ? "true" : "false");
+            TrySetTrackerParameter(handle, "DetermineFaceRotationAngle",
+                _settings.DetermineRotationAngle ? "true" : "false");
+            TrySetTrackerParameter(handle, "DetectAngles", "true");
             TrySetTrackerParameter(handle, "InternalResizeWidth", _settings.InternalResizeWidth.ToString());
-            TrySetTrackerParameter(handle, "HandleArbitraryRotations", "false");
-            TrySetTrackerParameter(handle, "DetermineRotationAngle", "false");
             TrySetTrackerParameter(handle, "FaceDetectionThreshold", _settings.DetectionThreshold.ToString());
             TrySetTrackerParameter(handle, "RecognizeFaces", "true");
             TrySetTrackerParameter(handle, "Learning", "true");
-
-            TrySetTrackerParameter(handle, "RecognitionPrecision", "1");
-            TrySetTrackerParameter(handle, "Threshold", _settings.MatchThreshold.ToString("0.00"));
+            TrySetTrackerParameter(handle, "Threshold", _settings.TrackerThreshold.ToString("0.000"));
+            // Allow tracker to return faces even when full facial feature detection fails
+            // (e.g. partial occlusion, distance, or slight angle). SDK default is true which
+            // causes tracker to return 0 faces in cases where standalone DetectMultipleFaces succeeds.
+            TrySetTrackerParameter(handle, "TrimFacesWithUncertainFacialFeatures", "false");
 
             var effectiveMaxFaces = Math.Max(1, maxFaces);
-            TrySetTrackerParameter(handle, "MaxFaces", effectiveMaxFaces.ToString());
-
-            if (trackTimeoutMs > 0)
-            {
-                TrySetTrackerParameter(handle, "TrackingClearTimeout", trackTimeoutMs.ToString());
-            }
-
-            if (reIdTimeoutMs > 0)
-            {
-                TrySetTrackerParameter(handle, "ReidentificationTimeout", reIdTimeoutMs.ToString());
-            }
 
             _trackerHandles[cameraId] = handle;
             _trackerMaxFaces[cameraId] = effectiveMaxFaces;
@@ -411,6 +418,8 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
     {
         if (!IsAvailable || !_trackerHandles.TryGetValue(cameraId, out var trackerHandle))
         {
+            _logger.LogWarning("Camera {CameraId}: FeedFrameAsync skipped — IsAvailable={Avail}, HasHandle={HasHandle}",
+                cameraId, IsAvailable, _trackerHandles.ContainsKey(cameraId));
             return [];
         }
 
@@ -869,7 +878,15 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
                 // Quality is assessed in scaled (detection) space — relative face/image size.
                 var scaledX = Math.Max(0, position.xc - half);
                 var scaledY = Math.Max(0, position.yc - (int)(position.w * 0.65f));
-                var qualityProxy = new DetectedFace { X = scaledX, Y = scaledY, Width = position.w, Height = estimatedHeight };
+                // Include Roll (in-plane rotation) so the quality score penalises tilted heads.
+                var qualityProxy = new DetectedFace
+                {
+                    X = scaledX,
+                    Y = scaledY,
+                    Width = position.w,
+                    Height = estimatedHeight,
+                    Roll = (float?)position.angle
+                };
                 qualityScore = CalculateQualityScore(qualityProxy, imageWidth, imageHeight);
 
                 // Coordinates stored on the returned face are in ORIGINAL frame space so that
@@ -1054,11 +1071,24 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
                 return result;
             }
 
+            var origInfo = SixLabors.ImageSharp.Image.Identify(imageBytes);
+            int originalWidth  = origInfo?.Width  ?? 0;
+            int originalHeight = origInfo?.Height ?? 0;
+
             image = LoadImageToFsdk(imageBytes);
             if (image < 0)
             {
                 return result;
             }
+
+            int imageWidth = 0, imageHeight = 0;
+            FSDK.GetImageWidth(image, ref imageWidth);
+            FSDK.GetImageHeight(image, ref imageHeight);
+            double scaleX = (originalWidth > 0 && imageWidth > 0) ? (double)originalWidth / imageWidth : 1.0;
+            double scaleY = (originalHeight > 0 && imageHeight > 0) ? (double)originalHeight / imageHeight : 1.0;
+            _logger.LogDebug(
+                "Camera {CameraId}: FeedFrameInternal — Original={OrigW}×{OrigH} PostResize={ResW}×{ResH} ScaleX={SX:F2} ScaleY={SY:F2}",
+                cameraId, originalWidth, originalHeight, imageWidth, imageHeight, scaleX, scaleY);
 
             long faceCount = 0;
             long[]? ids = null;
@@ -1066,6 +1096,8 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             var ret = FSDK.FeedFrame(trackerHandle, TrackerCameraIndex, image, ref faceCount, out ids, bufferSize);
             if (ret != FSDK.FSDKE_OK || faceCount <= 0 || ids == null)
             {
+                _logger.LogDebug("Camera {CameraId}: FSDK.FeedFrame ret={Ret} faceCount={Count}",
+                    cameraId, ret, faceCount);
                 return result;
             }
 
@@ -1078,22 +1110,53 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
                     continue;
                 }
 
+                // GetFaceTemplateUsingFeatures is the highest-accuracy extraction path per SDK docs (p.54).
+                // Fall back to GetFaceTemplateUsingEyes for extreme-pose frames where facial feature
+                // detection fails (e.g. near-profile angle, heavy occlusion).
                 byte[]? template = null;
-                FSDK.TPoint[]? eyes = null;
-                if (FSDK.GetTrackerEyes(trackerHandle, TrackerCameraIndex, faceId, out eyes) == FSDK.FSDKE_OK &&
-                    eyes is { Length: >= 2 })
+                FSDK.TPoint[]? features = null;
+                if (FSDK.GetTrackerFacialFeatures(trackerHandle, TrackerCameraIndex, faceId, out features) == FSDK.FSDKE_OK &&
+                    features is { Length: > 0 })
                 {
-                    FSDK.GetFaceTemplateUsingEyes(image, ref eyes, out template);
+                    FSDK.GetFaceTemplateUsingFeatures(image, ref features, out template);
+                }
+
+                if (template is not { Length: > 0 })
+                {
+                    // Fallback: GetFaceTemplateUsingEyes for extreme-pose faces
+                    FSDK.TPoint[]? eyes = null;
+                    if (FSDK.GetTrackerEyes(trackerHandle, TrackerCameraIndex, faceId, out eyes) == FSDK.FSDKE_OK &&
+                        eyes is { Length: >= 2 })
+                    {
+                        FSDK.GetFaceTemplateUsingEyes(image, ref eyes, out template);
+                    }
+                }
+
+                // Parse Yaw (Pan) and Tilt (Pitch) from DetectAngles tracker attribute.
+                // Populated only when DetectAngles=true is set on the tracker.
+                // Format returned by SDK: "Pan=<degrees>\nTilt=<degrees>"
+                float? yaw = null;
+                float? pitch = null;
+                string? anglesStr = null;
+                if (FSDK.GetTrackerFacialAttribute(trackerHandle, TrackerCameraIndex, faceId, "Angles", out anglesStr, 256) == FSDK.FSDKE_OK &&
+                    !string.IsNullOrEmpty(anglesStr))
+                {
+                    ParseTrackerAngles(anglesStr, out yaw, out pitch);
                 }
 
                 var half = position.w / 2;
+                var scaledX = Math.Max(0, position.xc - half);
+                var scaledY = Math.Max(0, position.yc - half);
                 result.Add(new TrackedFace
                 {
                     FaceId = faceId,
-                    X = Math.Max(0, position.xc - half),
-                    Y = Math.Max(0, position.yc - half),
-                    Width = position.w,
-                    Height = position.w,
+                    X      = (int)Math.Round(scaledX    * scaleX),
+                    Y      = (int)Math.Round(scaledY    * scaleY),
+                    Width  = (int)Math.Round(position.w * scaleX),
+                    Height = (int)Math.Round(position.w * scaleY),
+                    Roll = (float?)position.angle,
+                    Yaw = yaw,
+                    Pitch = pitch,
                     Template = template is { Length: > 0 } ? template : null
                 });
             }
@@ -1176,6 +1239,21 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
         }
     }
 
+    /// <summary>
+    /// Composite face quality score (0–100). Three components:
+    ///   • Size   (50 pts): face width as fraction of min frame dimension; saturates at 25%.
+    ///     Entry-camera faces are typically 10–30% of frame width at ~1–3m range.
+    ///   • Pose   (30 pts): penalty for in-plane roll. Roll=0°→30 pts, Roll=±45°→0 pts.
+    ///     Out-of-plane yaw/pitch are filtered separately by YawLimitDegrees/PitchLimitDegrees
+    ///     in CameraFrameRecognitionService once DetectAngles populates those fields.
+    ///   • Center (20 pts): horizontal distance from frame centre. Vertical centering is not
+    ///     penalised because entrance cameras aim at head height and subjects vary in height.
+    ///
+    /// Blur/sharpness is intentionally NOT included here: it is measured per-face crop at
+    /// filter time in CameraFrameRecognitionService via the Sobel-based ComputeBlurScore and
+    /// the BlurThreshold config value. Separating the two keeps this function fast (no image
+    /// decode) while still enforcing sharpness as a distinct, tunable filter stage.
+    /// </summary>
     private static double CalculateQualityScore(DetectedFace face, int imageWidth, int imageHeight)
     {
         if (imageWidth <= 0 || imageHeight <= 0)
@@ -1183,17 +1261,31 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             return 0;
         }
 
+        // Size component (50 pts): reward faces that cover a meaningful portion of the frame.
+        // Target saturation point = 25% of the shorter dimension. A face spanning 25%+ of
+        // the frame almost certainly has sufficient pixel detail for reliable template extraction.
         var minDimension = Math.Max(1, Math.Min(imageWidth, imageHeight));
         var sizeRatio = Math.Clamp(face.Width / (double)minDimension, 0, 1);
-        var sizeScore = Math.Clamp(sizeRatio / 0.35, 0, 1) * 70;
+        var sizeScore = Math.Clamp(sizeRatio / 0.25, 0, 1) * 50.0;
 
+        // Pose / Roll component (30 pts): penalise in-plane head tilt using FSDK TFacePosition.angle.
+        // Linear falloff: 0°→full score, ±45°→zero. Beyond ±45° the face is unlikely to produce
+        // a reliable template regardless of size.
+        var rollPenalty = 0.0;
+        if (face.Roll.HasValue)
+        {
+            var absRoll = Math.Abs(face.Roll.Value);
+            rollPenalty = Math.Clamp(absRoll / 45.0, 0.0, 1.0);
+        }
+        var poseScore = (1.0 - rollPenalty) * 30.0;
+
+        // Center component (20 pts): horizontal distance from the frame's horizontal midpoint.
+        // A face near the left or right edge is often partially cropped or at an angle.
         var centerX = face.X + face.Width / 2d;
-        var centerY = face.Y + face.Height / 2d;
         var offsetX = Math.Abs(centerX - imageWidth / 2d) / Math.Max(1, imageWidth / 2d);
-        var offsetY = Math.Abs(centerY - imageHeight / 2d) / Math.Max(1, imageHeight / 2d);
-        var centerScore = (1 - Math.Clamp((offsetX + offsetY) / 2d, 0, 1)) * 30;
+        var centerScore = (1.0 - Math.Clamp(offsetX, 0.0, 1.0)) * 20.0;
 
-        return Math.Round(sizeScore + centerScore, 3);
+        return Math.Round(sizeScore + poseScore + centerScore, 3);
     }
 
     private static bool IsJpeg(byte[] bytes)
@@ -1240,15 +1332,61 @@ public class LuxandFaceService : IFaceDetectionService, IFaceTrackerService, IDi
             template.TemplateData);
     }
 
-    private static void TrySetTrackerParameter(int handle, string key, string value)
+    private void TrySetTrackerParameter(int handle, string key, string value)
     {
         try
         {
-            FSDK.SetTrackerParameter(handle, key, value);
+            var ret = FSDK.SetTrackerParameter(handle, key, value);
+            if (ret != FSDK.FSDKE_OK)
+            {
+                _logger.LogWarning(
+                    "PrimaryEngine SetTrackerParameter returned non-OK code. Key={Key}, Value={Value}, ReturnCode={ReturnCode}",
+                    key, value, ret);
+            }
         }
-        catch
+        catch (Exception ex)
         {
-            // Older SDK builds may not support all tracker parameters.
+            // Older SDK builds may not support all parameters; log but do not throw.
+            _logger.LogWarning(ex,
+                "PrimaryEngine SetTrackerParameter threw an exception. Key={Key}, Value={Value}", key, value);
+        }
+    }
+
+    /// <summary>
+    /// Parses the SDK "Angles" facial attribute string.
+    /// Format: "Pan=&lt;degrees&gt;\nTilt=&lt;degrees&gt;" (newline- or comma-separated key=value pairs).
+    /// Pan maps to Yaw (left-right); Tilt maps to Pitch (up-down).
+    /// </summary>
+    private static void ParseTrackerAngles(string anglesStr, out float? yaw, out float? pitch)
+    {
+        yaw = null;
+        pitch = null;
+
+        foreach (var part in anglesStr.Split(new[] { '\n', '\r', ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var kv = part.Split('=', 2);
+            if (kv.Length != 2)
+            {
+                continue;
+            }
+
+            var key = kv[0].Trim();
+            if (!float.TryParse(kv[1].Trim(),
+                    System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out var val))
+            {
+                continue;
+            }
+
+            if (key.Equals("Pan", StringComparison.OrdinalIgnoreCase))
+            {
+                yaw = val;
+            }
+            else if (key.Equals("Tilt", StringComparison.OrdinalIgnoreCase))
+            {
+                pitch = val;
+            }
         }
     }
 
