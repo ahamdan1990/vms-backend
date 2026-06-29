@@ -40,6 +40,13 @@ public class ImportUserRowDto
     public string? PostalCode { get; set; }
     public string? Country { get; set; }
 
+    // ── Photo ─────────────────────────────────────────────────────────────────
+    /// <summary>
+    /// Optional filename of a photo in the photos/ folder of the ZIP archive.
+    /// e.g. "john_doe.jpg". Matched case-insensitively to extracted ZIP entries.
+    /// </summary>
+    public string? PhotoFile { get; set; }
+
     // ── Account settings ──────────────────────────────────────────────────────
     /// <summary>
     /// Raw cell value: "TRUE", "FALSE", or blank.

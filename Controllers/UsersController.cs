@@ -850,6 +850,12 @@ public class UsersController : BaseController
                 return File(csv, "text/csv", "import-users-template.csv");
             }
 
+            if (format.Equals("zip", StringComparison.OrdinalIgnoreCase))
+            {
+                var zip = await _userImportService.GenerateImportTemplateZipAsync(cancellationToken);
+                return File(zip, "application/zip", "import-users-template.zip");
+            }
+
             var xlsx = await _userImportService.GenerateImportTemplateAsync(cancellationToken);
             return File(xlsx,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -868,7 +874,7 @@ public class UsersController : BaseController
     /// </summary>
     [HttpPost("import/validate")]
     [Authorize(Policy = Permissions.User.Import)]
-    [RequestSizeLimit(5_242_880)] // 5 MB
+    [RequestSizeLimit(20_971_520)] // 20 MB — accommodates ZIP with photos
     [ProducesResponseType(typeof(ApiResponseDto<ImportValidationResultDto>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
     public async Task<IActionResult> ValidateImportFile(
@@ -944,7 +950,7 @@ public class UsersController : BaseController
     /// </summary>
     [HttpPost("import")]
     [Authorize(Policy = Permissions.User.Import)]
-    [RequestSizeLimit(5_242_880)] // 5 MB
+    [RequestSizeLimit(20_971_520)] // 20 MB — accommodates ZIP with photos
     [ProducesResponseType(typeof(ApiResponseDto<ImportUsersResultDto>), 200)]
     [ProducesResponseType(typeof(ApiResponseDto<object>), 400)]
     public async Task<IActionResult> ImportUsers(

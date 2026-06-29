@@ -1,6 +1,7 @@
 // Application/Commands/Users/ImportUsersCommandHandler.cs
 using MediatR;
 using VisitorManagementSystem.Api.Application.DTOs.Users;
+using VisitorManagementSystem.Api.Application.Services.FaceDetection;
 using VisitorManagementSystem.Api.Application.Services.Users;
 using VisitorManagementSystem.Api.Domain.Constants;
 using VisitorManagementSystem.Api.Domain.Enums;
@@ -14,21 +15,25 @@ namespace VisitorManagementSystem.Api.Application.Commands.Users;
 /// 3. Batch-checks emails and employeeIds against the database
 /// 4. Optionally returns early (dryRun) or proceeds to create users
 /// 5. Dispatches one CreateUserCommand per valid row (each in its own transaction)
-/// 6. Returns a detailed result for the UI
+/// 6. Enrolls the profile photo (if provided in ZIP) via IFaceTemplateEnrollmentService
+/// 7. Returns a detailed result for the UI
 /// </summary>
 public class ImportUsersCommandHandler : IRequestHandler<ImportUsersCommand, ImportUsersResultDto>
 {
     private readonly IUserImportService _importService;
     private readonly IMediator _mediator;
+    private readonly IFaceTemplateEnrollmentService _enrollmentService;
     private readonly ILogger<ImportUsersCommandHandler> _logger;
 
     public ImportUsersCommandHandler(
         IUserImportService importService,
         IMediator mediator,
+        IFaceTemplateEnrollmentService enrollmentService,
         ILogger<ImportUsersCommandHandler> logger)
     {
         _importService = importService;
         _mediator = mediator;
+        _enrollmentService = enrollmentService;
         _logger = logger;
     }
 
@@ -76,6 +81,9 @@ public class ImportUsersCommandHandler : IRequestHandler<ImportUsersCommand, Imp
         }
 
         overallResult.TotalRows = parseResult.Rows.Count;
+
+        // Photos extracted from ZIP archive (empty for plain xlsx/csv uploads).
+        var photos = parseResult.Photos;
 
         // ── Step 2: Field-level + within-file validation ──────────────────────
         var validationResults = _importService.ValidateRows(parseResult.Rows);
@@ -192,6 +200,33 @@ public class ImportUsersCommandHandler : IRequestHandler<ImportUsersCommand, Imp
 
                 _logger.LogDebug("Import row {Row}: created user {UserId} ({Email})",
                     row.RowNumber, userDto.Id, userDto.Email);
+
+                // Photo enrollment — optional, does not affect row success/failure.
+                if (!string.IsNullOrWhiteSpace(row.PhotoFile) &&
+                    photos.TryGetValue(row.PhotoFile, out var photoBytes))
+                {
+                    try
+                    {
+                        var enrollResult = await _enrollmentService.EnrollUserPhotoAsync(
+                            userDto.Id, photoBytes, row.PhotoFile,
+                            skipDuplicateCheck: false, cancellationToken);
+
+                        if (!enrollResult.Success)
+                            _logger.LogWarning(
+                                "Import row {Row}: photo enrollment failed for user {UserId} — {Msg}",
+                                row.RowNumber, userDto.Id, enrollResult.Message);
+                        else
+                            _logger.LogInformation(
+                                "Import row {Row}: enrolled photo '{Photo}' for user {UserId}",
+                                row.RowNumber, row.PhotoFile, userDto.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex,
+                            "Import row {Row}: photo enrollment threw exception for user {UserId} — skipped",
+                            row.RowNumber, userDto.Id);
+                    }
+                }
             }
             catch (InvalidOperationException ex)
             {

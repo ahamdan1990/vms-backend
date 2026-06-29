@@ -1,4 +1,5 @@
 // Application/Services/Users/UserImportService.cs
+using System.IO.Compression;
 using System.Net.Mail;
 using System.Text;
 using CsvHelper;
@@ -28,7 +29,11 @@ public class UserImportService : IUserImportService
 
     // ── Allowed enum values (case-insensitive matching in validator) ───────────
     private static readonly HashSet<string> AllowedRoles =
-        new(StringComparer.OrdinalIgnoreCase) { "Staff", "Receptionist", "Administrator" };
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            "Staff", "Receptionist", "Administrator",
+            "CivilDefense_Receptionist", "CivilDefense_Manager"
+        };
 
     private static readonly HashSet<string> AllowedStatuses =
         new(StringComparer.OrdinalIgnoreCase) { "Active", "Inactive", "Suspended" };
@@ -83,6 +88,7 @@ public class UserImportService : IUserImportService
             ["Country"]             = nameof(ImportUserRowDto.Country),
             ["MustChangePassword"]  = nameof(ImportUserRowDto.MustChangePassword),
             ["SendWelcomeEmail"]    = nameof(ImportUserRowDto.SendWelcomeEmail),
+            ["PhotoFile"]           = nameof(ImportUserRowDto.PhotoFile),
         };
 
     public UserImportService(IUnitOfWork unitOfWork, ILogger<UserImportService> logger)
@@ -113,9 +119,9 @@ public class UserImportService : IUserImportService
         }
 
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-        if (ext is not ".xlsx" and not ".csv")
+        if (ext is not ".xlsx" and not ".csv" and not ".zip")
         {
-            result.FileErrors.Add("Only .xlsx and .csv files are supported.");
+            result.FileErrors.Add("Only .xlsx, .csv, and .zip files are supported.");
             return result;
         }
 
@@ -123,10 +129,17 @@ public class UserImportService : IUserImportService
 
         try
         {
-            using var stream = file.OpenReadStream();
-            result.Rows = ext == ".xlsx"
-                ? await ParseXlsxAsync(stream, result.FileErrors, cancellationToken)
-                : await ParseCsvAsync(stream, result.FileErrors, cancellationToken);
+            if (ext == ".zip")
+            {
+                await ParseZipAsync(file, result, cancellationToken);
+            }
+            else
+            {
+                using var stream = file.OpenReadStream();
+                result.Rows = ext == ".xlsx"
+                    ? await ParseXlsxAsync(stream, result.FileErrors, cancellationToken)
+                    : await ParseCsvAsync(stream, result.FileErrors, cancellationToken);
+            }
         }
         catch (Exception ex)
         {
@@ -287,6 +300,60 @@ public class UserImportService : IUserImportService
         return rows;
     }
 
+    private static readonly HashSet<string> PhotoExtensions =
+        new(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
+
+    private async Task ParseZipAsync(
+        IFormFile file, UserImportParseResult result, CancellationToken cancellationToken)
+    {
+        using var zipStream = file.OpenReadStream();
+        using var archive = new ZipArchive(zipStream, ZipArchiveMode.Read, leaveOpen: false);
+
+        ZipArchiveEntry? dataEntry = null;
+        const long MaxPhotoBytesPerFile = 10 * 1024 * 1024; // 10 MB per photo
+
+        foreach (var entry in archive.Entries)
+        {
+            var entryExt = Path.GetExtension(entry.Name).ToLowerInvariant();
+
+            // First .xlsx or .csv found (ignoring path, ignoring README-style files)
+            if (dataEntry == null && entryExt is ".xlsx" or ".csv" && entry.Length > 0)
+            {
+                dataEntry = entry;
+            }
+            else if (PhotoExtensions.Contains(entryExt) && entry.Length > 0 &&
+                     entry.Length <= MaxPhotoBytesPerFile)
+            {
+                using var entryStream = entry.Open();
+                using var ms = new MemoryStream((int)entry.Length);
+                await entryStream.CopyToAsync(ms, cancellationToken);
+                // Key by filename only (no path) so row's PhotoFile value matches easily.
+                result.Photos[entry.Name] = ms.ToArray();
+            }
+        }
+
+        if (dataEntry == null)
+        {
+            result.FileErrors.Add("The ZIP archive does not contain an .xlsx or .csv file.");
+            return;
+        }
+
+        result.DetectedFormat = Path.GetExtension(dataEntry.Name).TrimStart('.');
+
+        using var dataStream = dataEntry.Open();
+        using var buffered = new MemoryStream((int)dataEntry.Length);
+        await dataStream.CopyToAsync(buffered, cancellationToken);
+        buffered.Position = 0;
+
+        result.Rows = result.DetectedFormat == "xlsx"
+            ? await ParseXlsxAsync(buffered, result.FileErrors, cancellationToken)
+            : await ParseCsvAsync(buffered, result.FileErrors, cancellationToken);
+
+        _logger.LogInformation(
+            "ZIP import: parsed {Rows} row(s) from '{DataFile}', extracted {Photos} photo(s)",
+            result.Rows.Count, dataEntry.Name, result.Photos.Count);
+    }
+
     // ── Validate rows ─────────────────────────────────────────────────────────
 
     public List<ImportUserRowResultDto> ValidateRows(List<ImportUserRowDto> rows)
@@ -364,7 +431,7 @@ public class UserImportService : IUserImportService
         if (string.IsNullOrWhiteSpace(row.Role))
             AddError(result, "Role", "Role is required.");
         else if (!AllowedRoles.Contains(row.Role.Trim()))
-            AddError(result, "Role", $"\"{row.Role}\" is not a valid role. Allowed values: Staff, Receptionist, Administrator.");
+            AddError(result, "Role", $"\"{row.Role}\" is not a valid role. Allowed values: Staff, Receptionist, Administrator, CivilDefense_Receptionist, CivilDefense_Manager.");
 
         // ── Status ───────────────────────────────────────────────────────────
         if (string.IsNullOrWhiteSpace(row.Status))
@@ -523,12 +590,56 @@ public class UserImportService : IUserImportService
         var sb = new StringBuilder();
 
         // Header row
-        sb.AppendLine("FirstName,LastName,Email,Role,Status,ApprovalOverride,PhoneCountryCode,PhoneNumber,PhoneType,EmployeeId,Department,JobTitle,TimeZone,Language,AddressType,Street1,Street2,City,Governorate,PostalCode,Country,MustChangePassword,SendWelcomeEmail");
+        sb.AppendLine("FirstName,LastName,Email,Role,Status,ApprovalOverride,PhoneCountryCode,PhoneNumber,PhoneType,EmployeeId,Department,JobTitle,TimeZone,Language,AddressType,Street1,Street2,City,Governorate,PostalCode,Country,MustChangePassword,SendWelcomeEmail,PhotoFile");
 
         // Example row
-        sb.AppendLine("Jane,Smith,jane.smith@company.com,Staff,Active,FollowGlobal,961,70123456,Mobile,EMP002,HR,HR Manager,Asia/Beirut,en-US,Home,Mar Elias St,,,Beirut,,Lebanon,TRUE,TRUE");
+        sb.AppendLine("Jane,Smith,jane.smith@company.com,Staff,Active,FollowGlobal,961,70123456,Mobile,EMP002,HR,HR Manager,Asia/Beirut,en-US,Home,Mar Elias St,,,Beirut,,Lebanon,TRUE,TRUE,");
 
         return Task.FromResult(Encoding.UTF8.GetBytes(sb.ToString()));
+    }
+
+    public Task<byte[]> GenerateImportTemplateZipAsync(CancellationToken cancellationToken = default)
+    {
+        // GenerateImportTemplateAsync is synchronous under the hood (Task.FromResult).
+        var xlsxBytes = GenerateImportTemplateAsync(cancellationToken).GetAwaiter().GetResult();
+
+        const string readmeContent =
+            "HOW TO ADD PROFILE PHOTOS\r\n" +
+            "=========================\r\n\r\n" +
+            "1. Place each user's photo file (JPG, PNG, etc.) in this folder.\r\n" +
+            "2. In the Users sheet, fill in the PhotoFile column with the exact\r\n" +
+            "   filename of the photo, e.g.  john_doe.jpg\r\n" +
+            "3. Leave PhotoFile blank for users who have no photo.\r\n" +
+            "4. Zip this folder together with the filled users_template.xlsx and\r\n" +
+            "   upload the ZIP on the User Management → Import page.\r\n\r\n" +
+            "Notes:\r\n" +
+            "  • Filenames are matched case-insensitively.\r\n" +
+            "  • Supported formats: JPG, JPEG, PNG, GIF, BMP, WEBP.\r\n" +
+            "  • Maximum 10 MB per photo.\r\n" +
+            "  • The photo is saved as the user's profile photo and enrolled\r\n" +
+            "    as their primary face template for facial recognition.\r\n";
+
+        var readmeBytes = Encoding.UTF8.GetBytes(readmeContent);
+
+        using var ms = new MemoryStream();
+        using (var zip = new ZipArchive(ms, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            // ZipArchive only allows one open entry at a time — use block-style using
+            // so each entry stream is fully disposed before the next one is created.
+            using (var xlsxOut = zip.CreateEntry("users_template.xlsx",
+                       System.IO.Compression.CompressionLevel.Optimal).Open())
+            {
+                xlsxOut.Write(xlsxBytes, 0, xlsxBytes.Length);
+            }
+
+            using (var readmeOut = zip.CreateEntry("photos/README.txt",
+                       System.IO.Compression.CompressionLevel.Optimal).Open())
+            {
+                readmeOut.Write(readmeBytes, 0, readmeBytes.Length);
+            }
+        }
+
+        return Task.FromResult(ms.ToArray());
     }
 
     // ── Excel template builder ────────────────────────────────────────────────
@@ -563,6 +674,7 @@ public class UserImportService : IUserImportService
             ("Country", "Country", false),
             ("MustChangePassword", "Must Change Password", false),
             ("SendWelcomeEmail", "Send Welcome Email", false),
+            ("PhotoFile", "Profile Photo File", false),
         };
 
         // Header row styling
@@ -630,7 +742,7 @@ public class UserImportService : IUserImportService
 
         // Column-level dropdowns for enum columns (rows 2–502)
         AddListValidation(ws, 4, 2, 501, "Role",
-            "\"Staff,Receptionist,Administrator\"");
+            "\"Staff,Receptionist,Administrator,CivilDefense_Receptionist,CivilDefense_Manager\"");
         AddListValidation(ws, 5, 2, 501, "Status",
             "\"Active,Inactive,Suspended\"");
         AddListValidation(ws, 6, 2, 501, "ApprovalOverride",
@@ -683,7 +795,7 @@ public class UserImportService : IUserImportService
             ("FirstName", "User's first name. Max 50 characters."),
             ("LastName", "User's last name. Max 50 characters."),
             ("Email", "Valid email address. Must be unique in the system. Max 256 characters."),
-            ("Role", "Must be one of: Staff, Receptionist, Administrator."),
+            ("Role", "Must be one of: Staff, Receptionist, Administrator, CivilDefense_Receptionist, CivilDefense_Manager."),
             ("Status", "Must be one of: Active, Inactive, Suspended."),
             ("", ""),
             ("OPTIONAL COLUMNS", ""),
@@ -705,6 +817,7 @@ public class UserImportService : IUserImportService
             ("Country", "Country name. Default: Lebanon. Max 50 characters."),
             ("MustChangePassword", "TRUE or FALSE. Default: TRUE. When TRUE, user must set a new password on first login."),
             ("SendWelcomeEmail", "TRUE or FALSE. Default: TRUE. When TRUE, a welcome email with login instructions is sent."),
+            ("PhotoFile", "Optional. Filename of the user's photo in the photos/ folder of the ZIP archive (e.g. john_doe.jpg). Ignored when uploading plain .xlsx or .csv."),
         };
 
         for (int i = 0; i < instructions.Length; i++)
@@ -735,7 +848,7 @@ public class UserImportService : IUserImportService
 
         var data = new[]
         {
-            ("Role", "Staff, Receptionist, Administrator"),
+            ("Role", "Staff, Receptionist, Administrator, CivilDefense_Receptionist, CivilDefense_Manager"),
             ("Status", "Active, Inactive, Suspended"),
             ("ApprovalOverride", "FollowGlobal, AlwaysRequire, AlwaysAutoApprove"),
             ("PhoneType", "Mobile, Landline, Unknown"),
@@ -816,6 +929,7 @@ public class UserImportService : IUserImportService
             case nameof(ImportUserRowDto.Country):            dto.Country = value; break;
             case nameof(ImportUserRowDto.MustChangePassword): dto.MustChangePassword = value; break;
             case nameof(ImportUserRowDto.SendWelcomeEmail):   dto.SendWelcomeEmail = value; break;
+            case nameof(ImportUserRowDto.PhotoFile):          dto.PhotoFile = value; break;
         }
     }
 

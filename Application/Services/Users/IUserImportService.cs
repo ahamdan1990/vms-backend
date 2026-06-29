@@ -44,6 +44,13 @@ public interface IUserImportService
     /// Generates a downloadable .csv import template.
     /// </summary>
     Task<byte[]> GenerateCsvImportTemplateAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Generates a downloadable .zip archive containing the Excel template and an
+    /// empty photos/ folder with instructions. Users place photos there, reference
+    /// filenames in the PhotoFile column, and upload the completed ZIP.
+    /// </summary>
+    Task<byte[]> GenerateImportTemplateZipAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>Result from parsing an uploaded file.</summary>
@@ -54,4 +61,11 @@ public class UserImportParseResult
     public List<ImportUserRowDto> Rows { get; set; } = [];
     public string DetectedFormat { get; set; } = string.Empty; // "xlsx" or "csv"
     public int TotalDataRows => Rows.Count;
+
+    /// <summary>
+    /// Photo bytes extracted from the ZIP archive, keyed by filename (case-insensitive).
+    /// Empty when the upload was a plain .xlsx or .csv (no photo support in that path).
+    /// </summary>
+    public Dictionary<string, byte[]> Photos { get; set; } =
+        new(StringComparer.OrdinalIgnoreCase);
 }
